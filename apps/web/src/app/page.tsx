@@ -1,16 +1,21 @@
-import { APP_NAME, formatInCenterTimeZone } from "@meguiars/core";
+import { APP_NAME, centersCopy } from "@meguiars/domain";
+import { connection } from "next/server";
+import { CentersView } from "@/components/centers-view";
+import { loadVisibleCenters } from "@/lib/centers";
 
-// La hora del servidor se renderiza en cada request.
-export const dynamic = "force-dynamic";
-
-export default function Home() {
-  const now = formatInCenterTimeZone(new Date(), "America/Mexico_City");
+export default async function Home() {
+  // Datos por usuario y hora actual: se renderiza en cada request.
+  await connection();
+  const state = await loadVisibleCenters();
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-      <h1 className="text-3xl font-semibold tracking-tight">{APP_NAME}</h1>
-      <p className="text-zinc-600 dark:text-zinc-400">Plataforma de operación · web</p>
-      <p className="text-sm text-zinc-500">{now} (America/Mexico_City)</p>
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
+      <header className="flex flex-col gap-1">
+        <p className="text-sm font-medium uppercase tracking-wide text-mg-accent">{APP_NAME}</p>
+        <h1 className="text-2xl font-semibold">{centersCopy.title}</h1>
+        <p className="text-mg-muted">{centersCopy.subtitle}</p>
+      </header>
+      <CentersView state={state} now={new Date()} />
     </main>
   );
 }

@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // @meguiars/core se publica como TypeScript fuente dentro del monorepo.
-  transpilePackages: ["@meguiars/core"],
+  // Los paquetes @meguiars/* se publican como TypeScript fuente dentro del monorepo.
+  transpilePackages: [
+    "@meguiars/domain",
+    "@meguiars/validation",
+    "@meguiars/supabase",
+    "@meguiars/ui-tokens",
+  ],
 };
 
 export default nextConfig;
