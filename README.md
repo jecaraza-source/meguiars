@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meguiar's Detail Center
 
-## Getting Started
+Plataforma de operación multicentro de Meguiar's Detail Center. El eje operacional es la Orden de Servicio.
 
-First, run the development server:
-
-```bash
-npm run dev
-# MEGUIAR'S
-yarn dev
-# MEGUIAR'S
-pnpm dev
-# MEGUIAR'S
-bun dev
+```
+apps/web        Next.js 16 + TypeScript (Vercel)
+apps/mobile     Expo + React Native + TypeScript
+packages/core   dominio, validaciones, fechas, KPIs, cliente Supabase
+supabase/       migraciones SQL y pruebas de RLS
+docs/adr/       decisiones de arquitectura
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Las reglas de arquitectura y calidad están en [AGENTS.md](AGENTS.md).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Desarrollo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+cp apps/web/.env.example apps/web/.env.local        # completa las llaves de Supabase
+cp apps/mobile/.env.example apps/mobile/.env.local
+npm run dev:web
+npm run dev:mobile
+```
 
-## Learn More
+## Calidad
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run lint && npm run typecheck && npm test && npm run test:db
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+CI (`.github/workflows/ci.yml`) corre lint, typecheck, pruebas unitarias, build web y pruebas de RLS en cada PR.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Despliegue
+- **Web (Vercel):** importa el repo y define *Root Directory* = `apps/web`. Vercel detecta los npm workspaces. Configura `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- **Base de datos:** `npx supabase link --project-ref <ref> && npx supabase db push`.
+- **Móvil:** EAS (`npx eas-cli@latest build`), con las variables `EXPO_PUBLIC_SUPABASE_*`.
