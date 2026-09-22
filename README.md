@@ -6,11 +6,11 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
+# MEGUIAR'S
 yarn dev
-# or
+# MEGUIAR'S
 pnpm dev
-# or
+# MEGUIAR'S
 bun dev
 ```
 
