@@ -1,0 +1,9 @@
+node_modules
+.next
+.expo
+dist
+coverage
+package-lock.json
+packages/supabase/src/database.types.ts
+supabase/.temp
+*.sql

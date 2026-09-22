@@ -8,13 +8,31 @@
   "scripts": {
     "dev:web": "npm run dev -w @meguiars/web",
     "dev:mobile": "npm run start -w @meguiars/mobile",
+    "build:web": "npm run build -w @meguiars/web",
     "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "vitest run",
     "test:db": "bash scripts/test-db.sh",
-    "build:web": "npm run build -w @meguiars/web"
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local --schema public > packages/supabase/src/database.types.ts",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build:web"
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "prettier": "^3.6.0",
+    "supabase": "^2.117.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^3.2.0"
   }
 }
