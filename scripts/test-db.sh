@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Aplica las migraciones en un Postgres limpio y corre las pruebas SQL (RLS/KPIs).
+# Aplica las migraciones en un Postgres limpio, corre las pruebas SQL (RLS/KPIs) y valida el seed.
 # Uso:
 #   DATABASE_URL=postgres://... npm run test:db   # base existente y VACÍA (CI)
 #   npm run test:db                               # levanta un Postgres temporal con pg_ctl
@@ -29,4 +29,7 @@ for f in supabase/tests/*.test.sql; do
   echo "prueba: $f"
   "${PSQL[@]}" -t -f "$f" 2>&1 | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^ *$/d'
 done
+echo "seed: supabase/seed.sql"
+"${PSQL[@]}" -f supabase/seed.sql
+[[ "$("${PSQL[@]}" -tAc 'select count(*) from public.detail_centers')" == "2" ]] || { echo "El seed no cargó 2 centros" >&2; exit 1; }
 echo "Pruebas de base de datos OK"

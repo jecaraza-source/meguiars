@@ -3,8 +3,6 @@
 -- Reglas: toda entidad transaccional lleva detail_center_id; fechas en UTC
 -- (timestamptz); la autorización vive en RLS, no en la UI.
 
-create extension if not exists pgcrypto;
-
 create schema if not exists private;
 revoke all on schema private from public;
 grant usage on schema private to authenticated;
@@ -178,6 +176,8 @@ revoke all on public.detail_centers, public.profiles, public.center_memberships,
 revoke insert, update, delete, truncate on public.audit_log from authenticated;
 -- Los centros se dan de alta con service_role (onboarding), no desde clientes.
 revoke insert, delete, truncate on public.detail_centers from authenticated;
+-- Las membresías se desactivan (active = false), no se borran: se conserva el historial.
+revoke delete, truncate on public.center_memberships from authenticated;
 
 create policy detail_centers_select on public.detail_centers
   for select to authenticated using (private.has_center_role(id));
@@ -218,14 +218,90 @@ create policy memberships_update on public.center_memberships
     private.has_center_role(detail_center_id, array['owner', 'admin']::public.app_role[])
     and (role <> 'owner' or private.has_center_role(detail_center_id, array['owner']::public.app_role[]))
   );
-create policy memberships_delete on public.center_memberships
-  for delete to authenticated using (
-    private.has_center_role(detail_center_id, array['owner', 'admin']::public.app_role[])
-    and (role <> 'owner' or private.has_center_role(detail_center_id, array['owner']::public.app_role[]))
-  );
 
 create policy audit_log_select on public.audit_log
   for select to authenticated using (
     detail_center_id is not null
     and private.has_center_role(detail_center_id, array['owner', 'admin', 'manager']::public.app_role[])
   );
+
+-- ---------------------------------------------------------------------------
+-- Mutaciones sensibles: sólo mediante RPC con motivo obligatorio.
+-- Las RPC son SECURITY INVOKER: la autorización la siguen aplicando las
+-- políticas RLS de arriba. El trigger require_change_reason bloquea las
+-- escrituras directas de clientes (PostgREST) que no pasen por una RPC.
+-- ---------------------------------------------------------------------------
+
+create function private.set_change_reason(p_reason text) returns void
+language plpgsql set search_path = '' as $$
+begin
+  if p_reason is null or length(btrim(p_reason)) not between 3 and 500 then
+    raise exception 'El motivo del cambio debe tener entre 3 y 500 caracteres'
+      using errcode = '22023';
+  end if;
+  perform set_config('app.change_reason', btrim(p_reason), true);
+end;
+$$;
+revoke all on function private.set_change_reason(text) from public;
+grant execute on function private.set_change_reason(text) to authenticated;
+
+create function private.require_change_reason() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  if current_user = 'authenticated'
+     and coalesce(current_setting('app.change_reason', true), '') = '' then
+    raise exception 'Cambio sensible sin motivo: usa la función RPC correspondiente'
+      using errcode = '23514';
+  end if;
+  return case when tg_op = 'DELETE' then old else new end;
+end;
+$$;
+
+create trigger detail_centers_require_reason before insert or update or delete on public.detail_centers
+  for each row execute function private.require_change_reason();
+create trigger center_memberships_require_reason before insert or update or delete on public.center_memberships
+  for each row execute function private.require_change_reason();
+
+create function public.update_detail_center(p_id uuid, p_name text, p_timezone text, p_reason text)
+returns public.detail_centers
+language plpgsql security invoker set search_path = '' as $$
+declare
+  result public.detail_centers;
+begin
+  perform private.set_change_reason(p_reason);
+  update public.detail_centers
+     set name = btrim(p_name), timezone = p_timezone
+   where id = p_id
+  returning * into result;
+  if not found then
+    raise exception 'Centro inexistente o sin permiso para editarlo' using errcode = '42501';
+  end if;
+  return result;
+end;
+$$;
+
+create function public.set_center_membership(
+  p_detail_center_id uuid,
+  p_user_id uuid,
+  p_role public.app_role,
+  p_active boolean,
+  p_reason text
+) returns public.center_memberships
+language plpgsql security invoker set search_path = '' as $$
+declare
+  result public.center_memberships;
+begin
+  perform private.set_change_reason(p_reason);
+  insert into public.center_memberships (detail_center_id, user_id, role, active)
+  values (p_detail_center_id, p_user_id, p_role, p_active)
+  on conflict (detail_center_id, user_id)
+    do update set role = excluded.role, active = excluded.active
+  returning * into result;
+  return result;
+end;
+$$;
+
+revoke all on function public.update_detail_center(uuid, text, text, text) from public, anon;
+revoke all on function public.set_center_membership(uuid, uuid, public.app_role, boolean, text) from public, anon;
+grant execute on function public.update_detail_center(uuid, text, text, text) to authenticated;
+grant execute on function public.set_center_membership(uuid, uuid, public.app_role, boolean, text) to authenticated;

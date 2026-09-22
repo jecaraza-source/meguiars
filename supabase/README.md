@@ -1,11 +1,20 @@
 # supabase
 
+- `config.toml`: pila local (`npm run db:start`). Postgres 17, igual que el servicio gestionado.
 - `migrations/`: migraciones SQL en orden (`YYYYMMDDHHMMSS_nombre.sql`), compatibles con `supabase db push`.
-- `tests/`: pruebas de RLS y auditoría. `00_supabase_stub.sql` sólo existe para correrlas en un Postgres plano; nunca se aplica a un proyecto real.
+- `seed.sql`: dos centros de ejemplo. Lo cargan `supabase db reset` y `npm run test:db`.
+- `tests/`: pruebas de RLS, RPC y auditoría. `00_supabase_stub.sql` sólo existe para correrlas en un Postgres plano; nunca se aplica a un proyecto real.
+
+## Contrato de seguridad
+
+- Todas las tablas tienen RLS. `anon` no tiene acceso.
+- Lectura: por membresía activa en el centro (`private.has_center_role`).
+- Escritura sensible: sólo por RPC (`update_detail_center`, `set_center_membership`), con motivo obligatorio. Una escritura directa sin motivo falla con `23514`.
+- Alta de centros: sólo con `service_role` (onboarding).
+- Auditoría: `public.audit_log` guarda actor, fecha UTC, fila anterior y nueva, y motivo. Sólo es legible por owner, admin y manager.
 
 ```bash
-npm run test:db                               # Postgres temporal local (requiere binarios de Postgres 16)
-DATABASE_URL=postgres://... npm run test:db   # base vacía existente
+npm run test:db                               # Postgres temporal local (binarios de Postgres 16+)
+DATABASE_URL=postgres://... npm run test:db   # base vacía existente (CI)
+npm run db:types                              # tras cada migración, con la pila local levantada
 ```
-
-Despliegue: `npx supabase link --project-ref <ref>` y luego `npx supabase db push`.
