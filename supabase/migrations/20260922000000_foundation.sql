@@ -64,7 +64,9 @@ create index center_memberships_user_idx on public.center_memberships (user_id);
 
 create table public.audit_log (
   id bigint generated always as identity primary key,
-  detail_center_id uuid references public.detail_centers (id) on delete set null,
+  -- Sin FK a detail_centers: la bitácora es historial inmutable y debe conservar
+  -- el centro aunque éste se borre (incluidas las filas borradas en cascada).
+  detail_center_id uuid,
   table_name text not null,
   record_id text,
   action text not null check (action in ('INSERT', 'UPDATE', 'DELETE')),
@@ -113,7 +115,8 @@ declare
   row_json jsonb := coalesce(new_json, old_json);
   center_id uuid;
 begin
-  if tg_op = 'UPDATE' and old_json = new_json then
+  -- updated_at siempre cambia (trigger set_updated_at); no cuenta como cambio.
+  if tg_op = 'UPDATE' and old_json - 'updated_at' = new_json - 'updated_at' then
     return null;
   end if;
 
@@ -124,8 +127,7 @@ begin
 
   insert into public.audit_log (detail_center_id, table_name, record_id, action, actor_id, reason, old_data, new_data)
   values (
-    -- En un DELETE del propio centro la FK ya no existiría.
-    case when tg_table_name = 'detail_centers' and tg_op = 'DELETE' then null else center_id end,
+    center_id,
     tg_table_schema || '.' || tg_table_name,
     coalesce(row_json ->> 'id', row_json ->> 'user_id'),
     tg_op,
@@ -162,6 +164,25 @@ $$;
 revoke all on function private.has_center_role(uuid, public.app_role[]) from public;
 grant execute on function private.has_center_role(uuid, public.app_role[]) to authenticated;
 
+-- ¿El usuario de la sesión tiene membresía activa en algún centro donde
+-- p_user_id tiene (o tuvo) membresía? Security definer: consultar
+-- center_memberships bajo RLS sólo mostraría la propia membresía a
+-- technician/advisor/viewer.
+create function private.shares_center_with(p_user_id uuid)
+returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1
+    from public.center_memberships target
+    join public.center_memberships me on me.detail_center_id = target.detail_center_id
+    where target.user_id = p_user_id
+      and me.user_id = auth.uid()
+      and me.active
+  );
+$$;
+revoke all on function private.shares_center_with(uuid) from public;
+grant execute on function private.shares_center_with(uuid) to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- RLS
 -- ---------------------------------------------------------------------------
@@ -187,13 +208,7 @@ create policy detail_centers_update on public.detail_centers
   with check (private.has_center_role(id, array['owner', 'admin']::public.app_role[]));
 
 create policy profiles_select on public.profiles
-  for select to authenticated using (
-    id = auth.uid()
-    or exists (
-      select 1 from public.center_memberships m
-      where m.user_id = profiles.id and private.has_center_role(m.detail_center_id)
-    )
-  );
+  for select to authenticated using (id = auth.uid() or private.shares_center_with(id));
 create policy profiles_update_self on public.profiles
   for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
 
@@ -261,6 +276,41 @@ create trigger detail_centers_require_reason before insert or update or delete o
   for each row execute function private.require_change_reason();
 create trigger center_memberships_require_reason before insert or update or delete on public.center_memberships
   for each row execute function private.require_change_reason();
+
+-- Un cliente no puede dejar un centro sin owner activo: sólo un owner otorga
+-- el rol owner, así que el centro quedaría sin forma de recuperarlo salvo con
+-- service_role. El bloqueo del centro serializa cambios concurrentes de owners.
+-- Security definer: bajo RLS, un owner que se desactiva ya no vería a los demás owners.
+create function private.center_has_active_owner(p_detail_center_id uuid) returns boolean
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform 1 from public.detail_centers where id = p_detail_center_id for no key update;
+  return exists (
+    select 1 from public.center_memberships
+    where detail_center_id = p_detail_center_id and role = 'owner' and active
+  );
+end;
+$$;
+revoke all on function private.center_has_active_owner(uuid) from public;
+grant execute on function private.center_has_active_owner(uuid) to authenticated;
+
+create function private.prevent_ownerless_center() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  if current_user = 'authenticated'
+     and old.role = 'owner' and old.active
+     and (new.role <> 'owner' or not new.active) then
+    if not private.center_has_active_owner(old.detail_center_id) then
+      raise exception 'El centro debe conservar al menos un owner activo'
+        using errcode = '23514';
+    end if;
+  end if;
+  return null;
+end;
+$$;
+
+create trigger center_memberships_keep_owner after update of role, active on public.center_memberships
+  for each row execute function private.prevent_ownerless_center();
 
 create function public.update_detail_center(p_id uuid, p_name text, p_timezone text, p_reason text)
 returns public.detail_centers

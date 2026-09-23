@@ -10,7 +10,7 @@ Estructura del monorepo, herramientas compartidas, base multicentro (centros, me
 | -------------------- | -------------------------------------------------- | --------------------------------------------------------------------------- |
 | `detail_centers`     | centro de costos y resultados, con `timezone` IANA | sólo `update_detail_center` (owner/admin)                                   |
 | `center_memberships` | usuario ↔ centro ↔ rol (`app_role`)                | sólo `set_center_membership` (owner/admin; `owner` sólo lo otorga un owner) |
-| `profiles`           | nombre del usuario (se crea al registrarse)        | el propio usuario                                                           |
+| `profiles`           | nombre del usuario (se crea al registrarse)        | el propio usuario (lo ven también sus compañeros de centro)                 |
 | `audit_log`          | bitácora de cambios sensibles                      | ninguna (sólo triggers)                                                     |
 
 La **vista corporativa consolidada** se obtiene hoy con membresías en todos los centros: RLS devuelve la unión de los centros del usuario, y los KPIs declaran `scopes: ["center", "corporate"]`.
@@ -31,7 +31,7 @@ La **vista corporativa consolidada** se obtiene hoy con membresías en todos los
 | build web            | `npm run build:web`                                                                                         |
 | imports compartidos  | el bundle móvil contiene `domain`, `validation`, `supabase` y `ui-tokens`; web los renderiza en SSR         |
 | sin secretos         | búsqueda de patrones de llaves en archivos versionados; `.env*` ignorados salvo `.env.example`              |
-| RLS                  | `npm run test:db`: 25 aserciones (aislamiento por centro, roles, RPC, auditoría, anon)                      |
+| RLS                  | `npm run test:db`: 34 aserciones (aislamiento por centro, roles, último owner, RPC, auditoría, anon)        |
 
 ## Supuestos
 

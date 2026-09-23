@@ -8,10 +8,11 @@
 ## Contrato de seguridad
 
 - Todas las tablas tienen RLS. `anon` no tiene acceso.
-- Lectura: por membresía activa en el centro (`private.has_center_role`).
+- Lectura: por membresía activa en el centro (`private.has_center_role`). Los perfiles son visibles para quien comparte centro (`private.shares_center_with`).
 - Escritura sensible: sólo por RPC (`update_detail_center`, `set_center_membership`), con motivo obligatorio. Una escritura directa sin motivo falla con `23514`.
-- Alta de centros: sólo con `service_role` (onboarding).
-- Auditoría: `public.audit_log` guarda actor, fecha UTC, fila anterior y nueva, y motivo. Sólo es legible por owner, admin y manager.
+- Alta y baja de centros: sólo con `service_role` (onboarding).
+- Todo centro conserva al menos un owner activo: un cliente no puede degradar ni desactivar al último (`23514`).
+- Auditoría: `public.audit_log` guarda actor, fecha UTC, fila anterior y nueva, y motivo. No tiene FK a `detail_centers`, así que sobrevive al borrado del centro. Sólo es legible por owner, admin y manager.
 
 ```bash
 npm run test:db                               # Postgres temporal local (binarios de Postgres 16+)

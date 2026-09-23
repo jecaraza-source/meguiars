@@ -6,9 +6,9 @@
 ## Decisión
 
 - **Tenancy por `detail_center_id`**, con la membresía `center_memberships (detail_center_id, user_id, role)`. Un usuario puede pertenecer a varios centros con roles distintos.
-- **Roles** (`app_role`): owner, admin, manager, advisor, technician y viewer. Sólo un owner puede otorgar, modificar o quitar el rol owner.
+- **Roles** (`app_role`): owner, admin, manager, advisor, technician y viewer. Sólo un owner puede otorgar, modificar o quitar el rol owner, y ningún cliente puede dejar un centro sin owner activo (`private.prevent_ownerless_center`); si no, sólo `service_role` podría recuperarlo.
 - **Autorización en RLS** mediante `private.has_center_role()` (`security definer`, para evitar recursión en las políticas de `center_memberships`). El esquema `private` no se expone por la API de datos.
-- **Auditoría por trigger** genérico `private.audit_row()` hacia `public.audit_log`: registra actor (`auth.uid()`), fecha UTC, fila anterior y nueva (jsonb) y el motivo tomado de `app.change_reason`. Los clientes sólo pueden leer la bitácora (owner/admin/manager de su centro); ningún cliente puede escribirla.
+- **Auditoría por trigger** genérico `private.audit_row()` hacia `public.audit_log`: registra actor (`auth.uid()`), fecha UTC, fila anterior y nueva (jsonb) y el motivo tomado de `app.change_reason`. Un `UPDATE` que sólo cambia `updated_at` no se audita. `audit_log.detail_center_id` no tiene FK: la bitácora es historial inmutable y conserva el centro aunque éste se borre. Los clientes sólo pueden leer la bitácora (owner/admin/manager de su centro); ningún cliente puede escribirla.
 - **Zona horaria por centro** (`detail_centers.timezone`, validada contra `pg_timezone_names`). Todo se guarda como `timestamptz`; la conversión a hora local se hace al presentar (`formatInCenterTimeZone`).
 - **Alta de centros** sólo con `service_role` (onboarding). Los clientes no pueden crear ni borrar centros.
 

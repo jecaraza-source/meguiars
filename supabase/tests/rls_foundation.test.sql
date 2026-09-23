@@ -66,6 +66,7 @@ reset role;
 select pg_temp.login('00000000-0000-0000-0000-00000000000c');
 select pg_temp.assert((select count(*) from public.detail_centers) = 1, 'técnico sólo ve su centro');
 select pg_temp.assert((select count(*) from public.center_memberships) = 1, 'técnico sólo ve su propia membresía');
+select pg_temp.assert((select count(*) from public.profiles) = 3, 'técnico ve los perfiles de sus compañeros de centro y no los de B');
 select pg_temp.assert((select count(*) from public.audit_log) = 0, 'técnico no lee auditoría');
 select pg_temp.assert_fails(
   $$select public.update_detail_center('aaaaaaaa-0000-0000-0000-000000000000', 'Hackeado', 'UTC', 'porque sí')$$,
@@ -92,6 +93,21 @@ select from public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000',
   'manager', true, 'Ascenso a jefe de taller');
 select pg_temp.assert((select role from public.center_memberships where user_id = '00000000-0000-0000-0000-00000000000c') = 'manager',
   'admin cambia rol de técnico a manager vía RPC');
+-- now() es fijo dentro de la transacción de prueba: se envejece updated_at para que
+-- el reintento lo modifique de verdad.
+reset role;
+alter table public.center_memberships disable trigger center_memberships_updated_at;
+update public.center_memberships set updated_at = updated_at - interval '1 hour'
+ where user_id = '00000000-0000-0000-0000-00000000000c';
+alter table public.center_memberships enable trigger center_memberships_updated_at;
+select pg_temp.login('00000000-0000-0000-0000-00000000000b');
+select from public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-00000000000c',
+  'manager', true, 'Reintento idéntico');
+select pg_temp.assert(
+  (select count(*) from public.audit_log
+    where table_name = 'public.center_memberships' and action = 'UPDATE'
+      and record_id = '00000000-0000-0000-0000-00000000000c') = 1,
+  'un reintento sin cambios no genera auditoría');
 select pg_temp.assert_fails(
   $$select public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-00000000000a', 'viewer', true, 'degradar')$$,
   '42501', 'admin no puede degradar a un owner');
@@ -129,10 +145,27 @@ reset role;
 
 -- Owner de A puede otorgar owner; owner de B no ve nada de A
 select pg_temp.login('00000000-0000-0000-0000-00000000000a');
+select pg_temp.assert_fails(
+  $$select public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-00000000000a', 'admin', true, 'me degrado')$$,
+  '23514', 'el único owner no puede degradarse');
+select pg_temp.assert_fails(
+  $$select public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-00000000000a', 'owner', false, 'me desactivo')$$,
+  '23514', 'el único owner no puede desactivarse');
 select from public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-00000000000b',
   'owner', true, 'Socio');
 select pg_temp.assert((select role from public.center_memberships where user_id = '00000000-0000-0000-0000-00000000000b') = 'owner',
   'owner puede otorgar owner');
+select from public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-00000000000a',
+  'admin', true, 'Cedo la propiedad');
+select pg_temp.assert((select role from public.center_memberships where user_id = '00000000-0000-0000-0000-00000000000a'
+    and detail_center_id = 'aaaaaaaa-0000-0000-0000-000000000000') = 'admin',
+  'un owner puede degradarse si queda otro owner activo');
+reset role;
+
+select pg_temp.login('00000000-0000-0000-0000-00000000000b');
+select pg_temp.assert_fails(
+  $$select public.set_center_membership('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-00000000000b', 'owner', false, 'me voy')$$,
+  '23514', 'el último owner restante no puede desactivarse');
 reset role;
 
 select pg_temp.login('00000000-0000-0000-0000-00000000000d');
@@ -146,5 +179,24 @@ insert into public.center_memberships (detail_center_id, user_id, role) values
 select pg_temp.login('00000000-0000-0000-0000-00000000000a');
 select pg_temp.assert((select count(*) from public.detail_centers) = 2, 'usuario multicentro ve la vista consolidada');
 reset role;
+
+-- Baja de un centro con miembros (service_role): la cascada no rompe la auditoría
+-- y la bitácora conserva el centro.
+select set_config('request.jwt.claims', '', true);
+set local role service_role;
+delete from public.detail_centers where id = 'bbbbbbbb-0000-0000-0000-000000000000';
+reset role;
+select pg_temp.assert(not exists (select 1 from public.detail_centers where id = 'bbbbbbbb-0000-0000-0000-000000000000'),
+  'service_role puede borrar un centro con miembros');
+select pg_temp.assert(
+  (select count(*) from public.audit_log
+    where detail_center_id = 'bbbbbbbb-0000-0000-0000-000000000000'
+      and table_name = 'public.center_memberships' and action = 'DELETE') = 2,
+  'las membresías borradas en cascada quedan auditadas con su centro');
+select pg_temp.assert(
+  (select count(*) from public.audit_log
+    where detail_center_id = 'bbbbbbbb-0000-0000-0000-000000000000'
+      and table_name = 'public.detail_centers' and action = 'DELETE') = 1,
+  'el borrado del centro queda auditado con su id');
 
 rollback;
