@@ -1,0 +1,30 @@
+{
+  "name": "@meguiars/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.3.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "@meguiars/domain": "*",
+    "@meguiars/validation": "*",
+    "@meguiars/supabase": "*",
+    "@meguiars/ui-tokens": "*",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint-config-next": "16.3.6",
+    "tailwindcss": "^4"
+  }
+}
