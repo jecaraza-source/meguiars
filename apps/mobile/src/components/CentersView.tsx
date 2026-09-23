@@ -1,4 +1,12 @@
-import { centersCopy, formatInCenterTimeZone, type DetailCenter, type ViewState } from "@meguiars/domain";
+import {
+  centersCopy,
+  corporateSummaryText,
+  formatInCenterTimeZone,
+  presentCenterAccess,
+  type AccessBadge,
+  type CenterAccess,
+  type ViewState,
+} from "@meguiars/domain";
 import { colors, fontSize, fontWeight, radius, space } from "@meguiars/ui-tokens";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -22,7 +30,7 @@ export function CentersView({
   now,
   onRetry,
 }: {
-  state: ViewState<DetailCenter[]>;
+  state: ViewState<CenterAccess[]>;
   now: Date;
   onRetry: () => void;
 }) {
@@ -40,16 +48,34 @@ export function CentersView({
       return <Notice tone="warning" message={centersCopy.permissionDenied} onRetry={onRetry} />;
     case "error":
       return <Notice tone="danger" message={state.message} onRetry={onRetry} />;
-    case "ready":
+    case "ready": {
+      const summary = corporateSummaryText(state.data);
       return (
         <FlatList
-          data={state.data}
-          keyExtractor={(center) => center.id}
+          data={state.data.map(presentCenterAccess)}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{ gap: space.md }}
+          ListHeaderComponent={
+            summary ? (
+              <View style={styles.notice} accessibilityRole="summary">
+                <Text style={styles.summary}>{summary}</Text>
+              </View>
+            ) : null
+          }
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.muted}>{item.code}</Text>
+              <View style={styles.titleRow}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                {item.badges.map((badge) => (
+                  <Text key={badge.kind} style={[styles.badge, BADGE_STYLE[badge.kind]]}>
+                    {badge.label}
+                  </Text>
+                ))}
+              </View>
+              <Text style={styles.muted}>{item.subtitle}</Text>
+              <Text style={styles.body}>
+                {centersCopy.rolesLabel}: {item.rolesText}
+              </Text>
               <Text style={styles.muted}>
                 {centersCopy.timeZoneLabel}: {item.timezone} · {centersCopy.localTimeLabel}:{" "}
                 {formatInCenterTimeZone(now, item.timezone)}
@@ -58,8 +84,15 @@ export function CentersView({
           )}
         />
       );
+    }
   }
 }
+
+const BADGE_STYLE: Record<AccessBadge, { backgroundColor: string; color: string }> = {
+  corporate: { backgroundColor: colors.brand, color: colors.brandForeground },
+  inactive: { backgroundColor: colors.surface, color: colors.danger },
+  readOnly: { backgroundColor: colors.surface, color: colors.muted },
+};
 
 const styles = StyleSheet.create({
   notice: {
@@ -84,6 +117,17 @@ const styles = StyleSheet.create({
     padding: space.lg,
     gap: space.xs,
   },
+  titleRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: space.sm },
   cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.foreground },
+  badge: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.medium,
+    borderRadius: radius.full,
+    paddingHorizontal: space.sm,
+    paddingVertical: 2,
+    overflow: "hidden",
+  },
+  summary: { fontSize: fontSize.md, fontWeight: fontWeight.medium, color: colors.foreground },
+  body: { fontSize: fontSize.sm, color: colors.foreground },
   muted: { fontSize: fontSize.sm, color: colors.muted },
 });

@@ -1,12 +1,12 @@
 import { APP_NAME, centersCopy } from "@meguiars/domain";
 import { connection } from "next/server";
 import { CentersView } from "@/components/centers-view";
-import { loadVisibleCenters } from "@/lib/centers";
+import { loadMyCenters } from "@/lib/centers";
 
 export default async function Home() {
   // Datos por usuario y hora actual: se renderiza en cada request.
   await connection();
-  const state = await loadVisibleCenters();
+  const state = await loadMyCenters();
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
