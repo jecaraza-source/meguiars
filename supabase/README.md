@@ -7,12 +7,14 @@
 
 ## Contrato de seguridad
 
-- Todas las tablas tienen RLS. `anon` no tiene acceso.
-- Lectura: por membresía activa en el centro (`private.has_center_role`). Los perfiles son visibles para quien comparte centro (`private.shares_center_with`).
-- Escritura sensible: sólo por RPC (`update_detail_center`, `set_center_membership`), con motivo obligatorio. Una escritura directa sin motivo falla con `23514`.
-- Alta y baja de centros: sólo con `service_role` (onboarding).
-- Todo centro conserva al menos un owner activo: un cliente no puede degradar ni desactivar al último (`23514`).
-- Auditoría: `public.audit_log` guarda actor, fecha UTC, fila anterior y nueva, y motivo. No tiene FK a `detail_centers`, así que sobrevive al borrado del centro. Sólo es legible por owner, admin y manager.
+Detalle completo, matriz de roles y plantilla para tablas nuevas en [docs/modules/multicentro-seguridad.md](../docs/modules/multicentro-seguridad.md).
+
+- **Deny-by-default:** RLS en todas las tablas; `anon` y `PUBLIC` sin privilegios, tampoco sobre objetos futuros.
+- **Acceso:** los roles efectivos en un centro son su rol en el centro (`user_detail_centers`) más sus roles corporativos (`role_assignments`). Los helpers `private.has_center_role` y `private.has_org_role` son la única vía de autorización.
+- **Escritura sensible:** sólo por RPC (`update_detail_center`, `set_center_membership`, `set_role_assignment`) con motivo obligatorio. Una escritura directa sin motivo falla con `23514`.
+- **Alta y baja** de organizaciones y centros, y deshabilitar perfiles: sólo con `service_role`.
+- **Auditoría:** `public.audit_log` registra cambios de fila y eventos (`private.log_event`) con actor, organización, centro, fecha UTC, valores y motivo. La leen admin_socio y contador.
+- **Pruebas:** `tests/*.test.sql` (RLS) y `tests/upgrade/<migración>.{before,after}.sql` (transición de datos).
 
 ```bash
 npm run test:db                               # Postgres temporal local (binarios de Postgres 16+)
