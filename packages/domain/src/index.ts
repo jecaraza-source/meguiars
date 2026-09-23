@@ -5,3 +5,5 @@ export * from "./result";
 export * from "./view-state";
 export * from "./centers/detail-center";
 export * from "./centers/copy";
+export * from "./access/access";
+export * from "./access/presenter";

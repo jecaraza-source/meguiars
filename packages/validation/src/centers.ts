@@ -27,10 +27,20 @@ export const updateDetailCenterSchema = z.object({
   reason: changeReasonSchema,
 });
 
-export const setMembershipSchema = z.object({
+export const appRoleSchema = z.enum(APP_ROLES);
+
+export const setCenterMembershipSchema = z.object({
   detailCenterId: z.uuid(),
   userId: z.uuid(),
-  role: z.enum(APP_ROLES),
+  role: appRoleSchema,
+  active: z.boolean(),
+  reason: changeReasonSchema,
+});
+
+export const setRoleAssignmentSchema = z.object({
+  organizationId: z.uuid(),
+  userId: z.uuid(),
+  role: appRoleSchema,
   active: z.boolean(),
   reason: changeReasonSchema,
 });

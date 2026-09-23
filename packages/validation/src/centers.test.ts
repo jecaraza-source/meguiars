@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   changeReasonSchema,
   detailCenterInputSchema,
-  setMembershipSchema,
+  setCenterMembershipSchema,
+  setRoleAssignmentSchema,
   updateDetailCenterSchema,
 } from "./centers";
 
@@ -31,10 +32,20 @@ describe("validaciones de centro", () => {
     expect(updateDetailCenterSchema.safeParse({ ...base, reason: "Cambio de horario" }).success).toBe(true);
   });
 
-  it("rechaza roles desconocidos en membresías", () => {
+  it("rechaza roles desconocidos o del esquema anterior en membresías", () => {
     const input = { detailCenterId: CENTER_ID, userId: USER_ID, active: true, reason: "Alta" };
-    expect(setMembershipSchema.safeParse({ ...input, role: "superuser" }).success).toBe(false);
-    expect(setMembershipSchema.safeParse({ ...input, role: "technician" }).success).toBe(true);
+    expect(setCenterMembershipSchema.safeParse({ ...input, role: "superuser" }).success).toBe(false);
+    expect(setCenterMembershipSchema.safeParse({ ...input, role: "owner" }).success).toBe(false);
+    expect(setCenterMembershipSchema.safeParse({ ...input, role: "operador_recepcion" }).success).toBe(true);
+  });
+
+  it("valida asignaciones de rol corporativo", () => {
+    const input = { organizationId: CENTER_ID, userId: USER_ID, active: true, reason: "Alta contador" };
+    expect(setRoleAssignmentSchema.safeParse({ ...input, role: "contador" }).success).toBe(true);
+    expect(
+      setRoleAssignmentSchema.safeParse({ ...input, organizationId: "x", role: "contador" }).success,
+    ).toBe(false);
+    expect(setRoleAssignmentSchema.safeParse({ ...input, reason: "", role: "contador" }).success).toBe(false);
   });
 
   it("limita el motivo a 3–500 caracteres", () => {

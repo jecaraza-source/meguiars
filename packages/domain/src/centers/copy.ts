@@ -9,4 +9,12 @@ export const centersCopy = {
   retry: "Reintentar",
   timeZoneLabel: "Zona horaria",
   localTimeLabel: "Hora local",
+  rolesLabel: "Tus roles",
+  corporateBadge: "Corporativo",
+  inactiveBadge: "Deshabilitado",
+  readOnlyBadge: "Sólo lectura",
+  corporateSummary: (centers: number, organizations: number) =>
+    `Vista corporativa: ${centers} ${centers === 1 ? "centro" : "centros"} en ${organizations} ${
+      organizations === 1 ? "organización" : "organizaciones"
+    }.`,
 } as const;

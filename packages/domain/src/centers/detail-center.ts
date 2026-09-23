@@ -1,22 +1,17 @@
-import type { AppRole } from "../roles";
 import type { Result } from "../result";
 
-/** Centro de costos y resultados independiente. */
+/** Centro de costos y resultados independiente dentro de una organización. */
 export interface DetailCenter {
   id: string;
+  organizationId: string;
   code: string;
   name: string;
   /** Zona horaria IANA en la que se presentan las fechas del centro. */
   timezone: string;
+  /** Soft-disable: un centro inactivo no otorga acceso operativo. */
+  active: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface CenterMembership {
-  detailCenterId: string;
-  userId: string;
-  role: AppRole;
-  active: boolean;
 }
 
 export interface UpdateDetailCenterCommand {
@@ -27,21 +22,12 @@ export interface UpdateDetailCenterCommand {
   reason: string;
 }
 
-export interface SetMembershipCommand {
-  detailCenterId: string;
-  userId: string;
-  role: AppRole;
-  active: boolean;
-  reason: string;
-}
-
 /**
  * Puerto de acceso a centros. Las apps dependen de esta interfaz;
  * `@meguiars/supabase` provee el adaptador. Las mutaciones van por RPC.
  */
 export interface DetailCenterRepository {
-  /** Centros visibles para el usuario actual (RLS filtra por membresía). */
+  /** Centros visibles para el usuario actual (RLS filtra por acceso). */
   listVisible(): Promise<Result<DetailCenter[]>>;
   update(command: UpdateDetailCenterCommand): Promise<Result<DetailCenter>>;
-  setMembership(command: SetMembershipCommand): Promise<Result<CenterMembership>>;
 }
