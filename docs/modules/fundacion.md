@@ -1,5 +1,7 @@
 # Módulo F0 — Fundación / Monorepo
 
+> El modelo de roles y membresías de este módulo evolucionó en F0.2: organizaciones, roles admin_socio/encargado/operador_recepcion/contador/comercial_b2b y `user_detail_centers`. Ver [multicentro-seguridad.md](multicentro-seguridad.md). Esta página describe el estado de F0.1.
+
 ## Alcance
 
 Estructura del monorepo, herramientas compartidas, base multicentro (centros, membresías con rol, perfiles, auditoría) con RLS, patrón de repositorio y el caso de uso mínimo **"Mis centros"** implementado igual en web y móvil. No incluye tablas de negocio (órdenes de servicio, clientes B2C/B2B, membresías comerciales); llegan en los módulos siguientes.

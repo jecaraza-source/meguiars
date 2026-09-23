@@ -1,6 +1,6 @@
 # ADR 0002 — Multicentro, RLS y auditoría en la base de datos
 
-- Estado: aceptado
+- Estado: aceptado; el modelo de roles y membresías fue reemplazado por el ADR 0004 (F0.2)
 - Fecha: 2026-09-22
 
 ## Decisión
