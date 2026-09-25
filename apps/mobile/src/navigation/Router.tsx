@@ -11,6 +11,9 @@ import { colors } from "@meguiars/ui-tokens";
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
+import { AgendaScreen } from "@/screens/AgendaScreen";
+import { AppointmentDetailScreen } from "@/screens/AppointmentDetailScreen";
+import { AppointmentNewScreen } from "@/screens/AppointmentNewScreen";
 import { CatalogDetailScreen } from "@/screens/CatalogDetailScreen";
 import { CatalogNewScreen } from "@/screens/CatalogNewScreen";
 import { CatalogScreen } from "@/screens/CatalogScreen";
@@ -41,6 +44,13 @@ export function Router() {
   const openClient = (id: string) => {
     setClientId(id);
     setScreen("clientDetail");
+  };
+  // Parámetros de la agenda (equivalen a /agenda/[id] y /agenda/nueva?walkin=1&dia= en web).
+  const [appointmentId, setAppointmentId] = useState<string | null>(null);
+  const [newAppointment, setNewAppointment] = useState({ walkIn: false, day: "" });
+  const openAppointment = (id: string) => {
+    setAppointmentId(id);
+    setScreen("appointmentDetail");
   };
   // Parámetro del detalle de servicio (equivale a /catalogo/[id] en web).
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -133,6 +143,41 @@ export function Router() {
         break;
       case "clients":
         content = <ClientsScreen {...props} onOpen={openClient} onNew={() => setScreen("clientNew")} />;
+        break;
+      case "agenda":
+        content = (
+          <AgendaScreen
+            {...props}
+            onOpen={openAppointment}
+            onNew={(walkIn, day) => {
+              setNewAppointment({ walkIn, day });
+              setScreen("appointmentNew");
+            }}
+          />
+        );
+        break;
+      case "appointmentNew":
+        content = (
+          <AppointmentNewScreen
+            {...props}
+            walkIn={newAppointment.walkIn}
+            day={newAppointment.day}
+            onOpen={openAppointment}
+            onCancel={() => setScreen("agenda")}
+          />
+        );
+        break;
+      case "appointmentDetail":
+        content = appointmentId ? (
+          <AppointmentDetailScreen
+            key={appointmentId}
+            {...props}
+            appointmentId={appointmentId}
+            onBack={() => setScreen("agenda")}
+          />
+        ) : (
+          <AgendaScreen {...props} onOpen={openAppointment} onNew={() => setScreen("appointmentNew")} />
+        );
         break;
       case "catalog":
         content = <CatalogScreen {...props} onOpen={openService} onNew={() => setScreen("catalogNew")} />;
