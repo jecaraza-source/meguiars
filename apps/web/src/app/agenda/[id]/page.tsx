@@ -4,6 +4,8 @@ import {
   canInActiveCenter,
   canReschedule,
   formatDateInCenterTimeZone,
+  newRequestId,
+  ordersCopy,
   presentAppointment,
   presentOrderDraft,
   utcToZoned,
@@ -12,6 +14,7 @@ import { createAgendaRepository, createCatalogRepository } from "@meguiars/supab
 import Link from "next/link";
 import { RescheduleForm, StatusActions } from "@/components/agenda-forms";
 import { AppShell } from "@/components/app-shell";
+import { FromAppointmentForm } from "@/components/order-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
@@ -78,6 +81,18 @@ export default async function AppointmentPage({ params, searchParams }: PageProp
         <Card title={agendaCopy.actionsTitle}>
           <Badge label={view.status} tone={view.tone} />
           <StatusActions appointmentId={a.id} status={a.status} />
+        </Card>
+      ) : null}
+
+      {a.serviceOrderId && canInActiveCenter(state, "orders.read") ? (
+        <Card title={ordersCopy.title}>
+          <ButtonLink href={`/ordenes/${a.serviceOrderId}`} label={ordersCopy.viewOrder} variant="primary" />
+        </Card>
+      ) : !a.serviceOrderId &&
+        (a.status === "recibida" || a.status === "en_servicio") &&
+        canInActiveCenter(state, "orders.write") ? (
+        <Card title={ordersCopy.fromAppointment} subtitle={agendaCopy.draftSubtitle}>
+          <FromAppointmentForm appointmentId={a.id} requestId={newRequestId()} />
         </Card>
       ) : null}
 
