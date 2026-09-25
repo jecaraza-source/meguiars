@@ -39,6 +39,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó los clientes y vehículos de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(distinct revenue_engine) from public.services")" == "5" ]] \
   || { echo "El seed no cargó el catálogo con los 5 motores de ingreso" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select count(*) from public.appointments a join public.appointment_services s on s.appointment_id = a.id where a.ends_at = a.starts_at + make_interval(mins => a.duration_minutes)")" == "3" ]] \
+  || { echo "El seed no cargó la agenda de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
