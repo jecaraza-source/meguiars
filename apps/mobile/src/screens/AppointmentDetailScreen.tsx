@@ -3,6 +3,9 @@ import {
   agendaCopy,
   canInActiveCenter,
   canReschedule,
+  newRequestId,
+  orderErrorMessage,
+  ordersCopy,
   presentAppointment,
   presentOrderDraft,
   statusActions,
@@ -18,11 +21,13 @@ import {
 import {
   createAgendaRepository,
   createCatalogRepository,
+  createServiceOrderRepository,
   type MeguiarsSupabaseClient,
 } from "@meguiars/supabase";
 import { space } from "@meguiars/ui-tokens";
 import {
   fieldErrors,
+  fromAppointmentFormSchema,
   rescheduleFormSchema,
   setStatusSchema,
   toUpdateAppointmentCommand,
@@ -32,6 +37,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import { DateTimeFields, ScheduleFields } from "@/components/AgendaFields";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
+import { ChannelFields } from "@/components/OrderFields";
 import { Button, Field, LinkButton } from "@/ui/controls";
 import { Badge, Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
 import { Screen } from "@/ui/layout";
@@ -81,7 +87,8 @@ export function AppointmentDetailScreen({
   header,
   appointmentId,
   onBack,
-}: PrivateScreenProps & { appointmentId: string; onBack: () => void }) {
+  onOpenOrder,
+}: PrivateScreenProps & { appointmentId: string; onBack: () => void; onOpenOrder: (id: string) => void }) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const [data, setData] = useState<ViewState<Loaded>>({ status: "loading" });
@@ -139,6 +146,15 @@ export function AppointmentDetailScreen({
           onDone={reload}
         />
       ) : null}
+      {a.serviceOrderId && canInActiveCenter(state, "orders.read") ? (
+        <Card title={ordersCopy.title}>
+          <Button label={ordersCopy.viewOrder} onPress={() => onOpenOrder(a.serviceOrderId!)} />
+        </Card>
+      ) : !a.serviceOrderId &&
+        (a.status === "recibida" || a.status === "en_servicio") &&
+        canInActiveCenter(state, "orders.write") ? (
+        <OpenOrderCard appointmentId={a.id} onOpenOrder={onOpenOrder} />
+      ) : null}
       {draft ? (
         <Card title={agendaCopy.draftTitle} subtitle={agendaCopy.draftSubtitle}>
           <Text style={textStyle("bodySmall")}>
@@ -167,6 +183,54 @@ export function AppointmentDetailScreen({
         />
       ) : null}
     </Screen>
+  );
+}
+
+/** Abrir la OS desde la cita recibida (mismo flujo que la web). */
+function OpenOrderCard({
+  appointmentId,
+  onOpenOrder,
+}: {
+  appointmentId: string;
+  onOpenOrder: (id: string) => void;
+}) {
+  const { client } = useAuth();
+  const [requestId] = useState(newRequestId);
+  const [values, setValues] = useState<FormValues>({ channel: "b2c" });
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const set = (key: string, value: string) => setValues((v) => ({ ...v, [key]: value }));
+
+  const submit = async () => {
+    if (!client) return;
+    const parsed = fromAppointmentFormSchema.safeParse(values);
+    if (!parsed.success) return setErrors(fieldErrors(parsed.error));
+    setErrors({});
+    setBusy(true);
+    const result = await createServiceOrderRepository(client).createFromAppointment({
+      ...parsed.data,
+      appointmentId,
+      requestId,
+    });
+    setBusy(false);
+    if (!result.ok) return setError(orderErrorMessage(result.error));
+    onOpenOrder(result.data.id);
+  };
+
+  return (
+    <Card title={ordersCopy.fromAppointment} subtitle={agendaCopy.draftSubtitle}>
+      <ChannelFields values={values} errors={errors} set={set} />
+      <Field
+        label={ordersCopy.odometerLabel}
+        keyboardType="number-pad"
+        value={values.odometerKm ?? ""}
+        onChangeText={(v) => set("odometerKm", v)}
+        error={errors.odometerKm}
+      />
+      <Notice tone="danger" text={error} />
+      <Button label={ordersCopy.fromAppointment} loading={busy} onPress={() => void submit()} />
+    </Card>
   );
 }
 

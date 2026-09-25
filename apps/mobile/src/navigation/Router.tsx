@@ -26,6 +26,9 @@ import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
+import { OrderDetailScreen } from "@/screens/OrderDetailScreen";
+import { OrderNewScreen } from "@/screens/OrderNewScreen";
+import { OrdersScreen } from "@/screens/OrdersScreen";
 import { ResetPasswordScreen } from "@/screens/ResetPasswordScreen";
 import { SectionScreen } from "@/screens/SectionScreen";
 import { SelectCenterScreen } from "@/screens/SelectCenterScreen";
@@ -57,6 +60,12 @@ export function Router() {
   const openService = (id: string) => {
     setServiceId(id);
     setScreen("catalogDetail");
+  };
+  // Parámetro del detalle de OS (equivale a /ordenes/[id] en web).
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const openOrder = (id: string) => {
+    setOrderId(id);
+    setScreen("orderDetail");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -174,9 +183,23 @@ export function Router() {
             {...props}
             appointmentId={appointmentId}
             onBack={() => setScreen("agenda")}
+            onOpenOrder={openOrder}
           />
         ) : (
           <AgendaScreen {...props} onOpen={openAppointment} onNew={() => setScreen("appointmentNew")} />
+        );
+        break;
+      case "orders":
+        content = <OrdersScreen {...props} onOpen={openOrder} onNew={() => setScreen("orderNew")} />;
+        break;
+      case "orderNew":
+        content = <OrderNewScreen {...props} onOpen={openOrder} onCancel={() => setScreen("orders")} />;
+        break;
+      case "orderDetail":
+        content = orderId ? (
+          <OrderDetailScreen key={orderId} {...props} orderId={orderId} onBack={() => setScreen("orders")} />
+        ) : (
+          <OrdersScreen {...props} onOpen={openOrder} onNew={() => setScreen("orderNew")} />
         );
         break;
       case "catalog":
