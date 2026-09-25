@@ -9,12 +9,12 @@ packages/domain       entidades, reglas, textos, ViewState, puertos de repositor
 packages/validation   esquemas zod (entrada y variables de entorno)
 packages/supabase     cliente tipado, tipos generados, adaptadores de repositorio
 packages/analytics    definición y registro de KPIs
-packages/ui-tokens    design tokens para CSS y StyleSheet
+packages/ui-tokens    tokens, recetas y contratos de componentes (CSS web y StyleSheet)
 supabase/             config local, migraciones, seed y pruebas SQL de RLS
 docs/                 ADRs y documentación de módulos
 ```
 
-Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md), [Multicentro y seguridad](docs/modules/multicentro-seguridad.md) y [Auth y sesión](docs/modules/auth-sesion.md).
+Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md), [Multicentro y seguridad](docs/modules/multicentro-seguridad.md) y [Auth y sesión](docs/modules/auth-sesion.md) y [Design system y navegación](docs/modules/design-system.md).
 
 ## Requisitos
 
