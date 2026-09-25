@@ -14,7 +14,7 @@ supabase/             config local, migraciones, seed y pruebas SQL de RLS
 docs/                 ADRs y documentación de módulos
 ```
 
-Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md), [Multicentro y seguridad](docs/modules/multicentro-seguridad.md) y [Auth y sesión](docs/modules/auth-sesion.md) y [Design system y navegación](docs/modules/design-system.md).
+Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md), [Multicentro y seguridad](docs/modules/multicentro-seguridad.md), [Auth y sesión](docs/modules/auth-sesion.md), [Design system y navegación](docs/modules/design-system.md) y [CI/CD](docs/modules/ci-cd.md).
 
 ## Requisitos
 
@@ -49,17 +49,27 @@ Sin variables de entorno, las dos apps arrancan y muestran el estado "Supabase n
 
 ## Variables de entorno
 
-| Variable                        | App   | Descripción                        |
-| ------------------------------- | ----- | ---------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | web   | URL del proyecto Supabase          |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | web   | llave pública (anon o publishable) |
-| `EXPO_PUBLIC_SUPABASE_URL`      | móvil | URL del proyecto Supabase          |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | móvil | llave pública (anon o publishable) |
+| Variable                        | App   | Descripción                                                          |
+| ------------------------------- | ----- | -------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | web   | URL del proyecto Supabase del ambiente                               |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | web   | llave pública (anon o publishable)                                   |
+| `NEXT_PUBLIC_SITE_URL`          | web   | URL pública, para el enlace de recuperación de contraseña            |
+| `NEXT_PUBLIC_APP_ENV`           | web   | `local` \| `preview` \| `production` (en Vercel se usa `VERCEL_ENV`) |
+| `EXPO_PUBLIC_SUPABASE_URL`      | móvil | URL del proyecto Supabase del ambiente                               |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | móvil | llave pública (anon o publishable)                                   |
+| `EXPO_PUBLIC_APP_ENV`           | móvil | lo fija cada perfil de `eas.json`                                    |
 
-Nunca se versionan archivos `.env*` salvo los `.env.example`. La llave `service_role` no se usa en ninguna app.
+Nunca se versionan archivos `.env*` salvo los `.env.example`. La llave `service_role` no se usa en ninguna app ni pipeline. Los secretos de los pipelines viven en GitHub Environments ([CI/CD](docs/modules/ci-cd.md#secretos)).
 
 ## Despliegue
 
-- **Base de datos:** `npx supabase link --project-ref <ref>` y luego `npx supabase db push`. El seed es sólo para desarrollo.
-- **Web (Vercel):** importa el repo con _Root Directory_ = `apps/web` (tiene su propio `vercel.json`). Vercel instala desde la raíz del workspace. Define las variables `NEXT_PUBLIC_SUPABASE_*`.
-- **Móvil:** EAS (`npx eas-cli@latest build`), con las variables `EXPO_PUBLIC_SUPABASE_*` en el perfil de EAS.
+Detalle completo, ambientes, secretos y rollback en [docs/modules/ci-cd.md](docs/modules/ci-cd.md).
+
+| Pieza                        | Local                              | Preview / staging                                                 | Production                                                               |
+| ---------------------------- | ---------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **CI (GitHub Actions)**      | `npm run check`, `npm run test:db` | cada PR; el check requerido es **CI ok**                          | cada push a `main`                                                       |
+| **Web (Vercel)**             | `npm run dev:web`                  | deploy de Preview por PR (`meguiars-web`, Root `apps/web`)        | deploy de Production al mergear a `main`; rollback con Instant Rollback  |
+| **Base de datos (Supabase)** | `npm run db:start` / `db:reset`    | `supabase db push` automático a `meguiars-staging` al mergear     | `supabase db push` a `meguiars` tras aprobar el environment `production` |
+| **Móvil (Expo/EAS)**         | `npm run dev:mobile`               | _Actions → Build móvil (EAS)_, perfil `preview` (APK/IPA interno) | perfil `production` y `eas submit` a las tiendas                         |
+
+Las migraciones son sólo hacia adelante y compatibles con el código en producción (expand → migrate → contract). El seed es sólo para local y staging.
