@@ -118,3 +118,59 @@ insert into public.appointment_services (appointment_id, service_id, organizatio
   ('a0000000-0000-4000-8000-000000000002', '5e000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', 0, 240),
   ('a0000000-0000-4000-8000-000000000003', '5e000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 0, 90)
 on conflict do nothing;
+
+-- Órdenes de servicio de ejemplo (O4): una en proceso y una abierta con
+-- descuento en CDMX, y una B2B autorizada en Monterrey. Precios congelados del
+-- catálogo del centro; los totales los calcula la base.
+insert into public.service_orders (id, organization_id, detail_center_id, folio, folio_number, client_id, vehicle_id,
+                                   channel, channel_reference, status, client_name, client_phone, client_email,
+                                   vehicle_make, vehicle_model, vehicle_year, vehicle_plate, odometer_km, bay_id,
+                                   technician_id, observations, authorized_at, started_at, work_started_at, request_id)
+values
+  ('0d000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+   'CDMX-01-000001', 1, 'c1000000-0000-4000-8000-000000000003', 'c2000000-0000-4000-8000-000000000004',
+   'b2c', null, 'en_proceso', 'María López', '+525598765432', null, 'Toyota', 'RAV4', 2019, 'MEX9087', 61200,
+   'ba000000-0000-4000-8000-000000000002', '7e000000-0000-4000-8000-000000000001', 'Walk-in: manchas en asientos',
+   now() - interval '1 hour', now() - interval '40 minutes', now() - interval '40 minutes',
+   '0d000000-0000-4000-8000-0000000000a1'),
+  ('0d000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+   'CDMX-01-000002', 2, 'c1000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000001',
+   'b2c', null, 'abierta', 'José Pérez', '+525512345678', 'jose.perez@example.com', 'Mazda', '3 Hatchback', 2021,
+   'ABC1234', 45210, null, null, null, null, null, null, '0d000000-0000-4000-8000-0000000000a2'),
+  ('0d000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+   'MTY-01-000001', 1, 'c1000000-0000-4000-8000-000000000002', 'c2000000-0000-4000-8000-000000000002',
+   'b2b', 'OC-5521', 'autorizada', 'Transportes del Norte', '+528181234567', 'flotilla@example.com', 'Nissan',
+   'NP300', 2020, 'NL4521A', null, 'ba000000-0000-4000-8000-000000000003', '7e000000-0000-4000-8000-000000000002',
+   null, now(), null, null, '0d000000-0000-4000-8000-0000000000a3')
+on conflict (id) do nothing;
+
+insert into public.service_order_items (id, organization_id, service_order_id, position, kind, service_id, service_code,
+                                        service_name, revenue_engine, unit_price, unit_direct_cost, duration_minutes,
+                                        price_source, quantity) values
+  ('0e100000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000001',
+   0, 'servicio', '5e000000-0000-4000-8000-000000000003', 'DET-INT', 'Detallado de interiores', 'valor_medio',
+   1800, 600, 240, 'base', 1),
+  ('0e100000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000001',
+   1, 'producto', '5e000000-0000-4000-8000-000000000006', 'AROM', 'Aromatizante', 'producto_complemento',
+   90, 30, 5, 'base', 1),
+  ('0e100000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000002',
+   0, 'servicio', '5e000000-0000-4000-8000-000000000004', 'PUL-1E', 'Pulido en una etapa', 'valor_medio',
+   2800, 950, 300, 'base', 1),
+  ('0e100000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000003',
+   0, 'servicio', '5e000000-0000-4000-8000-000000000001', 'LAV-EXP', 'Lavado exprés', 'recurrente',
+   220, 70, 40, 'center', 1)
+on conflict (id) do nothing;
+
+insert into public.service_order_discounts (id, organization_id, service_order_id, item_id, kind, value, reason,
+                                            authorization_level) values
+  ('0e200000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000002',
+   '0e100000-0000-4000-8000-000000000003', 'percent', 10, 'Cliente frecuente', 'operador')
+on conflict (id) do nothing;
+
+update public.service_orders set authorized_total = 1890 where id = '0d000000-0000-4000-8000-000000000001' and authorized_total is null;
+update public.service_orders set authorized_total = 220 where id = '0d000000-0000-4000-8000-000000000003' and authorized_total is null;
+select count(private.recalc_service_order(id)) from public.service_orders where id::text like '0d000000-%';
+
+insert into private.service_order_counters (detail_center_id, last_number) values
+  ('11111111-1111-4111-8111-111111111111', 2), ('22222222-2222-4222-8222-222222222222', 1)
+on conflict (detail_center_id) do update set last_number = greatest(private.service_order_counters.last_number, excluded.last_number);
