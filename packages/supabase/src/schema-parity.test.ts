@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { APP_ROLES } from "@meguiars/domain";
+import { APP_ROLES, REVENUE_ENGINES } from "@meguiars/domain";
 import { describe, expect, it } from "vitest";
 import { Constants, type Database } from "./database.types";
 
@@ -36,6 +36,9 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "organizations",
   "profiles",
   "role_assignments",
+  "service_center_config",
+  "service_price_history",
+  "services",
   "user_detail_centers",
   "vehicles",
 ];
@@ -43,22 +46,33 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_vehicle",
+  "center_catalog",
   "client_history",
   "create_client",
+  "create_service",
   "find_client_matches",
   "link_client_to_center",
   "my_detail_centers",
   "search_clients",
+  "service_price_at",
   "set_active_center",
   "set_center_membership",
   "set_role_assignment",
+  "set_service_center_config",
   "set_user_disabled",
   "update_client",
   "update_detail_center",
+  "update_service",
   "update_vehicle",
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {
+  it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {
+    const def = /create type public\.revenue_engine as enum \(([^)]+)\)/i.exec(allSql)?.[1];
+    expect(def?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...REVENUE_ENGINES]);
+    expect([...Constants.public.Enums.revenue_engine]).toEqual([...REVENUE_ENGINES]);
+  });
+
   it("los roles del dominio coinciden con la definición vigente del enum app_role", () => {
     const defs = [...allSql.matchAll(/create type public\.app_role(?:_v2)? as enum \(([^)]+)\)/gi)];
     const sqlRoles = defs

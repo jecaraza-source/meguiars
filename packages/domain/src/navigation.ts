@@ -37,6 +37,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     items: [
       { screen: "operacion", label: "Operación del día", href: "/operacion" },
       { screen: "clients", label: "Clientes y vehículos", href: "/clientes" },
+      { screen: "catalog", label: "Catálogo", href: "/catalogo" },
     ],
   },
   {
@@ -74,6 +75,8 @@ export function visibleNavigation(state: AuthState): NavSection[] {
 const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   clientDetail: "clients",
   clientNew: "clients",
+  catalogDetail: "catalog",
+  catalogNew: "catalog",
 };
 
 /** Ítem de menú que representa a la pantalla. */

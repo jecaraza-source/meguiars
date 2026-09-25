@@ -1,7 +1,7 @@
 // Generado con el formato de `supabase gen types typescript` para las migraciones
 // 20260922000000_foundation, 20260923000000_multicenter_security,
-// 20260925000000_advisor_fixes, 20260926000000_auth_session y
-// 20260927000000_clients_vehicles. Regenerar tras
+// 20260925000000_advisor_fixes, 20260926000000_auth_session,
+// 20260927000000_clients_vehicles y 20260928000000_service_catalog. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -343,6 +343,164 @@ export type Database = {
           },
         ];
       };
+      service_center_config: {
+        Row: {
+          available: boolean;
+          created_at: string;
+          detail_center_id: string;
+          direct_cost_override: number | null;
+          id: string;
+          organization_id: string;
+          price_override: number | null;
+          service_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          available?: boolean;
+          created_at?: string;
+          detail_center_id: string;
+          direct_cost_override?: number | null;
+          id?: string;
+          organization_id: string;
+          price_override?: number | null;
+          service_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          available?: boolean;
+          created_at?: string;
+          detail_center_id?: string;
+          direct_cost_override?: number | null;
+          id?: string;
+          organization_id?: string;
+          price_override?: number | null;
+          service_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_center_config_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_center_config_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      service_price_history: {
+        Row: {
+          changed_by: string | null;
+          detail_center_id: string | null;
+          direct_cost: number | null;
+          id: number;
+          organization_id: string;
+          price: number | null;
+          reason: string | null;
+          service_id: string;
+          valid_from: string;
+        };
+        Insert: {
+          changed_by?: string | null;
+          detail_center_id?: string | null;
+          direct_cost?: number | null;
+          id?: never;
+          organization_id: string;
+          price?: number | null;
+          reason?: string | null;
+          service_id: string;
+          valid_from?: string;
+        };
+        Update: {
+          changed_by?: string | null;
+          detail_center_id?: string | null;
+          direct_cost?: number | null;
+          id?: never;
+          organization_id?: string;
+          price?: number | null;
+          reason?: string | null;
+          service_id?: string;
+          valid_from?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_price_history_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_price_history_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      services: {
+        Row: {
+          active: boolean;
+          base_price: number;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          standard_direct_cost: number;
+          standard_duration_minutes: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          base_price: number;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          standard_direct_cost: number;
+          standard_duration_minutes: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          base_price?: number;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          revenue_engine?: Database["public"]["Enums"]["revenue_engine"];
+          standard_direct_cost?: number;
+          standard_duration_minutes?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "services_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_detail_centers: {
         Row: {
           active: boolean;
@@ -488,6 +646,28 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      center_catalog: {
+        Args: {
+          p_detail_center_id: string;
+          p_include_inactive?: boolean;
+          p_revenue_engine?: Database["public"]["Enums"]["revenue_engine"];
+        };
+        Returns: {
+          active: boolean;
+          available: boolean;
+          base_price: number;
+          code: string;
+          description: string | null;
+          direct_cost: number;
+          id: string;
+          name: string;
+          price: number;
+          price_source: string;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          standard_direct_cost: number;
+          standard_duration_minutes: number;
+        }[];
+      };
       client_history: {
         Args: { p_client_id: string };
         Returns: {
@@ -544,6 +724,40 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_service: {
+        Args: {
+          p_base_price: number;
+          p_code: string;
+          p_description: string;
+          p_name: string;
+          p_organization_id: string;
+          p_reason?: string;
+          p_revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          p_standard_direct_cost: number;
+          p_standard_duration_minutes: number;
+        };
+        Returns: {
+          active: boolean;
+          base_price: number;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          standard_direct_cost: number;
+          standard_duration_minutes: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "services";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       find_client_matches: {
         Args: {
           p_detail_center_id: string;
@@ -596,6 +810,14 @@ export type Database = {
           plates: string[];
         }[];
       };
+      service_price_at: {
+        Args: { p_at?: string; p_detail_center_id: string; p_service_id: string };
+        Returns: {
+          direct_cost: number;
+          price: number;
+          source: string;
+        }[];
+      };
       set_active_center: {
         Args: { p_detail_center_id: string };
         Returns: string;
@@ -643,6 +865,33 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "role_assignments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_service_center_config: {
+        Args: {
+          p_available: boolean;
+          p_detail_center_id: string;
+          p_direct_cost_override: number | null;
+          p_price_override: number | null;
+          p_reason: string;
+          p_service_id: string;
+        };
+        Returns: {
+          available: boolean;
+          created_at: string;
+          detail_center_id: string;
+          direct_cost_override: number | null;
+          id: string;
+          organization_id: string;
+          price_override: number | null;
+          service_id: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "service_center_config";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -715,6 +964,40 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      update_service: {
+        Args: {
+          p_active: boolean;
+          p_base_price: number;
+          p_description: string;
+          p_id: string;
+          p_name: string;
+          p_reason: string;
+          p_revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          p_standard_direct_cost: number;
+          p_standard_duration_minutes: number;
+        };
+        Returns: {
+          active: boolean;
+          base_price: number;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          standard_direct_cost: number;
+          standard_duration_minutes: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "services";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       update_vehicle: {
         Args: {
           p_active: boolean;
@@ -754,6 +1037,7 @@ export type Database = {
     };
     Enums: {
       app_role: "admin_socio" | "encargado" | "operador_recepcion" | "contador" | "comercial_b2b";
+      revenue_engine: "recurrente" | "valor_medio" | "premium" | "producto_complemento" | "membresia";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -797,6 +1081,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin_socio", "encargado", "operador_recepcion", "contador", "comercial_b2b"],
+      revenue_engine: ["recurrente", "valor_medio", "premium", "producto_complemento", "membresia"],
     },
   },
 } as const;

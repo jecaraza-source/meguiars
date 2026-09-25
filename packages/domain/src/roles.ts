@@ -37,6 +37,8 @@ export const CAPABILITIES = [
   "b2b.write",
   "clients.read",
   "clients.write",
+  "catalog.read",
+  "catalog.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -44,7 +46,9 @@ export type Capability = (typeof CAPABILITIES)[number];
 /**
  * Matriz rol → capacidades. `center.*`, `members.*` y `audit.read` están
  * aplicadas por RLS en la migración 20260923000000; `clients.*`, en
- * 20260927000000 (private.can_read_clients / private.can_write_clients). `operations.*`,
+ * 20260927000000 (private.can_read_clients / private.can_write_clients);
+ * `catalog.*`, en 20260928000000 (servicios: admin_socio corporativo; centro:
+ * private.can_manage_center_catalog). `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
  */
@@ -63,6 +67,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "b2b.write",
     "clients.read",
     "clients.write",
+    "catalog.read",
+    "catalog.manage",
   ],
   encargado: [
     "center.read",
@@ -72,11 +78,19 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "operations.write",
     "clients.read",
     "clients.write",
+    "catalog.read",
   ],
-  operador_recepcion: ["center.read", "operations.read", "operations.write", "clients.read", "clients.write"],
+  operador_recepcion: [
+    "center.read",
+    "operations.read",
+    "operations.write",
+    "clients.read",
+    "clients.write",
+    "catalog.read",
+  ],
   // El contador no ve datos personales de clientes.
-  contador: ["center.read", "finance.read", "members.read", "audit.read"],
-  comercial_b2b: ["center.read", "commercial.read", "b2b.write", "clients.read"],
+  contador: ["center.read", "finance.read", "members.read", "audit.read", "catalog.read"],
+  comercial_b2b: ["center.read", "commercial.read", "b2b.write", "clients.read", "catalog.read"],
 };
 
 export function can(roles: readonly AppRole[], capability: Capability): boolean {

@@ -46,7 +46,8 @@ describe("navegación por rol", () => {
     ["admin_socio", ["inicio", "operacion", "comercial", "finanzas", "direccion"]],
     ["encargado", ["inicio", "operacion", "comercial", "finanzas"]],
     ["operador_recepcion", ["inicio", "operacion"]],
-    ["contador", ["inicio", "finanzas"]],
+    // Consulta el catálogo (precios y costos) sin ver la operación del día.
+    ["contador", ["inicio", "operacion", "finanzas"]],
     // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día.
     ["comercial_b2b", ["inicio", "operacion", "comercial"]],
   ])("%s ve %j", (role, expected) => {
@@ -59,14 +60,18 @@ describe("navegación por rol", () => {
     expect(itemsOf(["contador"])).toEqual(expect.arrayContaining(["finanzas", "team"]));
   });
 
-  it("comercial_b2b sólo ve Clientes dentro de Operación", () => {
-    expect(itemsOf(["comercial_b2b"])).toContain("clients");
+  it("comercial_b2b ve Clientes y Catálogo dentro de Operación; el contador, sólo Catálogo", () => {
+    expect(itemsOf(["comercial_b2b"])).toEqual(expect.arrayContaining(["clients", "catalog"]));
     expect(itemsOf(["comercial_b2b"])).not.toContain("operacion");
+    expect(itemsOf(["contador"])).toContain("catalog");
+    expect(itemsOf(["contador"])).not.toContain("clients");
   });
 
   it("las pantallas de detalle y alta pertenecen a Clientes (pestaña y sub-navegación)", () => {
     expect(navScreenOf("clientDetail")).toBe("clients");
     expect(navScreenOf("clientNew")).toBe("clients");
+    expect(navScreenOf("catalogDetail")).toBe("catalog");
+    expect(sectionOfPath("/catalogo/abc")).toBe("operacion");
     expect(sectionOfScreen("clientDetail")).toBe("operacion");
     expect(sectionOfPath("/clientes/123")).toBe("operacion");
   });
