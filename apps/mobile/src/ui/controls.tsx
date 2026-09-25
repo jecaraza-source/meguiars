@@ -8,6 +8,7 @@ import {
   states,
   touchTarget,
   type ButtonContract,
+  type CheckboxContract,
   type FieldContract,
   type SelectContract,
 } from "@meguiars/ui-tokens";
@@ -146,7 +147,42 @@ export function Select({
   );
 }
 
+/** Casilla con área táctil completa; equivale a <input type="checkbox"> de web. */
+export function Checkbox({
+  label,
+  checked = false,
+  onChange,
+}: CheckboxContract & { onChange: (checked: boolean) => void }) {
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      accessibilityLabel={label}
+      onPress={() => onChange(!checked)}
+      style={styles.checkRow}
+    >
+      <View style={[styles.checkBox, checked ? styles.checkBoxOn : null]}>
+        {checked ? <Text style={[textStyle("caption"), styles.checkMark]}>✓</Text> : null}
+      </View>
+      <Text style={textStyle("body")}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  checkRow: { minHeight: touchTarget, flexDirection: "row", alignItems: "center", gap: space.sm },
+  checkBox: {
+    width: space.lg,
+    height: space.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceRaised,
+  },
+  checkBoxOn: { backgroundColor: colors.brand, borderColor: colors.brand },
+  checkMark: { color: colors.brandForeground },
   button: {
     alignItems: "center",
     justifyContent: "center",

@@ -8,6 +8,7 @@ import {
   motion,
   radius,
   space,
+  states,
   toneRecipes,
   TREND_SYMBOL,
   type BadgeContract,
@@ -18,7 +19,7 @@ import {
   type TableContract,
 } from "@meguiars/ui-tokens";
 import { useEffect, useState } from "react";
-import { AccessibilityInfo, Animated, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { textStyle } from "./theme";
 
 export function Card({ title, subtitle, children }: CardContract & { children?: React.ReactNode }) {
@@ -106,21 +107,46 @@ export function KpiCard({ label, value, delta, higherIsBetter = true, caption }:
   );
 }
 
-/** En móvil el contrato de tabla se presenta como lista de tarjetas (igual que la web en pantallas chicas). */
-export function List<Row>({ caption, columns, rows, rowKey, emptyMessage }: TableContract<Row>) {
+/**
+ * En móvil el contrato de tabla se presenta como lista de tarjetas (igual que
+ * la web en pantallas chicas). Con `onRowPress`, cada tarjeta abre el detalle.
+ */
+export function List<Row>({
+  caption,
+  columns,
+  rows,
+  rowKey,
+  emptyMessage,
+  onRowPress,
+}: TableContract<Row> & { onRowPress?: (row: Row) => void }) {
   if (rows.length === 0) return <EmptyState title={emptyMessage} />;
   return (
     <View accessibilityLabel={caption} style={styles.list}>
-      {rows.map((row) => (
-        <View key={rowKey(row)} style={styles.card}>
-          {columns.map((c) => (
-            <View key={c.key} style={styles.row}>
-              <Text style={textStyle("bodySmall", "muted")}>{c.header}</Text>
-              <Text style={[textStyle("bodySmall"), styles.value]}>{c.value(row)}</Text>
-            </View>
-          ))}
-        </View>
-      ))}
+      {rows.map((row) => {
+        const content = columns.map((c, i) => (
+          <View key={c.key} style={styles.row}>
+            <Text style={textStyle("bodySmall", "muted")}>{c.header}</Text>
+            <Text style={[textStyle(i === 0 && onRowPress ? "label" : "bodySmall"), styles.value]}>
+              {c.value(row)}
+            </Text>
+          </View>
+        ));
+        return onRowPress ? (
+          <Pressable
+            key={rowKey(row)}
+            accessibilityRole="button"
+            accessibilityLabel={columns[0]?.value(row)}
+            onPress={() => onRowPress(row)}
+            style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
+          >
+            {content}
+          </Pressable>
+        ) : (
+          <View key={rowKey(row)} style={styles.card}>
+            {content}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -160,6 +186,7 @@ const styles = StyleSheet.create({
   },
   center: { textAlign: "center" },
   list: { gap: space.sm },
+  pressed: { opacity: states.pressedOpacity },
   row: { flexDirection: "row", justifyContent: "space-between", gap: space.md },
   value: { flexShrink: 1, textAlign: "right" },
 });
