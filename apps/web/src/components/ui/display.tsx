@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   formatKpiDelta,
   kpiDeltaTone,
@@ -79,8 +80,26 @@ export function KpiCard({ label, value, delta, higherIsBetter = true, caption }:
   );
 }
 
+/** Primera columna como enlace al detalle de la fila (si hay `rowHref`). */
+function cellContent<Row>(row: Row, index: number, text: string, rowHref?: (row: Row) => string) {
+  return index === 0 && rowHref ? (
+    <Link href={rowHref(row)} className="font-medium underline">
+      {text}
+    </Link>
+  ) : (
+    text
+  );
+}
+
 /** Tabla en tablet/escritorio; lista de tarjetas en móvil. */
-export function Table<Row>({ caption, columns, rows, rowKey, emptyMessage }: TableContract<Row>) {
+export function Table<Row>({
+  caption,
+  columns,
+  rows,
+  rowKey,
+  emptyMessage,
+  rowHref,
+}: TableContract<Row> & { rowHref?: (row: Row) => string }) {
   if (rows.length === 0) return <EmptyState title={emptyMessage} />;
   return (
     <>
@@ -102,9 +121,9 @@ export function Table<Row>({ caption, columns, rows, rowKey, emptyMessage }: Tab
         <tbody>
           {rows.map((row) => (
             <tr key={rowKey(row)} className="border-t border-border">
-              {columns.map((c) => (
+              {columns.map((c, i) => (
                 <td key={c.key} className={`px-md py-sm ${c.align === "end" ? "text-right" : "text-left"}`}>
-                  {c.value(row)}
+                  {cellContent(row, i, c.value(row), rowHref)}
                 </td>
               ))}
             </tr>
@@ -115,10 +134,12 @@ export function Table<Row>({ caption, columns, rows, rowKey, emptyMessage }: Tab
         {rows.map((row) => (
           <li key={rowKey(row)} className="mg-card">
             <dl className="grid grid-cols-2 gap-xs text-sm">
-              {columns.map((c) => (
+              {columns.map((c, i) => (
                 <div key={c.key} className="contents">
                   <dt className="text-muted">{c.header}</dt>
-                  <dd className={c.align === "end" ? "text-right" : ""}>{c.value(row)}</dd>
+                  <dd className={c.align === "end" ? "text-right" : ""}>
+                    {cellContent(row, i, c.value(row), rowHref)}
+                  </dd>
                 </div>
               ))}
             </dl>
