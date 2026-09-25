@@ -1,24 +1,95 @@
 /**
- * Roles por centro. Debe coincidir con el enum `public.app_role`.
- * La base de datos (RLS) es la fuente de verdad de la autorización;
- * estos conjuntos sólo deciden qué se muestra en la UI.
+ * Roles de la plataforma. Deben coincidir con el enum `public.app_role`
+ * (ver schema-parity.test.ts). Un rol se asigna en un centro
+ * (user_detail_centers) o en la organización completa (role_assignments,
+ * "corporativo"). La base de datos (RLS) es la fuente de verdad; esta matriz
+ * es su espejo para decidir qué mostrar en la UI.
  */
-export const APP_ROLES = ["owner", "admin", "manager", "advisor", "technician", "viewer"] as const;
+export const APP_ROLES = [
+  "admin_socio",
+  "encargado",
+  "operador_recepcion",
+  "contador",
+  "comercial_b2b",
+] as const;
 
 export type AppRole = (typeof APP_ROLES)[number];
 
-/** Pueden editar el centro y administrar membresías. */
-export const CENTER_ADMIN_ROLES: readonly AppRole[] = ["owner", "admin"];
+export const ROLE_LABELS: Record<AppRole, string> = {
+  admin_socio: "Admin / socio",
+  encargado: "Encargado",
+  operador_recepcion: "Operador de recepción",
+  contador: "Contador",
+  comercial_b2b: "Comercial B2B",
+};
 
-/** Pueden consultar la bitácora de auditoría. */
-export const AUDIT_READER_ROLES: readonly AppRole[] = ["owner", "admin", "manager"];
+export const CAPABILITIES = [
+  "center.read",
+  "center.manage",
+  "members.read",
+  "members.manage",
+  "audit.read",
+  "operations.write",
+  "b2b.write",
+] as const;
 
-export function hasAnyRole(role: AppRole | null | undefined, allowed: readonly AppRole[]): boolean {
-  return role != null && allowed.includes(role);
+export type Capability = (typeof CAPABILITIES)[number];
+
+/**
+ * Matriz rol → capacidades. `center.*`, `members.*` y `audit.read` están
+ * aplicadas por RLS en la migración 20260923000000; `operations.write` y
+ * `b2b.write` son el contrato para las tablas de negocio de módulos futuros.
+ */
+export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
+  admin_socio: [
+    "center.read",
+    "center.manage",
+    "members.read",
+    "members.manage",
+    "audit.read",
+    "operations.write",
+    "b2b.write",
+  ],
+  encargado: ["center.read", "members.read", "operations.write"],
+  operador_recepcion: ["center.read", "operations.write"],
+  contador: ["center.read", "members.read", "audit.read"],
+  comercial_b2b: ["center.read", "b2b.write"],
+};
+
+export function can(roles: readonly AppRole[], capability: Capability): boolean {
+  return roles.some((role) => ROLE_CAPABILITIES[role].includes(capability));
 }
 
-/** Sólo un owner puede otorgar, modificar o retirar el rol owner. */
-export function canAssignRole(actor: AppRole | null | undefined, target: AppRole): boolean {
-  if (!hasAnyRole(actor, CENTER_ADMIN_ROLES)) return false;
-  return target !== "owner" || actor === "owner";
+export function hasAnyRole(
+  roles: readonly AppRole[] | null | undefined,
+  allowed: readonly AppRole[],
+): boolean {
+  return roles != null && roles.some((role) => allowed.includes(role));
+}
+
+/** Un rol es de sólo lectura si no tiene ninguna capacidad de escritura. */
+export function isReadOnlyRole(role: AppRole): boolean {
+  return ROLE_CAPABILITIES[role].every((c) => c.endsWith(".read"));
+}
+
+export interface ActorRoles {
+  /** Roles del actor en el centro (user_detail_centers). */
+  centerRoles: readonly AppRole[];
+  /** Roles del actor en la organización del centro (role_assignments). */
+  corporateRoles: readonly AppRole[];
+}
+
+/**
+ * Espejo de `private.can_manage_center_member`: el admin_socio corporativo
+ * asigna cualquier rol en los centros de su organización; el admin_socio de
+ * un centro, cualquiera salvo admin_socio.
+ */
+export function canManageCenterMember(actor: ActorRoles, target: AppRole): boolean {
+  if (actor.corporateRoles.includes("admin_socio")) return true;
+  return target !== "admin_socio" && actor.centerRoles.includes("admin_socio");
+}
+
+/** Sólo el admin_socio corporativo asigna roles a nivel organización. */
+export function canManageRoleAssignments(corporateRoles: readonly AppRole[]): boolean {
+  return corporateRoles.includes("admin_socio");
 }

@@ -20,6 +20,7 @@ fi
 trap cleanup EXIT
 
 PSQL=(psql "$DATABASE_URL" -X -q -v ON_ERROR_STOP=1)
+show() { sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^ *$/d'; }
 "${PSQL[@]}" -f supabase/tests/00_supabase_stub.sql
 for f in supabase/migrations/*.sql; do
   echo "migración: $f"
@@ -27,9 +28,29 @@ for f in supabase/migrations/*.sql; do
 done
 for f in supabase/tests/*.test.sql; do
   echo "prueba: $f"
-  "${PSQL[@]}" -t -f "$f" 2>&1 | sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^ *$/d'
+  "${PSQL[@]}" -t -f "$f" 2>&1 | show
 done
 echo "seed: supabase/seed.sql"
 "${PSQL[@]}" -f supabase/seed.sql
-[[ "$("${PSQL[@]}" -tAc 'select count(*) from public.detail_centers')" == "2" ]] || { echo "El seed no cargó 2 centros" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select count(*) from public.detail_centers c join public.organizations o on o.id = c.organization_id where o.slug = 'meguiars-demo'")" == "2" ]] \
+  || { echo "El seed no cargó la organización demo con 2 centros" >&2; exit 1; }
+
+# Prueba de actualización: en una base aparte aplica las migraciones en orden y,
+# si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
+# tests/upgrade/<migración>.after.sql justo después (datos del esquema anterior).
+UPGRADE_DB=meguiars_upgrade_check
+"${PSQL[@]}" -c "set client_min_messages = warning" -c "drop database if exists $UPGRADE_DB" -c "create database $UPGRADE_DB"
+UPGRADE_URL="$(sed -E "s#/postgres(\?|$)#/$UPGRADE_DB\1#" <<<"$DATABASE_URL")"
+UPSQL=(psql "$UPGRADE_URL" -X -q -v ON_ERROR_STOP=1)
+"${UPSQL[@]}" -f supabase/tests/00_supabase_stub.sql
+for f in supabase/migrations/*.sql; do
+  name="$(basename "$f" .sql)"
+  before="supabase/tests/upgrade/$name.before.sql"
+  after="supabase/tests/upgrade/$name.after.sql"
+  if [[ -f "$before" ]]; then echo "actualización: datos previos a $name"; "${UPSQL[@]}" -f "$before"; fi
+  "${UPSQL[@]}" -f "$f"
+  if [[ -f "$after" ]]; then echo "actualización: verificación de $name"; "${UPSQL[@]}" -t -f "$after" 2>&1 | show; fi
+done
+"${PSQL[@]}" -c "drop database $UPGRADE_DB"
+
 echo "Pruebas de base de datos OK"

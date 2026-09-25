@@ -4,9 +4,11 @@ import { createDetailCenterRepository } from "./detail-centers";
 
 const ROW = {
   id: "11111111-1111-4111-8111-111111111111",
+  organization_id: "00000000-0000-4000-8000-00000000d3e0",
   code: "CDMX-01",
   name: "Centro CDMX",
   timezone: "America/Mexico_City",
+  active: true,
   created_at: "2026-09-22T00:00:00Z",
   updated_at: "2026-09-22T00:00:00Z",
 };
@@ -31,9 +33,11 @@ describe("DetailCenterRepository (Supabase)", () => {
       data: [
         {
           id: ROW.id,
+          organizationId: ROW.organization_id,
           code: "CDMX-01",
           name: "Centro CDMX",
           timezone: "America/Mexico_City",
+          active: true,
           createdAt: ROW.created_at,
           updatedAt: ROW.updated_at,
         },
@@ -74,33 +78,6 @@ describe("DetailCenterRepository (Supabase)", () => {
       p_reason: "Cambio de sede",
     });
     expect(result.ok && result.data.name).toBe("Centro Polanco");
-  });
-
-  it("asigna membresías mediante la RPC", async () => {
-    const membership = {
-      detail_center_id: ROW.id,
-      user_id: "0b7a4c2e-3d1f-4e5a-8b9c-7d6e5f4a3b21",
-      role: "technician",
-      active: true,
-      created_at: ROW.created_at,
-      updated_at: ROW.updated_at,
-    };
-    const { client, rpc } = fakeClient({ data: membership, error: null });
-    const result = await createDetailCenterRepository(client).setMembership({
-      detailCenterId: ROW.id,
-      userId: membership.user_id,
-      role: "technician",
-      active: true,
-      reason: "Alta de técnico",
-    });
-    expect(rpc).toHaveBeenCalledWith(
-      "set_center_membership",
-      expect.objectContaining({ p_role: "technician" }),
-    );
-    expect(result).toEqual({
-      ok: true,
-      data: { detailCenterId: ROW.id, userId: membership.user_id, role: "technician", active: true },
-    });
   });
 
   it("reporta servicio no disponible si la red falla", async () => {

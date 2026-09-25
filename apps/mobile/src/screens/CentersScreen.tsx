@@ -1,18 +1,18 @@
-import { APP_NAME, centersCopy, type DetailCenter, type ViewState } from "@meguiars/domain";
+import { APP_NAME, centersCopy, type CenterAccess, type ViewState } from "@meguiars/domain";
 import { colors, fontSize, fontWeight, space } from "@meguiars/ui-tokens";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CentersView } from "@/components/CentersView";
-import { loadVisibleCenters } from "@/lib/centers";
+import { loadMyCenters } from "@/lib/centers";
 
 export function CentersScreen() {
-  const [state, setState] = useState<ViewState<DetailCenter[]>>({ status: "loading" });
+  const [state, setState] = useState<ViewState<CenterAccess[]>>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    loadVisibleCenters().then(
+    loadMyCenters().then(
       (next) => active && setState(next),
       (error: unknown) =>
         active &&

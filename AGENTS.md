@@ -40,7 +40,10 @@ Antes de programar: inspecciona el repositorio, resume lo existente, identifica 
 
 - **Dónde va cada cosa** (ver `packages/README.md`): entidades, reglas, textos compartidos y puertos de repositorio en `domain`; esquemas zod en `validation`; adaptadores Supabase y tipos generados en `supabase`; KPIs en `analytics`; colores/espacios en `ui-tokens`. Las apps sólo tienen UI y composición.
 - **Paridad:** cada caso de uso tiene un `src/lib/<caso>.ts` en web y en móvil que llama al mismo repositorio y devuelve un `ViewState` de `domain`. Los textos salen de `domain` para que ambas UIs digan lo mismo.
-- **Mutaciones sensibles:** siempre por RPC `security invoker` que valida y llama `private.set_change_reason(p_reason)`. El trigger `private.require_change_reason()` bloquea escrituras directas sin motivo. La autorización sigue en RLS con `private.has_center_role(...)`.
+- **Tenancy:** toda tabla de negocio lleva `detail_center_id`, RLS habilitado y políticas con `private.has_center_role(detail_center_id, array[...]::public.app_role[])`; `private.has_org_role` es para datos de organización. Sigue la plantilla y la matriz de roles de `docs/modules/multicentro-seguridad.md`. La prueba de RLS falla si una tabla de `public` no tiene RLS.
+- **Mutaciones sensibles:** siempre por RPC `security invoker` que valida y llama `private.set_change_reason(p_reason)`. El trigger `private.require_change_reason()` bloquea escrituras directas sin motivo. Para eventos que no son un cambio de fila, usa `private.log_event(...)`.
+- **Triggers que miran `current_user`** no pueden ser `security definer`; pon la consulta privilegiada en un helper aparte.
+- **Migraciones incompatibles:** agrega `supabase/tests/upgrade/<migración>.before.sql` y `.after.sql` para probar la transición con datos del esquema anterior.
 - **Auditoría:** agrega `create trigger <tabla>_audit ... execute function private.audit_row()` y `<tabla>_require_reason` a cada tabla sensible.
 - **Migraciones:** cada una lleva pruebas en `supabase/tests/*.test.sql` (`npm run test:db`). Después regenera los tipos (`npm run db:types`); `schema-parity.test.ts` falla si los roles o las RPC de TS y SQL divergen.
 - **KPIs:** decláralos con `defineKpi` en `packages/analytics`, regístralos en `kpiRegistry` y agrega su prueba.
