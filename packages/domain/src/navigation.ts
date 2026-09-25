@@ -36,6 +36,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     shortLabel: "Operación",
     items: [
       { screen: "operacion", label: "Operación del día", href: "/operacion" },
+      { screen: "agenda", label: "Agenda", href: "/agenda" },
       { screen: "clients", label: "Clientes y vehículos", href: "/clientes" },
       { screen: "catalog", label: "Catálogo", href: "/catalogo" },
     ],
@@ -77,6 +78,8 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   clientNew: "clients",
   catalogDetail: "catalog",
   catalogNew: "catalog",
+  appointmentDetail: "agenda",
+  appointmentNew: "agenda",
 };
 
 /** Ítem de menú que representa a la pantalla. */

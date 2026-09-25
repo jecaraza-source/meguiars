@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { APP_ROLES, REVENUE_ENGINES } from "@meguiars/domain";
+import { APP_ROLES, APPOINTMENT_STATUSES, APPOINTMENT_TRANSITIONS, REVENUE_ENGINES } from "@meguiars/domain";
 import { describe, expect, it } from "vitest";
 import { Constants, type Database } from "./database.types";
 
@@ -29,7 +29,10 @@ function currentTables(): string[] {
 
 // Nombres de tabla tipados; si falta alguna, este tipo deja de compilar la prueba.
 const typedTables: (keyof Database["public"]["Tables"])[] = [
+  "appointment_services",
+  "appointments",
   "audit_log",
+  "bays",
   "client_centers",
   "clients",
   "detail_centers",
@@ -39,6 +42,7 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "service_center_config",
   "service_price_history",
   "services",
+  "technicians",
   "user_detail_centers",
   "vehicles",
 ];
@@ -46,27 +50,49 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_vehicle",
+  "appointment_order_draft",
   "center_catalog",
   "client_history",
+  "create_appointment",
   "create_client",
   "create_service",
   "find_client_matches",
   "link_client_to_center",
+  "list_appointments",
   "my_detail_centers",
   "search_clients",
   "service_price_at",
   "set_active_center",
+  "set_appointment_status",
   "set_center_membership",
   "set_role_assignment",
   "set_service_center_config",
   "set_user_disabled",
+  "update_appointment",
   "update_client",
   "update_detail_center",
   "update_service",
   "update_vehicle",
+  "upsert_bay",
+  "upsert_technician",
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {
+  it("estatus y transiciones de citas: SQL y dominio coinciden", () => {
+    const def = /create type public\.appointment_status as enum\s*\(([^)]+)\)/i.exec(allSql)?.[1];
+    expect(def?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...APPOINTMENT_STATUSES]);
+    expect([...Constants.public.Enums.appointment_status]).toEqual([...APPOINTMENT_STATUSES]);
+    const fn =
+      /function private\.appointment_transition_allowed[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    const sqlPairs = [...fn.matchAll(/\('(\w+)'(?:::public\.appointment_status)?,\s*'(\w+)'/g)].map(
+      (m) => `${m[1]}>${m[2]}`,
+    );
+    const domainPairs = Object.entries(APPOINTMENT_TRANSITIONS).flatMap(([from, tos]) =>
+      tos.map((to) => `${from}>${to}`),
+    );
+    expect(sqlPairs.sort()).toEqual(domainPairs.sort());
+  });
+
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {
     const def = /create type public\.revenue_engine as enum \(([^)]+)\)/i.exec(allSql)?.[1];
     expect(def?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...REVENUE_ENGINES]);

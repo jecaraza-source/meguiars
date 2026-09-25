@@ -1,13 +1,173 @@
 // Generado con el formato de `supabase gen types typescript` para las migraciones
 // 20260922000000_foundation, 20260923000000_multicenter_security,
 // 20260925000000_advisor_fixes, 20260926000000_auth_session,
-// 20260927000000_clients_vehicles y 20260928000000_service_catalog. Regenerar tras
+// 20260927000000_clients_vehicles, 20260928000000_service_catalog y
+// 20260929000000_agenda. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   public: {
     Tables: {
+      appointment_services: {
+        Row: {
+          appointment_id: string;
+          created_at: string;
+          duration_minutes: number;
+          organization_id: string;
+          position: number;
+          service_id: string;
+        };
+        Insert: {
+          appointment_id: string;
+          created_at?: string;
+          duration_minutes: number;
+          organization_id: string;
+          position?: number;
+          service_id: string;
+        };
+        Update: {
+          appointment_id?: string;
+          created_at?: string;
+          duration_minutes?: number;
+          organization_id?: string;
+          position?: number;
+          service_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_organization_id_appointment_id_fkey";
+            columns: ["organization_id", "appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "appointment_services_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      appointments: {
+        Row: {
+          bay_id: string | null;
+          cancelled_at: string | null;
+          client_id: string;
+          conflict_override: boolean;
+          created_at: string;
+          created_by: string | null;
+          delivered_at: string | null;
+          detail_center_id: string;
+          duration_minutes: number;
+          ends_at: string;
+          finished_at: string | null;
+          id: string;
+          is_walk_in: boolean;
+          notes: string | null;
+          organization_id: string;
+          received_at: string | null;
+          request_id: string;
+          service_order_id: string | null;
+          started_at: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          technician_id: string | null;
+          updated_at: string;
+          vehicle_id: string;
+        };
+        Insert: {
+          bay_id?: string | null;
+          cancelled_at?: string | null;
+          client_id: string;
+          conflict_override?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          delivered_at?: string | null;
+          detail_center_id: string;
+          duration_minutes: number;
+          ends_at: string;
+          finished_at?: string | null;
+          id?: string;
+          is_walk_in?: boolean;
+          notes?: string | null;
+          organization_id: string;
+          received_at?: string | null;
+          request_id: string;
+          service_order_id?: string | null;
+          started_at?: string | null;
+          starts_at: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          technician_id?: string | null;
+          updated_at?: string;
+          vehicle_id: string;
+        };
+        Update: {
+          bay_id?: string | null;
+          cancelled_at?: string | null;
+          client_id?: string;
+          conflict_override?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          delivered_at?: string | null;
+          detail_center_id?: string;
+          duration_minutes?: number;
+          ends_at?: string;
+          finished_at?: string | null;
+          id?: string;
+          is_walk_in?: boolean;
+          notes?: string | null;
+          organization_id?: string;
+          received_at?: string | null;
+          request_id?: string;
+          service_order_id?: string | null;
+          started_at?: string | null;
+          starts_at?: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          technician_id?: string | null;
+          updated_at?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointments_detail_center_id_bay_id_fkey";
+            columns: ["detail_center_id", "bay_id"];
+            isOneToOne: false;
+            referencedRelation: "bays";
+            referencedColumns: ["detail_center_id", "id"];
+          },
+          {
+            foreignKeyName: "appointments_detail_center_id_technician_id_fkey";
+            columns: ["detail_center_id", "technician_id"];
+            isOneToOne: false;
+            referencedRelation: "technicians";
+            referencedColumns: ["detail_center_id", "id"];
+          },
+          {
+            foreignKeyName: "appointments_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "appointments_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "appointments_organization_id_vehicle_id_fkey";
+            columns: ["organization_id", "vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -52,6 +212,44 @@ export type Database = {
           table_name?: string;
         };
         Relationships: [];
+      };
+      bays: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          name: string;
+          organization_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          detail_center_id: string;
+          id?: string;
+          name: string;
+          organization_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          detail_center_id?: string;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bays_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
       };
       client_centers: {
         Row: {
@@ -501,6 +699,54 @@ export type Database = {
           },
         ];
       };
+      technicians: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          detail_center_id: string;
+          full_name: string;
+          id: string;
+          organization_id: string;
+          profile_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          detail_center_id: string;
+          full_name: string;
+          id?: string;
+          organization_id: string;
+          profile_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          detail_center_id?: string;
+          full_name?: string;
+          id?: string;
+          organization_id?: string;
+          profile_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "technicians_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "technicians_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_detail_centers: {
         Row: {
           active: boolean;
@@ -646,6 +892,22 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      appointment_order_draft: {
+        Args: { p_appointment_id: string };
+        Returns: {
+          appointment_id: string;
+          client_id: string;
+          detail_center_id: string;
+          duration_minutes: number;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          service_code: string;
+          service_id: string;
+          service_name: string;
+          unit_direct_cost: number;
+          unit_price: number;
+          vehicle_id: string;
+        }[];
+      };
       center_catalog: {
         Args: {
           p_detail_center_id: string;
@@ -678,6 +940,54 @@ export type Database = {
           title: string;
           vehicle_id: string | null;
         }[];
+      };
+      create_appointment: {
+        Args: {
+          p_bay_id?: string;
+          p_client_id: string;
+          p_detail_center_id: string;
+          p_duration_minutes?: number;
+          p_notes?: string;
+          p_override_reason?: string;
+          p_request_id: string;
+          p_service_ids: string[];
+          p_starts_at: string | null;
+          p_technician_id?: string;
+          p_vehicle_id: string;
+          p_walk_in?: boolean;
+        };
+        Returns: {
+          bay_id: string | null;
+          cancelled_at: string | null;
+          client_id: string;
+          conflict_override: boolean;
+          created_at: string;
+          created_by: string | null;
+          delivered_at: string | null;
+          detail_center_id: string;
+          duration_minutes: number;
+          ends_at: string;
+          finished_at: string | null;
+          id: string;
+          is_walk_in: boolean;
+          notes: string | null;
+          organization_id: string;
+          received_at: string | null;
+          request_id: string;
+          service_order_id: string | null;
+          started_at: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          technician_id: string | null;
+          updated_at: string;
+          vehicle_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "appointments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_client: {
         Args: {
@@ -780,6 +1090,36 @@ export type Database = {
         Args: { p_client_id: string; p_detail_center_id: string; p_reason: string };
         Returns: string;
       };
+      list_appointments: {
+        Args: {
+          p_bay_id?: string;
+          p_day: string;
+          p_detail_center_id: string;
+          p_status?: Database["public"]["Enums"]["appointment_status"];
+          p_technician_id?: string;
+        };
+        Returns: {
+          bay_id: string | null;
+          bay_name: string | null;
+          client_id: string;
+          client_name: string | null;
+          client_phone: string | null;
+          conflict_override: boolean;
+          duration_minutes: number;
+          ends_at: string;
+          id: string;
+          is_walk_in: boolean;
+          notes: string | null;
+          service_order_id: string | null;
+          services: string[];
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          technician_id: string | null;
+          technician_name: string | null;
+          vehicle_id: string;
+          vehicle_label: string | null;
+        }[];
+      };
       my_detail_centers: {
         Args: never;
         Returns: {
@@ -821,6 +1161,41 @@ export type Database = {
       set_active_center: {
         Args: { p_detail_center_id: string };
         Returns: string;
+      };
+      set_appointment_status: {
+        Args: { p_id: string; p_reason?: string; p_status: Database["public"]["Enums"]["appointment_status"] };
+        Returns: {
+          bay_id: string | null;
+          cancelled_at: string | null;
+          client_id: string;
+          conflict_override: boolean;
+          created_at: string;
+          created_by: string | null;
+          delivered_at: string | null;
+          detail_center_id: string;
+          duration_minutes: number;
+          ends_at: string;
+          finished_at: string | null;
+          id: string;
+          is_walk_in: boolean;
+          notes: string | null;
+          organization_id: string;
+          received_at: string | null;
+          request_id: string;
+          service_order_id: string | null;
+          started_at: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          technician_id: string | null;
+          updated_at: string;
+          vehicle_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "appointments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       set_center_membership: {
         Args: {
@@ -899,6 +1274,51 @@ export type Database = {
       set_user_disabled: {
         Args: { p_disabled: boolean; p_reason: string; p_user_id: string };
         Returns: undefined;
+      };
+      update_appointment: {
+        Args: {
+          p_bay_id: string | null;
+          p_duration_minutes: number;
+          p_id: string;
+          p_notes: string | null;
+          p_override_reason?: string;
+          p_reason: string;
+          p_service_ids: string[];
+          p_starts_at: string;
+          p_technician_id: string | null;
+        };
+        Returns: {
+          bay_id: string | null;
+          cancelled_at: string | null;
+          client_id: string;
+          conflict_override: boolean;
+          created_at: string;
+          created_by: string | null;
+          delivered_at: string | null;
+          detail_center_id: string;
+          duration_minutes: number;
+          ends_at: string;
+          finished_at: string | null;
+          id: string;
+          is_walk_in: boolean;
+          notes: string | null;
+          organization_id: string;
+          received_at: string | null;
+          request_id: string;
+          service_order_id: string | null;
+          started_at: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          technician_id: string | null;
+          updated_at: string;
+          vehicle_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "appointments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       update_client: {
         Args: {
@@ -1034,8 +1454,59 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      upsert_bay: {
+        Args: { p_active: boolean; p_detail_center_id: string; p_id: string | null; p_name: string; p_reason: string };
+        Returns: {
+          active: boolean;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          name: string;
+          organization_id: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "bays";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      upsert_technician: {
+        Args: {
+          p_active: boolean;
+          p_detail_center_id: string;
+          p_full_name: string;
+          p_id: string | null;
+          p_reason: string;
+        };
+        Returns: {
+          active: boolean;
+          created_at: string;
+          detail_center_id: string;
+          full_name: string;
+          id: string;
+          organization_id: string;
+          profile_id: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "technicians";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
+      appointment_status:
+        | "programada"
+        | "recibida"
+        | "en_servicio"
+        | "terminada"
+        | "entregada"
+        | "cancelada"
+        | "no_show";
       app_role: "admin_socio" | "encargado" | "operador_recepcion" | "contador" | "comercial_b2b";
       revenue_engine: "recurrente" | "valor_medio" | "premium" | "producto_complemento" | "membresia";
     };
@@ -1080,6 +1551,7 @@ export type Enums<T extends keyof DefaultSchema["Enums"]> = DefaultSchema["Enums
 export const Constants = {
   public: {
     Enums: {
+      appointment_status: ["programada", "recibida", "en_servicio", "terminada", "entregada", "cancelada", "no_show"],
       app_role: ["admin_socio", "encargado", "operador_recepcion", "contador", "comercial_b2b"],
       revenue_engine: ["recurrente", "valor_medio", "premium", "producto_complemento", "membresia"],
     },
