@@ -1,0 +1,47 @@
+# Builds móviles firmados con EAS (fuera de Vercel). Manual: Actions → Build
+# móvil (EAS) → Run workflow. El perfil define ambiente y distribución
+# (apps/mobile/eas.json); las variables EXPO_PUBLIC_* salen de EAS Environment
+# Variables. Requiere el secret EXPO_TOKEN en el environment correspondiente.
+name: Build móvil (EAS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Perfil de eas.json
+        type: choice
+        options: [preview, production]
+        default: preview
+      platform:
+        description: Plataforma
+        type: choice
+        options: [android, ios, all]
+        default: android
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: eas build (${{ inputs.profile }}, ${{ inputs.platform }})
+    if: github.ref == 'refs/heads/main' || inputs.profile == 'preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.profile == 'production' && 'production' || 'staging' }}
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      PROFILE: ${{ inputs.profile }}
+      PLATFORM: ${{ inputs.platform }}
+    steps:
+      - name: Verificar EXPO_TOKEN
+        run: |
+          [[ -n "$EXPO_TOKEN" ]] || { echo "::error::Falta el secret EXPO_TOKEN (docs/modules/ci-cd.md)."; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Encola el build en EAS y termina; el progreso se ve en expo.dev.
+      - run: npx --yes eas-cli@24.8.0 build --profile "$PROFILE" --platform "$PLATFORM" --non-interactive --no-wait
+        working-directory: apps/mobile
