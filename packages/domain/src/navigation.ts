@@ -34,13 +34,16 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     id: "operacion",
     label: "Operación",
     shortLabel: "Operación",
-    items: [{ screen: "operacion", label: "Operación del día", href: "/operacion" }],
+    items: [
+      { screen: "operacion", label: "Operación del día", href: "/operacion" },
+      { screen: "clients", label: "Clientes y vehículos", href: "/clientes" },
+    ],
   },
   {
     id: "comercial",
     label: "Comercial",
     shortLabel: "Comercial",
-    items: [{ screen: "comercial", label: "Clientes, membresías y B2B", href: "/comercial" }],
+    items: [{ screen: "comercial", label: "Membresías y B2B", href: "/comercial" }],
   },
   {
     id: "finanzas",
@@ -67,9 +70,21 @@ export function visibleNavigation(state: AuthState): NavSection[] {
   })).filter((section) => section.items.length > 0);
 }
 
+/** Pantallas que no están en el menú y se muestran bajo otra (detalle, alta). */
+const NAV_PARENT: Partial<Record<Screen, Screen>> = {
+  clientDetail: "clients",
+  clientNew: "clients",
+};
+
+/** Ítem de menú que representa a la pantalla. */
+export function navScreenOf(screen: Screen): Screen {
+  return NAV_PARENT[screen] ?? screen;
+}
+
 /** Sección a la que pertenece una pantalla (para marcar la pestaña activa). */
 export function sectionOfScreen(screen: Screen): NavSectionId | null {
-  return NAV_SECTIONS.find((s) => s.items.some((i) => i.screen === screen))?.id ?? null;
+  const target = navScreenOf(screen);
+  return NAV_SECTIONS.find((s) => s.items.some((i) => i.screen === target))?.id ?? null;
 }
 
 /** Sección activa a partir de la ruta web. */

@@ -35,13 +35,16 @@ export const CAPABILITIES = [
   "audit.read",
   "operations.write",
   "b2b.write",
+  "clients.read",
+  "clients.write",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
 
 /**
  * Matriz rol → capacidades. `center.*`, `members.*` y `audit.read` están
- * aplicadas por RLS en la migración 20260923000000. `operations.*`,
+ * aplicadas por RLS en la migración 20260923000000; `clients.*`, en
+ * 20260927000000 (private.can_read_clients / private.can_write_clients). `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
  */
@@ -58,11 +61,22 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "audit.read",
     "operations.write",
     "b2b.write",
+    "clients.read",
+    "clients.write",
   ],
-  encargado: ["center.read", "operations.read", "commercial.read", "members.read", "operations.write"],
-  operador_recepcion: ["center.read", "operations.read", "operations.write"],
+  encargado: [
+    "center.read",
+    "operations.read",
+    "commercial.read",
+    "members.read",
+    "operations.write",
+    "clients.read",
+    "clients.write",
+  ],
+  operador_recepcion: ["center.read", "operations.read", "operations.write", "clients.read", "clients.write"],
+  // El contador no ve datos personales de clientes.
   contador: ["center.read", "finance.read", "members.read", "audit.read"],
-  comercial_b2b: ["center.read", "commercial.read", "b2b.write"],
+  comercial_b2b: ["center.read", "commercial.read", "b2b.write", "clients.read"],
 };
 
 export function can(roles: readonly AppRole[], capability: Capability): boolean {

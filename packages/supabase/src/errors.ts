@@ -14,6 +14,7 @@ const BY_CODE: Record<string, RepoErrorKind> = {
   "22P02": "validation", // invalid_text_representation (uuid/enum)
   "23505": "conflict", // unique_violation
   "23503": "conflict", // foreign_key_violation
+  MG001: "conflict", // posible cliente duplicado (create_client / update_client)
   // PostgREST
   PGRST116: "not_found",
   PGRST301: "permission_denied", // JWT inválido/expirado

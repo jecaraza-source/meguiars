@@ -30,21 +30,32 @@ function currentTables(): string[] {
 // Nombres de tabla tipados; si falta alguna, este tipo deja de compilar la prueba.
 const typedTables: (keyof Database["public"]["Tables"])[] = [
   "audit_log",
+  "client_centers",
+  "clients",
   "detail_centers",
   "organizations",
   "profiles",
   "role_assignments",
   "user_detail_centers",
+  "vehicles",
 ];
 
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
+  "add_vehicle",
+  "client_history",
+  "create_client",
+  "find_client_matches",
+  "link_client_to_center",
   "my_detail_centers",
+  "search_clients",
   "set_active_center",
   "set_center_membership",
   "set_role_assignment",
   "set_user_disabled",
+  "update_client",
   "update_detail_center",
+  "update_vehicle",
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {
