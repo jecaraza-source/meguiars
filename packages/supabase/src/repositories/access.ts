@@ -61,15 +61,13 @@ export function createAccessRepository(client: MeguiarsSupabaseClient): AccessRe
       const { detailCenterId, userId, role, active, reason } = parsed.data;
       return run(
         () =>
-          client
-            .rpc("set_center_membership", {
-              p_detail_center_id: detailCenterId,
-              p_user_id: userId,
-              p_role: role,
-              p_active: active,
-              p_reason: reason,
-            })
-            .single(),
+          client.rpc("set_center_membership", {
+            p_detail_center_id: detailCenterId,
+            p_user_id: userId,
+            p_role: role,
+            p_active: active,
+            p_reason: reason,
+          }),
         (row: Tables<"user_detail_centers">) => ({
           detailCenterId: row.detail_center_id,
           userId: row.user_id,
@@ -85,15 +83,13 @@ export function createAccessRepository(client: MeguiarsSupabaseClient): AccessRe
       const { organizationId, userId, role, active, reason } = parsed.data;
       return run(
         () =>
-          client
-            .rpc("set_role_assignment", {
-              p_organization_id: organizationId,
-              p_user_id: userId,
-              p_role: role,
-              p_active: active,
-              p_reason: reason,
-            })
-            .single(),
+          client.rpc("set_role_assignment", {
+            p_organization_id: organizationId,
+            p_user_id: userId,
+            p_role: role,
+            p_active: active,
+            p_reason: reason,
+          }),
         (row: Tables<"role_assignments">) => ({
           id: row.id,
           organizationId: row.organization_id,
