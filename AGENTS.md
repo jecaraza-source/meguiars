@@ -39,7 +39,8 @@ Antes de programar: inspecciona el repositorio, resume lo existente, identifica 
 ## Cómo aplicar estas reglas en este repo
 
 - **Dónde va cada cosa** (ver `packages/README.md`): entidades, reglas, textos compartidos y puertos de repositorio en `domain`; esquemas zod en `validation`; adaptadores Supabase y tipos generados en `supabase`; KPIs en `analytics`; colores/espacios en `ui-tokens`. Las apps sólo tienen UI y composición.
-- **Paridad:** cada caso de uso tiene un `src/lib/<caso>.ts` en web y en móvil que llama al mismo repositorio y devuelve un `ViewState` de `domain`. Los textos salen de `domain` para que ambas UIs digan lo mismo.
+- **Paridad:** web y móvil llaman a los mismos repositorios de `@meguiars/supabase` y renderizan `ViewState`, textos y presentadores de `domain`, para que ambas UIs digan lo mismo.
+- **Sesión y guards:** toda pantalla privada nueva se declara en `SCREEN_GUARDS` (`domain/src/auth/guards.ts`). Web: `requireScreen("<pantalla>")` al inicio de la página. Móvil: pasa por `Router.tsx`. Los datos de centro siempre usan el `activeCenterId` del estado de sesión, nunca uno que envíe el cliente.
 - **Tenancy:** toda tabla de negocio lleva `detail_center_id`, RLS habilitado y políticas con `private.has_center_role(detail_center_id, array[...]::public.app_role[])`; `private.has_org_role` es para datos de organización. Sigue la plantilla y la matriz de roles de `docs/modules/multicentro-seguridad.md`. La prueba de RLS falla si una tabla de `public` no tiene RLS.
 - **Mutaciones sensibles:** siempre por RPC `security invoker` que valida y llama `private.set_change_reason(p_reason)`. El trigger `private.require_change_reason()` bloquea escrituras directas sin motivo. Para eventos que no son un cambio de fila, usa `private.log_event(...)`.
 - **Triggers que miran `current_user`** no pueden ser `security definer`; pon la consulta privilegiada en un helper aparte.
