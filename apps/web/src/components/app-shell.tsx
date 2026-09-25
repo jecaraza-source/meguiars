@@ -11,6 +11,7 @@ import {
 } from "@meguiars/domain";
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
+import { EnvironmentBanner } from "./environment-banner";
 import { BottomNav, SideNav, SubNav } from "./nav";
 import { Badge } from "./ui/display";
 
@@ -44,6 +45,7 @@ export function AppShell({
       <a href="#contenido" className="sr-only focus:not-sr-only focus:p-sm">
         Saltar al contenido
       </a>
+      <EnvironmentBanner />
       <header className="flex flex-wrap items-center justify-between gap-sm border-b border-border bg-surface-raised px-lg py-sm">
         <Link href="/" className="text-sm font-semibold uppercase tracking-wide text-accent">
           {APP_NAME}
@@ -101,15 +103,18 @@ export function AppShell({
 /** Pantallas informativas o de autenticación, sin navegación. */
 export function PlainShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <main
-      id="contenido"
-      className="mx-auto flex w-full max-w-(--mg-layout-narrow) flex-1 flex-col justify-center gap-xl p-lg"
-    >
-      <header className="flex flex-col gap-xs">
-        <p className="text-sm font-semibold uppercase tracking-wide text-accent">{APP_NAME}</p>
-        <h1 className="text-xl font-semibold leading-tight">{title}</h1>
-      </header>
-      {children}
-    </main>
+    <>
+      <EnvironmentBanner />
+      <main
+        id="contenido"
+        className="mx-auto flex w-full max-w-(--mg-layout-narrow) flex-1 flex-col justify-center gap-xl p-lg"
+      >
+        <header className="flex flex-col gap-xs">
+          <p className="text-sm font-semibold uppercase tracking-wide text-accent">{APP_NAME}</p>
+          <h1 className="text-xl font-semibold leading-tight">{title}</h1>
+        </header>
+        {children}
+      </main>
+    </>
   );
 }

@@ -1,8 +1,8 @@
 import type { Database } from "@meguiars/supabase";
-import { parseSupabasePublicEnv } from "@meguiars/validation";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE_OPTIONS } from "@/lib/supabase/cookies";
+import { supabaseEnv } from "@/lib/supabase/env";
 import { isPublicPath } from "@/lib/auth/redirects";
 
 /**
@@ -11,10 +11,7 @@ import { isPublicPath } from "@/lib/auth/redirects";
  * /login. La autorización real está en lib/auth/dal.ts y en RLS.
  */
 export async function proxy(request: NextRequest) {
-  const env = parseSupabasePublicEnv(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
+  const env = supabaseEnv();
   if (!env) return NextResponse.next();
 
   let response = NextResponse.next({ request });

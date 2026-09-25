@@ -1,16 +1,9 @@
 import "server-only";
 import type { Database } from "@meguiars/supabase";
-import { parseSupabasePublicEnv } from "@meguiars/validation";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE_OPTIONS } from "./cookies";
-
-export function supabaseEnv() {
-  return parseSupabasePublicEnv(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
-}
+import { supabaseEnv } from "./env";
 
 /**
  * Cliente Supabase ligado a las cookies de la petición (sesión httpOnly

@@ -2,6 +2,7 @@ import {
   activeCenterAccess,
   APP_NAME,
   authCopy,
+  environmentBanner,
   ROLE_LABELS,
   usableCenters,
   type NavSection,
@@ -9,13 +10,31 @@ import {
   type Screen as ScreenId,
   type SignedInState,
 } from "@meguiars/domain";
-import { colors, radius, space, touchTarget } from "@meguiars/ui-tokens";
+import { colorOf, colors, radius, space, toneRecipes, touchTarget } from "@meguiars/ui-tokens";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth/AuthProvider";
+import { APP_ENV } from "@/lib/environment";
 import { LinkButton } from "./controls";
 import { Badge } from "./display";
 import { textStyle } from "./theme";
+
+/** Aviso de ambiente (local o preview), igual que en web; no aparece en producción. */
+export function EnvironmentBanner() {
+  const banner = environmentBanner(APP_ENV);
+  if (!banner) return null;
+  const r = toneRecipes[banner.tone];
+  return (
+    <View
+      accessibilityRole="summary"
+      style={[styles.envBanner, { backgroundColor: colorOf(r.bg), borderBottomColor: colorOf(r.border) }]}
+    >
+      <Text style={[textStyle("caption"), { color: colorOf(r.fg) }]}>
+        {banner.label} · {banner.message}
+      </Text>
+    </View>
+  );
+}
 
 /** Contenedor de pantalla con título; el contenido hace scroll. */
 export function Screen({
@@ -33,6 +52,7 @@ export function Screen({
 }) {
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={styles.safe}>
+      <EnvironmentBanner />
       {header}
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {eyebrow ? <Text style={textStyle("caption", "accent")}>{eyebrow}</Text> : null}
@@ -150,6 +170,7 @@ export function SubNav({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  envBanner: { paddingHorizontal: space.xl, paddingVertical: space.xs, borderBottomWidth: 1 },
   content: { padding: space.xl, gap: space.lg },
   header: {
     gap: space.xs,
