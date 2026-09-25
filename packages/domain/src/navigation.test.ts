@@ -54,6 +54,13 @@ describe("navegación por rol", () => {
     expect(sectionsOf([role])).toEqual(expected);
   });
 
+  it("Órdenes de servicio: operación del centro (no contador ni comercial B2B)", () => {
+    expect(itemsOf(["operador_recepcion"])).toContain("orders");
+    expect(itemsOf(["encargado"])).toContain("orders");
+    expect(itemsOf(["contador"])).not.toContain("orders");
+    expect(itemsOf(["comercial_b2b"])).not.toContain("orders");
+  });
+
   it("filtra ítems dentro de una sección: el encargado ve Equipo pero no el resumen financiero", () => {
     expect(itemsOf(["encargado"])).toContain("team");
     expect(itemsOf(["encargado"])).not.toContain("finanzas");
@@ -76,6 +83,8 @@ describe("navegación por rol", () => {
     expect(sectionOfPath("/catalogo/abc")).toBe("operacion");
     expect(sectionOfScreen("clientDetail")).toBe("operacion");
     expect(sectionOfPath("/clientes/123")).toBe("operacion");
+    expect(navScreenOf("orderDetail")).toBe("orders");
+    expect(sectionOfPath("/ordenes/abc")).toBe("operacion");
   });
 
   it("varios roles en el centro suman secciones", () => {
