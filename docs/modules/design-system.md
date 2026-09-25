@@ -59,6 +59,7 @@ Catálogo vivo: **`/sistema`** en web y **"Sistema de diseño"** en el encabezad
 | ------------------------- | ------------------------------------------------------------ | :---------: | :---------: | :----------------: | :------: | :-----------: |
 | Inicio                    | Mi centro                                                    |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
 | Operación                 | Operación del día (`operations.read`)                        |      ✓      |      ✓      |         ✓          |          |               |
+| Operación                 | Agenda (`agenda.read`, módulo O3)                            |      ✓      |      ✓      |         ✓          |          |               |
 | Operación                 | Clientes y vehículos (`clients.read`, módulo O1)             |      ✓      |      ✓      |         ✓          |          |       ✓       |
 | Operación                 | Catálogo (`catalog.read`, módulo O2)                         |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
 | Comercial                 | Membresías y B2B (`commercial.read`)                         |      ✓      |      ✓      |                    |          |       ✓       |
