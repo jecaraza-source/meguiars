@@ -14,7 +14,7 @@ Citas y capacidad de atención por centro, sin sobreasignar bahías ni técnicos
 
 **Fuera de alcance:**
 
-- **La Orden de Servicio misma:** queda preparado el vínculo (`service_order_id`, `appointment_order_draft`).
+- **La Orden de Servicio misma:** llegó en O4 ([orden-servicio.md](orden-servicio.md)); la cita recibida abre su OS.
 - **Horarios de apertura y % de ocupación:** se requiere el horario de cada centro para definir el KPI (ver [Pendientes](#pendientes)).
 - **Recordatorios al cliente.**
 
@@ -140,5 +140,4 @@ Ninguna nueva.
 ## Pendientes
 
 - **Horario de apertura por centro:** permitiría el KPI de ocupación (minutos agendados entre minutos disponibles por bahía) con una sola definición en `packages/analytics`.
-- **Orden de Servicio:** al crearla desde la cita, guardar `appointments.service_order_id` y agregar el FK.
 - **Selectores de fecha y hora nativos en móvil:** hoy son campos de texto AAAA-MM-DD y HH:MM, sin dependencias nuevas.
