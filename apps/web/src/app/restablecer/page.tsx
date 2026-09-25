@@ -1,5 +1,5 @@
 import { authCopy } from "@meguiars/domain";
-import { AuthCard } from "@/components/auth-card";
+import { PlainShell } from "@/components/app-shell";
 import { ResetPasswordForm } from "@/components/forms";
 import { requireScreen } from "@/lib/auth/dal";
 
@@ -7,8 +7,8 @@ import { requireScreen } from "@/lib/auth/dal";
 export default async function ResetPasswordPage() {
   await requireScreen("account");
   return (
-    <AuthCard title={authCopy.resetTitle}>
+    <PlainShell title={authCopy.resetTitle}>
       <ResetPasswordForm />
-    </AuthCard>
+    </PlainShell>
   );
 }

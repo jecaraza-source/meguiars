@@ -1,17 +1,80 @@
 @import "tailwindcss";
 
-/* Los valores vienen de @meguiars/ui-tokens (inyectados en layout.tsx como --mg-*). */
+/*
+ * Tailwind usa SÓLO los tokens de @meguiars/ui-tokens (inyectados como --mg-* en
+ * layout.tsx). Se vacían la paleta y las escalas por defecto de Tailwind: sólo
+ * existen las clases con nombre de token (p-lg, text-muted…). Mantener en sincronía con
+ * tokens.ts (lo verifica ui-tokens/src/web-theme.test.ts).
+ */
 @theme inline {
+  --color-*: initial;
   --color-background: var(--mg-color-background);
+  --color-surface: var(--mg-color-surface);
+  --color-surface-raised: var(--mg-color-surface-raised);
   --color-foreground: var(--mg-color-foreground);
-  --color-mg-surface: var(--mg-color-surface);
-  --color-mg-muted: var(--mg-color-muted);
-  --color-mg-border: var(--mg-color-border);
-  --color-mg-brand: var(--mg-color-brand);
-  --color-mg-accent: var(--mg-color-accent);
-  --color-mg-success: var(--mg-color-success);
-  --color-mg-warning: var(--mg-color-warning);
-  --color-mg-danger: var(--mg-color-danger);
+  --color-muted: var(--mg-color-muted);
+  --color-subtle: var(--mg-color-subtle);
+  --color-border: var(--mg-color-border);
+  --color-border-strong: var(--mg-color-border-strong);
+  --color-brand: var(--mg-color-brand);
+  --color-brand-foreground: var(--mg-color-brand-foreground);
+  --color-accent: var(--mg-color-accent);
+  --color-focus: var(--mg-color-focus);
+  --color-success: var(--mg-color-success);
+  --color-success-surface: var(--mg-color-success-surface);
+  --color-warning: var(--mg-color-warning);
+  --color-warning-surface: var(--mg-color-warning-surface);
+  --color-danger: var(--mg-color-danger);
+  --color-danger-surface: var(--mg-color-danger-surface);
+  --color-info: var(--mg-color-info);
+  --color-info-surface: var(--mg-color-info-surface);
+  --color-overlay: var(--mg-color-overlay);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --spacing-*: initial;
+  --spacing-0: 0px;
+  --spacing-xxs: var(--mg-space-xxs);
+  --spacing-xs: var(--mg-space-xs);
+  --spacing-sm: var(--mg-space-sm);
+  --spacing-md: var(--mg-space-md);
+  --spacing-lg: var(--mg-space-lg);
+  --spacing-xl: var(--mg-space-xl);
+  --spacing-xxl: var(--mg-space-xxl);
+  --spacing-xxxl: var(--mg-space-xxxl);
+
+  --radius-*: initial;
+  --radius-none: var(--mg-radius-none);
+  --radius-sm: var(--mg-radius-sm);
+  --radius-md: var(--mg-radius-md);
+  --radius-lg: var(--mg-radius-lg);
+  --radius-xl: var(--mg-radius-xl);
+  --radius-full: var(--mg-radius-full);
+
+  --text-*: initial;
+  --text-xs: var(--mg-font-size-xs);
+  --text-xs--line-height: 1.5;
+  --text-sm: var(--mg-font-size-sm);
+  --text-sm--line-height: 1.5;
+  --text-md: var(--mg-font-size-md);
+  --text-md--line-height: 1.5;
+  --text-lg: var(--mg-font-size-lg);
+  --text-lg--line-height: 1.25;
+  --text-xl: var(--mg-font-size-xl);
+  --text-xl--line-height: 1.25;
+  --text-xxl: var(--mg-font-size-xxl);
+  --text-xxl--line-height: 1.25;
+
+  --shadow-*: initial;
+  --shadow-sm: var(--mg-shadow-sm);
+  --shadow-md: var(--mg-shadow-md);
+  --shadow-lg: var(--mg-shadow-lg);
+
+  /* Breakpoints = tokens.breakpoints (tablet 768, desktop 1024, wide 1280). */
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -20,4 +83,6 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-size: var(--mg-text-body-size);
+  line-height: var(--mg-text-body-line-height);
 }
