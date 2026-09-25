@@ -11,6 +11,9 @@ import { colors } from "@meguiars/ui-tokens";
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
+import { CatalogDetailScreen } from "@/screens/CatalogDetailScreen";
+import { CatalogNewScreen } from "@/screens/CatalogNewScreen";
+import { CatalogScreen } from "@/screens/CatalogScreen";
 import { ClientDetailScreen } from "@/screens/ClientDetailScreen";
 import { ClientNewScreen } from "@/screens/ClientNewScreen";
 import { ClientsScreen } from "@/screens/ClientsScreen";
@@ -38,6 +41,12 @@ export function Router() {
   const openClient = (id: string) => {
     setClientId(id);
     setScreen("clientDetail");
+  };
+  // Parámetro del detalle de servicio (equivale a /catalogo/[id] en web).
+  const [serviceId, setServiceId] = useState<string | null>(null);
+  const openService = (id: string) => {
+    setServiceId(id);
+    setScreen("catalogDetail");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -124,6 +133,24 @@ export function Router() {
         break;
       case "clients":
         content = <ClientsScreen {...props} onOpen={openClient} onNew={() => setScreen("clientNew")} />;
+        break;
+      case "catalog":
+        content = <CatalogScreen {...props} onOpen={openService} onNew={() => setScreen("catalogNew")} />;
+        break;
+      case "catalogNew":
+        content = <CatalogNewScreen {...props} onOpen={openService} onCancel={() => setScreen("catalog")} />;
+        break;
+      case "catalogDetail":
+        content = serviceId ? (
+          <CatalogDetailScreen
+            key={serviceId}
+            {...props}
+            serviceId={serviceId}
+            onBack={() => setScreen("catalog")}
+          />
+        ) : (
+          <CatalogScreen {...props} onOpen={openService} onNew={() => setScreen("catalogNew")} />
+        );
         break;
       case "clientNew":
         content = <ClientNewScreen {...props} onOpen={openClient} onCancel={() => setScreen("clients")} />;
