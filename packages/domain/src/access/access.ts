@@ -62,9 +62,19 @@ export interface SetRoleAssignmentCommand {
   reason: string;
 }
 
+/** Miembro de un centro visto por quien tiene `members.read`. */
+export interface CenterMember {
+  userId: string;
+  fullName: string | null;
+  role: AppRole;
+  active: boolean;
+}
+
 /** Puerto de tenancy y permisos. Las mutaciones van por RPC con motivo. */
 export interface AccessRepository {
   listMyAccess(): Promise<Result<CenterAccess[]>>;
+  /** Miembros de un centro (RLS: admin_socio, encargado o contador de ese centro). */
+  listCenterMembers(detailCenterId: string): Promise<Result<CenterMember[]>>;
   setCenterMembership(command: SetCenterMembershipCommand): Promise<Result<CenterMembership>>;
   setRoleAssignment(command: SetRoleAssignmentCommand): Promise<Result<RoleAssignment>>;
 }

@@ -1,5 +1,6 @@
 // Generado con el formato de `supabase gen types typescript` para las migraciones
-// 20260922000000_foundation y 20260923000000_multicenter_security. Regenerar tras
+// 20260922000000_foundation, 20260923000000_multicenter_security,
+// 20260925000000_advisor_fixes y 20260926000000_auth_session. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -125,6 +126,7 @@ export type Database = {
           created_at: string;
           full_name: string | null;
           id: string;
+          last_detail_center_id: string | null;
           updated_at: string;
         };
         Insert: {
@@ -132,6 +134,7 @@ export type Database = {
           created_at?: string;
           full_name?: string | null;
           id: string;
+          last_detail_center_id?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -139,9 +142,18 @@ export type Database = {
           created_at?: string;
           full_name?: string | null;
           id?: string;
+          last_detail_center_id?: string | null;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_last_detail_center_id_fkey";
+            columns: ["last_detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       role_assignments: {
         Row: {
@@ -235,6 +247,10 @@ export type Database = {
           timezone: string;
         }[];
       };
+      set_active_center: {
+        Args: { p_detail_center_id: string };
+        Returns: string;
+      };
       set_center_membership: {
         Args: {
           p_active: boolean;
@@ -281,6 +297,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      set_user_disabled: {
+        Args: { p_disabled: boolean; p_reason: string; p_user_id: string };
+        Returns: undefined;
       };
       update_detail_center: {
         Args: { p_id: string; p_name: string; p_reason: string; p_timezone: string };
