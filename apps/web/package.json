@@ -10,13 +10,14 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@meguiars/domain": "*",
+    "@meguiars/supabase": "*",
+    "@meguiars/ui-tokens": "*",
+    "@meguiars/validation": "*",
+    "@supabase/ssr": "^0.12.7",
     "next": "16.3.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "@meguiars/domain": "*",
-    "@meguiars/validation": "*",
-    "@meguiars/supabase": "*",
-    "@meguiars/ui-tokens": "*",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
