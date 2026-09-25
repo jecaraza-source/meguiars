@@ -99,6 +99,19 @@ select pg_temp.assert(not has_function_privilege('anon', 'public.zz_rpc_futura()
 drop table public.zz_tabla_futura;
 drop function public.zz_rpc_futura();
 
+-- Guardas de los asesores de Supabase (lints 0011 y 0003) para migraciones futuras.
+select pg_temp.assert(
+  (select count(*) from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
+    where ns.nspname in ('public', 'private') and p.prokind = 'f'
+      and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')) = 0,
+  'toda función de public/private fija search_path');
+select pg_temp.assert(
+  (select count(*) from pg_policies
+    where schemaname = 'public'
+      and (regexp_replace(coalesce(qual, '') || ' ' || coalesce(with_check, ''),
+             '\(\s*SELECT auth\.uid\(\) AS uid\)', '', 'g') ~ 'auth\.uid\(\)')) = 0,
+  'las políticas usan (select auth.uid()) y no auth.uid() por fila');
+
 select pg_temp.assert((select full_name from public.profiles where id = '00000000-0000-0000-0000-0000000000a1') = 'Admin Corporativo',
   'el perfil se crea al registrar usuario');
 select pg_temp.assert_fails(

@@ -73,7 +73,7 @@ create policy <tabla>_write on public.<tabla> for insert to authenticated
   with check (private.has_center_role(detail_center_id, array['admin_socio','encargado','operador_recepcion']::public.app_role[]));
 ```
 
-Las tablas y funciones nuevas de `public` nacen sin privilegios para `anon` ni `PUBLIC`. La prueba `todas las tablas de public tienen RLS habilitado` falla si una migración olvida habilitar RLS.
+En políticas, compara con `(select auth.uid())` (se evalúa una vez por consulta) y en funciones fija `set search_path = ''`; las pruebas lo verifican. Las tablas y funciones nuevas de `public` nacen sin privilegios para `anon` ni `PUBLIC`. La prueba `todas las tablas de public tienen RLS habilitado` falla si una migración olvida habilitar RLS.
 
 ## RPC
 
