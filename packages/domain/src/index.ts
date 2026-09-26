@@ -14,3 +14,4 @@ export * from "./environment";
 export * from "./clients";
 export * from "./catalog";
 export * from "./agenda";
+export * from "./orders";

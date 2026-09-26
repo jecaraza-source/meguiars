@@ -7,8 +7,7 @@ export const sectionCopy = {
     title: "Operación del día",
     description: "Órdenes de servicio, agenda y avance en taller del centro activo.",
     emptyTitle: "Aún no hay operación registrada",
-    emptyMessage:
-      "La Orden de Servicio llega en el módulo de Operación. Aquí verás la agenda y el avance del día.",
+    emptyMessage: "Abre órdenes de servicio desde la agenda o como walk-in. Aquí verás el avance del día.",
   },
   comercial: {
     title: "Comercial",

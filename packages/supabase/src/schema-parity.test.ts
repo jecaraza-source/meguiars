@@ -1,6 +1,17 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { APP_ROLES, APPOINTMENT_STATUSES, APPOINTMENT_TRANSITIONS, REVENUE_ENGINES } from "@meguiars/domain";
+import {
+  APP_ROLES,
+  APPOINTMENT_STATUSES,
+  APPOINTMENT_TRANSITIONS,
+  DISCOUNT_LEVEL_LIMITS,
+  DISCOUNT_LEVELS,
+  PAYMENT_METHODS,
+  REVENUE_ENGINES,
+  SALES_CHANNELS,
+  SERVICE_ORDER_STATUSES,
+  SERVICE_ORDER_TRANSITIONS,
+} from "@meguiars/domain";
 import { describe, expect, it } from "vitest";
 import { Constants, type Database } from "./database.types";
 
@@ -40,6 +51,10 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "profiles",
   "role_assignments",
   "service_center_config",
+  "service_order_discounts",
+  "service_order_items",
+  "service_order_status_history",
+  "service_orders",
   "service_price_history",
   "services",
   "technicians",
@@ -49,6 +64,7 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
+  "add_service_order_discount",
   "add_vehicle",
   "appointment_order_draft",
   "center_catalog",
@@ -56,10 +72,14 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "create_appointment",
   "create_client",
   "create_service",
+  "create_service_order",
+  "create_service_order_from_appointment",
   "find_client_matches",
   "link_client_to_center",
   "list_appointments",
+  "list_service_orders",
   "my_detail_centers",
+  "record_service_order_payment",
   "search_clients",
   "service_price_at",
   "set_active_center",
@@ -67,14 +87,18 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "set_center_membership",
   "set_role_assignment",
   "set_service_center_config",
+  "set_service_order_item",
+  "set_service_order_status",
   "set_user_disabled",
   "update_appointment",
   "update_client",
   "update_detail_center",
   "update_service",
+  "update_service_order_details",
   "update_vehicle",
   "upsert_bay",
   "upsert_technician",
+  "void_service_order_discount",
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {
@@ -91,6 +115,42 @@ describe("paridad SQL ↔ TypeScript", () => {
       tos.map((to) => `${from}>${to}`),
     );
     expect(sqlPairs.sort()).toEqual(domainPairs.sort());
+  });
+
+  it("estatus y transiciones de la OS: SQL y dominio coinciden", () => {
+    const def = /create type public\.service_order_status as enum\s*\(([^)]+)\)/i.exec(allSql)?.[1];
+    expect(def?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...SERVICE_ORDER_STATUSES]);
+    expect([...Constants.public.Enums.service_order_status]).toEqual([...SERVICE_ORDER_STATUSES]);
+    const fn =
+      /function private\.service_order_transition_allowed[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    const sqlPairs = [...fn.matchAll(/\('(\w+)'(?:::public\.service_order_status)?,\s*'(\w+)'/g)].map(
+      (m) => `${m[1]}>${m[2]}`,
+    );
+    const domainPairs = Object.entries(SERVICE_ORDER_TRANSITIONS).flatMap(([from, tos]) =>
+      tos.map((to) => `${from}>${to}`),
+    );
+    expect(sqlPairs.sort()).toEqual(domainPairs.sort());
+  });
+
+  it("canales, niveles de descuento (con sus límites) y formas de pago: SQL y dominio coinciden", () => {
+    const enumOf = (name: string) =>
+      new RegExp(`create type public\\.${name} as enum \\(([^)]+)\\)`, "i")
+        .exec(allSql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(enumOf("sales_channel")).toEqual([...SALES_CHANNELS]);
+    expect([...Constants.public.Enums.sales_channel]).toEqual([...SALES_CHANNELS]);
+    expect(enumOf("discount_level")).toEqual([...DISCOUNT_LEVELS]);
+    expect([...Constants.public.Enums.discount_level]).toEqual([...DISCOUNT_LEVELS]);
+    const levels =
+      /function private\.discount_required_level[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    const limits = [...levels.matchAll(/p_percent <= (\d+) then '(\w+)'/g)].map((m) => [m[2], Number(m[1])]);
+    expect(limits).toEqual([
+      ["operador", DISCOUNT_LEVEL_LIMITS.operador],
+      ["encargado", DISCOUNT_LEVEL_LIMITS.encargado],
+    ]);
+    const pay = /p_method not in \(([^)]+)\)/.exec(allSql)?.[1];
+    expect(pay?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...PAYMENT_METHODS]);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {
