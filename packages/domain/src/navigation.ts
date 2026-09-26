@@ -51,6 +51,8 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "memberships", label: "Membresías", href: "/comercial/membresias" },
       { screen: "crmCustomers", label: "Clientes (CRM)", href: "/comercial/clientes" },
       { screen: "crmTasks", label: "Seguimientos", href: "/comercial/seguimientos" },
+      { screen: "b2bAccounts", label: "Cuentas B2B", href: "/comercial/b2b" },
+      { screen: "b2bProfitability", label: "Rentabilidad B2B", href: "/comercial/b2b/rentabilidad" },
     ],
   },
   {
@@ -95,6 +97,9 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   membershipPlans: "memberships",
   membershipPlanDetail: "memberships",
   crmCustomerDetail: "crmCustomers",
+  b2bAccountDetail: "b2bAccounts",
+  b2bAccountNew: "b2bAccounts",
+  b2bAgreementDetail: "b2bAccounts",
 };
 
 /** Ítem de menú que representa a la pantalla. */

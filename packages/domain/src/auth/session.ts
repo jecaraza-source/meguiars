@@ -78,6 +78,16 @@ export function canInActiveCenter(state: AuthState, capability: Capability): boo
   return can(activeRoles(state), capability);
 }
 
+/**
+ * ¿Puede hacer `capability` en un centro concreto (roles del centro + corporativos)?
+ * P. ej. administrar una cuenta B2B se decide en su centro gestor, no en el activo.
+ */
+export function canInCenter(state: AuthState, centerId: string, capability: Capability): boolean {
+  if (state.status !== "signed_in") return false;
+  const access = state.access.find((a) => a.center.id === centerId);
+  return access ? can([...access.roles, ...access.corporateRoles], capability) : false;
+}
+
 /** Cambiar de centro: sólo a uno utilizable; devuelve el nuevo estado sin mezclar datos del anterior. */
 export function switchActiveCenter(state: SignedInState, centerId: string): SignedInState {
   if (!usableCenters(state.access).some((a) => a.center.id === centerId)) {
