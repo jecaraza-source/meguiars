@@ -2,7 +2,9 @@ import { APP_NAME, authCopy } from "@meguiars/domain";
 import { fieldErrors, loginSchema } from "@meguiars/validation";
 import { useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
-import { Button, Field, Message, Screen } from "@/ui/kit";
+import { Button, Field, LinkButton } from "@/ui/controls";
+import { Notice } from "@/ui/notice";
+import { Screen } from "@/ui/layout";
 
 export function LoginScreen({ onForgot }: { onForgot: () => void }) {
   const { signIn, linkError } = useAuth();
@@ -23,7 +25,7 @@ export function LoginScreen({ onForgot }: { onForgot: () => void }) {
 
   return (
     <Screen eyebrow={APP_NAME.toUpperCase()} title={authCopy.loginTitle}>
-      <Message tone="danger" text={linkError} />
+      <Notice tone="danger" text={linkError} />
       <Field
         label={authCopy.emailLabel}
         value={email}
@@ -43,9 +45,9 @@ export function LoginScreen({ onForgot }: { onForgot: () => void }) {
         textContentType="password"
         error={fields.password}
       />
-      <Message tone="danger" text={error} />
-      <Button label={authCopy.submitLogin} onPress={() => void submit()} busy={busy} />
-      <Button variant="link" label={authCopy.forgotLink} onPress={onForgot} />
+      <Notice tone="danger" text={error} />
+      <Button label={authCopy.submitLogin} onPress={() => void submit()} loading={busy} />
+      <LinkButton label={authCopy.forgotLink} onPress={onForgot} />
     </Screen>
   );
 }

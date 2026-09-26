@@ -1,22 +1,28 @@
 import { APP_NAME } from "@meguiars/domain";
-import { Button, Message, Screen } from "@/ui/kit";
+import type { Tone } from "@meguiars/ui-tokens";
+import { Button } from "@/ui/controls";
+import { EmptyState } from "@/ui/display";
+import { Screen } from "@/ui/layout";
+import { Notice } from "@/ui/notice";
 
 /** Pantallas informativas: cuenta deshabilitada, sin centros, sin permiso. */
 export function MessageScreen({
   title,
   message,
-  tone = "muted",
+  tone,
   action,
+  header,
 }: {
   title: string;
   message: string;
-  tone?: "muted" | "danger" | "warning";
+  tone?: Tone;
   action?: { label: string; onPress: () => void };
+  header?: React.ReactNode;
 }) {
   return (
-    <Screen eyebrow={APP_NAME.toUpperCase()} title={title}>
-      <Message tone={tone} text={message} />
-      {action ? <Button variant="link" label={action.label} onPress={action.onPress} /> : null}
+    <Screen eyebrow={header ? undefined : APP_NAME.toUpperCase()} title={title} header={header}>
+      {tone ? <Notice tone={tone} text={message} /> : <EmptyState title={title} message={message} />}
+      {action ? <Button label={action.label} variant="secondary" onPress={action.onPress} /> : null}
     </Screen>
   );
 }

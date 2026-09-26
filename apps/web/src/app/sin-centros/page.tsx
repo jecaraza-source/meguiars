@@ -1,16 +1,18 @@
 import { authCopy } from "@meguiars/domain";
-import { AppHeader } from "@/components/app-header";
+import { logoutAction } from "@/app/actions/auth";
+import { PlainShell } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
 
 export default async function NoCentersPage() {
-  const state = await requireScreen("account");
+  await requireScreen("account");
   return (
-    <>
-      <AppHeader state={state} />
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-2 p-6">
-        <h1 className="text-2xl font-semibold">{authCopy.noCentersTitle}</h1>
-        <p className="text-mg-muted">{authCopy.noCenters}</p>
-      </main>
-    </>
+    <PlainShell title={authCopy.noCentersTitle}>
+      <EmptyState title={authCopy.noCentersTitle} message={authCopy.noCenters} />
+      <form action={logoutAction}>
+        <Button type="submit" label={authCopy.logout} variant="secondary" />
+      </form>
+    </PlainShell>
   );
 }

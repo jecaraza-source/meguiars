@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatInCenterTimeZone, isValidTimeZone, toUtcIso } from "./time";
+import {
+  formatDateInCenterTimeZone,
+  formatInCenterTimeZone,
+  formatTimeInCenterTimeZone,
+  isValidTimeZone,
+  toUtcIso,
+} from "./time";
 
 describe("time", () => {
   it("valida zonas IANA", () => {
@@ -22,5 +28,12 @@ describe("time", () => {
 
   it("rechaza zonas inválidas al presentar", () => {
     expect(() => formatInCenterTimeZone(new Date(), "Nope/Nope")).toThrow(RangeError);
+  });
+
+  it("separa hora y fecha en la zona del centro (el día puede cambiar)", () => {
+    const utc = "2026-01-15T03:30:00Z";
+    expect(formatTimeInCenterTimeZone(utc, "America/Mexico_City", "en-US")).toBe("9:30 PM");
+    expect(formatDateInCenterTimeZone(utc, "America/Mexico_City", "en-US")).toBe("Jan 14, 2026");
+    expect(formatDateInCenterTimeZone(utc, "UTC", "en-US")).toBe("Jan 15, 2026");
   });
 });

@@ -3,26 +3,17 @@ import {
   authCopy,
   ROLE_LABELS,
   type CenterMember,
-  type SignedInState,
   type ViewState,
 } from "@meguiars/domain";
 import { createAccessRepository } from "@meguiars/supabase";
-import { colors, space } from "@meguiars/ui-tokens";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
-import { Header } from "@/ui/Header";
-import { Button, Card, Message, Screen, text } from "@/ui/kit";
+import { Card, List, Skeleton } from "@/ui/display";
+import { Screen } from "@/ui/layout";
+import { Notice } from "@/ui/notice";
+import type { PrivateScreenProps } from "./types";
 
-export function TeamScreen({
-  state,
-  onBack,
-  onChangeCenter,
-}: {
-  state: SignedInState;
-  onBack: () => void;
-  onChangeCenter: () => void;
-}) {
+export function TeamScreen({ state, header, subnav }: PrivateScreenProps) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const [members, setMembers] = useState<ViewState<CenterMember[]>>({ status: "loading" });
@@ -51,31 +42,27 @@ export function TeamScreen({
   }, [client, center.id]);
 
   return (
-    <Screen title={`${authCopy.teamTitle} · ${center.name}`}>
-      <Header state={state} onChangeCenter={onChangeCenter} />
-      <Button variant="link" label="← Inicio" onPress={onBack} />
-      {members.status === "loading" ? <ActivityIndicator color={colors.brand} /> : null}
-      {members.status === "empty" ? <Message text={authCopy.teamEmpty} /> : null}
-      {members.status === "error" || members.status === "permission_denied" ? (
-        <Message tone="danger" text={members.message} />
-      ) : null}
-      {members.status === "ready" ? (
-        <Card>
-          {members.data.map((m) => (
-            <View key={m.userId} style={styles.row}>
-              <Text style={text.body}>{m.fullName ?? m.userId}</Text>
-              <Text style={text.muted}>
-                {ROLE_LABELS[m.role]}
-                {m.active ? "" : " · inactivo"}
-              </Text>
-            </View>
-          ))}
-        </Card>
-      ) : null}
+    <Screen title={`${authCopy.teamTitle} · ${center.name}`} header={header}>
+      {subnav}
+      <Card>
+        {members.status === "loading" ? <Skeleton lines={3} label="Cargando equipo" /> : null}
+        {members.status === "error" || members.status === "permission_denied" ? (
+          <Notice tone="danger" text={members.message} />
+        ) : null}
+        {members.status === "empty" || members.status === "ready" ? (
+          <List
+            caption={authCopy.teamTitle}
+            rows={members.status === "ready" ? members.data : []}
+            rowKey={(m) => m.userId}
+            emptyMessage={authCopy.teamEmpty}
+            columns={[
+              { key: "name", header: "Nombre", value: (m) => m.fullName ?? m.userId },
+              { key: "role", header: "Rol", value: (m) => ROLE_LABELS[m.role] },
+              { key: "status", header: "Estado", value: (m) => (m.active ? "Activo" : "Inactivo") },
+            ]}
+          />
+        ) : null}
+      </Card>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", justifyContent: "space-between", gap: space.md, paddingVertical: space.xs },
-});

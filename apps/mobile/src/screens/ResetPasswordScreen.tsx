@@ -2,7 +2,9 @@ import { APP_NAME, authCopy } from "@meguiars/domain";
 import { fieldErrors, resetPasswordSchema } from "@meguiars/validation";
 import { useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
-import { Button, Field, Message, Screen } from "@/ui/kit";
+import { Button, Field } from "@/ui/controls";
+import { Screen } from "@/ui/layout";
+import { Notice } from "@/ui/notice";
 
 export function ResetPasswordScreen() {
   const { updatePassword, finishRecovery } = useAuth();
@@ -28,6 +30,7 @@ export function ResetPasswordScreen() {
     <Screen eyebrow={APP_NAME.toUpperCase()} title={authCopy.resetTitle}>
       <Field
         label={authCopy.newPasswordLabel}
+        hint="Al menos 8 caracteres."
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -42,12 +45,12 @@ export function ResetPasswordScreen() {
         textContentType="newPassword"
         error={fields.confirm}
       />
-      <Message tone="danger" text={error} />
-      <Message tone="success" text={done ? authCopy.resetDone : null} />
+      <Notice tone="danger" text={error} />
+      <Notice tone="success" text={done ? authCopy.resetDone : null} />
       {done ? (
         <Button label="Continuar" onPress={finishRecovery} />
       ) : (
-        <Button label={authCopy.submitReset} onPress={() => void submit()} busy={busy} />
+        <Button label={authCopy.submitReset} onPress={() => void submit()} loading={busy} />
       )}
     </Screen>
   );

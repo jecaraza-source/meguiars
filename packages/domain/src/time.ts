@@ -41,3 +41,27 @@ export function formatInCenterTimeZone(
   }
   return new Intl.DateTimeFormat(locale, { timeZone, dateStyle, timeStyle }).format(new Date(toUtcIso(utc)));
 }
+
+/** Sólo la hora (p. ej. "6:15 p.m.") en la zona horaria del centro. */
+export function formatTimeInCenterTimeZone(
+  utc: Date | string | number,
+  timeZone: string,
+  locale = "es-MX",
+): string {
+  if (!isValidTimeZone(timeZone)) {
+    throw new RangeError(`Zona horaria inválida: ${timeZone}`);
+  }
+  return new Intl.DateTimeFormat(locale, { timeZone, timeStyle: "short" }).format(new Date(toUtcIso(utc)));
+}
+
+/** Sólo la fecha (p. ej. "25 sep 2026") en la zona horaria del centro. */
+export function formatDateInCenterTimeZone(
+  utc: Date | string | number,
+  timeZone: string,
+  locale = "es-MX",
+): string {
+  if (!isValidTimeZone(timeZone)) {
+    throw new RangeError(`Zona horaria inválida: ${timeZone}`);
+  }
+  return new Intl.DateTimeFormat(locale, { timeZone, dateStyle: "medium" }).format(new Date(toUtcIso(utc)));
+}

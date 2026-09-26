@@ -19,6 +19,11 @@ export const SCREEN_GUARDS = {
   selectCenter: {},
   team: { center: true, capability: "members.read" },
   editCenter: { center: true, capability: "center.manage" },
+  operacion: { center: true, capability: "operations.read" },
+  comercial: { center: true, capability: "commercial.read" },
+  finanzas: { center: true, capability: "finance.read" },
+  direccion: { center: true, capability: "executive.read" },
+  designSystem: {},
   account: {},
 } as const satisfies Record<string, GuardRequirement>;
 

@@ -1,9 +1,12 @@
 import { APP_NAME, authCopy } from "@meguiars/domain";
 import { fieldErrors, forgotPasswordSchema } from "@meguiars/validation";
 import { useState } from "react";
-import { useAuth } from "@/auth/AuthProvider";
-import { Button, Field, Message, Screen, text } from "@/ui/kit";
 import { Text } from "react-native";
+import { useAuth } from "@/auth/AuthProvider";
+import { Button, Field, LinkButton } from "@/ui/controls";
+import { Screen } from "@/ui/layout";
+import { Notice } from "@/ui/notice";
+import { textStyle } from "@/ui/theme";
 
 export function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
   const { sendReset } = useAuth();
@@ -27,7 +30,7 @@ export function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <Screen eyebrow={APP_NAME.toUpperCase()} title={authCopy.forgotTitle}>
-      <Text style={text.muted}>{authCopy.forgotHelp}</Text>
+      <Text style={textStyle("bodySmall", "muted")}>{authCopy.forgotHelp}</Text>
       <Field
         label={authCopy.emailLabel}
         value={email}
@@ -36,9 +39,9 @@ export function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
         keyboardType="email-address"
         error={fields.email}
       />
-      <Message tone={result?.tone} text={result?.text} />
-      <Button label={authCopy.submitForgot} onPress={() => void submit()} busy={busy} />
-      <Button variant="link" label={authCopy.backToLogin} onPress={onBack} />
+      <Notice tone={result?.tone} text={result?.text} />
+      <Button label={authCopy.submitForgot} onPress={() => void submit()} loading={busy} />
+      <LinkButton label={authCopy.backToLogin} onPress={onBack} />
     </Screen>
   );
 }

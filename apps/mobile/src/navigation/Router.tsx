@@ -1,35 +1,43 @@
-import { authCopy, centersCopy, guardScreen, type Screen } from "@meguiars/domain";
+import {
+  authCopy,
+  centersCopy,
+  guardScreen,
+  sectionOfScreen,
+  visibleNavigation,
+  type Screen,
+} from "@meguiars/domain";
 import { colors } from "@meguiars/ui-tokens";
 import { useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
+import { DesignSystemScreen } from "@/screens/DesignSystemScreen";
+import { DireccionScreen } from "@/screens/DireccionScreen";
 import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
 import { ResetPasswordScreen } from "@/screens/ResetPasswordScreen";
+import { SectionScreen } from "@/screens/SectionScreen";
 import { SelectCenterScreen } from "@/screens/SelectCenterScreen";
 import { TeamScreen } from "@/screens/TeamScreen";
-
-type PrivateScreen = Extract<Screen, "home" | "team" | "selectCenter">;
+import { AppHeader, SubNav, TabBar } from "@/ui/layout";
 
 /**
- * Navegación mínima por estado. Cada pantalla privada pasa por el mismo
- * guard de @meguiars/domain que usa la web (SCREEN_GUARDS).
+ * Navegación nativa por pestañas. Las pestañas y los guards salen de
+ * @meguiars/domain (visibleNavigation / SCREEN_GUARDS), igual que la web.
  */
 export function Router() {
   const { client, state, recovery, signOut, dismissDisabled } = useAuth();
-  const [screen, setScreen] = useState<PrivateScreen>("home");
+  const [screen, setScreen] = useState<Screen>("home");
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
-  const changeCenter = () => setScreen("selectCenter");
 
   if (!client)
     return <MessageScreen title={authCopy.loginTitle} message={centersCopy.notConfigured} tone="danger" />;
   if (state.status === "loading") {
     return (
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <ActivityIndicator color={colors.brand} />
+      <View style={styles.center}>
+        <ActivityIndicator color={colors.brand} accessibilityLabel="Cargando" />
       </View>
     );
   }
@@ -53,42 +61,76 @@ export function Router() {
   }
 
   const guard = guardScreen(state, screen);
+  if (!guard.allow && guard.redirect === "select_center")
+    return <SelectCenterScreen state={state} onDone={goHome} />;
+  if (!guard.allow && guard.redirect === "no_centers") {
+    return (
+      <MessageScreen
+        title={authCopy.noCentersTitle}
+        message={authCopy.noCenters}
+        action={{ label: authCopy.logout, onPress: () => void signOut() }}
+      />
+    );
+  }
+  if (screen === "selectCenter") return <SelectCenterScreen state={state} onDone={goHome} />;
+
+  const sections = visibleNavigation(state);
+  const sectionId = sectionOfScreen(screen);
+  const header = (
+    <AppHeader
+      state={state}
+      onChangeCenter={() => setScreen("selectCenter")}
+      onDesignSystem={() => setScreen("designSystem")}
+    />
+  );
+  const subnav = (
+    <SubNav section={sections.find((s) => s.id === sectionId)} current={screen} onSelect={setScreen} />
+  );
+  const props = { state, header, subnav };
+
+  let content: React.ReactNode;
   if (!guard.allow) {
-    switch (guard.redirect) {
-      case "select_center":
-        return <SelectCenterScreen state={state} onDone={goHome} />;
-      case "no_centers":
-        return (
-          <MessageScreen
-            title={authCopy.noCentersTitle}
-            message={authCopy.noCenters}
-            action={{ label: authCopy.logout, onPress: () => void signOut() }}
-          />
-        );
-      case "forbidden":
-        return (
-          <MessageScreen
-            title={authCopy.forbiddenTitle}
-            message={authCopy.forbidden}
-            tone="warning"
-            action={{ label: "Ir al inicio", onPress: goHome }}
-          />
-        );
+    content = (
+      <MessageScreen
+        header={header}
+        title={authCopy.forbiddenTitle}
+        message={authCopy.forbidden}
+        action={{ label: "Ir al inicio", onPress: goHome }}
+      />
+    );
+  } else {
+    switch (screen) {
+      case "operacion":
+      case "comercial":
+      case "finanzas":
+        content = <SectionScreen {...props} section={screen} />;
+        break;
+      case "direccion":
+        content = <DireccionScreen {...props} />;
+        break;
+      case "team":
+        content = <TeamScreen {...props} />;
+        break;
+      case "designSystem":
+        content = <DesignSystemScreen {...props} />;
+        break;
       default:
-        return <LoginScreen onForgot={() => setPublicScreen("forgot")} />;
+        content = <HomeScreen {...props} />;
     }
   }
 
   // key = centro activo: al cambiar de centro se descarta el estado de la pantalla anterior.
-  const key = state.activeCenterId ?? "none";
-  switch (screen) {
-    case "selectCenter":
-      return <SelectCenterScreen key={key} state={state} onDone={goHome} />;
-    case "team":
-      return <TeamScreen key={key} state={state} onBack={goHome} onChangeCenter={changeCenter} />;
-    default:
-      return (
-        <HomeScreen key={key} state={state} onChangeCenter={changeCenter} onTeam={() => setScreen("team")} />
-      );
-  }
+  return (
+    <View style={styles.fill}>
+      <View key={state.activeCenterId ?? "none"} style={styles.fill}>
+        {content}
+      </View>
+      <TabBar sections={sections} active={sectionId} onSelect={setScreen} />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  fill: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, justifyContent: "center", backgroundColor: colors.background },
+});

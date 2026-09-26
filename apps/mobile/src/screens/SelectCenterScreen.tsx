@@ -1,10 +1,12 @@
 import { authCopy, presentCenterAccess, usableCenters, type SignedInState } from "@meguiars/domain";
 import { colors, radius, space } from "@meguiars/ui-tokens";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
-import { Header } from "@/ui/Header";
-import { Message, Screen, text } from "@/ui/kit";
+import { Badge } from "@/ui/display";
+import { Screen } from "@/ui/layout";
+import { Notice } from "@/ui/notice";
+import { textStyle } from "@/ui/theme";
 
 export function SelectCenterScreen({ state, onDone }: { state: SignedInState; onDone: () => void }) {
   const { selectCenter } = useAuth();
@@ -20,10 +22,8 @@ export function SelectCenterScreen({ state, onDone }: { state: SignedInState; on
   };
 
   return (
-    <Screen title={authCopy.selectCenterTitle}>
-      <Header state={state} onChangeCenter={() => undefined} />
-      <Text style={text.muted}>{authCopy.selectCenterHelp}</Text>
-      <Message tone="danger" text={error} />
+    <Screen title={authCopy.selectCenterTitle} description={authCopy.selectCenterHelp}>
+      <Notice tone="danger" text={error} />
       {usableCenters(state.access)
         .map(presentCenterAccess)
         .map((item) => (
@@ -32,11 +32,16 @@ export function SelectCenterScreen({ state, onDone }: { state: SignedInState; on
             accessibilityRole="button"
             accessibilityState={{ selected: item.id === state.activeCenterId, busy: busyId === item.id }}
             onPress={() => void choose(item.id)}
-            style={[styles.option, item.id === state.activeCenterId ? { borderColor: colors.brand } : null]}
+            style={[styles.option, item.id === state.activeCenterId ? styles.selected : null]}
           >
-            <Text style={text.strong}>{item.title}</Text>
-            <Text style={text.muted}>{item.subtitle}</Text>
-            <Text style={text.body}>{item.rolesText}</Text>
+            <Text style={textStyle("heading")}>{item.title}</Text>
+            <Text style={textStyle("bodySmall", "muted")}>{item.subtitle}</Text>
+            <View style={styles.badges}>
+              <Badge label={item.rolesText} />
+              {item.badges.map((b) => (
+                <Badge key={b.kind} label={b.label} tone={b.kind === "corporate" ? "brand" : "neutral"} />
+              ))}
+            </View>
           </Pressable>
         ))}
     </Screen>
@@ -45,10 +50,13 @@ export function SelectCenterScreen({ state, onDone }: { state: SignedInState; on
 
 const styles = StyleSheet.create({
   option: {
+    gap: space.xs,
+    padding: space.lg,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
-    padding: space.lg,
-    gap: space.xs,
+    backgroundColor: colors.surfaceRaised,
   },
+  selected: { borderColor: colors.brand },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: space.xs },
 });
