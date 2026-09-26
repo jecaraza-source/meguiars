@@ -9,6 +9,7 @@ import {
   ordersCopy,
   PAYMENT_METHOD_LABELS,
   PAYMENT_METHODS,
+  membershipDiscountTotal,
   previewDiscount,
   SALES_CHANNEL_LABELS,
   SALES_CHANNELS,
@@ -388,6 +389,7 @@ export function OrderDiscounts({
     reason: string;
     level: string;
     active: boolean;
+    voidable: boolean;
   }[];
   editable: boolean;
 }) {
@@ -415,11 +417,16 @@ export function OrderDiscounts({
   const amount = Number(draft.value.replace(/[$,\s]/g, ""));
   const preview =
     Number.isFinite(amount) && amount > 0
-      ? previewDiscount(totals, order.paidAmount, {
-          itemId: draft.itemId || null,
-          kind: draft.kind,
-          value: amount,
-        })
+      ? previewDiscount(
+          totals,
+          order.paidAmount,
+          {
+            itemId: draft.itemId || null,
+            kind: draft.kind,
+            value: amount,
+          },
+          membershipDiscountTotal(order.discounts),
+        )
       : null;
   return (
     <div className="flex flex-col gap-md">
@@ -433,7 +440,7 @@ export function OrderDiscounts({
               <span className="text-muted">
                 {d.reason} · {ordersCopy.discountLevel}: {d.level}
               </span>
-              {editable && d.active ? (
+              {editable && d.voidable ? (
                 <form action={voidAction} className="flex flex-wrap items-end gap-sm" noValidate>
                   <Versioned order={order} />
                   <input type="hidden" name="discountId" value={d.id} />

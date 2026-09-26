@@ -142,6 +142,8 @@ export interface ServiceOrderDiscount {
   amount: number;
   reason: string;
   authorizationLevel: DiscountLevel;
+  /** manual (con nivel de autorización) o membresia (redención de un beneficio). */
+  source: "manual" | "membresia";
   authorizedBy: string | null;
   createdAt: string;
   voidedAt: string | null;
@@ -336,3 +338,11 @@ export function deliveryBlocker(order: BlockerInput): string | null {
   if (order.channel === "b2b" && !order.channelReference) return "Captura la orden de compra del cliente B2B";
   return null;
 }
+
+/** Descuentos de membresía vigentes (excluidos del nivel de autorización). */
+export const membershipDiscountTotal = (
+  discounts: readonly Pick<ServiceOrderDiscount, "source" | "amount" | "voidedAt">[],
+) =>
+  Math.round(
+    discounts.filter((d) => d.source === "membresia" && !d.voidedAt).reduce((t, d) => t + d.amount, 0) * 100,
+  ) / 100;

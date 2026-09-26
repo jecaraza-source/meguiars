@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
   },
   // Los paquetes @meguiars/* se publican como TypeScript fuente dentro del monorepo.
   transpilePackages: [
+    "@meguiars/analytics",
     "@meguiars/domain",
     "@meguiars/validation",
     "@meguiars/supabase",

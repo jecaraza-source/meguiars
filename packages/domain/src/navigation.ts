@@ -46,7 +46,10 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     id: "comercial",
     label: "Comercial",
     shortLabel: "Comercial",
-    items: [{ screen: "comercial", label: "Membresías y B2B", href: "/comercial" }],
+    items: [
+      { screen: "comercial", label: "Resumen comercial", href: "/comercial" },
+      { screen: "memberships", label: "Membresías", href: "/comercial/membresias" },
+    ],
   },
   {
     id: "finanzas",
@@ -85,6 +88,10 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   orderNew: "orders",
   orderExecution: "orders",
   supplies: "catalog",
+  membershipDetail: "memberships",
+  membershipNew: "memberships",
+  membershipPlans: "memberships",
+  membershipPlanDetail: "memberships",
 };
 
 /** Ítem de menú que representa a la pantalla. */

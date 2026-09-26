@@ -3,6 +3,16 @@ import {
   activeRoles,
   canInActiveCenter,
   executionCopy,
+  formatDateOnly,
+  membershipsCopy,
+  membershipStatus,
+  newRequestId,
+  presentBalance,
+  presentRedemption,
+  presentStatus,
+  redeemableLines,
+  renewalCaption,
+  todayIn,
   formatDateInCenterTimeZone,
   orderStatusActions,
   ordersCopy,
@@ -10,10 +20,16 @@ import {
   presentHistory,
   presentOrder,
   utcToZoned,
+  type BenefitBalance,
+  type Membership,
+  type MembershipRedemption,
+  type Result,
+  type ServiceOrder,
 } from "@meguiars/domain";
 import {
   createAgendaRepository,
   createCatalogRepository,
+  createMembershipRepository,
   createServiceOrderRepository,
 } from "@meguiars/supabase";
 import Link from "next/link";
@@ -25,6 +41,7 @@ import {
   OrderStatusPanel,
   PaymentForm,
 } from "@/components/order-forms";
+import { OrderMembershipRedeem, VoidRedemptionForm } from "@/components/membership-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
@@ -58,6 +75,11 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
         agenda.listTechnicians(center.id),
       ])
     : [null, null, null];
+  const canMemberships = canInActiveCenter(state, "memberships.read");
+  const memberships = createMembershipRepository(supabase);
+  const [membership, redemptions] = canMemberships
+    ? await Promise.all([memberships.forVehicle(order.vehicleId), memberships.redemptionsForOrder(order.id)])
+    : [null, null];
   const lineName = (itemId: string) => order.items.find((i) => i.id === itemId)?.serviceName ?? "—";
   const promised = order.promisedAt ? utcToZoned(order.promisedAt, center.timezone) : null;
 
@@ -105,6 +127,19 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           needsReason={view.itemsNeedReason}
         />
       </Card>
+
+      {canMemberships ? (
+        <Card title={membershipsCopy.orderCardTitle}>
+          <OrderMembershipCard
+            order={order}
+            canWrite={canWrite}
+            membership={membership}
+            redemptions={redemptions}
+            today={todayIn(center.timezone)}
+            timeZone={center.timezone}
+          />
+        </Card>
+      ) : null}
 
       <Card title={ordersCopy.discountsTitle}>
         <OrderDiscounts
@@ -156,5 +191,106 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
         />
       </Card>
     </AppShell>
+  );
+}
+
+/** Membresía del vehículo: saldo, próxima renovación, redimir y anular redenciones de esta OS. */
+function OrderMembershipCard({
+  order,
+  canWrite,
+  membership,
+  redemptions,
+  today,
+  timeZone,
+}: {
+  order: ServiceOrder;
+  canWrite: boolean;
+  membership: Result<{ membership: Membership; balance: BenefitBalance[] } | null> | null;
+  redemptions: Result<MembershipRedemption[]> | null;
+  today: string;
+  timeZone: string;
+}) {
+  if (!membership || !membership.ok) {
+    return (
+      <p role={membership && !membership.ok ? "alert" : undefined} className="text-sm text-muted">
+        {membership && !membership.ok ? membership.error.message : membershipsCopy.orderNoMembership}
+      </p>
+    );
+  }
+  if (!membership.data) {
+    return (
+      <div className="flex flex-wrap items-center gap-sm text-sm">
+        <span className="text-muted">{membershipsCopy.orderNoMembership}</span>
+        <Link href={`/comercial/membresias/nueva?cliente=${order.clientId}`} className="underline">
+          {membershipsCopy.newMembership}
+        </Link>
+      </div>
+    );
+  }
+  const { membership: m, balance } = membership.data;
+  const status = membershipStatus(m, today);
+  const badge = presentStatus(status);
+  const own = redemptions?.ok ? redemptions.data : [];
+  const open = ["abierta", "autorizada", "en_proceso", "pausada", "terminada"].includes(order.status);
+  const lines = canWrite && open ? redeemableLines(status, order.items, balance, own) : [];
+  return (
+    <div className="flex flex-col gap-md">
+      <div className="flex flex-wrap items-center gap-sm text-sm">
+        <Link href={`/comercial/membresias/${m.id}`} className="font-semibold underline">
+          {m.number} · {m.planName}
+        </Link>
+        <Badge label={badge.label} tone={badge.tone} />
+        <span className="text-muted">
+          {membershipsCopy.nextRenewal}: {formatDateOnly(m.endsOn)} · {renewalCaption(m.endsOn, today)}
+        </span>
+      </div>
+      <Table
+        caption={membershipsCopy.balanceTitle}
+        rows={balance.map(presentBalance)}
+        rowKey={(b) => b.key}
+        emptyMessage={membershipsCopy.balanceEmpty}
+        columns={[
+          { key: "service", header: "Servicio", value: (b) => b.service },
+          { key: "usage", header: membershipsCopy.used, value: (b) => b.usage },
+          {
+            key: "remaining",
+            header: membershipsCopy.remaining,
+            value: (b) => String(b.remaining),
+            align: "end",
+          },
+        ]}
+      />
+      {lines.length > 0 ? (
+        <OrderMembershipRedeem
+          orderId={order.id}
+          version={order.version}
+          membershipId={m.id}
+          lines={lines}
+          requestId={newRequestId()}
+        />
+      ) : canWrite && open ? (
+        <p className="text-sm text-muted">{membershipsCopy.notRedeemable}</p>
+      ) : null}
+      {own.length > 0 ? (
+        <ul aria-label={membershipsCopy.redemptionsTitle} className="flex flex-col gap-sm text-sm">
+          {own.map((r) => {
+            const view = presentRedemption(r, timeZone);
+            return (
+              <li key={r.id} className="mg-card flex flex-col gap-xs">
+                <span className={view.voided ? "text-muted line-through" : ""}>
+                  {view.service} = {view.amount}
+                </span>
+                <span className="text-muted">
+                  {view.when} · {view.status}
+                </span>
+                {canWrite && open && !view.voided ? (
+                  <VoidRedemptionForm orderId={order.id} version={order.version} redemptionId={r.id} />
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
   );
 }

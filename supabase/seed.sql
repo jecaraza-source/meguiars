@@ -211,3 +211,60 @@ insert into public.service_order_consumptions (id, organization_id, detail_cente
    '0d000000-0000-4000-8000-000000000001', '0e100000-0000-4000-8000-000000000001', '1a000000-0000-4000-8000-000000000003',
    'ml', 250, 300, 0.12)
 on conflict (id) do nothing;
+
+-- Membresías (C1): planes CARE / PLUS / PREMIUM y tres membresías de ejemplo
+-- (activa en CDMX, próxima a vencer en CDMX y trimestral en Monterrey).
+insert into public.membership_plans (id, organization_id, code, tier, name, description, price, period_months,
+                                     redeem_scope, restrictions, renewal_notice_days, available_from) values
+  ('3b000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'CARE', 'care', 'Care',
+   'Dos lavados exprés al mes.', 449, 1, 'centro_origen', 'Autos particulares; un vehículo por membresía.', 7,
+   current_date - 90),
+  ('3b000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 'PLUS', 'plus', 'Plus',
+   'Dos lavados exprés y un lavado premium al mes, en cualquier centro.', 849, 1, 'cualquier_centro', null, 7,
+   current_date - 90),
+  ('3b000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', 'PREMIUM', 'premium', 'Premium',
+   'Tres lavados premium y un detallado de interiores por trimestre.', 3900, 3, 'cualquier_centro', null, 15,
+   current_date - 90)
+on conflict (id) do nothing;
+
+insert into public.membership_benefits (organization_id, plan_id, service_id, quantity_per_period) values
+  ('00000000-0000-4000-8000-00000000d3e0', '3b000000-0000-4000-8000-000000000001', '5e000000-0000-4000-8000-000000000001', 2),
+  ('00000000-0000-4000-8000-00000000d3e0', '3b000000-0000-4000-8000-000000000002', '5e000000-0000-4000-8000-000000000001', 2),
+  ('00000000-0000-4000-8000-00000000d3e0', '3b000000-0000-4000-8000-000000000002', '5e000000-0000-4000-8000-000000000002', 1),
+  ('00000000-0000-4000-8000-00000000d3e0', '3b000000-0000-4000-8000-000000000003', '5e000000-0000-4000-8000-000000000002', 3),
+  ('00000000-0000-4000-8000-00000000d3e0', '3b000000-0000-4000-8000-000000000003', '5e000000-0000-4000-8000-000000000003', 1)
+on conflict (plan_id, service_id) do nothing;
+
+insert into public.memberships (id, organization_id, detail_center_id, number, number_seq, plan_id, client_id, vehicle_id,
+                                plan_code, plan_name, plan_tier, price, period_months, redeem_scope, renewal_notice_days,
+                                benefits, started_on, period_anchor, ends_on, request_id)
+select x.id, p.organization_id, x.center, x.number, x.seq, p.id, x.client, x.vehicle, p.code, p.name, p.tier, p.price,
+       p.period_months, p.redeem_scope, p.renewal_notice_days, private.membership_plan_snapshot(p.id),
+       x.anchor, x.anchor, (x.anchor + make_interval(months => p.period_months))::date - 1, x.request
+  from (values
+    ('3c000000-0000-4000-8000-000000000001'::uuid, '11111111-1111-4111-8111-111111111111'::uuid, 'MEM-000001', 1,
+     '3b000000-0000-4000-8000-000000000002'::uuid, 'c1000000-0000-4000-8000-000000000001'::uuid,
+     'c2000000-0000-4000-8000-000000000001'::uuid, current_date - 20, '3c000000-0000-4000-8000-0000000000a1'::uuid),
+    ('3c000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', 'MEM-000002', 2,
+     '3b000000-0000-4000-8000-000000000001', 'c1000000-0000-4000-8000-000000000003',
+     'c2000000-0000-4000-8000-000000000004', (current_date + 4 - interval '1 month')::date,
+     '3c000000-0000-4000-8000-0000000000a2'),
+    ('3c000000-0000-4000-8000-000000000003', '22222222-2222-4222-8222-222222222222', 'MEM-000003', 3,
+     '3b000000-0000-4000-8000-000000000003', 'c1000000-0000-4000-8000-000000000002',
+     'c2000000-0000-4000-8000-000000000002', current_date - 30, '3c000000-0000-4000-8000-0000000000a3')
+  ) as x(id, center, number, seq, plan, client, vehicle, anchor, request)
+  join public.membership_plans p on p.id = x.plan
+on conflict (id) do nothing;
+
+insert into private.membership_counters (organization_id, last_number)
+values ('00000000-0000-4000-8000-00000000d3e0', 3)
+on conflict (organization_id) do update set last_number = greatest(private.membership_counters.last_number, 3);
+
+insert into public.membership_events (organization_id, membership_id, membership_center_id, detail_center_id, kind,
+                                      to_state, plan_code, amount, period_start, period_end, reason, occurred_at)
+select m.organization_id, m.id, m.detail_center_id, m.detail_center_id, 'alta', 'activa', m.plan_code, m.price,
+       m.period_anchor, m.ends_on, 'Alta de membresía (seed)', m.period_anchor::timestamptz + interval '10 hours'
+  from public.memberships m
+ where m.id in ('3c000000-0000-4000-8000-000000000001', '3c000000-0000-4000-8000-000000000002',
+                '3c000000-0000-4000-8000-000000000003')
+   and not exists (select 1 from public.membership_events e where e.membership_id = m.id);

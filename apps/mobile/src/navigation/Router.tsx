@@ -26,6 +26,11 @@ import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
+import { ComercialScreen } from "@/screens/ComercialScreen";
+import { MembershipDetailScreen } from "@/screens/MembershipDetailScreen";
+import { MembershipNewScreen } from "@/screens/MembershipNewScreen";
+import { MembershipPlanScreen, MembershipPlansScreen } from "@/screens/MembershipPlansScreen";
+import { MembershipsScreen } from "@/screens/MembershipsScreen";
 import { OrderDetailScreen } from "@/screens/OrderDetailScreen";
 import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
 import { OrderNewScreen } from "@/screens/OrderNewScreen";
@@ -68,6 +73,17 @@ export function Router() {
   const openOrder = (id: string) => {
     setOrderId(id);
     setScreen("orderDetail");
+  };
+  // Parámetros de membresías (equivalen a /comercial/membresias/[id] y /comercial/planes/[id] en web).
+  const [membershipId, setMembershipId] = useState<string | null>(null);
+  const openMembership = (id: string) => {
+    setMembershipId(id);
+    setScreen("membershipDetail");
+  };
+  const [planId, setPlanId] = useState<string | null>(null);
+  const openPlan = (id: string) => {
+    setPlanId(id);
+    setScreen("membershipPlanDetail");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -144,8 +160,59 @@ export function Router() {
     );
   } else {
     switch (screen) {
-      case "operacion":
       case "comercial":
+        content = <ComercialScreen {...props} onMemberships={() => setScreen("memberships")} />;
+        break;
+      case "memberships":
+        content = (
+          <MembershipsScreen
+            {...props}
+            onOpen={openMembership}
+            onNew={() => setScreen("membershipNew")}
+            onPlans={() => setScreen("membershipPlans")}
+          />
+        );
+        break;
+      case "membershipNew":
+        content = (
+          <MembershipNewScreen {...props} onOpen={openMembership} onCancel={() => setScreen("memberships")} />
+        );
+        break;
+      case "membershipDetail":
+        content = membershipId ? (
+          <MembershipDetailScreen
+            key={membershipId}
+            {...props}
+            membershipId={membershipId}
+            onBack={() => setScreen("memberships")}
+          />
+        ) : (
+          <MembershipsScreen
+            {...props}
+            onOpen={openMembership}
+            onNew={() => setScreen("membershipNew")}
+            onPlans={() => setScreen("membershipPlans")}
+          />
+        );
+        break;
+      case "membershipPlans":
+        content = (
+          <MembershipPlansScreen {...props} onOpen={openPlan} onBack={() => setScreen("memberships")} />
+        );
+        break;
+      case "membershipPlanDetail":
+        content = planId ? (
+          <MembershipPlanScreen
+            key={planId}
+            {...props}
+            planId={planId}
+            onBack={() => setScreen("membershipPlans")}
+          />
+        ) : (
+          <MembershipPlansScreen {...props} onOpen={openPlan} onBack={() => setScreen("memberships")} />
+        );
+        break;
+      case "operacion":
       case "finanzas":
         content = <SectionScreen {...props} section={screen} />;
         break;
@@ -205,6 +272,7 @@ export function Router() {
             orderId={orderId}
             onBack={() => setScreen("orders")}
             onExecution={() => setScreen("orderExecution")}
+            onNewMembership={() => setScreen("membershipNew")}
           />
         ) : (
           <OrdersScreen {...props} onOpen={openOrder} onNew={() => setScreen("orderNew")} />

@@ -45,6 +45,10 @@ export const CAPABILITIES = [
   "orders.read",
   "orders.write",
   "orders.manage",
+  // Membresías de clientes (C1); no confundir con members.* (equipo del centro).
+  "memberships.read",
+  "memberships.write",
+  "memberships.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -56,7 +60,9 @@ export type Capability = (typeof CAPABILITIES)[number];
  * `catalog.*`, en 20260928000000 (servicios: admin_socio corporativo; centro:
  * private.can_manage_center_catalog); `agenda.*`, en 20260929000000
  * (private.can_use_agenda / private.can_manage_agenda); `orders.*`, en
- * 20260930000000 (private.can_use_orders / private.can_manage_orders).
+ * 20260930000000 (private.can_use_orders / private.can_manage_orders);
+ * `memberships.*`, en 20261002000000 (private.can_use_memberships /
+ * private.can_manage_memberships).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -84,6 +90,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "orders.read",
     "orders.write",
     "orders.manage",
+    "memberships.read",
+    "memberships.write",
+    "memberships.manage",
   ],
   encargado: [
     "center.read",
@@ -100,6 +109,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "orders.read",
     "orders.write",
     "orders.manage",
+    "memberships.read",
+    "memberships.write",
+    "memberships.manage",
   ],
   operador_recepcion: [
     "center.read",
@@ -112,10 +124,20 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "agenda.write",
     "orders.read",
     "orders.write",
+    "memberships.read",
+    "memberships.write",
   ],
   // El contador no ve datos personales de clientes.
   contador: ["center.read", "finance.read", "members.read", "audit.read", "catalog.read"],
-  comercial_b2b: ["center.read", "commercial.read", "b2b.write", "clients.read", "catalog.read"],
+  comercial_b2b: [
+    "center.read",
+    "commercial.read",
+    "b2b.write",
+    "clients.read",
+    "catalog.read",
+    "memberships.read",
+    "memberships.write",
+  ],
 };
 
 export function can(roles: readonly AppRole[], capability: Capability): boolean {

@@ -14,7 +14,9 @@ import {
   presentDiscount,
   presentHistory,
   presentOrder,
+  membershipDiscountTotal,
   previewDiscount,
+  todayIn,
   utcToZoned,
   type Bay,
   type CatalogItem,
@@ -45,6 +47,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
+import { OrderMembershipCard } from "@/components/OrderMembershipCard";
 import { ChannelFields } from "@/components/OrderFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
 import { Badge, Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
@@ -96,7 +99,13 @@ export function OrderDetailScreen({
   orderId,
   onBack,
   onExecution,
-}: PrivateScreenProps & { orderId: string; onBack: () => void; onExecution: () => void }) {
+  onNewMembership,
+}: PrivateScreenProps & {
+  orderId: string;
+  onBack: () => void;
+  onExecution: () => void;
+  onNewMembership?: (() => void) | undefined;
+}) {
   const { client } = useAuth();
   const toast = useToast();
   const center = activeCenterAccess(state)!.center;
@@ -169,6 +178,17 @@ export function OrderDetailScreen({
         mutate={mutate}
         repo={repo}
       />
+      {canInActiveCenter(state, "memberships.read") ? (
+        <OrderMembershipCard
+          key={`m-${k}`}
+          order={order}
+          canWrite={canWrite}
+          today={todayIn(center.timezone)}
+          timeZone={center.timezone}
+          onChanged={reload}
+          onNewMembership={onNewMembership}
+        />
+      ) : null}
       <DiscountsCard
         key={`d-${k}`}
         order={order}
@@ -431,11 +451,16 @@ function DiscountsCard({
   const amount = Number((values.value ?? "").replace(/[$,\s]/g, ""));
   const preview =
     Number.isFinite(amount) && amount > 0
-      ? previewDiscount(totals, order.paidAmount, {
-          itemId: values.itemId || null,
-          kind: values.kind as "percent" | "amount",
-          value: amount,
-        })
+      ? previewDiscount(
+          totals,
+          order.paidAmount,
+          {
+            itemId: values.itemId || null,
+            kind: values.kind as "percent" | "amount",
+            value: amount,
+          },
+          membershipDiscountTotal(order.discounts),
+        )
       : null;
 
   const add = async () => {
@@ -474,7 +499,7 @@ function DiscountsCard({
           <Text style={textStyle("caption", "muted")}>
             {d.reason} · {ordersCopy.discountLevel}: {d.level}
           </Text>
-          {editable && d.active ? (
+          {editable && d.voidable ? (
             <>
               <Field
                 label={ordersCopy.reasonLabel}

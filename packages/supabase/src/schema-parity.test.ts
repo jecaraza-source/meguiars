@@ -13,6 +13,13 @@ import {
   INVENTORY_UNITS,
   ITEM_WORK_STATUSES,
   ITEM_WORK_TRANSITIONS,
+  MEMBERSHIP_EVENT_KINDS,
+  MEMBERSHIP_STATE_TRANSITIONS,
+  MEMBERSHIP_STATES,
+  MEMBERSHIP_STATUSES,
+  PERIOD_MONTHS,
+  PLAN_TIERS,
+  REDEEM_SCOPES,
   DISCOUNT_LEVELS,
   PAYMENT_METHODS,
   REVENUE_ENGINES,
@@ -56,6 +63,11 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "clients",
   "detail_centers",
   "inventory_items",
+  "membership_benefits",
+  "membership_events",
+  "membership_plans",
+  "membership_redemptions",
+  "memberships",
   "organizations",
   "profiles",
   "role_assignments",
@@ -86,15 +98,21 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "client_history",
   "create_appointment",
   "create_client",
+  "create_membership",
   "create_service",
   "create_service_order",
   "create_service_order_from_appointment",
   "find_client_matches",
   "link_client_to_center",
   "list_appointments",
+  "list_memberships",
   "list_service_orders",
+  "membership_balance",
+  "membership_metric_facts",
   "my_detail_centers",
   "record_service_order_consumption",
+  "redeem_membership_benefit",
+  "renew_membership",
   "register_service_order_evidence",
   "remove_service_order_evidence",
   "report_service_order_incident",
@@ -105,6 +123,8 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "set_active_center",
   "set_appointment_status",
   "set_center_membership",
+  "set_membership_benefit",
+  "set_membership_state",
   "set_role_assignment",
   "set_service_center_config",
   "set_service_order_item",
@@ -121,7 +141,9 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "update_vehicle",
   "upsert_bay",
   "upsert_inventory_item",
+  "upsert_membership_plan",
   "upsert_technician",
+  "void_membership_redemption",
   "void_service_order_discount",
 ];
 
@@ -214,6 +236,39 @@ describe("paridad SQL ↔ TypeScript", () => {
       );
     expect(Number(bucket?.[1])).toBe(EVIDENCE_MAX_BYTES);
     expect(bucket?.[2]?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...EVIDENCE_MIME_TYPES]);
+  });
+
+  it("membresías: estados, estado efectivo, niveles, periodicidad, alcance, eventos y transiciones coinciden", () => {
+    const listIn = (re: RegExp) =>
+      re
+        .exec(allSql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listIn(/create type public\.membership_state as enum \(([^)]+)\)/)).toEqual([
+      ...MEMBERSHIP_STATES,
+    ]);
+    expect([...Constants.public.Enums.membership_state]).toEqual([...MEMBERSHIP_STATES]);
+    const status = /function private\.membership_status[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    expect([...status.matchAll(/(?:then|else) '(\w+)'/g)].map((m) => m[1]).sort()).toEqual(
+      [...MEMBERSHIP_STATUSES].sort(),
+    );
+    expect(listIn(/tier text not null check \(tier in \(([^)]+)\)\)/)).toEqual([...PLAN_TIERS]);
+    expect(
+      listIn(/period_months smallint not null check \(period_months in \(([^)]+)\)\)/)?.map(Number),
+    ).toEqual([...PERIOD_MONTHS]);
+    expect(listIn(/check \(redeem_scope in \(([^)]+)\)\)/)).toEqual([...REDEEM_SCOPES]);
+    const events = /check \(kind in \(\s*('alta'[\s\S]*?'redencion_anulada')/.exec(allSql)?.[1] ?? "";
+    expect([...events.matchAll(/'(\w+)'/g)].map((m) => m[1])).toEqual([...MEMBERSHIP_EVENT_KINDS]);
+    const fn = /function public\.set_membership_state[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    const sqlPairs = [
+      ...fn.matchAll(/when m\.state (?:= '(\w+)'|in \(([^)]+)\)) and p_state = '(\w+)'/g),
+    ].flatMap((m) =>
+      (m[1] ? [m[1]] : m[2]!.split(",").map((x) => x.trim().replace(/'/g, ""))).map((f) => `${f}>${m[3]}`),
+    );
+    const domainPairs = Object.entries(MEMBERSHIP_STATE_TRANSITIONS).flatMap(([from, tos]) =>
+      tos.map((to) => `${from}>${to}`),
+    );
+    expect(sqlPairs.sort()).toEqual(domainPairs.sort());
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

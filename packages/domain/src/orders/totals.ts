@@ -99,13 +99,17 @@ export function previewDiscount(
   totals: OrderTotals,
   paidAmount: number,
   discount: Omit<TotalsDiscount, "voided">,
+  /** Suma de descuentos de membresía vigentes de la OS. */
+  membershipDiscount = 0,
 ): DiscountPreview {
   const line = discount.itemId ? totals.lines[discount.itemId] : undefined;
   const baseCents = line ? cents(line.subtotal) : cents(totals.subtotal - totals.lineDiscount);
   const remaining = line ? cents(line.subtotal - line.discount) : cents(totals.total);
   const amount = discountCents(discount, baseCents);
   const subtotal = cents(totals.subtotal);
-  const percent = subtotal > 0 ? ((cents(totals.discountTotal) + amount) * 100) / subtotal : 0;
+  // Los descuentos de membresía no cuentan para el nivel (los autoriza el plan).
+  const percent =
+    subtotal > 0 ? ((cents(totals.discountTotal) - cents(membershipDiscount) + amount) * 100) / subtotal : 0;
   const error =
     amount > remaining
       ? "El descuento excede el importe pendiente"
