@@ -3,6 +3,7 @@ import {
   activeCenterAccess,
   addDays,
   canInActiveCenter,
+  crmCopy,
   membershipKpiCards,
   membershipsCopy,
   sectionCopy,
@@ -28,7 +29,9 @@ export function ComercialScreen({
   header,
   subnav,
   onMemberships,
-}: PrivateScreenProps & { onMemberships: () => void }) {
+  onCrm,
+  onTasks,
+}: PrivateScreenProps & { onMemberships: () => void; onCrm: () => void; onTasks: () => void }) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const [all, setAll] = useState(false);
@@ -86,6 +89,12 @@ export function ComercialScreen({
       </Card>
       {canInActiveCenter(state, "memberships.read") ? (
         <Button label={membershipsCopy.title} variant="secondary" onPress={onMemberships} />
+      ) : null}
+      {canInActiveCenter(state, "crm.read") ? (
+        <>
+          <Button label={crmCopy.customersTitle} variant="secondary" onPress={onCrm} />
+          <Button label={crmCopy.tasksTitle} variant="secondary" onPress={onTasks} />
+        </>
       ) : null}
     </Screen>
   );
