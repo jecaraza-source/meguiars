@@ -27,6 +27,11 @@ import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
 import { ComercialScreen } from "@/screens/ComercialScreen";
+import { B2bAccountNewScreen } from "@/screens/B2bAccountNewScreen";
+import { B2bAccountScreen } from "@/screens/B2bAccountScreen";
+import { B2bAccountsScreen } from "@/screens/B2bAccountsScreen";
+import { B2bAgreementScreen } from "@/screens/B2bAgreementScreen";
+import { B2bProfitabilityScreen } from "@/screens/B2bProfitabilityScreen";
 import { CrmCustomerScreen } from "@/screens/CrmCustomerScreen";
 import { CrmCustomersScreen } from "@/screens/CrmCustomersScreen";
 import { CrmTasksScreen } from "@/screens/CrmTasksScreen";
@@ -93,6 +98,17 @@ export function Router() {
   const openCrmCustomer = (id: string) => {
     setCrmClientId(id);
     setScreen("crmCustomerDetail");
+  };
+  // Parámetros B2B (equivalen a /comercial/b2b/[id] y /comercial/b2b/convenios/[id] en web).
+  const [b2bAccountId, setB2bAccountId] = useState<string | null>(null);
+  const openB2bAccount = (id: string) => {
+    setB2bAccountId(id);
+    setScreen("b2bAccountDetail");
+  };
+  const [b2bAgreementId, setB2bAgreementId] = useState<string | null>(null);
+  const openB2bAgreement = (id: string) => {
+    setB2bAgreementId(id);
+    setScreen("b2bAgreementDetail");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -176,8 +192,62 @@ export function Router() {
             onMemberships={() => setScreen("memberships")}
             onCrm={() => setScreen("crmCustomers")}
             onTasks={() => setScreen("crmTasks")}
+            onB2b={() => setScreen("b2bAccounts")}
           />
         );
+        break;
+      case "b2bAccounts":
+        content = (
+          <B2bAccountsScreen
+            {...props}
+            onOpen={openB2bAccount}
+            onNew={() => setScreen("b2bAccountNew")}
+            onProfitability={() => setScreen("b2bProfitability")}
+          />
+        );
+        break;
+      case "b2bAccountNew":
+        content = (
+          <B2bAccountNewScreen {...props} onOpen={openB2bAccount} onCancel={() => setScreen("b2bAccounts")} />
+        );
+        break;
+      case "b2bAccountDetail":
+        content = b2bAccountId ? (
+          <B2bAccountScreen
+            key={b2bAccountId}
+            {...props}
+            accountId={b2bAccountId}
+            onBack={() => setScreen("b2bAccounts")}
+            onOpenAgreement={openB2bAgreement}
+          />
+        ) : (
+          <B2bAccountsScreen
+            {...props}
+            onOpen={openB2bAccount}
+            onNew={() => setScreen("b2bAccountNew")}
+            onProfitability={() => setScreen("b2bProfitability")}
+          />
+        );
+        break;
+      case "b2bAgreementDetail":
+        content = b2bAgreementId ? (
+          <B2bAgreementScreen
+            key={b2bAgreementId}
+            {...props}
+            agreementId={b2bAgreementId}
+            onBack={(accountId) => (accountId ? openB2bAccount(accountId) : setScreen("b2bAccounts"))}
+          />
+        ) : (
+          <B2bAccountsScreen
+            {...props}
+            onOpen={openB2bAccount}
+            onNew={() => setScreen("b2bAccountNew")}
+            onProfitability={() => setScreen("b2bProfitability")}
+          />
+        );
+        break;
+      case "b2bProfitability":
+        content = <B2bProfitabilityScreen {...props} onOpen={openB2bAccount} />;
         break;
       case "crmCustomers":
         content = (
