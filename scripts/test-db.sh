@@ -45,6 +45,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó las órdenes de servicio de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.service_supply_standards")" == "4" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_order_consumptions c join public.service_order_items i on i.id = c.item_id where i.work_status = 'en_proceso'")" == "1" ]] \
   || { echo "El seed no cargó la ejecución y los consumos de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select string_agg(m.number || '=' || private.membership_status(m.state, m.ends_on, m.renewal_notice_days, current_date), ',' order by m.number) from public.memberships m")" == "MEM-000001=activa,MEM-000002=proxima_a_vencer,MEM-000003=activa" ]] \
+  || { echo "El seed no cargó las membresías de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
