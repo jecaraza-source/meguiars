@@ -21,27 +21,17 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthState } from "@/lib/auth/dal";
+import { stamp, text, values as formValues, type ActionFormState } from "@/lib/form-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export interface ClientFormState {
-  error?: string;
-  fields?: Record<string, string>;
-  message?: string;
-  /** Valores enviados, para volver a pintar el formulario tras un error. */
-  values?: Record<string, string | string[]>;
+export interface ClientFormState extends ActionFormState {
   /** Posibles duplicados encontrados al registrar. */
   matches?: ClientMatch[];
   /** Edición: el teléfono/email pertenece a otro cliente; se pide confirmar. */
   needsConfirm?: boolean;
-  /**
-   * Marca de cada respuesta. React 19 reinicia el formulario tras la acción;
-   * los formularios usan esta marca como `key` para volver a montarse con los
-   * valores enviados (los <select> no recuperan su defaultValue con el reinicio).
-   */
-  at?: number;
 }
 
-const stamp = (state: ClientFormState): ClientFormState => ({ ...state, at: Date.now() });
+const values = (form: FormData) => formValues(form, ["marketingChannels"]);
 
 /** Centro activo del servidor (nunca uno enviado por el cliente) y repositorio. */
 async function context(screen: Screen) {
@@ -51,21 +41,6 @@ async function context(screen: Screen) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
   return { centerId: state.activeCenterId, repo: createClientRepository(supabase) };
-}
-
-const text = (form: FormData, key: string) => {
-  const v = form.get(key);
-  return typeof v === "string" ? v : "";
-};
-
-function values(form: FormData): Record<string, string | string[]> {
-  const out: Record<string, string | string[]> = {};
-  for (const key of new Set(form.keys())) {
-    if (key.startsWith("$")) continue;
-    const all = form.getAll(key).filter((v): v is string => typeof v === "string");
-    out[key] = key === "marketingChannels" ? all : (all[0] ?? "");
-  }
-  return out;
 }
 
 export async function createClientAction(prev: ClientFormState, form: FormData): Promise<ClientFormState> {

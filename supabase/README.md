@@ -2,7 +2,7 @@
 
 - `config.toml`: pila local (`npm run db:start`). Postgres 17, igual que el servicio gestionado.
 - `migrations/`: migraciones SQL en orden (`YYYYMMDDHHMMSS_nombre.sql`), compatibles con `supabase db push`.
-- `seed.sql`: dos centros y tres clientes con vehículos de ejemplo. Lo cargan `supabase db reset` y `npm run test:db`.
+- `seed.sql`: dos centros, tres clientes con vehículos y un catálogo de servicios de ejemplo. Lo cargan `supabase db reset` y `npm run test:db`.
 - `tests/`: pruebas de RLS, RPC y auditoría. `00_supabase_stub.sql` sólo existe para correrlas en un Postgres plano; nunca se aplica a un proyecto real.
 
 ## Contrato de seguridad

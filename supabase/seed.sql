@@ -52,3 +52,31 @@ insert into public.vehicles (id, organization_id, client_id, make, model, year, 
   ('c2000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0', 'c1000000-0000-4000-8000-000000000003',
    'Toyota', 'RAV4', 2019, 'MEX9087', null, '11111111-1111-4111-8111-111111111111')
 on conflict (id) do nothing;
+
+-- Catálogo homologado de ejemplo (O2), con un servicio por motor de ingreso.
+-- Monterrey tiene precio propio en el lavado exprés y no ofrece el cerámico.
+insert into public.services (id, organization_id, code, name, description, revenue_engine,
+                             standard_duration_minutes, base_price, standard_direct_cost) values
+  ('5e000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'LAV-EXP', 'Lavado exprés',
+   'Exterior a mano, aspirado y cristales.', 'recurrente', 40, 250, 80),
+  ('5e000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 'LAV-PRE', 'Lavado premium',
+   'Lavado exprés más descontaminado, cera y acondicionado de interiores.', 'recurrente', 90, 550, 170),
+  ('5e000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', 'DET-INT', 'Detallado de interiores',
+   'Limpieza profunda de vestiduras, alfombras y plásticos.', 'valor_medio', 240, 1800, 600),
+  ('5e000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0', 'PUL-1E', 'Pulido en una etapa',
+   'Corrección ligera de pintura y sellador.', 'valor_medio', 300, 2800, 950),
+  ('5e000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-00000000d3e0', 'CER-9H', 'Recubrimiento cerámico',
+   'Corrección de pintura y cerámico 9H con garantía.', 'premium', 480, 12000, 4200),
+  ('5e000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-00000000d3e0', 'AROM', 'Aromatizante',
+   null, 'producto_complemento', 5, 90, 30),
+  ('5e000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-00000000d3e0', 'MEM-MEN', 'Membresía mensual de lavado',
+   'Hasta 4 lavados exprés al mes.', 'membresia', 5, 799, 0)
+on conflict (id) do nothing;
+
+insert into public.service_center_config (organization_id, detail_center_id, service_id, available, price_override,
+                                          direct_cost_override) values
+  ('00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+   '5e000000-0000-4000-8000-000000000001', true, 220, 70),
+  ('00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+   '5e000000-0000-4000-8000-000000000005', false, null, null)
+on conflict (detail_center_id, service_id) do nothing;

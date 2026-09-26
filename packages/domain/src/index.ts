@@ -12,3 +12,4 @@ export * from "./navigation";
 export * from "./sections";
 export * from "./environment";
 export * from "./clients";
+export * from "./catalog";

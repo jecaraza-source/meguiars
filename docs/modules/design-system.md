@@ -60,6 +60,7 @@ Catálogo vivo: **`/sistema`** en web y **"Sistema de diseño"** en el encabezad
 | Inicio                    | Mi centro                                                    |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
 | Operación                 | Operación del día (`operations.read`)                        |      ✓      |      ✓      |         ✓          |          |               |
 | Operación                 | Clientes y vehículos (`clients.read`, módulo O1)             |      ✓      |      ✓      |         ✓          |          |       ✓       |
+| Operación                 | Catálogo (`catalog.read`, módulo O2)                         |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
 | Comercial                 | Membresías y B2B (`commercial.read`)                         |      ✓      |      ✓      |                    |          |       ✓       |
 | Administración y Finanzas | Resumen financiero (`finance.read`), Equipo (`members.read`) |      ✓      | sólo Equipo |                    |    ✓     |               |
 | Dirección                 | Vista consolidada (`executive.read`)                         |      ✓      |             |                    |          |               |
