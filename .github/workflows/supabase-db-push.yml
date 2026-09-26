@@ -1,0 +1,68 @@
+# Workflow reutilizable: aplica las migraciones pendientes de supabase/migrations
+# a un ambiente con `supabase db push` (en orden; nunca el seed). Lo llama
+# deploy-db.yml. Secretos del GitHub Environment del mismo nombre:
+# SUPABASE_ACCESS_TOKEN y SUPABASE_DB_PASSWORD (secrets) y SUPABASE_PROJECT_REF
+# (variable). Ver docs/modules/ci-cd.md.
+name: supabase db push
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    name: db push (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.environment }}
+    # Nunca dos despliegues al mismo ambiente a la vez, y sin cancelar uno en curso.
+    concurrency:
+      group: deploy-db-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      TARGET: ${{ inputs.environment }}
+    steps:
+      - name: Verificar configuración del environment
+        id: config
+        run: |
+          missing=()
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF; do
+            [[ -n "${!v}" ]] || missing+=("$v")
+          done
+          if (( ${#missing[@]} == 0 )); then echo "ready=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          msg="El environment '$TARGET' no tiene: ${missing[*]} (docs/modules/ci-cd.md)."
+          # Tras un merge, un ambiente aún sin configurar sólo avisa; a mano es error.
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then echo "::warning::$msg Se omite."; exit 0; fi
+          echo "::error::$msg"; exit 1
+      - if: steps.config.outputs.ready == 'true'
+        uses: actions/checkout@v4
+      - if: steps.config.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Instala la CLI de Supabase fijada en package-lock.json.
+      - if: steps.config.outputs.ready == 'true'
+        run: npm ci
+      - if: steps.config.outputs.ready == 'true'
+        run: node scripts/check-migrations.mjs
+      - if: steps.config.outputs.ready == 'true'
+        run: npx supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Migraciones pendientes (dry run)
+        if: steps.config.outputs.ready == 'true'
+        run: npx supabase db push --dry-run
+      - name: Aplicar
+        if: steps.config.outputs.ready == 'true'
+        run: npx supabase db push
+      - name: Estado final
+        if: steps.config.outputs.ready == 'true'
+        run: npx supabase migration list

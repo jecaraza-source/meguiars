@@ -1,0 +1,41 @@
+# Despliegue de migraciones Supabase por ambiente.
+# - Merge a main que cambia supabase/migrations: staging automático y después
+#   production, que espera la aprobación del environment `production`.
+# - Manual (Actions → Migraciones Supabase → Run workflow): un solo ambiente,
+#   siempre desde main (p. ej. para reintentar).
+name: Migraciones Supabase
+
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Ambiente destino
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.environment == 'staging')
+    uses: ./.github/workflows/supabase-db-push.yml
+    with:
+      environment: staging
+    secrets: inherit
+
+  production:
+    needs: staging
+    # Tras un merge, sólo si staging salió bien; a mano, sin pasar por staging.
+    if: >-
+      always() && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'push' && needs.staging.result == 'success') ||
+       (github.event_name == 'workflow_dispatch' && inputs.environment == 'production'))
+    uses: ./.github/workflows/supabase-db-push.yml
+    with:
+      environment: production
+    secrets: inherit

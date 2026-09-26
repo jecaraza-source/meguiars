@@ -1,9 +1,16 @@
+# Integración continua. En cada PR corren todos los jobs; `ci-ok` resume el
+# resultado y es el único check requerido por la protección de `main`
+# (docs/modules/ci-cd.md). Sin secretos: nada de este workflow toca Supabase,
+# Vercel ni EAS.
 name: CI
 
 on:
   pull_request:
   push:
     branches: [main]
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -13,11 +20,14 @@ jobs:
   checks:
     name: Formato, lint, typecheck, tests y build web
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run format:check
@@ -26,9 +36,27 @@ jobs:
       - run: npm test
       - run: npm run build:web
 
-  database:
-    name: Migraciones y pruebas RLS
+  migrations:
+    name: Reglas de migraciones versionadas
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Formato y versiones únicas
+        if: github.event_name != 'pull_request'
+        run: node scripts/check-migrations.mjs
+      - name: Sin editar migraciones de la base y en orden
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_REF"
+          node scripts/check-migrations.mjs "origin/$BASE_REF"
+
+  database:
+    name: Migraciones desde cero y pruebas RLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:17
@@ -42,3 +70,54 @@ jobs:
       - run: npm run test:db
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+  supabase:
+    name: Migraciones en la imagen de Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Postgres de Supabase (misma imagen que el servicio gestionado, con los
+      # esquemas auth/storage reales): aplica migraciones y seed desde cero.
+      - run: npx supabase db start
+      - name: Linter de funciones (plpgsql_check)
+        run: npx supabase db lint --local --level error --fail-on error
+      - if: always()
+        run: npx supabase stop --no-backup
+
+  mobile:
+    name: Bundle móvil (Android e iOS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Compila el bundle de JS de ambas plataformas como lo haría EAS; la
+      # distribución (binarios firmados) va por .github/workflows/mobile-build.yml.
+      - run: npx expo export --platform android --platform ios --output-dir "$RUNNER_TEMP/expo-export"
+        working-directory: apps/mobile
+
+  ci-ok:
+    name: CI ok
+    if: always()
+    needs: [checks, migrations, database, supabase, mobile]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Todos los jobs pasaron
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados: $RESULTS"
+          for r in $RESULTS; do
+            [[ "$r" == "success" ]] || { echo "::error::Hay jobs fallidos, cancelados u omitidos: el PR no está listo para merge."; exit 1; }
+          done

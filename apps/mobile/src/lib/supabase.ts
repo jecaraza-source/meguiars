@@ -3,9 +3,11 @@ import {
   createMeguiarsClient,
   type MeguiarsSupabaseClient,
 } from "@meguiars/supabase";
+import { checkSupabaseTarget } from "@meguiars/domain";
 import { parseSupabasePublicEnv } from "@meguiars/validation";
 import * as SecureStore from "expo-secure-store";
 import { AppState } from "react-native";
+import { APP_ENV } from "./environment";
 
 /** URL a la que Supabase redirige el enlace de recuperación (scheme de app.json). */
 export const AUTH_REDIRECT_URL = "meguiars://auth/confirm";
@@ -18,6 +20,7 @@ const env = parseSupabasePublicEnv(
   process.env.EXPO_PUBLIC_SUPABASE_URL,
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
 );
+checkSupabaseTarget(APP_ENV, env?.url);
 
 export const supabase: MeguiarsSupabaseClient | null = env
   ? createMeguiarsClient(env, {

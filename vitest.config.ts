@@ -8,6 +8,7 @@ const packages = readdirSync("packages", { withFileTypes: true })
 
 export default defineConfig({
   test: {
-    projects: packages,
+    // `scripts/`: pruebas de las guardas del pipeline (migraciones, secretos, CI).
+    projects: [...packages, "scripts"],
   },
 });

@@ -1,0 +1,22 @@
+{
+  "cli": {
+    "version": ">= 24.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": { "EXPO_PUBLIC_APP_ENV": "preview" },
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "environment": "production",
+      "env": { "EXPO_PUBLIC_APP_ENV": "production" },
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
