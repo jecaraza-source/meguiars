@@ -37,6 +37,16 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "user_detail_centers",
 ];
 
+// Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
+const typedRpcs: (keyof Database["public"]["Functions"])[] = [
+  "my_detail_centers",
+  "set_active_center",
+  "set_center_membership",
+  "set_role_assignment",
+  "set_user_disabled",
+  "update_detail_center",
+];
+
 describe("paridad SQL ↔ TypeScript", () => {
   it("los roles del dominio coinciden con la definición vigente del enum app_role", () => {
     const defs = [...allSql.matchAll(/create type public\.app_role(?:_v2)? as enum \(([^)]+)\)/gi)];
@@ -52,14 +62,12 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect(currentTables()).toEqual([...typedTables].sort());
   });
 
-  it("cada RPC tipada existe en las migraciones", () => {
-    for (const fn of [
-      "update_detail_center",
-      "set_center_membership",
-      "set_role_assignment",
-      "my_detail_centers",
-    ]) {
-      expect(allSql).toContain(`create function public.${fn}(`);
+  it("las RPC tipadas son exactamente las funciones públicas vigentes de las migraciones", () => {
+    const fns = new Set<string>();
+    for (const m of allSql.matchAll(/create function public\.(\w+)\(|drop function public\.(\w+)\(/gi)) {
+      if (m[1]) fns.add(m[1]);
+      if (m[2]) fns.delete(m[2]);
     }
+    expect([...fns].sort()).toEqual([...typedRpcs].sort());
   });
 });

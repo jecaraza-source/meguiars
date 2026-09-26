@@ -23,6 +23,38 @@ export function createAccessRepository(client: MeguiarsSupabaseClient): AccessRe
       );
     },
 
+    async listCenterMembers(detailCenterId) {
+      const members = await run(
+        () =>
+          client
+            .from("user_detail_centers")
+            .select("user_id, role, active")
+            .eq("detail_center_id", detailCenterId)
+            .order("role"),
+        (rows: Pick<Tables<"user_detail_centers">, "user_id" | "role" | "active">[]) => rows,
+      );
+      if (!members.ok) return members;
+      const ids = members.data.map((m) => m.user_id);
+      const names = new Map<string, string | null>();
+      if (ids.length > 0) {
+        const profiles = await run(
+          () => client.from("profiles").select("id, full_name").in("id", ids),
+          (rows: Pick<Tables<"profiles">, "id" | "full_name">[]) => rows,
+        );
+        if (!profiles.ok) return profiles;
+        for (const p of profiles.data) names.set(p.id, p.full_name);
+      }
+      return {
+        ok: true,
+        data: members.data.map((m) => ({
+          userId: m.user_id,
+          fullName: names.get(m.user_id) ?? null,
+          role: m.role,
+          active: m.active,
+        })),
+      };
+    },
+
     setCenterMembership(command) {
       const parsed = setCenterMembershipSchema.safeParse(command);
       if (!parsed.success) return Promise.resolve(invalid(parsed.error));

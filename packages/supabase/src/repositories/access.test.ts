@@ -127,3 +127,31 @@ describe("AccessRepository (Supabase)", () => {
     expect(result.ok || result.error.kind).toBe("validation");
   });
 });
+
+describe("listCenterMembers", () => {
+  it("combina membresías del centro con nombres de perfil", async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        { user_id: "u1", role: "encargado", active: true },
+        { user_id: "u2", role: "operador_recepcion", active: false },
+      ],
+      error: null,
+    });
+    const inFn = vi.fn().mockResolvedValue({ data: [{ id: "u1", full_name: "Ana" }], error: null });
+    const from = vi.fn((table: string) =>
+      table === "user_detail_centers"
+        ? { select: () => ({ eq: () => ({ order }) }) }
+        : { select: () => ({ in: inFn }) },
+    );
+    const client = { from } as unknown as MeguiarsSupabaseClient;
+    const result = await createAccessRepository(client).listCenterMembers(CENTER);
+    expect(inFn).toHaveBeenCalledWith("id", ["u1", "u2"]);
+    expect(result).toEqual({
+      ok: true,
+      data: [
+        { userId: "u1", fullName: "Ana", role: "encargado", active: true },
+        { userId: "u2", fullName: null, role: "operador_recepcion", active: false },
+      ],
+    });
+  });
+});

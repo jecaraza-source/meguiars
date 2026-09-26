@@ -1,0 +1,42 @@
+import type { Capability } from "../roles";
+import { canInActiveCenter, usableCenters, type AuthState } from "./session";
+
+/** Requisito de acceso de una ruta (web) o pantalla (móvil). */
+export interface GuardRequirement {
+  /** Requiere un centro activo elegido. */
+  center?: boolean;
+  /** Capacidad requerida en el centro activo. */
+  capability?: Capability;
+}
+
+export type GuardResult =
+  | { allow: true }
+  | { allow: false; redirect: "login" | "disabled" | "select_center" | "no_centers" | "forbidden" };
+
+/** Rutas/pantallas de la app y sus requisitos. Web y móvil usan la misma tabla. */
+export const SCREEN_GUARDS = {
+  home: { center: true },
+  selectCenter: {},
+  team: { center: true, capability: "members.read" },
+  editCenter: { center: true, capability: "center.manage" },
+  account: {},
+} as const satisfies Record<string, GuardRequirement>;
+
+export type Screen = keyof typeof SCREEN_GUARDS;
+
+export function evaluateGuard(state: AuthState, requirement: GuardRequirement): GuardResult {
+  if (state.status === "loading" || state.status === "signed_out") return { allow: false, redirect: "login" };
+  if (state.status === "disabled") return { allow: false, redirect: "disabled" };
+  if (requirement.center || requirement.capability) {
+    if (usableCenters(state.access).length === 0) return { allow: false, redirect: "no_centers" };
+    if (!state.activeCenterId) return { allow: false, redirect: "select_center" };
+  }
+  if (requirement.capability && !canInActiveCenter(state, requirement.capability)) {
+    return { allow: false, redirect: "forbidden" };
+  }
+  return { allow: true };
+}
+
+export function guardScreen(state: AuthState, screen: Screen): GuardResult {
+  return evaluateGuard(state, SCREEN_GUARDS[screen]);
+}

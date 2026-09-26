@@ -14,7 +14,7 @@ supabase/             config local, migraciones, seed y pruebas SQL de RLS
 docs/                 ADRs y documentación de módulos
 ```
 
-Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md) y [Multicentro y seguridad](docs/modules/multicentro-seguridad.md).
+Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md), [Multicentro y seguridad](docs/modules/multicentro-seguridad.md) y [Auth y sesión](docs/modules/auth-sesion.md).
 
 ## Requisitos
 
@@ -33,7 +33,7 @@ npm run dev:web                                    # http://localhost:3000
 npm run dev:mobile                                 # abre en Expo Go / simulador
 ```
 
-Sin variables de entorno, las dos apps arrancan y muestran el estado "Supabase no está configurado".
+Sin variables de entorno, las dos apps arrancan y muestran el estado "Supabase no está configurado". Para el login y la recuperación de contraseña, configura las URLs de Supabase Auth como indica [auth-sesion.md](docs/modules/auth-sesion.md#configuración-de-supabase-auth-dashboard).
 
 ## Comandos
 
