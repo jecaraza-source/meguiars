@@ -48,6 +48,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
 import { OrderB2bCard } from "@/components/OrderB2bCard";
+import { UpsellCard } from "@/components/UpsellCard";
 import { OrderMembershipCard } from "@/components/OrderMembershipCard";
 import { ChannelFields } from "@/components/OrderFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
@@ -179,6 +180,14 @@ export function OrderDetailScreen({
         mutate={mutate}
         repo={repo}
       />
+      {canWrite ? (
+        <UpsellCard
+          key={`u-${k}`}
+          order={order}
+          onChanged={reload}
+          onSellMembership={() => (onNewMembership ? onNewMembership() : reload())}
+        />
+      ) : null}
       <OrderB2bCard
         key={`b-${k}`}
         order={order}

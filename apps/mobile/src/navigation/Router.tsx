@@ -33,6 +33,7 @@ import { B2bAccountsScreen } from "@/screens/B2bAccountsScreen";
 import { B2bAgreementScreen } from "@/screens/B2bAgreementScreen";
 import { B2bProfitabilityScreen } from "@/screens/B2bProfitabilityScreen";
 import { CrmCustomerScreen } from "@/screens/CrmCustomerScreen";
+import { UpsellScreen } from "@/screens/UpsellScreen";
 import { CrmCustomersScreen } from "@/screens/CrmCustomersScreen";
 import { CrmTasksScreen } from "@/screens/CrmTasksScreen";
 import { MembershipDetailScreen } from "@/screens/MembershipDetailScreen";
@@ -193,6 +194,7 @@ export function Router() {
             onCrm={() => setScreen("crmCustomers")}
             onTasks={() => setScreen("crmTasks")}
             onB2b={() => setScreen("b2bAccounts")}
+            onUpsell={() => setScreen("upsell")}
           />
         );
         break;
@@ -245,6 +247,9 @@ export function Router() {
             onProfitability={() => setScreen("b2bProfitability")}
           />
         );
+        break;
+      case "upsell":
+        content = <UpsellScreen {...props} />;
         break;
       case "b2bProfitability":
         content = <B2bProfitabilityScreen {...props} onOpen={openB2bAccount} />;
