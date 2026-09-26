@@ -2,8 +2,8 @@
 // 20260922000000_foundation, 20260923000000_multicenter_security,
 // 20260925000000_advisor_fixes, 20260926000000_auth_session,
 // 20260927000000_clients_vehicles, 20260928000000_service_catalog,
-// 20260929000000_agenda, 20260930000000_service_orders y
-// 20261001000000_execution_evidence. Regenerar tras
+// 20260929000000_agenda, 20260930000000_service_orders,
+// 20261001000000_execution_evidence y 20261002000000_memberships. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -493,6 +493,425 @@ export type Database = {
           },
         ];
       };
+      membership_benefits: {
+        Row: {
+          created_at: string;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          plan_id: string;
+          quantity_per_period: number;
+          service_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          plan_id: string;
+          quantity_per_period: number;
+          service_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          plan_id?: string;
+          quantity_per_period?: number;
+          service_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "membership_benefits_organization_id_plan_id_fkey";
+            columns: ["organization_id", "plan_id"];
+            isOneToOne: false;
+            referencedRelation: "membership_plans";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "membership_benefits_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      membership_events: {
+        Row: {
+          actor_id: string | null;
+          amount: number | null;
+          data: Json | null;
+          detail_center_id: string;
+          from_state: string | null;
+          id: number;
+          kind: string;
+          membership_center_id: string;
+          membership_id: string;
+          occurred_at: string;
+          organization_id: string;
+          period_end: string | null;
+          period_start: string | null;
+          plan_code: string | null;
+          reason: string | null;
+          request_id: string | null;
+          to_state: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          amount?: number | null;
+          data?: Json | null;
+          detail_center_id: string;
+          from_state?: string | null;
+          id?: never;
+          kind: string;
+          membership_center_id: string;
+          membership_id: string;
+          occurred_at?: string;
+          organization_id: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          plan_code?: string | null;
+          reason?: string | null;
+          request_id?: string | null;
+          to_state?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          amount?: number | null;
+          data?: Json | null;
+          detail_center_id?: string;
+          from_state?: string | null;
+          id?: never;
+          kind?: string;
+          membership_center_id?: string;
+          membership_id?: string;
+          occurred_at?: string;
+          organization_id?: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          plan_code?: string | null;
+          reason?: string | null;
+          request_id?: string | null;
+          to_state?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "membership_events_organization_id_membership_id_fkey";
+            columns: ["organization_id", "membership_id"];
+            isOneToOne: false;
+            referencedRelation: "memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      membership_plans: {
+        Row: {
+          active: boolean;
+          available_from: string;
+          available_until: string | null;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          period_months: number;
+          price: number;
+          redeem_scope: string;
+          renewal_notice_days: number;
+          restrictions: string | null;
+          tier: string;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          available_from?: string;
+          available_until?: string | null;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+          period_months: number;
+          price: number;
+          redeem_scope?: string;
+          renewal_notice_days?: number;
+          restrictions?: string | null;
+          tier: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          available_from?: string;
+          available_until?: string | null;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          period_months?: number;
+          price?: number;
+          redeem_scope?: string;
+          renewal_notice_days?: number;
+          restrictions?: string | null;
+          tier?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "membership_plans_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      membership_redemptions: {
+        Row: {
+          amount: number;
+          detail_center_id: string;
+          discount_id: string | null;
+          id: string;
+          item_id: string | null;
+          membership_center_id: string;
+          membership_id: string;
+          organization_id: string;
+          period_end: string;
+          period_start: string;
+          quantity: number;
+          redeemed_at: string;
+          redeemed_by: string | null;
+          request_id: string;
+          service_code: string;
+          service_id: string;
+          service_name: string;
+          service_order_id: string;
+          unit_price: number;
+          updated_at: string;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          detail_center_id: string;
+          discount_id?: string | null;
+          id?: string;
+          item_id?: string | null;
+          membership_center_id: string;
+          membership_id: string;
+          organization_id: string;
+          period_end: string;
+          period_start: string;
+          quantity: number;
+          redeemed_at?: string;
+          redeemed_by?: string | null;
+          request_id: string;
+          service_code: string;
+          service_id: string;
+          service_name: string;
+          service_order_id: string;
+          unit_price: number;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          detail_center_id?: string;
+          discount_id?: string | null;
+          id?: string;
+          item_id?: string | null;
+          membership_center_id?: string;
+          membership_id?: string;
+          organization_id?: string;
+          period_end?: string;
+          period_start?: string;
+          quantity?: number;
+          redeemed_at?: string;
+          redeemed_by?: string | null;
+          request_id?: string;
+          service_code?: string;
+          service_id?: string;
+          service_name?: string;
+          service_order_id?: string;
+          unit_price?: number;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "membership_redemptions_discount_id_fkey";
+            columns: ["discount_id"];
+            isOneToOne: false;
+            referencedRelation: "service_order_discounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "membership_redemptions_organization_id_membership_id_fkey";
+            columns: ["organization_id", "membership_id"];
+            isOneToOne: false;
+            referencedRelation: "memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "membership_redemptions_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "membership_redemptions_service_order_id_item_id_fkey";
+            columns: ["service_order_id", "item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_order_items";
+            referencedColumns: ["service_order_id", "id"];
+          },
+        ];
+      };
+      memberships: {
+        Row: {
+          auto_renew: boolean;
+          benefits: Json;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          client_id: string;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string;
+          ends_on: string;
+          id: string;
+          number: string;
+          number_seq: number;
+          organization_id: string;
+          payment_method_ref: string | null;
+          period_anchor: string;
+          period_months: number;
+          plan_code: string;
+          plan_id: string;
+          plan_name: string;
+          plan_tier: string;
+          price: number;
+          redeem_scope: string;
+          renewal_notice_days: number;
+          renewals: number;
+          request_id: string;
+          started_on: string;
+          state: Database["public"]["Enums"]["membership_state"];
+          suspended_at: string | null;
+          updated_at: string;
+          vehicle_id: string;
+        };
+        Insert: {
+          auto_renew?: boolean;
+          benefits: Json;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          client_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id: string;
+          ends_on: string;
+          id?: string;
+          number: string;
+          number_seq: number;
+          organization_id: string;
+          payment_method_ref?: string | null;
+          period_anchor: string;
+          period_months: number;
+          plan_code: string;
+          plan_id: string;
+          plan_name: string;
+          plan_tier: string;
+          price: number;
+          redeem_scope: string;
+          renewal_notice_days: number;
+          renewals?: number;
+          request_id: string;
+          started_on: string;
+          state?: Database["public"]["Enums"]["membership_state"];
+          suspended_at?: string | null;
+          updated_at?: string;
+          vehicle_id: string;
+        };
+        Update: {
+          auto_renew?: boolean;
+          benefits?: Json;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          client_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string;
+          ends_on?: string;
+          id?: string;
+          number?: string;
+          number_seq?: number;
+          organization_id?: string;
+          payment_method_ref?: string | null;
+          period_anchor?: string;
+          period_months?: number;
+          plan_code?: string;
+          plan_id?: string;
+          plan_name?: string;
+          plan_tier?: string;
+          price?: number;
+          redeem_scope?: string;
+          renewal_notice_days?: number;
+          renewals?: number;
+          request_id?: string;
+          started_on?: string;
+          state?: Database["public"]["Enums"]["membership_state"];
+          suspended_at?: string | null;
+          updated_at?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "memberships_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "memberships_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "memberships_organization_id_plan_id_fkey";
+            columns: ["organization_id", "plan_id"];
+            isOneToOne: false;
+            referencedRelation: "membership_plans";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "memberships_organization_id_vehicle_id_fkey";
+            columns: ["organization_id", "vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       organizations: {
         Row: {
           active: boolean;
@@ -729,6 +1148,7 @@ export type Database = {
           organization_id: string;
           reason: string;
           service_order_id: string;
+          source: string;
           updated_at: string;
           value: number;
           void_reason: string | null;
@@ -746,6 +1166,7 @@ export type Database = {
           organization_id: string;
           reason: string;
           service_order_id: string;
+          source?: string;
           updated_at?: string;
           value: number;
           void_reason?: string | null;
@@ -763,6 +1184,7 @@ export type Database = {
           organization_id?: string;
           reason?: string;
           service_order_id?: string;
+          source?: string;
           updated_at?: string;
           value?: number;
           void_reason?: string | null;
@@ -786,6 +1208,7 @@ export type Database = {
           },
         ];
       };
+
       service_order_events: {
         Row: {
           actor_id: string | null;
@@ -1929,6 +2352,24 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_membership: {
+        Args: {
+          p_client_id: string;
+          p_detail_center_id: string;
+          p_payment_reference?: string;
+          p_plan_id: string;
+          p_request_id: string;
+          p_starts_on?: string;
+          p_vehicle_id: string;
+        };
+        Returns: Database["public"]["Tables"]["memberships"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "memberships";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_service: {
         Args: {
           p_base_price: number;
@@ -2155,6 +2596,32 @@ export type Database = {
           vehicle_label: string | null;
         }[];
       };
+      list_memberships: {
+        Args: {
+          p_detail_center_id: string;
+          p_limit?: number;
+          p_query?: string;
+          p_status?: string;
+        };
+        Returns: {
+          client_id: string;
+          client_name: string;
+          ends_on: string;
+          id: string;
+          number: string;
+          period_months: number;
+          plan_code: string;
+          plan_name: string;
+          plan_tier: string;
+          price: number;
+          renewals: number;
+          started_on: string;
+          state: Database["public"]["Enums"]["membership_state"];
+          status: string;
+          vehicle_id: string;
+          vehicle_label: string;
+        }[];
+      };
       list_service_orders: {
         Args: {
           p_detail_center_id: string;
@@ -2177,6 +2644,44 @@ export type Database = {
           technician_name: string | null;
           total: number;
           vehicle_label: string;
+        }[];
+      };
+      membership_balance: {
+        Args: {
+          p_membership_id: string;
+        };
+        Returns: {
+          period_end: string | null;
+          period_start: string | null;
+          quantity_per_period: number;
+          remaining: number;
+          service_code: string;
+          service_id: string;
+          service_name: string;
+          used: number;
+        }[];
+      };
+      membership_metric_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_to: string;
+        };
+        Returns: {
+          cancelled_in_range: boolean;
+          detail_center_id: string;
+          ends_on: string;
+          entitled_units: number;
+          expired_in_range: boolean;
+          membership_id: string;
+          new_in_range: boolean;
+          period_months: number;
+          price: number;
+          renewals_in_range: number;
+          revenue_in_range: number;
+          started_on: string;
+          status: string;
+          used_units: number;
         }[];
       };
       my_detail_centers: {
@@ -2289,6 +2794,23 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      redeem_membership_benefit: {
+        Args: {
+          p_item_id: string;
+          p_membership_id: string;
+          p_order_id: string;
+          p_quantity: number;
+          p_request_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["membership_redemptions"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "membership_redemptions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       register_service_order_evidence: {
         Args: {
           p_content_type: string;
@@ -2359,6 +2881,21 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "service_order_evidence";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      renew_membership: {
+        Args: {
+          p_membership_id: string;
+          p_payment_reference?: string;
+          p_plan_id?: string;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["memberships"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "memberships";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -2503,6 +3040,30 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "user_detail_centers";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_membership_benefit: {
+        Args: {
+          p_notes: string | null;
+          p_plan_id: string;
+          p_quantity_per_period: number | null;
+          p_reason: string;
+          p_service_id: string;
+        };
+        Returns: undefined;
+      };
+      set_membership_state: {
+        Args: {
+          p_membership_id: string;
+          p_reason: string;
+          p_state: Database["public"]["Enums"]["membership_state"];
+        };
+        Returns: Database["public"]["Tables"]["memberships"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "memberships";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -3065,6 +3626,32 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      upsert_membership_plan: {
+        Args: {
+          p_active: boolean;
+          p_available_from: string | null;
+          p_available_until: string | null;
+          p_code: string;
+          p_description: string | null;
+          p_id: string | null;
+          p_name: string;
+          p_organization_id: string;
+          p_period_months: number;
+          p_price: number;
+          p_reason: string;
+          p_redeem_scope: string;
+          p_renewal_notice_days: number;
+          p_restrictions: string | null;
+          p_tier: string;
+        };
+        Returns: Database["public"]["Tables"]["membership_plans"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "membership_plans";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       upsert_technician: {
         Args: {
           p_active: boolean;
@@ -3086,6 +3673,20 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "technicians";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      void_membership_redemption: {
+        Args: {
+          p_reason: string;
+          p_redemption_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["membership_redemptions"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "membership_redemptions";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -3167,6 +3768,7 @@ export type Database = {
       app_role: "admin_socio" | "encargado" | "operador_recepcion" | "contador" | "comercial_b2b";
       discount_level: "operador" | "encargado" | "admin";
       item_work_status: "pendiente" | "en_proceso" | "pausada" | "terminada";
+      membership_state: "activa" | "suspendida" | "cancelada";
       revenue_engine: "recurrente" | "valor_medio" | "premium" | "producto_complemento" | "membresia";
       sales_channel: "b2c" | "membresia" | "b2b";
       service_order_status:
@@ -3223,6 +3825,7 @@ export const Constants = {
       app_role: ["admin_socio", "encargado", "operador_recepcion", "contador", "comercial_b2b"],
       discount_level: ["operador", "encargado", "admin"],
       item_work_status: ["pendiente", "en_proceso", "pausada", "terminada"],
+      membership_state: ["activa", "suspendida", "cancelada"],
       revenue_engine: ["recurrente", "valor_medio", "premium", "producto_complemento", "membresia"],
       sales_channel: ["b2c", "membresia", "b2b"],
       service_order_status: ["abierta", "autorizada", "en_proceso", "pausada", "terminada", "entregada", "cancelada"],

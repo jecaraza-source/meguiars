@@ -119,6 +119,7 @@ export const toServiceOrder = (row: DetailRow): ServiceOrder => ({
       amount: Number(d.amount),
       reason: d.reason,
       authorizationLevel: d.authorization_level,
+      source: d.source === "membresia" ? "membresia" : "manual",
       authorizedBy: d.authorized_by,
       createdAt: d.created_at,
       voidedAt: d.voided_at,

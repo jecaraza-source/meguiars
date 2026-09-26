@@ -132,8 +132,10 @@ export function presentDiscount(d: ServiceOrderDiscount, lineName: (itemId: stri
     value: d.kind === "percent" ? `${d.value}%` : formatMoney(d.value),
     amount: formatMoney(d.amount),
     reason: d.voidedAt ? `${d.reason} · ${ordersCopy.voided}: ${d.voidReason ?? ""}` : d.reason,
-    level: DISCOUNT_LEVEL_LABELS[d.authorizationLevel],
+    level: d.source === "membresia" ? "Membresía" : DISCOUNT_LEVEL_LABELS[d.authorizationLevel],
     active: d.voidedAt === null,
+    /** El descuento de membresía se anula desde la redención, no aquí. */
+    voidable: d.voidedAt === null && d.source !== "membresia",
   };
 }
 

@@ -45,7 +45,8 @@ describe("navegación por rol", () => {
   it.each<[AppRole, string[]]>([
     ["admin_socio", ["inicio", "operacion", "comercial", "finanzas", "direccion"]],
     ["encargado", ["inicio", "operacion", "comercial", "finanzas"]],
-    ["operador_recepcion", ["inicio", "operacion"]],
+    // Vende y renueva membresías en recepción (Comercial → Membresías).
+    ["operador_recepcion", ["inicio", "operacion", "comercial"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     ["contador", ["inicio", "operacion", "finanzas"]],
     // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día.
@@ -89,6 +90,17 @@ describe("navegación por rol", () => {
     expect(sectionOfPath("/ordenes/abc/ejecucion")).toBe("operacion");
     expect(navScreenOf("supplies")).toBe("catalog");
     expect(sectionOfPath("/catalogo/insumos")).toBe("operacion");
+    expect(navScreenOf("membershipDetail")).toBe("memberships");
+    expect(navScreenOf("membershipPlans")).toBe("memberships");
+    expect(sectionOfPath("/comercial/membresias/abc")).toBe("comercial");
+    expect(sectionOfPath("/comercial/planes")).toBe("comercial");
+  });
+
+  it("Membresías: recepción y comercial las venden; el contador sólo ve KPIs agregados", () => {
+    expect(itemsOf(["operador_recepcion"])).toContain("memberships");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("comercial");
+    expect(itemsOf(["comercial_b2b"])).toEqual(expect.arrayContaining(["comercial", "memberships"]));
+    expect(itemsOf(["contador"])).not.toContain("memberships");
   });
 
   it("varios roles en el centro suman secciones", () => {

@@ -7,6 +7,7 @@ export * from "./repositories/catalog";
 export * from "./repositories/agenda";
 export * from "./repositories/orders";
 export * from "./repositories/execution";
+export * from "./repositories/memberships";
 export * from "./auth";
 export * from "./storage";
 export type { Database, Json, Tables } from "./database.types";
