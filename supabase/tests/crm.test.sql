@@ -342,6 +342,24 @@ select pg_temp.assert(
   'reprogramar con motivo');
 reset role;
 
+-- Generación diaria (pg_cron): todos los centros, sin sesión de usuario.
+select pg_temp.assert(private.generate_crm_tasks_all() = 0, 'la generación diaria respeta las llaves: no duplica');
+set session_replication_role = replica;
+delete from public.crm_tasks where dedupe_key like 'mem:%';
+set session_replication_role = origin;
+select private.generate_crm_tasks_all() as generated_all \gset
+select pg_temp.assert(
+  :generated_all = 1
+  and (select source = 'membresia' and status = 'pendiente' from public.crm_tasks where dedupe_key like 'mem:%'),
+  'la generación diaria (sin usuario) crea la renovación pendiente de la membresía');
+select id as t_ren from public.crm_tasks where dedupe_key like 'mem:%' \gset
+select pg_temp.login('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.assert_fails($$select private.generate_crm_tasks_all()$$, '42501',
+  'ningún usuario ejecuta la generación de todos los centros');
+select pg_temp.assert_fails($$select private.generate_crm_tasks_for_center('$$ || :'B' || $$')$$, '42501',
+  'ni la de un centro sin el chequeo de permisos');
+reset role;
+
 select pg_temp.assert(
   exists (select 1 from public.audit_log where table_name = 'public.crm_tasks' and reason = 'Cliente pidió el jueves')
   and exists (select 1 from public.audit_log where table_name = 'public.contact_preferences' and reason = 'Pidió no recibir emails'),
