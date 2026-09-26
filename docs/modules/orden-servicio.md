@@ -20,7 +20,7 @@ La Orden de Servicio (OS) es el eje operacional: une la recepción (cita o walk-
 - **Pagos detallados, pagos parciales con conciliación y reembolsos:** hoy `paid_amount` y `record_service_order_payment`.
 - **Membresías y redenciones:** hoy `channel = membresia` y `channel_reference` (número de membresía).
 - **Cuentas B2B y facturación:** hoy `b2b_account_id` (sin FK todavía) y `channel_reference` (orden de compra).
-- **Consumo de inventario y evidencias (fotos):** se vincularán con `service_order_items.id` y `service_orders.id`.
+- **Consumo de insumos y evidencias (fotos):** ver [Ejecución y evidencias](ejecucion-evidencias.md) (O5).
 
 ## Modelo de datos (`20260930000000_service_orders.sql`)
 
