@@ -2,6 +2,7 @@ import {
   authCopy,
   centersCopy,
   guardScreen,
+  navScreenOf,
   sectionOfScreen,
   visibleNavigation,
   type Screen,
@@ -10,6 +11,9 @@ import { colors } from "@meguiars/ui-tokens";
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
+import { ClientDetailScreen } from "@/screens/ClientDetailScreen";
+import { ClientNewScreen } from "@/screens/ClientNewScreen";
+import { ClientsScreen } from "@/screens/ClientsScreen";
 import { DesignSystemScreen } from "@/screens/DesignSystemScreen";
 import { DireccionScreen } from "@/screens/DireccionScreen";
 import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
@@ -29,6 +33,12 @@ import { AppHeader, SubNav, TabBar } from "@/ui/layout";
 export function Router() {
   const { client, state, recovery, signOut, dismissDisabled } = useAuth();
   const [screen, setScreen] = useState<Screen>("home");
+  // Parámetro de la pantalla de detalle (equivale a /clientes/[id] en web).
+  const [clientId, setClientId] = useState<string | null>(null);
+  const openClient = (id: string) => {
+    setClientId(id);
+    setScreen("clientDetail");
+  };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
 
@@ -84,7 +94,11 @@ export function Router() {
     />
   );
   const subnav = (
-    <SubNav section={sections.find((s) => s.id === sectionId)} current={screen} onSelect={setScreen} />
+    <SubNav
+      section={sections.find((s) => s.id === sectionId)}
+      current={navScreenOf(screen)}
+      onSelect={setScreen}
+    />
   );
   const props = { state, header, subnav };
 
@@ -107,6 +121,24 @@ export function Router() {
         break;
       case "direccion":
         content = <DireccionScreen {...props} />;
+        break;
+      case "clients":
+        content = <ClientsScreen {...props} onOpen={openClient} onNew={() => setScreen("clientNew")} />;
+        break;
+      case "clientNew":
+        content = <ClientNewScreen {...props} onOpen={openClient} onCancel={() => setScreen("clients")} />;
+        break;
+      case "clientDetail":
+        content = clientId ? (
+          <ClientDetailScreen
+            key={clientId}
+            {...props}
+            clientId={clientId}
+            onBack={() => setScreen("clients")}
+          />
+        ) : (
+          <ClientsScreen {...props} onOpen={openClient} onNew={() => setScreen("clientNew")} />
+        );
         break;
       case "team":
         content = <TeamScreen {...props} />;

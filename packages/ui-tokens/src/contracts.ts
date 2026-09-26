@@ -32,6 +32,13 @@ export interface SelectContract extends FieldContract {
   placeholder?: string;
 }
 
+/** Casilla de verificación (p. ej. consentimiento por canal). */
+export interface CheckboxContract {
+  label: string;
+  checked?: boolean;
+  hint?: string;
+}
+
 export interface BadgeContract {
   label: string;
   tone?: Tone;

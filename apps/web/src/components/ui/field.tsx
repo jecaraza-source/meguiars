@@ -1,4 +1,4 @@
-import type { FieldContract, SelectContract } from "@meguiars/ui-tokens";
+import type { CheckboxContract, FieldContract, SelectContract } from "@meguiars/ui-tokens";
 import type { InputHTMLAttributes, SelectHTMLAttributes } from "react";
 
 /** Etiqueta visible + ayuda + error enlazados por aria-describedby. */
@@ -92,5 +92,33 @@ export function Select({
         ))}
       </select>
     </FieldShell>
+  );
+}
+
+type CheckboxProps = CheckboxContract &
+  Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type" | "checked"> & { name: string; value: string };
+
+/** Casilla con etiqueta clicable y área táctil completa. */
+export function Checkbox({ label, hint, checked, name, value, ...rest }: CheckboxProps) {
+  const id = `field-${name}-${value}`;
+  return (
+    <label htmlFor={id} className="flex min-h-(--mg-touch-target) cursor-pointer items-center gap-sm">
+      <input
+        {...rest}
+        id={id}
+        type="checkbox"
+        name={name}
+        value={value}
+        defaultChecked={checked}
+        className="size-lg accent-brand"
+        aria-describedby={hint ? `${id}-hint` : undefined}
+      />
+      <span className="text-sm">{label}</span>
+      {hint ? (
+        <span id={`${id}-hint`} className="mg-hint">
+          {hint}
+        </span>
+      ) : null}
+    </label>
   );
 }

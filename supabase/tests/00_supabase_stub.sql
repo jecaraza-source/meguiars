@@ -9,6 +9,8 @@ begin
 end $$;
 
 create schema if not exists auth;
+-- Supabase instala las extensiones (pg_trgm…) en el esquema extensions.
+create schema if not exists extensions;
 grant usage on schema auth to anon, authenticated, service_role;
 create table if not exists auth.users (
   id uuid primary key,

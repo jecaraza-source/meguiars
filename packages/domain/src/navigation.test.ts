@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CenterAccess } from "./access/access";
 import type { AuthState } from "./auth/session";
-import { NAV_SECTIONS, sectionOfPath, sectionOfScreen, visibleNavigation } from "./navigation";
+import { NAV_SECTIONS, navScreenOf, sectionOfPath, sectionOfScreen, visibleNavigation } from "./navigation";
 import { APP_ROLES, type AppRole } from "./roles";
 
 const stateFor = (roles: AppRole[]): AuthState => ({
@@ -47,7 +47,8 @@ describe("navegación por rol", () => {
     ["encargado", ["inicio", "operacion", "comercial", "finanzas"]],
     ["operador_recepcion", ["inicio", "operacion"]],
     ["contador", ["inicio", "finanzas"]],
-    ["comercial_b2b", ["inicio", "comercial"]],
+    // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día.
+    ["comercial_b2b", ["inicio", "operacion", "comercial"]],
   ])("%s ve %j", (role, expected) => {
     expect(sectionsOf([role])).toEqual(expected);
   });
@@ -56,6 +57,18 @@ describe("navegación por rol", () => {
     expect(itemsOf(["encargado"])).toContain("team");
     expect(itemsOf(["encargado"])).not.toContain("finanzas");
     expect(itemsOf(["contador"])).toEqual(expect.arrayContaining(["finanzas", "team"]));
+  });
+
+  it("comercial_b2b sólo ve Clientes dentro de Operación", () => {
+    expect(itemsOf(["comercial_b2b"])).toContain("clients");
+    expect(itemsOf(["comercial_b2b"])).not.toContain("operacion");
+  });
+
+  it("las pantallas de detalle y alta pertenecen a Clientes (pestaña y sub-navegación)", () => {
+    expect(navScreenOf("clientDetail")).toBe("clients");
+    expect(navScreenOf("clientNew")).toBe("clients");
+    expect(sectionOfScreen("clientDetail")).toBe("operacion");
+    expect(sectionOfPath("/clientes/123")).toBe("operacion");
   });
 
   it("varios roles en el centro suman secciones", () => {

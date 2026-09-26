@@ -11,7 +11,11 @@ export const centerNameSchema = z.string().trim().min(2).max(120);
 export const timeZoneSchema = z.string().refine(isValidTimeZone, "Zona horaria IANA inválida");
 
 /** Motivo obligatorio para cambios sensibles auditados (igual que en SQL). */
-export const changeReasonSchema = z.string().trim().min(3).max(500);
+export const changeReasonSchema = z
+  .string()
+  .trim()
+  .min(3, "Escribe el motivo (mínimo 3 caracteres)")
+  .max(500, "Usa como máximo 500 caracteres");
 
 export const detailCenterInputSchema = z.object({
   code: centerCodeSchema,

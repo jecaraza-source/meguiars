@@ -12,13 +12,14 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   [[ -x "$PG_BIN/pg_ctl" ]] || { echo "No encontré pg_ctl; define DATABASE_URL o PG_BIN" >&2; exit 1; }
   TMP="$(mktemp -d)"
   if [[ "$(id -u)" == "0" ]]; then chown -R postgres "$TMP"; RUN=(runuser -u postgres --); else RUN=(); fi
-  "${RUN[@]}" "$PG_BIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null
+  "${RUN[@]}" "$PG_BIN/initdb" -D "$TMP/data" -U postgres -A trust -E UTF8 --no-locale >/dev/null
   "${RUN[@]}" "$PG_BIN/pg_ctl" -D "$TMP/data" -o "-p 54329 -k $TMP -c listen_addresses=''" -w start >/dev/null
   cleanup() { "${RUN[@]}" "$PG_BIN/pg_ctl" -D "$TMP/data" -m fast stop >/dev/null; rm -rf "$TMP"; }
   DATABASE_URL="postgresql://postgres@/postgres?host=$TMP&port=54329"
 fi
 trap cleanup EXIT
 
+export PGCLIENTENCODING=UTF8
 PSQL=(psql "$DATABASE_URL" -X -q -v ON_ERROR_STOP=1)
 show() { sed -e 's/^psql:[^ ]* NOTICE:  /  /' -e '/^ *$/d'; }
 "${PSQL[@]}" -f supabase/tests/00_supabase_stub.sql
@@ -34,6 +35,8 @@ echo "seed: supabase/seed.sql"
 "${PSQL[@]}" -f supabase/seed.sql
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.detail_centers c join public.organizations o on o.id = c.organization_id where o.slug = 'meguiars-demo'")" == "2" ]] \
   || { echo "El seed no cargó la organización demo con 2 centros" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select count(*) from public.clients c join public.vehicles v on v.client_id = c.id")" == "4" ]] \
+  || { echo "El seed no cargó los clientes y vehículos de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

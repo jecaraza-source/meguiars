@@ -12,9 +12,10 @@ export const sectionCopy = {
   },
   comercial: {
     title: "Comercial",
-    description: "Clientes B2C, membresías y cuentas B2B del centro activo.",
-    emptyTitle: "Aún no hay clientes registrados",
-    emptyMessage: "Clientes, membresías y cuentas B2B llegan en el módulo Comercial.",
+    description: "Membresías, campañas y cuentas B2B del centro activo.",
+    emptyTitle: "Aún no hay membresías ni cuentas B2B",
+    emptyMessage:
+      "Membresías y cuentas B2B llegan en el módulo Comercial. Los clientes se registran en Operación → Clientes y vehículos.",
   },
   finanzas: {
     title: "Resumen financiero",
