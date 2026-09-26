@@ -14,7 +14,7 @@ supabase/             config local, migraciones, seed y pruebas SQL de RLS
 docs/                 ADRs y documentación de módulos
 ```
 
-Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md), [Multicentro y seguridad](docs/modules/multicentro-seguridad.md), [Auth y sesión](docs/modules/auth-sesion.md), [Design system y navegación](docs/modules/design-system.md), [CI/CD](docs/modules/ci-cd.md), [Clientes y vehículos](docs/modules/clientes-vehiculos.md), [Catálogo](docs/modules/catalogo.md), [Agenda](docs/modules/agenda.md) y [Orden de Servicio](docs/modules/orden-servicio.md).
+Las reglas de arquitectura están en [AGENTS.md](AGENTS.md). Módulos: [Fundación](docs/modules/fundacion.md), [Multicentro y seguridad](docs/modules/multicentro-seguridad.md), [Auth y sesión](docs/modules/auth-sesion.md), [Design system y navegación](docs/modules/design-system.md), [CI/CD](docs/modules/ci-cd.md), [Clientes y vehículos](docs/modules/clientes-vehiculos.md), [Catálogo](docs/modules/catalogo.md), [Agenda](docs/modules/agenda.md), [Orden de Servicio](docs/modules/orden-servicio.md) y [Ejecución y evidencias](docs/modules/ejecucion-evidencias.md).
 
 ## Requisitos
 

@@ -174,3 +174,40 @@ select count(private.recalc_service_order(id)) from public.service_orders where 
 insert into private.service_order_counters (detail_center_id, last_number) values
   ('11111111-1111-4111-8111-111111111111', 2), ('22222222-2222-4222-8222-222222222222', 1)
 on conflict (detail_center_id) do update set last_number = greatest(private.service_order_counters.last_number, excluded.last_number);
+
+-- Ejecución y consumos de ejemplo (O5): insumos con estándar para los lavados y
+-- el detallado; la OS CDMX-01-000001 tiene su línea principal en proceso con
+-- dos técnicos y un consumo registrado. (Las fotos viven en Storage; el seed no las incluye.)
+insert into public.inventory_items (id, organization_id, code, name, unit, unit_cost) values
+  ('1a000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'SHP-NEU', 'Shampoo pH neutro', 'ml', 0.06),
+  ('1a000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 'CERA-LIQ', 'Cera líquida', 'ml', 0.18),
+  ('1a000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', 'LIMP-VEST', 'Limpiador de vestiduras', 'ml', 0.12)
+on conflict (id) do nothing;
+
+insert into public.service_supply_standards (organization_id, service_id, inventory_item_id, quantity) values
+  ('00000000-0000-4000-8000-00000000d3e0', '5e000000-0000-4000-8000-000000000001', '1a000000-0000-4000-8000-000000000001', 60),
+  ('00000000-0000-4000-8000-00000000d3e0', '5e000000-0000-4000-8000-000000000002', '1a000000-0000-4000-8000-000000000001', 80),
+  ('00000000-0000-4000-8000-00000000d3e0', '5e000000-0000-4000-8000-000000000002', '1a000000-0000-4000-8000-000000000002', 40),
+  ('00000000-0000-4000-8000-00000000d3e0', '5e000000-0000-4000-8000-000000000003', '1a000000-0000-4000-8000-000000000003', 250)
+on conflict do nothing;
+
+insert into public.technicians (id, organization_id, detail_center_id, full_name) values
+  ('7e000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111', 'Luis Gómez')
+on conflict (id) do nothing;
+
+insert into public.service_order_staff (service_order_id, technician_id, organization_id, detail_center_id) values
+  ('0d000000-0000-4000-8000-000000000001', '7e000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111'),
+  ('0d000000-0000-4000-8000-000000000001', '7e000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111')
+on conflict do nothing;
+
+update public.service_order_items
+   set work_status = 'en_proceso', started_at = now() - interval '35 minutes', work_started_at = now() - interval '35 minutes',
+       technician_id = '7e000000-0000-4000-8000-000000000003'
+ where id = '0e100000-0000-4000-8000-000000000001' and work_status = 'pendiente';
+
+insert into public.service_order_consumptions (id, organization_id, detail_center_id, service_order_id, item_id,
+                                               inventory_item_id, unit, standard_quantity, actual_quantity, unit_cost) values
+  ('1c000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+   '0d000000-0000-4000-8000-000000000001', '0e100000-0000-4000-8000-000000000001', '1a000000-0000-4000-8000-000000000003',
+   'ml', 250, 300, 0.12)
+on conflict (id) do nothing;

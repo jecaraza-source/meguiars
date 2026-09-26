@@ -2,6 +2,7 @@ import {
   activeCenterAccess,
   canManageServices,
   catalogCopy,
+  executionCopy,
   presentCatalogItem,
   REVENUE_ENGINE_LABELS,
   REVENUE_ENGINES,
@@ -38,9 +39,12 @@ export default async function CatalogPage({ searchParams }: PageProps<"/catalogo
     >
       <Card
         actions={
-          canManageServices(state) ? (
-            <ButtonLink href="/catalogo/nuevo" label={catalogCopy.newService} variant="primary" />
-          ) : null
+          <div className="flex flex-wrap gap-sm">
+            <ButtonLink href="/catalogo/insumos" label={executionCopy.suppliesOpen} />
+            {canManageServices(state) ? (
+              <ButtonLink href="/catalogo/nuevo" label={catalogCopy.newService} variant="primary" />
+            ) : null}
+          </div>
         }
       >
         <form className="flex flex-col gap-sm md:flex-row md:items-end" action="/catalogo">

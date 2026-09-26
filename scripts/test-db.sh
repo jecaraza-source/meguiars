@@ -43,6 +43,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó la agenda de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total, ',' order by folio) from public.service_orders")" == "CDMX-01-000001=1890.00,CDMX-01-000002=2520.00,MTY-01-000001=220.00" ]] \
   || { echo "El seed no cargó las órdenes de servicio de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select count(*) from public.service_supply_standards")" == "4" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_order_consumptions c join public.service_order_items i on i.id = c.item_id where i.work_status = 'en_proceso'")" == "1" ]] \
+  || { echo "El seed no cargó la ejecución y los consumos de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

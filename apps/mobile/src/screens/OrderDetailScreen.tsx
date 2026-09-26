@@ -4,6 +4,7 @@ import {
   canInActiveCenter,
   computeOrderTotals,
   DISCOUNT_LEVEL_LABELS,
+  executionCopy,
   formatMoney,
   orderErrorMessage,
   ordersCopy,
@@ -94,7 +95,8 @@ export function OrderDetailScreen({
   header,
   orderId,
   onBack,
-}: PrivateScreenProps & { orderId: string; onBack: () => void }) {
+  onExecution,
+}: PrivateScreenProps & { orderId: string; onBack: () => void; onExecution: () => void }) {
   const { client } = useAuth();
   const toast = useToast();
   const center = activeCenterAccess(state)!.center;
@@ -149,6 +151,7 @@ export function OrderDetailScreen({
     <Screen title={view.title} description={`${view.subtitle} · ${view.channel}`} header={header}>
       {back}
       <Badge label={view.status} tone={view.tone} />
+      <Button label={executionCopy.open} variant="secondary" onPress={onExecution} />
       <View style={styles.kpis}>
         {view.kpis.map((kpi) => (
           <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} caption={kpi.caption} />

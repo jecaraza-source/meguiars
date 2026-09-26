@@ -2,6 +2,7 @@ import {
   activeCenterAccess,
   canManageServices,
   catalogCopy,
+  executionCopy,
   presentCatalogItem,
   REVENUE_ENGINE_LABELS,
   REVENUE_ENGINES,
@@ -41,7 +42,8 @@ export function CatalogScreen({
   subnav,
   onOpen,
   onNew,
-}: PrivateScreenProps & { onOpen: (id: string) => void; onNew: () => void }) {
+  onSupplies,
+}: PrivateScreenProps & { onOpen: (id: string) => void; onNew: () => void; onSupplies: () => void }) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const [engine, setEngine] = useState<RevenueEngine | "">("");
@@ -82,6 +84,7 @@ export function CatalogScreen({
           onChange={setIncludeInactive}
         />
         {canManageServices(state) ? <Button label={catalogCopy.newService} onPress={onNew} /> : null}
+        <Button label={executionCopy.suppliesOpen} variant="secondary" onPress={onSupplies} />
       </Card>
       {rows.status === "loading" ? <Skeleton lines={4} label="Cargando catálogo" /> : null}
       {rows.status === "error" ? <Notice tone="danger" text={rows.message} /> : null}

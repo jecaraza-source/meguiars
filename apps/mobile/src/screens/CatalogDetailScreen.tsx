@@ -19,6 +19,7 @@ import { StyleSheet, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
 import { ServiceFields } from "@/components/ServiceFields";
+import { SupplyStandardsCard } from "@/components/SupplyStandardsCard";
 import { Button, Checkbox, Field, LinkButton } from "@/ui/controls";
 import { Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
 import { Screen } from "@/ui/layout";
@@ -126,6 +127,11 @@ export function CatalogDetailScreen({
           />
         )}
       </Card>
+      <SupplyStandardsCard
+        serviceId={item.id}
+        organizationId={center.organizationId}
+        editable={canManageServices(state)}
+      />
       {canConfigureCenterCatalog(state) ? (
         <CenterConfig key={`${item.id}-${version}`} item={item} centerId={center.id} onDone={reload} />
       ) : null}

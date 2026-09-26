@@ -85,6 +85,10 @@ describe("navegación por rol", () => {
     expect(sectionOfPath("/clientes/123")).toBe("operacion");
     expect(navScreenOf("orderDetail")).toBe("orders");
     expect(sectionOfPath("/ordenes/abc")).toBe("operacion");
+    expect(navScreenOf("orderExecution")).toBe("orders");
+    expect(sectionOfPath("/ordenes/abc/ejecucion")).toBe("operacion");
+    expect(navScreenOf("supplies")).toBe("catalog");
+    expect(sectionOfPath("/catalogo/insumos")).toBe("operacion");
   });
 
   it("varios roles en el centro suman secciones", () => {

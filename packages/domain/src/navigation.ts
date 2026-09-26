@@ -83,6 +83,8 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   appointmentNew: "agenda",
   orderDetail: "orders",
   orderNew: "orders",
+  orderExecution: "orders",
+  supplies: "catalog",
 };
 
 /** Ítem de menú que representa a la pantalla. */

@@ -20,6 +20,7 @@ const items = [
 
 const order = (patch: Partial<ServiceOrder> = {}): ServiceOrder => ({
   id: "o1",
+  organizationId: "org",
   detailCenterId: "A",
   folio: "A-01-000001",
   status: "abierta",

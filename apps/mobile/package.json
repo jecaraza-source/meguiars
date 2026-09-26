@@ -8,6 +8,8 @@
     "@meguiars/ui-tokens": "*",
     "@meguiars/validation": "*",
     "expo": "~57.0.24",
+    "expo-image-manipulator": "~57.0.20",
+    "expo-image-picker": "~57.0.20",
     "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",

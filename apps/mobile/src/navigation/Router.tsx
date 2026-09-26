@@ -27,11 +27,13 @@ import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
 import { OrderDetailScreen } from "@/screens/OrderDetailScreen";
+import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
 import { OrderNewScreen } from "@/screens/OrderNewScreen";
 import { OrdersScreen } from "@/screens/OrdersScreen";
 import { ResetPasswordScreen } from "@/screens/ResetPasswordScreen";
 import { SectionScreen } from "@/screens/SectionScreen";
 import { SelectCenterScreen } from "@/screens/SelectCenterScreen";
+import { SuppliesScreen } from "@/screens/SuppliesScreen";
 import { TeamScreen } from "@/screens/TeamScreen";
 import { AppHeader, SubNav, TabBar } from "@/ui/layout";
 
@@ -197,13 +199,41 @@ export function Router() {
         break;
       case "orderDetail":
         content = orderId ? (
-          <OrderDetailScreen key={orderId} {...props} orderId={orderId} onBack={() => setScreen("orders")} />
+          <OrderDetailScreen
+            key={orderId}
+            {...props}
+            orderId={orderId}
+            onBack={() => setScreen("orders")}
+            onExecution={() => setScreen("orderExecution")}
+          />
         ) : (
           <OrdersScreen {...props} onOpen={openOrder} onNew={() => setScreen("orderNew")} />
         );
         break;
+      case "orderExecution":
+        content = orderId ? (
+          <OrderExecutionScreen
+            key={orderId}
+            {...props}
+            orderId={orderId}
+            onBack={() => setScreen("orderDetail")}
+          />
+        ) : (
+          <OrdersScreen {...props} onOpen={openOrder} onNew={() => setScreen("orderNew")} />
+        );
+        break;
+      case "supplies":
+        content = <SuppliesScreen {...props} onBack={() => setScreen("catalog")} />;
+        break;
       case "catalog":
-        content = <CatalogScreen {...props} onOpen={openService} onNew={() => setScreen("catalogNew")} />;
+        content = (
+          <CatalogScreen
+            {...props}
+            onOpen={openService}
+            onNew={() => setScreen("catalogNew")}
+            onSupplies={() => setScreen("supplies")}
+          />
+        );
         break;
       case "catalogNew":
         content = <CatalogNewScreen {...props} onOpen={openService} onCancel={() => setScreen("catalog")} />;
@@ -217,7 +247,12 @@ export function Router() {
             onBack={() => setScreen("catalog")}
           />
         ) : (
-          <CatalogScreen {...props} onOpen={openService} onNew={() => setScreen("catalogNew")} />
+          <CatalogScreen
+            {...props}
+            onOpen={openService}
+            onNew={() => setScreen("catalogNew")}
+            onSupplies={() => setScreen("supplies")}
+          />
         );
         break;
       case "clientNew":

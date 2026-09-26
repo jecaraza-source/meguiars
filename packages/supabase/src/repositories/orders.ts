@@ -50,6 +50,7 @@ const num = (v: number | string | null) => (v === null ? null : Number(v));
 
 export const toServiceOrder = (row: DetailRow): ServiceOrder => ({
   id: row.id,
+  organizationId: row.organization_id,
   detailCenterId: row.detail_center_id,
   folio: row.folio,
   status: row.status,

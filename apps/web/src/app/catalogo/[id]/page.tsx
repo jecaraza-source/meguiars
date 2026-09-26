@@ -4,12 +4,14 @@ import {
   canManageServices,
   catalogCopy,
   centerName,
+  executionCopy,
   presentCatalogItem,
   presentPriceHistory,
 } from "@meguiars/domain";
-import { createCatalogRepository } from "@meguiars/supabase";
+import { createCatalogRepository, createExecutionRepository } from "@meguiars/supabase";
 import { AppShell } from "@/components/app-shell";
 import { CenterConfigForm, EditServiceForm } from "@/components/catalog-forms";
+import { SupplyStandards } from "@/components/supply-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
@@ -20,11 +22,16 @@ export default async function ServicePage({ params, searchParams }: PageProps<"/
   const center = activeCenterAccess(state)!.center;
   const { id } = await params;
   const created = (await searchParams).nuevo === "1";
-  const repo = createCatalogRepository((await createSupabaseServerClient())!);
-  const [service, catalog, history] = await Promise.all([
+  const supabase = (await createSupabaseServerClient())!;
+  const repo = createCatalogRepository(supabase);
+  const execution = createExecutionRepository(supabase);
+  const manage = canManageServices(state);
+  const [service, catalog, history, standards, inventory] = await Promise.all([
     repo.get(id),
     repo.listForCenter(center.id, { includeInactive: true }),
     repo.priceHistory(id),
+    execution.listStandards(id),
+    manage ? execution.listInventory(center.organizationId) : null,
   ]);
   const item = catalog.ok ? catalog.data.find((c) => c.id === id) : undefined;
 
@@ -87,12 +94,27 @@ export default async function ServicePage({ params, searchParams }: PageProps<"/
         )}
       </Card>
 
+      <Card title={executionCopy.standardsTitle}>
+        {standards.ok ? (
+          <SupplyStandards
+            serviceId={id}
+            standards={standards.data}
+            inventory={inventory?.ok ? inventory.data : []}
+            editable={manage}
+          />
+        ) : (
+          <p role="alert" className="mg-tone rounded-md border p-md text-sm" data-tone="danger">
+            {standards.error.message}
+          </p>
+        )}
+      </Card>
+
       {canConfigureCenterCatalog(state) ? (
         <Card title={`${catalogCopy.centerTitle} · ${center.name}`} subtitle={catalogCopy.centerSubtitle}>
           <CenterConfigForm item={item} />
         </Card>
       ) : null}
-      {canManageServices(state) ? (
+      {manage ? (
         <Card title={catalogCopy.editTitle} subtitle={catalogCopy.editSubtitle}>
           <EditServiceForm service={service.data} />
         </Card>

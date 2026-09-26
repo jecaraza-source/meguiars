@@ -109,6 +109,16 @@ describe("guards por rol", () => {
     expect(guardScreen(signedIn([op], "C"), "team")).toEqual({ allow: false, redirect: "forbidden" });
   });
 
+  it("ejecución de OS: roles con órdenes sí; el contador no (igual que la RLS de evidencias)", () => {
+    expect(guardScreen(signedIn([A], "A"), "orderExecution")).toEqual({ allow: true });
+    expect(guardScreen(signedIn([B], "B"), "orderExecution")).toEqual({
+      allow: false,
+      redirect: "forbidden",
+    });
+    // Insumos: lectura con el catálogo (el contador sí los consulta).
+    expect(guardScreen(signedIn([B], "B"), "supplies")).toEqual({ allow: true });
+  });
+
   it("editar centro: sólo admin_socio; el contador (sólo lectura) no", () => {
     const socio = access("S", ["admin_socio"]);
     expect(guardScreen(signedIn([socio], "S"), "editCenter")).toEqual({ allow: true });

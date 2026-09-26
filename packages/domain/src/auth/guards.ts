@@ -32,6 +32,8 @@ export const SCREEN_GUARDS = {
   orders: { center: true, capability: "orders.read" },
   orderDetail: { center: true, capability: "orders.read" },
   orderNew: { center: true, capability: "orders.write" },
+  orderExecution: { center: true, capability: "orders.read" },
+  supplies: { center: true, capability: "catalog.read" },
   comercial: { center: true, capability: "commercial.read" },
   finanzas: { center: true, capability: "finance.read" },
   direccion: { center: true, capability: "executive.read" },
