@@ -160,6 +160,7 @@ export interface StatusHistoryEntry {
 /** OS completa (detalle). Importes en MXN con IVA incluido; horas en UTC. */
 export interface ServiceOrder {
   id: string;
+  organizationId: string;
   detailCenterId: string;
   folio: string;
   status: ServiceOrderStatus;

@@ -1,0 +1,135 @@
+import type { StatusTone } from "../agenda/copy";
+import type {
+  EvidenceKind,
+  ExecutionEventKind,
+  IncidentKind,
+  InventoryUnit,
+  ItemWorkStatus,
+} from "./execution";
+
+export const ITEM_WORK_LABELS: Record<ItemWorkStatus, string> = {
+  pendiente: "Pendiente",
+  en_proceso: "En proceso",
+  pausada: "Pausada",
+  terminada: "Terminada",
+};
+
+export const ITEM_WORK_TONES: Record<ItemWorkStatus, StatusTone> = {
+  pendiente: "neutral",
+  en_proceso: "warning",
+  pausada: "danger",
+  terminada: "success",
+};
+
+export const EVIDENCE_KIND_LABELS: Record<EvidenceKind, string> = {
+  antes: "Antes",
+  durante: "Durante",
+  despues: "Después",
+  incidencia: "Incidencia",
+};
+
+export const INCIDENT_KIND_LABELS: Record<IncidentKind, string> = {
+  incidencia: "Incidencia",
+  retrabajo: "Retrabajo",
+};
+
+export const INVENTORY_UNIT_LABELS: Record<InventoryUnit, string> = {
+  ml: "ml",
+  l: "l",
+  g: "g",
+  kg: "kg",
+  pza: "pza",
+};
+
+export const EXECUTION_EVENT_LABELS: Record<ExecutionEventKind, string> = {
+  os_inicio: "OS iniciada",
+  os_pausa: "OS pausada",
+  os_reanudacion: "OS reanudada",
+  os_fin: "OS terminada",
+  linea_inicio: "Línea iniciada",
+  linea_pausa: "Línea pausada",
+  linea_reanudacion: "Línea reanudada",
+  linea_fin: "Línea terminada",
+  personal: "Personal actualizado",
+  evidencia: "Evidencia agregada",
+  evidencia_eliminada: "Evidencia retirada",
+  consumo: "Consumo registrado",
+  incidencia: "Incidencia reportada",
+  incidencia_resuelta: "Incidencia resuelta",
+};
+
+/** Textos de ejecución y evidencias, idénticos en web y móvil. */
+export const executionCopy = {
+  title: "Ejecución y evidencias",
+  open: "Ejecución y evidencias",
+  back: "Volver a la OS",
+  description: "Avance por línea, técnicos, fotos, consumos e incidencias.",
+  linesTitle: "Avance por línea",
+  needsInProgress: "Inicia la OS para trabajar sus líneas.",
+  start: "Iniciar",
+  pause: "Pausar",
+  resume: "Reanudar",
+  finish: "Terminar",
+  technician: "Técnico",
+  noTechnician: "Sin técnico",
+  worked: "Tiempo",
+  staffTitle: "Técnicos participantes",
+  saveStaff: "Guardar técnicos",
+  mainTechnician: "principal",
+  evidenceTitle: "Evidencias",
+  evidenceEmpty: "Sin fotos todavía.",
+  takePhoto: "Tomar foto",
+  pickPhoto: "Elegir de la galería",
+  upload: "Subir foto",
+  uploading: "Subiendo…",
+  kind: "Momento",
+  line: "Línea (opcional)",
+  wholeOrder: "Toda la OS",
+  note: "Nota (opcional)",
+  photoFile: "Foto",
+  photoHint: "Se redimensiona a 1600 px y se comprime antes de subir.",
+  photoTooLarge: "La foto pesa más de 5 MB aun comprimida.",
+  photoType: "Usa una foto JPG, PNG o WebP.",
+  removeEvidence: "Retirar",
+  removeReason: "Motivo para retirar",
+  cameraDenied: "Sin permiso para la cámara. Actívalo en los ajustes del teléfono.",
+  consumptionTitle: "Consumo de insumos",
+  consumptionEmpty: "Ningún servicio de esta OS tiene insumos configurados.",
+  standard: "Estándar",
+  actual: "Real",
+  variance: "Variación",
+  record: "Registrar",
+  consumptionClosed: "El consumo se registra durante o al terminar el servicio.",
+  incidentsTitle: "Incidencias y retrabajos",
+  incidentsEmpty: "Sin incidencias.",
+  report: "Reportar",
+  incidentDescription: "Descripción",
+  resolve: "Resolver",
+  resolution: "Solución",
+  incidentOpen: "Abierta",
+  incidentResolved: "Resuelta",
+  timelineTitle: "Bitácora de ejecución",
+  saved: "Guardado.",
+  uploaded: "Foto subida.",
+  closed: "La OS está cerrada: sólo consulta.",
+  suppliesTitle: "Insumos",
+  suppliesDescription:
+    "Insumos de la organización para controlar consumo estándar vs real (sin existencias).",
+  suppliesOpen: "Insumos",
+  supplyCode: "Clave",
+  supplyName: "Nombre",
+  supplyUnit: "Unidad",
+  supplyCost: "Costo por unidad",
+  supplyAdd: "Agregar insumo",
+  supplySave: "Guardar",
+  supplyInactive: "Inactivo",
+  standardsTitle: "Insumos estándar por unidad",
+  standardsHint: "Sólo los servicios con insumos configurados piden consumo real en la OS.",
+  standardQuantity: "Cantidad estándar",
+  standardSet: "Guardar estándar",
+  standardRemove: "Quitar",
+  reason: "Motivo",
+  forbidden: "Sin permiso para esta acción en el centro activo.",
+  photoRequired: "Elige una foto",
+  resizing: "Preparando foto…",
+} as const;

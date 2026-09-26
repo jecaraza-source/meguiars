@@ -2,7 +2,8 @@
 // 20260922000000_foundation, 20260923000000_multicenter_security,
 // 20260925000000_advisor_fixes, 20260926000000_auth_session,
 // 20260927000000_clients_vehicles, 20260928000000_service_catalog,
-// 20260929000000_agenda y 20260930000000_service_orders. Regenerar tras
+// 20260929000000_agenda, 20260930000000_service_orders y
+// 20261001000000_execution_evidence. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -175,7 +176,6 @@ export type Database = {
           },
         ];
       };
-
       audit_log: {
         Row: {
           action: string;
@@ -449,6 +449,50 @@ export type Database = {
           },
         ];
       };
+      inventory_items: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          id: string;
+          name: string;
+          organization_id: string;
+          unit: string;
+          unit_cost: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          organization_id: string;
+          unit: string;
+          unit_cost: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          unit?: string;
+          unit_cost?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       organizations: {
         Row: {
           active: boolean;
@@ -600,6 +644,79 @@ export type Database = {
           },
         ];
       };
+      service_order_consumptions: {
+        Row: {
+          actual_quantity: number;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          inventory_item_id: string;
+          item_id: string;
+          note: string | null;
+          organization_id: string;
+          recorded_by: string | null;
+          service_order_id: string;
+          standard_quantity: number;
+          unit: string;
+          unit_cost: number;
+          updated_at: string;
+        };
+        Insert: {
+          actual_quantity: number;
+          created_at?: string;
+          detail_center_id: string;
+          id?: string;
+          inventory_item_id: string;
+          item_id: string;
+          note?: string | null;
+          organization_id: string;
+          recorded_by?: string | null;
+          service_order_id: string;
+          standard_quantity: number;
+          unit: string;
+          unit_cost: number;
+          updated_at?: string;
+        };
+        Update: {
+          actual_quantity?: number;
+          created_at?: string;
+          detail_center_id?: string;
+          id?: string;
+          inventory_item_id?: string;
+          item_id?: string;
+          note?: string | null;
+          organization_id?: string;
+          recorded_by?: string | null;
+          service_order_id?: string;
+          standard_quantity?: number;
+          unit?: string;
+          unit_cost?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_order_consumptions_organization_id_inventory_item__fkey";
+            columns: ["organization_id", "inventory_item_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_items";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_order_consumptions_organization_id_service_order_i_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_order_consumptions_service_order_id_item_id_fkey";
+            columns: ["service_order_id", "item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_order_items";
+            referencedColumns: ["service_order_id", "id"];
+          },
+        ];
+      };
       service_order_discounts: {
         Row: {
           amount: number;
@@ -669,10 +786,215 @@ export type Database = {
           },
         ];
       };
+      service_order_events: {
+        Row: {
+          actor_id: string | null;
+          data: Json | null;
+          detail_center_id: string;
+          id: number;
+          item_id: string | null;
+          kind: string;
+          note: string | null;
+          occurred_at: string;
+          organization_id: string;
+          service_order_id: string;
+          technician_id: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          data?: Json | null;
+          detail_center_id: string;
+          id?: never;
+          item_id?: string | null;
+          kind: string;
+          note?: string | null;
+          occurred_at?: string;
+          organization_id: string;
+          service_order_id: string;
+          technician_id?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          data?: Json | null;
+          detail_center_id?: string;
+          id?: never;
+          item_id?: string | null;
+          kind?: string;
+          note?: string | null;
+          occurred_at?: string;
+          organization_id?: string;
+          service_order_id?: string;
+          technician_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_order_events_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      service_order_evidence: {
+        Row: {
+          content_type: string;
+          created_at: string;
+          delete_reason: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          detail_center_id: string;
+          height: number | null;
+          id: string;
+          incident_id: string | null;
+          item_id: string | null;
+          kind: string;
+          note: string | null;
+          organization_id: string;
+          service_order_id: string;
+          size_bytes: number;
+          storage_path: string;
+          taken_by: string | null;
+          updated_at: string;
+          width: number | null;
+        };
+        Insert: {
+          content_type: string;
+          created_at?: string;
+          delete_reason?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          detail_center_id: string;
+          height?: number | null;
+          id?: string;
+          incident_id?: string | null;
+          item_id?: string | null;
+          kind: string;
+          note?: string | null;
+          organization_id: string;
+          service_order_id: string;
+          size_bytes: number;
+          storage_path: string;
+          taken_by?: string | null;
+          updated_at?: string;
+          width?: number | null;
+        };
+        Update: {
+          content_type?: string;
+          created_at?: string;
+          delete_reason?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          detail_center_id?: string;
+          height?: number | null;
+          id?: string;
+          incident_id?: string | null;
+          item_id?: string | null;
+          kind?: string;
+          note?: string | null;
+          organization_id?: string;
+          service_order_id?: string;
+          size_bytes?: number;
+          storage_path?: string;
+          taken_by?: string | null;
+          updated_at?: string;
+          width?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_order_evidence_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_order_evidence_service_order_id_incident_id_fkey";
+            columns: ["service_order_id", "incident_id"];
+            isOneToOne: false;
+            referencedRelation: "service_order_incidents";
+            referencedColumns: ["service_order_id", "id"];
+          },
+          {
+            foreignKeyName: "service_order_evidence_service_order_id_item_id_fkey";
+            columns: ["service_order_id", "item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_order_items";
+            referencedColumns: ["service_order_id", "id"];
+          },
+        ];
+      };
+      service_order_incidents: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          detail_center_id: string;
+          id: string;
+          item_id: string | null;
+          kind: string;
+          organization_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          service_order_id: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          description: string;
+          detail_center_id: string;
+          id?: string;
+          item_id?: string | null;
+          kind: string;
+          organization_id: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          service_order_id: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          description?: string;
+          detail_center_id?: string;
+          id?: string;
+          item_id?: string | null;
+          kind?: string;
+          organization_id?: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          service_order_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_order_incidents_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_order_incidents_service_order_id_item_id_fkey";
+            columns: ["service_order_id", "item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_order_items";
+            referencedColumns: ["service_order_id", "id"];
+          },
+        ];
+      };
       service_order_items: {
         Row: {
           created_at: string;
           duration_minutes: number;
+          finished_at: string | null;
           id: string;
           kind: string;
           line_discount: number;
@@ -686,13 +1008,19 @@ export type Database = {
           service_id: string;
           service_name: string;
           service_order_id: string;
+          started_at: string | null;
+          technician_id: string | null;
           unit_direct_cost: number;
           unit_price: number;
           updated_at: string;
+          work_started_at: string | null;
+          work_status: Database["public"]["Enums"]["item_work_status"];
+          worked_minutes: number;
         };
         Insert: {
           created_at?: string;
           duration_minutes: number;
+          finished_at?: string | null;
           id?: string;
           kind: string;
           line_discount?: number;
@@ -706,13 +1034,19 @@ export type Database = {
           service_id: string;
           service_name: string;
           service_order_id: string;
+          started_at?: string | null;
+          technician_id?: string | null;
           unit_direct_cost: number;
           unit_price: number;
           updated_at?: string;
+          work_started_at?: string | null;
+          work_status?: Database["public"]["Enums"]["item_work_status"];
+          worked_minutes?: number;
         };
         Update: {
           created_at?: string;
           duration_minutes?: number;
+          finished_at?: string | null;
           id?: string;
           kind?: string;
           line_discount?: number;
@@ -726,9 +1060,14 @@ export type Database = {
           service_id?: string;
           service_name?: string;
           service_order_id?: string;
+          started_at?: string | null;
+          technician_id?: string | null;
           unit_direct_cost?: number;
           unit_price?: number;
           updated_at?: string;
+          work_started_at?: string | null;
+          work_status?: Database["public"]["Enums"]["item_work_status"];
+          worked_minutes?: number;
         };
         Relationships: [
           {
@@ -740,6 +1079,48 @@ export type Database = {
           },
           {
             foreignKeyName: "service_order_items_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      service_order_staff: {
+        Row: {
+          added_at: string;
+          added_by: string | null;
+          detail_center_id: string;
+          organization_id: string;
+          service_order_id: string;
+          technician_id: string;
+        };
+        Insert: {
+          added_at?: string;
+          added_by?: string | null;
+          detail_center_id: string;
+          organization_id: string;
+          service_order_id: string;
+          technician_id: string;
+        };
+        Update: {
+          added_at?: string;
+          added_by?: string | null;
+          detail_center_id?: string;
+          organization_id?: string;
+          service_order_id?: string;
+          technician_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_order_staff_detail_center_id_technician_id_fkey";
+            columns: ["detail_center_id", "technician_id"];
+            isOneToOne: false;
+            referencedRelation: "technicians";
+            referencedColumns: ["detail_center_id", "id"];
+          },
+          {
+            foreignKeyName: "service_order_staff_organization_id_service_order_id_fkey";
             columns: ["organization_id", "service_order_id"];
             isOneToOne: false;
             referencedRelation: "service_orders";
@@ -997,7 +1378,6 @@ export type Database = {
           },
         ];
       };
-
       service_price_history: {
         Row: {
           changed_by: string | null;
@@ -1042,6 +1422,48 @@ export type Database = {
           },
           {
             foreignKeyName: "service_price_history_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      service_supply_standards: {
+        Row: {
+          created_at: string;
+          inventory_item_id: string;
+          organization_id: string;
+          quantity: number;
+          service_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          inventory_item_id: string;
+          organization_id: string;
+          quantity: number;
+          service_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          inventory_item_id?: string;
+          organization_id?: string;
+          quantity?: number;
+          service_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_supply_standards_organization_id_inventory_item_id_fkey";
+            columns: ["organization_id", "inventory_item_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_items";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_supply_standards_organization_id_service_id_fkey";
             columns: ["organization_id", "service_id"];
             isOneToOne: false;
             referencedRelation: "services";
@@ -1771,6 +2193,36 @@ export type Database = {
           timezone: string;
         }[];
       };
+      record_service_order_consumption: {
+        Args: {
+          p_actual_quantity: number;
+          p_inventory_item_id: string;
+          p_item_id: string;
+          p_note?: string;
+        };
+        Returns: {
+          actual_quantity: number;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          inventory_item_id: string;
+          item_id: string;
+          note: string | null;
+          organization_id: string;
+          recorded_by: string | null;
+          service_order_id: string;
+          standard_quantity: number;
+          unit: string;
+          unit_cost: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "service_order_consumptions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       record_service_order_payment: {
         Args: {
           p_amount: number;
@@ -1833,6 +2285,138 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "service_orders";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      register_service_order_evidence: {
+        Args: {
+          p_content_type: string;
+          p_height?: number;
+          p_incident_id?: string;
+          p_item_id?: string;
+          p_kind: string;
+          p_note?: string;
+          p_order_id: string;
+          p_size_bytes: number;
+          p_storage_path: string;
+          p_width?: number;
+        };
+        Returns: {
+          content_type: string;
+          created_at: string;
+          delete_reason: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          detail_center_id: string;
+          height: number | null;
+          id: string;
+          incident_id: string | null;
+          item_id: string | null;
+          kind: string;
+          note: string | null;
+          organization_id: string;
+          service_order_id: string;
+          size_bytes: number;
+          storage_path: string;
+          taken_by: string | null;
+          updated_at: string;
+          width: number | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "service_order_evidence";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      remove_service_order_evidence: {
+        Args: {
+          p_evidence_id: string;
+          p_reason: string;
+        };
+        Returns: {
+          content_type: string;
+          created_at: string;
+          delete_reason: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          detail_center_id: string;
+          height: number | null;
+          id: string;
+          incident_id: string | null;
+          item_id: string | null;
+          kind: string;
+          note: string | null;
+          organization_id: string;
+          service_order_id: string;
+          size_bytes: number;
+          storage_path: string;
+          taken_by: string | null;
+          updated_at: string;
+          width: number | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "service_order_evidence";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      report_service_order_incident: {
+        Args: {
+          p_description: string;
+          p_item_id?: string;
+          p_kind: string;
+          p_order_id: string;
+        };
+        Returns: {
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          detail_center_id: string;
+          id: string;
+          item_id: string | null;
+          kind: string;
+          organization_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          service_order_id: string;
+          status: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "service_order_incidents";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      resolve_service_order_incident: {
+        Args: {
+          p_incident_id: string;
+          p_resolution: string;
+        };
+        Returns: {
+          created_at: string;
+          created_by: string | null;
+          description: string;
+          detail_center_id: string;
+          id: string;
+          item_id: string | null;
+          kind: string;
+          organization_id: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          service_order_id: string;
+          status: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "service_order_incidents";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -2040,6 +2624,67 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      set_service_order_item_work: {
+        Args: {
+          p_item_id: string;
+          p_note?: string;
+          p_status: Database["public"]["Enums"]["item_work_status"];
+          p_technician_id?: string;
+        };
+        Returns: {
+          created_at: string;
+          duration_minutes: number;
+          finished_at: string | null;
+          id: string;
+          kind: string;
+          line_discount: number;
+          line_subtotal: number | null;
+          organization_id: string;
+          position: number;
+          price_source: string;
+          quantity: number;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          service_code: string;
+          service_id: string;
+          service_name: string;
+          service_order_id: string;
+          started_at: string | null;
+          technician_id: string | null;
+          unit_direct_cost: number;
+          unit_price: number;
+          updated_at: string;
+          work_started_at: string | null;
+          work_status: Database["public"]["Enums"]["item_work_status"];
+          worked_minutes: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "service_order_items";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_service_order_staff: {
+        Args: {
+          p_order_id: string;
+          p_reason?: string;
+          p_technician_ids: string[];
+        };
+        Returns: {
+          added_at: string;
+          added_by: string | null;
+          detail_center_id: string;
+          organization_id: string;
+          service_order_id: string;
+          technician_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "service_order_staff";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       set_service_order_status: {
         Args: {
           p_order_id: string;
@@ -2104,6 +2749,15 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      set_service_supply_standard: {
+        Args: {
+          p_inventory_item_id: string;
+          p_quantity: number | null;
+          p_reason: string;
+          p_service_id: string;
+        };
+        Returns: undefined;
       };
       set_user_disabled: {
         Args: { p_disabled: boolean; p_reason: string; p_user_id: string };
@@ -2382,6 +3036,35 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      upsert_inventory_item: {
+        Args: {
+          p_active: boolean;
+          p_code: string;
+          p_id: string | null;
+          p_name: string;
+          p_organization_id: string;
+          p_reason: string;
+          p_unit: string;
+          p_unit_cost: number;
+        };
+        Returns: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          id: string;
+          name: string;
+          organization_id: string;
+          unit: string;
+          unit_cost: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "inventory_items";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       upsert_technician: {
         Args: {
           p_active: boolean;
@@ -2483,6 +3166,7 @@ export type Database = {
         | "no_show";
       app_role: "admin_socio" | "encargado" | "operador_recepcion" | "contador" | "comercial_b2b";
       discount_level: "operador" | "encargado" | "admin";
+      item_work_status: "pendiente" | "en_proceso" | "pausada" | "terminada";
       revenue_engine: "recurrente" | "valor_medio" | "premium" | "producto_complemento" | "membresia";
       sales_channel: "b2c" | "membresia" | "b2b";
       service_order_status:
@@ -2538,6 +3222,7 @@ export const Constants = {
       appointment_status: ["programada", "recibida", "en_servicio", "terminada", "entregada", "cancelada", "no_show"],
       app_role: ["admin_socio", "encargado", "operador_recepcion", "contador", "comercial_b2b"],
       discount_level: ["operador", "encargado", "admin"],
+      item_work_status: ["pendiente", "en_proceso", "pausada", "terminada"],
       revenue_engine: ["recurrente", "valor_medio", "premium", "producto_complemento", "membresia"],
       sales_channel: ["b2c", "membresia", "b2b"],
       service_order_status: ["abierta", "autorizada", "en_proceso", "pausada", "terminada", "entregada", "cancelada"],

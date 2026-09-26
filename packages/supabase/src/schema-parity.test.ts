@@ -5,6 +5,14 @@ import {
   APPOINTMENT_STATUSES,
   APPOINTMENT_TRANSITIONS,
   DISCOUNT_LEVEL_LIMITS,
+  EVIDENCE_KINDS,
+  EVIDENCE_MAX_BYTES,
+  EVIDENCE_MIME_TYPES,
+  EXECUTION_EVENT_KINDS,
+  INCIDENT_KINDS,
+  INVENTORY_UNITS,
+  ITEM_WORK_STATUSES,
+  ITEM_WORK_TRANSITIONS,
   DISCOUNT_LEVELS,
   PAYMENT_METHODS,
   REVENUE_ENGINES,
@@ -47,14 +55,21 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "client_centers",
   "clients",
   "detail_centers",
+  "inventory_items",
   "organizations",
   "profiles",
   "role_assignments",
   "service_center_config",
+  "service_order_consumptions",
   "service_order_discounts",
+  "service_order_events",
+  "service_order_evidence",
+  "service_order_incidents",
   "service_order_items",
+  "service_order_staff",
   "service_order_status_history",
   "service_orders",
+  "service_supply_standards",
   "service_price_history",
   "services",
   "technicians",
@@ -79,6 +94,11 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "list_appointments",
   "list_service_orders",
   "my_detail_centers",
+  "record_service_order_consumption",
+  "register_service_order_evidence",
+  "remove_service_order_evidence",
+  "report_service_order_incident",
+  "resolve_service_order_incident",
   "record_service_order_payment",
   "search_clients",
   "service_price_at",
@@ -88,7 +108,10 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "set_role_assignment",
   "set_service_center_config",
   "set_service_order_item",
+  "set_service_order_item_work",
+  "set_service_order_staff",
   "set_service_order_status",
+  "set_service_supply_standard",
   "set_user_disabled",
   "update_appointment",
   "update_client",
@@ -97,6 +120,7 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "update_service_order_details",
   "update_vehicle",
   "upsert_bay",
+  "upsert_inventory_item",
   "upsert_technician",
   "void_service_order_discount",
 ];
@@ -151,6 +175,45 @@ describe("paridad SQL ↔ TypeScript", () => {
     ]);
     const pay = /p_method not in \(([^)]+)\)/.exec(allSql)?.[1];
     expect(pay?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...PAYMENT_METHODS]);
+  });
+
+  it("ejecución: estatus y transiciones de línea, unidades, momentos, eventos y límites de fotos coinciden", () => {
+    const listIn = (re: RegExp) =>
+      re
+        .exec(allSql)?.[1]
+        ?.split(",")
+        .map((r) =>
+          r
+            .trim()
+            .replace(/'/g, "")
+            .replace(/^array\[|\]$/g, ""),
+        );
+    expect(listIn(/create type public\.item_work_status as enum \(([^)]+)\)/)).toEqual([
+      ...ITEM_WORK_STATUSES,
+    ]);
+    expect([...Constants.public.Enums.item_work_status]).toEqual([...ITEM_WORK_STATUSES]);
+    const fn =
+      /function private\.item_work_transition_allowed[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    const sqlPairs = [...fn.matchAll(/\('(\w+)'(?:::public\.item_work_status)?,\s*'(\w+)'/g)].map(
+      (m) => `${m[1]}>${m[2]}`,
+    );
+    const domainPairs = Object.entries(ITEM_WORK_TRANSITIONS).flatMap(([from, tos]) =>
+      tos.map((to) => `${from}>${to}`),
+    );
+    expect(sqlPairs.sort()).toEqual(domainPairs.sort());
+    expect(listIn(/unit text not null check \(unit in \(([^)]+)\)\)/)).toEqual([...INVENTORY_UNITS]);
+    expect(listIn(/kind text not null check \(kind in \(('antes'[^)]+)\)\)/)).toEqual([...EVIDENCE_KINDS]);
+    expect(listIn(/kind text not null check \(kind in \(('incidencia', 'retrabajo')\)\)/)).toEqual([
+      ...INCIDENT_KINDS,
+    ]);
+    const events = /check \(kind in \(\s*('os_inicio'[\s\S]*?'incidencia_resuelta')/.exec(allSql)?.[1] ?? "";
+    expect([...events.matchAll(/'(\w+)'/g)].map((m) => m[1])).toEqual([...EXECUTION_EVENT_KINDS]);
+    const bucket =
+      /values \('service-order-evidence', 'service-order-evidence', false, (\d+),\s*array\[([^\]]+)\]/.exec(
+        allSql,
+      );
+    expect(Number(bucket?.[1])).toBe(EVIDENCE_MAX_BYTES);
+    expect(bucket?.[2]?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...EVIDENCE_MIME_TYPES]);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {
