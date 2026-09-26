@@ -268,3 +268,21 @@ select m.organization_id, m.id, m.detail_center_id, m.detail_center_id, 'alta', 
  where m.id in ('3c000000-0000-4000-8000-000000000001', '3c000000-0000-4000-8000-000000000002',
                 '3c000000-0000-4000-8000-000000000003')
    and not exists (select 1 from public.membership_events e where e.membership_id = m.id);
+
+-- CRM (C2): consentimiento de llamada y seguimientos de ejemplo. El
+-- consentimiento por whatsapp/sms/email ya lo sincroniza clients.marketing_*.
+insert into public.contact_preferences (organization_id, client_id, channel, opted_in, source)
+values ('00000000-0000-4000-8000-00000000d3e0', 'c1000000-0000-4000-8000-000000000001', 'llamada', true, 'web')
+on conflict (client_id, channel) do nothing;
+
+insert into public.crm_tasks (id, organization_id, detail_center_id, client_id, vehicle_id, kind, channel, due_on, notes,
+                              source, membership_id, dedupe_key)
+values
+  ('4c000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+   'c1000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000001', 'whatsapp', 'whatsapp',
+   current_date + 1, 'Ofrecer pulido antes de vacaciones', 'manual', null, null),
+  ('4c000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+   'c1000000-0000-4000-8000-000000000003', 'c2000000-0000-4000-8000-000000000004', 'renovar', 'presencial',
+   current_date, 'Membresía MEM-000002 por vencer', 'membresia', '3c000000-0000-4000-8000-000000000002',
+   'mem:3c000000-0000-4000-8000-000000000002:seed')
+on conflict (id) do nothing;
