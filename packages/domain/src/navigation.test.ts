@@ -94,6 +94,8 @@ describe("navegación por rol", () => {
     expect(navScreenOf("membershipPlans")).toBe("memberships");
     expect(sectionOfPath("/comercial/membresias/abc")).toBe("comercial");
     expect(sectionOfPath("/comercial/planes")).toBe("comercial");
+    expect(navScreenOf("crmCustomerDetail")).toBe("crmCustomers");
+    expect(sectionOfPath("/comercial/clientes/abc")).toBe("comercial");
   });
 
   it("Membresías: recepción y comercial las venden; el contador sólo ve KPIs agregados", () => {
@@ -101,6 +103,12 @@ describe("navegación por rol", () => {
     expect(itemsOf(["operador_recepcion"])).not.toContain("comercial");
     expect(itemsOf(["comercial_b2b"])).toEqual(expect.arrayContaining(["comercial", "memberships"]));
     expect(itemsOf(["contador"])).not.toContain("memberships");
+  });
+
+  it("CRM: recepción y comercial lo usan; el contador no (datos personales)", () => {
+    expect(itemsOf(["operador_recepcion"])).toEqual(expect.arrayContaining(["crmCustomers", "crmTasks"]));
+    expect(itemsOf(["comercial_b2b"])).toEqual(expect.arrayContaining(["crmCustomers", "crmTasks"]));
+    expect(itemsOf(["contador"])).not.toContain("crmCustomers");
   });
 
   it("varios roles en el centro suman secciones", () => {

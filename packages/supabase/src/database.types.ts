@@ -3,7 +3,7 @@
 // 20260925000000_advisor_fixes, 20260926000000_auth_session,
 // 20260927000000_clients_vehicles, 20260928000000_service_catalog,
 // 20260929000000_agenda, 20260930000000_service_orders,
-// 20261001000000_execution_evidence y 20261002000000_memberships. Regenerar tras
+// 20261001000000_execution_evidence, 20261002000000_memberships y 20261003000000_crm. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -408,6 +408,175 @@ export type Database = {
           },
         ];
       };
+      contact_preferences: {
+        Row: {
+          channel: string;
+          client_id: string;
+          created_at: string;
+          opted_in: boolean;
+          organization_id: string;
+          source: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          channel: string;
+          client_id: string;
+          created_at?: string;
+          opted_in: boolean;
+          organization_id: string;
+          source: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          channel?: string;
+          client_id?: string;
+          created_at?: string;
+          opted_in?: boolean;
+          organization_id?: string;
+          source?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contact_preferences_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      crm_tasks: {
+        Row: {
+          assigned_to: string | null;
+          cancel_reason: string | null;
+          channel: string;
+          client_id: string;
+          completed_at: string | null;
+          completed_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          dedupe_key: string | null;
+          detail_center_id: string;
+          due_on: string;
+          id: string;
+          kind: string;
+          membership_id: string | null;
+          notes: string | null;
+          organization_id: string;
+          outcome: string | null;
+          outcome_notes: string | null;
+          recommended_service_id: string | null;
+          request_id: string | null;
+          service_order_id: string | null;
+          source: string;
+          status: string;
+          updated_at: string;
+          vehicle_id: string | null;
+        };
+        Insert: {
+          assigned_to?: string | null;
+          cancel_reason?: string | null;
+          channel: string;
+          client_id: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          dedupe_key?: string | null;
+          detail_center_id: string;
+          due_on: string;
+          id?: string;
+          kind: string;
+          membership_id?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          outcome?: string | null;
+          outcome_notes?: string | null;
+          recommended_service_id?: string | null;
+          request_id?: string | null;
+          service_order_id?: string | null;
+          source?: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_id?: string | null;
+        };
+        Update: {
+          assigned_to?: string | null;
+          cancel_reason?: string | null;
+          channel?: string;
+          client_id?: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          dedupe_key?: string | null;
+          detail_center_id?: string;
+          due_on?: string;
+          id?: string;
+          kind?: string;
+          membership_id?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          outcome?: string | null;
+          outcome_notes?: string | null;
+          recommended_service_id?: string | null;
+          request_id?: string | null;
+          service_order_id?: string | null;
+          source?: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_tasks_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "crm_tasks_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "crm_tasks_organization_id_membership_id_fkey";
+            columns: ["organization_id", "membership_id"];
+            isOneToOne: false;
+            referencedRelation: "memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "crm_tasks_organization_id_recommended_service_id_fkey";
+            columns: ["organization_id", "recommended_service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "crm_tasks_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "crm_tasks_organization_id_vehicle_id_fkey";
+            columns: ["organization_id", "vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+
       detail_centers: {
         Row: {
           active: boolean;
@@ -2226,6 +2395,19 @@ export type Database = {
           vehicle_id: string;
         }[];
       };
+      cancel_crm_task: {
+        Args: {
+          p_reason: string;
+          p_task_id: string;
+        };
+        Returns: Database["public"]["Tables"]["crm_tasks"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "crm_tasks";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       center_catalog: {
         Args: {
           p_detail_center_id: string;
@@ -2258,6 +2440,20 @@ export type Database = {
           title: string;
           vehicle_id: string | null;
         }[];
+      };
+      complete_crm_task: {
+        Args: {
+          p_notes?: string;
+          p_outcome: string;
+          p_task_id: string;
+        };
+        Returns: Database["public"]["Tables"]["crm_tasks"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "crm_tasks";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_appointment: {
         Args: {
@@ -2348,6 +2544,26 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "clients";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_crm_task: {
+        Args: {
+          p_assigned_to?: string;
+          p_channel: string | null;
+          p_client_id: string;
+          p_detail_center_id: string;
+          p_due_on: string;
+          p_kind: string;
+          p_notes?: string;
+          p_request_id: string;
+          p_vehicle_id?: string;
+        };
+        Returns: Database["public"]["Tables"]["crm_tasks"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "crm_tasks";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -2544,6 +2760,41 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      crm_customers: {
+        Args: {
+          p_client_id?: string;
+          p_detail_center_ids: string[];
+          p_due?: string;
+          p_limit?: number;
+          p_query?: string;
+          p_segment?: string;
+        };
+        Returns: {
+          client_id: string;
+          email: string | null;
+          full_name: string;
+          kind: string;
+          last_visit_at: string | null;
+          lifetime_value: number;
+          membership_ends_on: string | null;
+          membership_id: string | null;
+          membership_number: string | null;
+          membership_plan: string | null;
+          membership_status: string | null;
+          membership_value: number;
+          next_visit_folio: string | null;
+          next_visit_on: string | null;
+          next_visit_order_id: string | null;
+          next_visit_service: string | null;
+          next_visit_state: string | null;
+          open_tasks: number;
+          opted_in_channels: string[];
+          phone: string | null;
+          segment: string;
+          services_value: number;
+          visits: number;
+        }[];
+      };
       find_client_matches: {
         Args: {
           p_detail_center_id: string;
@@ -2561,6 +2812,12 @@ export type Database = {
           phone_hint: string;
           visible: boolean;
         }[];
+      };
+      generate_crm_tasks: {
+        Args: {
+          p_detail_center_id: string;
+        };
+        Returns: number;
       };
       link_client_to_center: {
         Args: { p_client_id: string; p_detail_center_id: string; p_reason: string };
@@ -2930,6 +3187,20 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      reschedule_crm_task: {
+        Args: {
+          p_due_on: string;
+          p_reason: string;
+          p_task_id: string;
+        };
+        Returns: Database["public"]["Tables"]["crm_tasks"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "crm_tasks";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       resolve_service_order_incident: {
         Args: {
           p_incident_id: string;
@@ -3043,6 +3314,16 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      set_contact_preference: {
+        Args: {
+          p_channel: string;
+          p_client_id: string;
+          p_opted_in: boolean;
+          p_reason: string;
+          p_source: string;
+        };
+        Returns: undefined;
       };
       set_membership_benefit: {
         Args: {

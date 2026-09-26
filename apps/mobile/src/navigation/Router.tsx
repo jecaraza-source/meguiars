@@ -27,6 +27,9 @@ import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
 import { ComercialScreen } from "@/screens/ComercialScreen";
+import { CrmCustomerScreen } from "@/screens/CrmCustomerScreen";
+import { CrmCustomersScreen } from "@/screens/CrmCustomersScreen";
+import { CrmTasksScreen } from "@/screens/CrmTasksScreen";
 import { MembershipDetailScreen } from "@/screens/MembershipDetailScreen";
 import { MembershipNewScreen } from "@/screens/MembershipNewScreen";
 import { MembershipPlanScreen, MembershipPlansScreen } from "@/screens/MembershipPlansScreen";
@@ -84,6 +87,12 @@ export function Router() {
   const openPlan = (id: string) => {
     setPlanId(id);
     setScreen("membershipPlanDetail");
+  };
+  // Parámetro de la ficha comercial (equivale a /comercial/clientes/[id] en web).
+  const [crmClientId, setCrmClientId] = useState<string | null>(null);
+  const openCrmCustomer = (id: string) => {
+    setCrmClientId(id);
+    setScreen("crmCustomerDetail");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -161,7 +170,34 @@ export function Router() {
   } else {
     switch (screen) {
       case "comercial":
-        content = <ComercialScreen {...props} onMemberships={() => setScreen("memberships")} />;
+        content = (
+          <ComercialScreen
+            {...props}
+            onMemberships={() => setScreen("memberships")}
+            onCrm={() => setScreen("crmCustomers")}
+            onTasks={() => setScreen("crmTasks")}
+          />
+        );
+        break;
+      case "crmCustomers":
+        content = (
+          <CrmCustomersScreen {...props} onOpen={openCrmCustomer} onTasks={() => setScreen("crmTasks")} />
+        );
+        break;
+      case "crmCustomerDetail":
+        content = crmClientId ? (
+          <CrmCustomerScreen
+            key={crmClientId}
+            {...props}
+            clientId={crmClientId}
+            onBack={() => setScreen("crmCustomers")}
+          />
+        ) : (
+          <CrmCustomersScreen {...props} onOpen={openCrmCustomer} onTasks={() => setScreen("crmTasks")} />
+        );
+        break;
+      case "crmTasks":
+        content = <CrmTasksScreen {...props} onOpenClient={openCrmCustomer} />;
         break;
       case "memberships":
         content = (
@@ -333,6 +369,7 @@ export function Router() {
             {...props}
             clientId={clientId}
             onBack={() => setScreen("clients")}
+            onCrm={openCrmCustomer}
           />
         ) : (
           <ClientsScreen {...props} onOpen={openClient} onNew={() => setScreen("clientNew")} />

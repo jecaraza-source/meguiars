@@ -17,3 +17,4 @@ export * from "./agenda";
 export * from "./orders";
 export * from "./execution";
 export * from "./memberships";
+export * from "./crm";

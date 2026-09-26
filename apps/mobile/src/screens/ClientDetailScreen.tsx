@@ -4,6 +4,7 @@ import {
   canInActiveCenter,
   clientErrorMessage,
   clientsCopy,
+  crmCopy,
   isPossibleDuplicate,
   newRequestId,
   presentClientDetail,
@@ -59,7 +60,8 @@ export function ClientDetailScreen({
   header,
   clientId,
   onBack,
-}: PrivateScreenProps & { clientId: string; onBack: () => void }) {
+  onCrm,
+}: PrivateScreenProps & { clientId: string; onBack: () => void; onCrm?: (id: string) => void }) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const [data, setData] = useState<ViewState<Loaded>>({ status: "loading" });
@@ -109,6 +111,9 @@ export function ClientDetailScreen({
         <KpiCard label={clientsCopy.vehiclesTitle} value={String(view.vehiclesCount)} caption="activos" />
         <KpiCard label="Promociones" value={view.consent} caption={view.centers} />
       </View>
+      {onCrm && canInActiveCenter(state, "crm.read") ? (
+        <LinkButton label={crmCopy.openProfile} onPress={() => onCrm(clientId)} />
+      ) : null}
       <Card title={clientsCopy.vehiclesTitle}>
         <List
           caption={clientsCopy.vehiclesTitle}
