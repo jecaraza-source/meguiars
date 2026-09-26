@@ -99,18 +99,16 @@ export function createCatalogRepository(client: MeguiarsSupabaseClient): Catalog
       const c = parsed.data;
       return run(
         () =>
-          client
-            .rpc("create_service", {
-              p_organization_id: c.organizationId,
-              p_code: c.code,
-              p_name: c.name,
-              p_description: c.description ?? "",
-              p_revenue_engine: c.revenueEngine,
-              p_standard_duration_minutes: c.standardDurationMinutes,
-              p_base_price: c.basePrice,
-              p_standard_direct_cost: c.standardDirectCost,
-            })
-            .single(),
+          client.rpc("create_service", {
+            p_organization_id: c.organizationId,
+            p_code: c.code,
+            p_name: c.name,
+            p_description: c.description ?? "",
+            p_revenue_engine: c.revenueEngine,
+            p_standard_duration_minutes: c.standardDurationMinutes,
+            p_base_price: c.basePrice,
+            p_standard_direct_cost: c.standardDirectCost,
+          }),
         toService,
       );
     },
@@ -121,19 +119,17 @@ export function createCatalogRepository(client: MeguiarsSupabaseClient): Catalog
       const c = parsed.data;
       return run(
         () =>
-          client
-            .rpc("update_service", {
-              p_id: c.id,
-              p_name: c.name,
-              p_description: c.description ?? "",
-              p_revenue_engine: c.revenueEngine,
-              p_standard_duration_minutes: c.standardDurationMinutes,
-              p_base_price: c.basePrice,
-              p_standard_direct_cost: c.standardDirectCost,
-              p_active: c.active,
-              p_reason: c.reason,
-            })
-            .single(),
+          client.rpc("update_service", {
+            p_id: c.id,
+            p_name: c.name,
+            p_description: c.description ?? "",
+            p_revenue_engine: c.revenueEngine,
+            p_standard_duration_minutes: c.standardDurationMinutes,
+            p_base_price: c.basePrice,
+            p_standard_direct_cost: c.standardDirectCost,
+            p_active: c.active,
+            p_reason: c.reason,
+          }),
         toService,
       );
     },
@@ -144,16 +140,14 @@ export function createCatalogRepository(client: MeguiarsSupabaseClient): Catalog
       const c = parsed.data;
       const result = await run(
         () =>
-          client
-            .rpc("set_service_center_config", {
-              p_detail_center_id: c.detailCenterId,
-              p_service_id: c.serviceId,
-              p_available: c.available,
-              p_price_override: c.priceOverride ?? null,
-              p_direct_cost_override: c.directCostOverride ?? null,
-              p_reason: c.reason,
-            })
-            .single(),
+          client.rpc("set_service_center_config", {
+            p_detail_center_id: c.detailCenterId,
+            p_service_id: c.serviceId,
+            p_available: c.available,
+            p_price_override: c.priceOverride ?? null,
+            p_direct_cost_override: c.directCostOverride ?? null,
+            p_reason: c.reason,
+          }),
         () => undefined,
       );
       return result;

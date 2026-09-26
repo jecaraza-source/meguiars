@@ -39,6 +39,9 @@ export const CAPABILITIES = [
   "clients.write",
   "catalog.read",
   "catalog.manage",
+  "agenda.read",
+  "agenda.write",
+  "agenda.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -48,7 +51,8 @@ export type Capability = (typeof CAPABILITIES)[number];
  * aplicadas por RLS en la migración 20260923000000; `clients.*`, en
  * 20260927000000 (private.can_read_clients / private.can_write_clients);
  * `catalog.*`, en 20260928000000 (servicios: admin_socio corporativo; centro:
- * private.can_manage_center_catalog). `operations.*`,
+ * private.can_manage_center_catalog); `agenda.*`, en 20260929000000
+ * (private.can_use_agenda / private.can_manage_agenda). `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
  */
@@ -69,6 +73,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "clients.write",
     "catalog.read",
     "catalog.manage",
+    "agenda.read",
+    "agenda.write",
+    "agenda.manage",
   ],
   encargado: [
     "center.read",
@@ -79,6 +86,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "clients.read",
     "clients.write",
     "catalog.read",
+    "agenda.read",
+    "agenda.write",
+    "agenda.manage",
   ],
   operador_recepcion: [
     "center.read",
@@ -87,6 +97,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "clients.read",
     "clients.write",
     "catalog.read",
+    "agenda.read",
+    "agenda.write",
   ],
   // El contador no ve datos personales de clientes.
   contador: ["center.read", "finance.read", "members.read", "audit.read", "catalog.read"],

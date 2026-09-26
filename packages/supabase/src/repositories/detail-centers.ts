@@ -19,9 +19,12 @@ export function createDetailCenterRepository(client: MeguiarsSupabaseClient): De
       const { id, name, timezone, reason } = parsed.data;
       return run(
         () =>
-          client
-            .rpc("update_detail_center", { p_id: id, p_name: name, p_timezone: timezone, p_reason: reason })
-            .single(),
+          client.rpc("update_detail_center", {
+            p_id: id,
+            p_name: name,
+            p_timezone: timezone,
+            p_reason: reason,
+          }),
         toDetailCenter,
       );
     },

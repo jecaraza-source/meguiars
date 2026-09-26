@@ -15,6 +15,7 @@ const BY_CODE: Record<string, RepoErrorKind> = {
   "23505": "conflict", // unique_violation
   "23503": "conflict", // foreign_key_violation
   MG001: "conflict", // posible cliente duplicado (create_client / update_client)
+  "23P01": "conflict", // exclusion_violation: bahía o técnico ocupados
   // PostgREST
   PGRST116: "not_found",
   PGRST301: "permission_denied", // JWT inválido/expirado

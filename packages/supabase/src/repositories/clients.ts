@@ -165,28 +165,26 @@ export function createClientRepository(client: MeguiarsSupabaseClient): ClientRe
       const c = parsed.data;
       return run(
         () =>
-          client
-            .rpc("create_client", {
-              p_detail_center_id: c.detailCenterId,
-              p_request_id: c.requestId,
-              p_full_name: c.fullName,
-              p_phone: c.phone,
-              ...(c.email ? { p_email: c.email } : {}),
-              p_kind: c.kind,
-              ...(c.notes ? { p_notes: c.notes } : {}),
-              p_marketing_channels: c.marketingChannels,
-              p_source: c.source,
-              p_vehicles: c.vehicles.map((v) => ({
-                make: v.make,
-                model: v.model,
-                year: v.year,
-                plate: v.plate,
-                identifier: v.identifier ?? null,
-                notes: v.notes ?? null,
-              })),
-              ...(c.duplicateReason ? { p_duplicate_reason: c.duplicateReason } : {}),
-            })
-            .single(),
+          client.rpc("create_client", {
+            p_detail_center_id: c.detailCenterId,
+            p_request_id: c.requestId,
+            p_full_name: c.fullName,
+            p_phone: c.phone,
+            ...(c.email ? { p_email: c.email } : {}),
+            p_kind: c.kind,
+            ...(c.notes ? { p_notes: c.notes } : {}),
+            p_marketing_channels: c.marketingChannels,
+            p_source: c.source,
+            p_vehicles: c.vehicles.map((v) => ({
+              make: v.make,
+              model: v.model,
+              year: v.year,
+              plate: v.plate,
+              identifier: v.identifier ?? null,
+              notes: v.notes ?? null,
+            })),
+            ...(c.duplicateReason ? { p_duplicate_reason: c.duplicateReason } : {}),
+          }),
         toClient,
       );
     },
@@ -197,21 +195,19 @@ export function createClientRepository(client: MeguiarsSupabaseClient): ClientRe
       const c = parsed.data;
       return run(
         () =>
-          client
-            .rpc("update_client", {
-              p_id: c.id,
-              p_full_name: c.fullName,
-              p_phone: c.phone,
-              p_email: c.email ?? "",
-              p_kind: c.kind,
-              p_notes: c.notes ?? "",
-              p_home_detail_center_id: c.homeDetailCenterId,
-              p_marketing_channels: c.marketingChannels,
-              p_source: c.source,
-              p_reason: c.reason,
-              p_confirm_duplicate: c.confirmDuplicate ?? false,
-            })
-            .single(),
+          client.rpc("update_client", {
+            p_id: c.id,
+            p_full_name: c.fullName,
+            p_phone: c.phone,
+            p_email: c.email ?? "",
+            p_kind: c.kind,
+            p_notes: c.notes ?? "",
+            p_home_detail_center_id: c.homeDetailCenterId,
+            p_marketing_channels: c.marketingChannels,
+            p_source: c.source,
+            p_reason: c.reason,
+            p_confirm_duplicate: c.confirmDuplicate ?? false,
+          }),
         toClient,
       );
     },
@@ -222,19 +218,17 @@ export function createClientRepository(client: MeguiarsSupabaseClient): ClientRe
       const v = parsed.data;
       return run(
         () =>
-          client
-            .rpc("add_vehicle", {
-              p_client_id: v.clientId,
-              p_detail_center_id: v.detailCenterId,
-              p_request_id: v.requestId,
-              p_make: v.make,
-              p_model: v.model,
-              p_year: v.year,
-              p_plate: v.plate,
-              ...(v.identifier ? { p_identifier: v.identifier } : {}),
-              ...(v.notes ? { p_notes: v.notes } : {}),
-            })
-            .single(),
+          client.rpc("add_vehicle", {
+            p_client_id: v.clientId,
+            p_detail_center_id: v.detailCenterId,
+            p_request_id: v.requestId,
+            p_make: v.make,
+            p_model: v.model,
+            p_year: v.year,
+            p_plate: v.plate,
+            ...(v.identifier ? { p_identifier: v.identifier } : {}),
+            ...(v.notes ? { p_notes: v.notes } : {}),
+          }),
         toVehicle,
       );
     },
@@ -245,19 +239,17 @@ export function createClientRepository(client: MeguiarsSupabaseClient): ClientRe
       const v = parsed.data;
       return run(
         () =>
-          client
-            .rpc("update_vehicle", {
-              p_id: v.id,
-              p_make: v.make,
-              p_model: v.model,
-              p_year: v.year,
-              p_plate: v.plate,
-              p_identifier: v.identifier ?? "",
-              p_notes: v.notes ?? "",
-              p_active: v.active,
-              p_reason: v.reason,
-            })
-            .single(),
+          client.rpc("update_vehicle", {
+            p_id: v.id,
+            p_make: v.make,
+            p_model: v.model,
+            p_year: v.year,
+            p_plate: v.plate,
+            p_identifier: v.identifier ?? "",
+            p_notes: v.notes ?? "",
+            p_active: v.active,
+            p_reason: v.reason,
+          }),
         toVehicle,
       );
     },

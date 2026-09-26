@@ -19,7 +19,7 @@ function fakeClient(response: { data: unknown; error: unknown }) {
   const select = vi.fn(() => ({ order }));
   const from = vi.fn(() => ({ select }));
   const single = vi.fn().mockResolvedValue(response);
-  const rpc = vi.fn(() => ({ single }));
+  const rpc = vi.fn(() => Object.assign(Promise.resolve(response), { single }));
   return { client: { from, rpc } as unknown as MeguiarsSupabaseClient, from, rpc };
 }
 

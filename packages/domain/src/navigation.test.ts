@@ -71,6 +71,8 @@ describe("navegación por rol", () => {
     expect(navScreenOf("clientDetail")).toBe("clients");
     expect(navScreenOf("clientNew")).toBe("clients");
     expect(navScreenOf("catalogDetail")).toBe("catalog");
+    expect(navScreenOf("appointmentNew")).toBe("agenda");
+    expect(sectionOfPath("/agenda/nueva")).toBe("operacion");
     expect(sectionOfPath("/catalogo/abc")).toBe("operacion");
     expect(sectionOfScreen("clientDetail")).toBe("operacion");
     expect(sectionOfPath("/clientes/123")).toBe("operacion");

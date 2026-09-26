@@ -34,10 +34,15 @@ function FieldShell({
 const describedBy = (id: string, hint?: string, error?: string) =>
   [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(" ") || undefined;
 
-type InputProps = FieldContract & Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & { name: string };
+type InputProps = FieldContract &
+  Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
+    name: string;
+    /** Id propio cuando dos formularios de la página usan el mismo `name`. */
+    id?: string;
+  };
 
-export function Input({ label, hint, error, required, name, ...rest }: InputProps) {
-  const id = `field-${name}`;
+export function Input({ label, hint, error, required, name, id: ownId, ...rest }: InputProps) {
+  const id = ownId ?? `field-${name}`;
   return (
     <FieldShell id={id} label={label} hint={hint} error={error} required={required}>
       <input
