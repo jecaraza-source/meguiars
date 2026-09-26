@@ -4,12 +4,14 @@ import {
   canInActiveCenter,
   clientErrorMessage,
   clientsCopy,
+  crmCopy,
   presentClientDetail,
   presentHistoryEntry,
   vehicleLabel,
 } from "@meguiars/domain";
 import { createClientRepository } from "@meguiars/supabase";
 import { randomUUID } from "node:crypto";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { AddVehicleForm, DeactivateVehicleForm, EditClientForm } from "@/components/client-forms";
 import { ButtonLink } from "@/components/ui/button";
@@ -66,6 +68,11 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
         <KpiCard label={clientsCopy.vehiclesTitle} value={String(view.vehiclesCount)} caption="activos" />
         <KpiCard label="Promociones" value={view.consent} caption={view.centers} />
       </div>
+      {canInActiveCenter(state, "crm.read") ? (
+        <Link href={`/comercial/clientes/${client.id}`} className="text-sm underline">
+          {crmCopy.openProfile}: última visita, próxima recomendación y seguimientos
+        </Link>
+      ) : null}
 
       <Card title={clientsCopy.vehiclesTitle}>
         <Table
