@@ -1,6 +1,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  OFFER_STATUSES,
+  REJECTION_REASONS,
+  RULE_STAGES,
+  UPSELL_STAGES,
   AGREEMENT_STATES,
   AGREEMENT_STATUSES,
   B2B_ACCOUNT_STATUSES,
@@ -113,6 +117,8 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "service_price_history",
   "services",
   "technicians",
+  "upsell_offers",
+  "upsell_rules",
   "user_detail_centers",
   "vehicles",
 ];
@@ -120,6 +126,11 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_service_order_discount",
+  "accept_upsell",
+  "reject_upsell",
+  "upsell_metric_facts",
+  "upsell_suggestions",
+  "upsert_upsell_rule",
   "add_vehicle",
   "apply_b2b_account",
   "b2b_account_orders",
@@ -394,6 +405,31 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect([...states].sort()).toEqual([...AGREEMENT_STATES].sort());
     const rfc = /rfc is null or rfc ~ '([^']+)'/.exec(b2b)?.[1];
     expect(rfc).toBe(RFC_PATTERN.source);
+  });
+
+  it("Recomendaciones: etapas, estados de oferta, motivos de rechazo, canales y puntaje coinciden", () => {
+    const up = allSql.slice(allSql.indexOf("-- C4 — Comercial / Recomendaciones"));
+    const listIn = (re: RegExp) =>
+      re
+        .exec(up)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listIn(/stage text not null default 'diagnostico' check \(stage in \(([^)]+)\)\)/)).toEqual([
+      ...RULE_STAGES,
+    ]);
+    expect(listIn(/stage text not null check \(stage in \(([^)]+)\)\)/)).toEqual([...UPSELL_STAGES]);
+    expect(listIn(/status text not null default 'ofrecida' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...OFFER_STATUSES,
+    ]);
+    expect(listIn(/rejection_reason text check \(rejection_reason in \(([^)]+)\)\)/)).toEqual([
+      ...REJECTION_REASONS,
+    ]);
+    expect(listIn(/channels <@ array\[([^\]]+)\]/)).toEqual([...SALES_CHANNELS]);
+    const stage = /function private\.upsell_stage[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(up)?.[1] ?? "";
+    expect(stage).toContain("in ('abierta', 'autorizada') then 'diagnostico'");
+    expect(stage).toContain("in ('en_proceso', 'pausada', 'terminada') then 'cierre'");
+    const score = /function private\.upsell_score[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(up)?.[1] ?? "";
+    expect(score).toContain("(coalesce(p_accepted, 0) + 1)::numeric / (coalesce(p_offered, 0) + 2), 4");
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {
