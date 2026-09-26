@@ -23,6 +23,16 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "meguiars"
+    "scheme": "meguiars",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Meguiar's usa la cámara para tomar fotos de evidencia (antes, durante y después) de cada orden de servicio.",
+          "photosPermission": "Meguiar's accede a tus fotos para adjuntar evidencia a una orden de servicio.",
+          "microphonePermission": false
+        }
+      ]
+    ]
   }
 }
