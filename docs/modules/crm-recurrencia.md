@@ -34,17 +34,17 @@ private.crm_rows(centros, hoy, zona, cliente?) → métricas derivadas
 
 ## Reglas
 
-| Regla              | Detalle                                                                                                                                                                                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Segmento           | Prioridad: **B2B** (cliente empresa u OS B2B) > **miembro** (membresía activa o próxima a vencer) > **inactivo** (última visita hace > 180 días) > **recurrente** (≥ 2 visitas) > **nuevo**. `private.customer_segment` ↔ `customerSegment`.               |
-| Próxima visita     | La de la OS no cancelada más reciente con fecha (terminada o, si no, creada; desempate por folio). **Vencida** si ya pasó, **próxima** si faltan ≤ 14 días, si no **programada**. `private.next_visit_state` ↔ `nextVisitState`.                           |
-| Valor acumulado    | Σ total de OS **entregadas** + Σ cobros de membresía (altas y renovaciones), en los centros autorizados. Coincide con el histórico transaccional (prueba SQL).                                                                                             |
-| OS terminada       | Sin recomendación y con un servicio recurrente → próxima visita = hoy + 30 días, mismo servicio. Con próxima visita → tarea "ofrecer mantenimiento" 3 días antes (no antes de hoy), por el mejor canal aceptado (WhatsApp > llamada > email > presencial). |
-| Deduplicación      | Una tarea automática por OS (`os:<id>`) o por periodo de membresía (`mem:<id>:<vence>`). La recomendación más reciente reemplaza la tarea de mantenimiento pendiente anterior del cliente en ese centro.                                                   |
-| Generar pendientes | `generate_crm_tasks(centro)` agrega renovaciones (membresías próximas a vencer o vencidas hace ≤ 30 días) y próximas visitas vencidas (≤ 30 días) o cercanas. Idempotente.                                                                                 |
-| Consentimiento     | Seguimiento por un canal no aceptado → `MG002`. Retirar un canal cancela sus pendientes ("El cliente retiró el consentimiento"). Presencial siempre permitido.                                                                                             |
-| Seguimiento manual | Cliente vinculado al centro activo, fecha de hoy en adelante, idempotente por `request_id`. Completar exige resultado; cancelar y reprogramar exigen motivo.                                                                                               |
-| Auditoría          | `private.audit_row` + `require_change_reason` en `contact_preferences` y `crm_tasks` (actor, fecha, valores anteriores/nuevos y motivo).                                                                                                                   |
+| Regla              | Detalle                                                                                                                                                                                                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Segmento           | Prioridad: **B2B** (cliente empresa u OS B2B) > **miembro** (membresía activa o próxima a vencer) > **inactivo** (última visita hace > 180 días) > **recurrente** (≥ 2 visitas) > **nuevo**. `private.customer_segment` ↔ `customerSegment`.                                                           |
+| Próxima visita     | La de la OS no cancelada más reciente con fecha (terminada o, si no, creada; desempate por folio). **Vencida** si ya pasó, **próxima** si faltan ≤ 14 días, si no **programada**. `private.next_visit_state` ↔ `nextVisitState`.                                                                       |
+| Valor acumulado    | Σ total de OS **entregadas** + Σ cobros de membresía (altas y renovaciones), en los centros autorizados. Coincide con el histórico transaccional (prueba SQL).                                                                                                                                         |
+| OS terminada       | Sin recomendación y con un servicio recurrente → próxima visita = hoy + 30 días, mismo servicio. Con próxima visita → tarea "ofrecer mantenimiento" 3 días antes (no antes de hoy), por el mejor canal aceptado (WhatsApp > llamada > email > presencial).                                             |
+| Deduplicación      | Una tarea automática por OS (`os:<id>`) o por periodo de membresía (`mem:<id>:<vence>`). La recomendación más reciente reemplaza la tarea de mantenimiento pendiente anterior del cliente en ese centro.                                                                                               |
+| Generar pendientes | Renovaciones (membresías próximas a vencer o vencidas hace ≤ 30 días) y próximas visitas vencidas (≤ 30 días) o cercanas. Idempotente. **Diario a las 07:00 (13:00 UTC)** en todos los centros activos (pg_cron, ver abajo); el botón "Generar pendientes" (`generate_crm_tasks(centro)`) lo adelanta. |
+| Consentimiento     | Seguimiento por un canal no aceptado → `MG002`. Retirar un canal cancela sus pendientes ("El cliente retiró el consentimiento"). Presencial siempre permitido.                                                                                                                                         |
+| Seguimiento manual | Cliente vinculado al centro activo, fecha de hoy en adelante, idempotente por `request_id`. Completar exige resultado; cancelar y reprogramar exigen motivo.                                                                                                                                           |
+| Auditoría          | `private.audit_row` + `require_change_reason` en `contact_preferences` y `crm_tasks` (actor, fecha, valores anteriores/nuevos y motivo).                                                                                                                                                               |
 
 Umbrales en `private.crm_rule` ↔ `CRM_RULES` (`inactiveDays` 180, `dueSoonDays` 14, `recurrentReturnDays` 30, `taskLeadDays` 3), verificados por la prueba de paridad.
 
@@ -86,12 +86,19 @@ Errores: `MG002` → regla visible (sin consentimiento, ya cerrado), `42501` →
 - José Pérez acepta llamada (además de su consentimiento previo); seguimiento pendiente por WhatsApp.
 - Seguimiento "Renovar membresía" para `MEM-000002` de María López (próxima a vencer).
 
+## Tarea programada
+
+`20261003100000_crm_daily_tasks.sql` habilita `pg_cron` y programa `crm-generar-pendientes` (`0 13 * * *`, UTC = 07:00 en Ciudad de México y Monterrey). La ejecución corre sin usuario (`private.generate_crm_tasks_all`, sin permiso para ningún rol de la API) y usa las mismas llaves de deduplicación, así que coexistir con el botón no duplica tareas. Si la base no tiene `pg_cron` (Postgres local de pruebas), la migración sólo avisa.
+
+- Ver ejecuciones: `select * from cron.job_run_details where jobid = (select jobid from cron.job where jobname = 'crm-generar-pendientes') order by start_time desc limit 10;`
+- Cambiar la hora: `select cron.schedule('crm-generar-pendientes', '<cron UTC>', 'select private.generate_crm_tasks_all()');`
+- Pausar: `select cron.unschedule('crm-generar-pendientes');`
+
 ## Variables de entorno
 
 Ninguna nueva.
 
 ## Pendientes
 
-- Programar `generate_crm_tasks` (pg_cron o job) cuando se decida la frecuencia; hoy se ejecuta con "Generar pendientes".
 - Asignación de seguimientos por persona (`assigned_to` ya existe en la tabla).
 - Conector de mensajería que consuma la cola respetando `contact_preferences`.
