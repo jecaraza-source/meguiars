@@ -4,6 +4,15 @@ import {
   APP_ROLES,
   APPOINTMENT_STATUSES,
   APPOINTMENT_TRANSITIONS,
+  CONTACT_CHANNELS,
+  CRM_RULES,
+  CUSTOMER_SEGMENTS,
+  NEXT_VISIT_STATES,
+  TASK_CHANNELS,
+  TASK_KINDS,
+  TASK_OUTCOMES,
+  TASK_SOURCES,
+  TASK_STATUSES,
   DISCOUNT_LEVEL_LIMITS,
   EVIDENCE_KINDS,
   EVIDENCE_MAX_BYTES,
@@ -61,6 +70,8 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "bays",
   "client_centers",
   "clients",
+  "contact_preferences",
+  "crm_tasks",
   "detail_centers",
   "inventory_items",
   "membership_benefits",
@@ -93,16 +104,21 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_service_order_discount",
   "add_vehicle",
+  "cancel_crm_task",
+  "complete_crm_task",
   "appointment_order_draft",
   "center_catalog",
   "client_history",
   "create_appointment",
   "create_client",
+  "create_crm_task",
   "create_membership",
   "create_service",
   "create_service_order",
   "create_service_order_from_appointment",
+  "crm_customers",
   "find_client_matches",
+  "generate_crm_tasks",
   "link_client_to_center",
   "list_appointments",
   "list_memberships",
@@ -115,6 +131,7 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "renew_membership",
   "register_service_order_evidence",
   "remove_service_order_evidence",
+  "reschedule_crm_task",
   "report_service_order_incident",
   "resolve_service_order_incident",
   "record_service_order_payment",
@@ -123,6 +140,7 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "set_active_center",
   "set_appointment_status",
   "set_center_membership",
+  "set_contact_preference",
   "set_membership_benefit",
   "set_membership_state",
   "set_role_assignment",
@@ -269,6 +287,46 @@ describe("paridad SQL ↔ TypeScript", () => {
       tos.map((to) => `${from}>${to}`),
     );
     expect(sqlPairs.sort()).toEqual(domainPairs.sort());
+  });
+
+  it("CRM: segmentos, estados de próxima visita, umbrales, canales, tipos y resultados coinciden", () => {
+    const listIn = (re: RegExp) =>
+      re
+        .exec(allSql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    const seg = /function private\.customer_segment[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    expect([...seg.matchAll(/(?:then|else) '(\w+)'/g)].map((m) => m[1]).sort()).toEqual(
+      [...CUSTOMER_SEGMENTS].sort(),
+    );
+    const nv = /function private\.next_visit_state[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    expect([...nv.matchAll(/then '(\w+)'|else '(\w+)'/g)].map((m) => m[1] ?? m[2]).sort()).toEqual(
+      [...NEXT_VISIT_STATES].sort(),
+    );
+    const rules = /function private\.crm_rule[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    const sqlRules = Object.fromEntries(
+      [...rules.matchAll(/when '(\w+)' then (\d+)/g)].map((m) => [m[1], Number(m[2])]),
+    );
+    expect(sqlRules).toEqual({
+      inactive_days: CRM_RULES.inactiveDays,
+      due_soon_days: CRM_RULES.dueSoonDays,
+      recurrent_return_days: CRM_RULES.recurrentReturnDays,
+      task_lead_days: CRM_RULES.taskLeadDays,
+    });
+    expect(
+      listIn(/channel text not null check \(channel in \(('llamada', 'whatsapp', 'sms'[^)]*)\)\)/),
+    ).toEqual([...CONTACT_CHANNELS]);
+    expect(
+      listIn(/channel text not null check \(channel in \(('llamada', 'whatsapp', 'email', 'presencial')\)\)/),
+    ).toEqual([...TASK_CHANNELS]);
+    expect(listIn(/kind text not null check \(kind in \(('llamar'[^)]*)\)\)/)).toEqual([...TASK_KINDS]);
+    expect(listIn(/status text not null default 'pendiente' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...TASK_STATUSES,
+    ]);
+    expect(
+      listIn(/source text not null default 'manual' check \(source in \(('manual', 'os_terminada'[^)]*)\)\)/),
+    ).toEqual([...TASK_SOURCES]);
+    expect(listIn(/outcome text check \(outcome in \(([^)]+)\)\)/)).toEqual([...TASK_OUTCOMES]);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

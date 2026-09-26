@@ -11,7 +11,7 @@ export const sectionCopy = {
   },
   comercial: {
     title: "Comercial",
-    description: "Membresías, campañas y cuentas B2B del centro activo.",
+    description: "Membresías, clientes (CRM), seguimientos y cuentas B2B del centro activo.",
     emptyTitle: "Aún no hay membresías en este periodo",
     emptyMessage:
       "Contrata membresías en Comercial → Membresías. Las cuentas B2B llegan en su propio módulo.",
