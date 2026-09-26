@@ -2,6 +2,7 @@ import {
   b2bCopy,
   BILLING_MODEL_LABELS,
   formatMoney,
+  upsellStage,
   activeCenterAccess,
   activeRoles,
   canInActiveCenter,
@@ -34,6 +35,7 @@ import {
   createCatalogRepository,
   createB2bRepository,
   createMembershipRepository,
+  createUpsellRepository,
   createServiceOrderRepository,
 } from "@meguiars/supabase";
 import Link from "next/link";
@@ -46,6 +48,7 @@ import {
   PaymentForm,
 } from "@/components/order-forms";
 import { ApplyB2bForm } from "@/components/b2b-forms";
+import { UpsellCard } from "@/components/upsell-forms";
 import { OrderMembershipRedeem, VoidRedemptionForm } from "@/components/membership-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
@@ -94,6 +97,14 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           .accountsForCenter(center.id)
           .then((r) => (r.ok ? r.data.filter((a) => a.clientId === order.clientId) : []))
       : [];
+  // Sugerencias de venta: opcionales; si fallan, la tarjeta no se muestra (nunca bloquean la OS).
+  const suggestions =
+    canWrite && upsellStage(order.status)
+      ? await createUpsellRepository(supabase)
+          .suggestions(order.id)
+          .then((r) => (r.ok ? r.data : []))
+          .catch(() => [])
+      : [];
   const lineName = (itemId: string) => order.items.find((i) => i.id === itemId)?.serviceName ?? "—";
   const promised = order.promisedAt ? utcToZoned(order.promisedAt, center.timezone) : null;
 
@@ -141,6 +152,13 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           needsReason={view.itemsNeedReason}
         />
       </Card>
+
+      <UpsellCard
+        suggestions={suggestions}
+        orderId={order.id}
+        version={order.version}
+        clientId={order.clientId}
+      />
 
       {(b2bInfo.ok && b2bInfo.data) || applicable.length > 0 ? (
         <Card title={b2bCopy.orderCardTitle}>
