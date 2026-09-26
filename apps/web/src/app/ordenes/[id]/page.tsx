@@ -2,6 +2,7 @@ import {
   activeCenterAccess,
   activeRoles,
   canInActiveCenter,
+  executionCopy,
   formatDateInCenterTimeZone,
   orderStatusActions,
   ordersCopy,
@@ -82,6 +83,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             Cita de origen
           </Link>
         ) : null}
+        <ButtonLink href={`/ordenes/${order.id}/ejecucion`} label={executionCopy.open} size="sm" />
       </div>
       <div className="grid gap-lg md:grid-cols-2 lg:grid-cols-4">
         {view.kpis.map((k) => (

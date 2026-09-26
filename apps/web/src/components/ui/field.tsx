@@ -59,7 +59,12 @@ export function Input({ label, hint, error, required, name, id: ownId, ...rest }
 }
 
 type SelectProps = SelectContract &
-  Omit<SelectHTMLAttributes<HTMLSelectElement>, "id" | "value"> & { name: string; defaultValue?: string };
+  Omit<SelectHTMLAttributes<HTMLSelectElement>, "id" | "value"> & {
+    name: string;
+    defaultValue?: string;
+    /** Id propio cuando dos formularios de la página usan el mismo `name`. */
+    id?: string;
+  };
 
 export function Select({
   label,
@@ -70,9 +75,10 @@ export function Select({
   options,
   placeholder,
   value,
+  id: ownId,
   ...rest
 }: SelectProps) {
-  const id = `field-${name}`;
+  const id = ownId ?? `field-${name}`;
   return (
     <FieldShell id={id} label={label} hint={hint} error={error} required={required}>
       <select
@@ -101,11 +107,16 @@ export function Select({
 }
 
 type CheckboxProps = CheckboxContract &
-  Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type" | "checked"> & { name: string; value: string };
+  Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type" | "checked"> & {
+    name: string;
+    value: string;
+    /** Id propio cuando dos formularios de la página usan el mismo `name`. */
+    id?: string;
+  };
 
 /** Casilla con etiqueta clicable y área táctil completa. */
-export function Checkbox({ label, hint, checked, name, value, ...rest }: CheckboxProps) {
-  const id = `field-${name}-${value}`;
+export function Checkbox({ label, hint, checked, name, value, id: ownId, ...rest }: CheckboxProps) {
+  const id = ownId ?? `field-${name}-${value}`;
   return (
     <label htmlFor={id} className="flex min-h-(--mg-touch-target) cursor-pointer items-center gap-sm">
       <input
