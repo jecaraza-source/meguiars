@@ -1,0 +1,163 @@
+import type { StatusTone } from "../agenda/copy";
+import type { ApprovalEventKind, ExpensePaymentMethod, ExpenseStatus, PnlGroup } from "./expenses";
+
+export const PNL_GROUP_LABELS: Record<PnlGroup, string> = {
+  costo_directo: "Costo directo",
+  insumos: "Compra de insumos (fuera del P&L)",
+  personal: "Personal",
+  operativo: "Operativo",
+  administrativo: "Administrativo",
+  marketing: "Marketing",
+  financiero: "Financiero",
+  otros: "Otros",
+};
+
+export const PNL_GROUP_HINTS: Record<PnlGroup, string> = {
+  costo_directo:
+    "Costos directos que la OS no captura (p. ej. subcontratos). El costo estándar ya está en la OS.",
+  insumos: "Salida de caja; su costo se reconoce en la OS al consumirse. No suma al P&L.",
+  personal: "Nómina, comisiones y prestaciones.",
+  operativo: "Renta, servicios y mantenimiento del centro.",
+  administrativo: "Papelería, software y honorarios.",
+  marketing: "Publicidad y promoción.",
+  financiero: "Comisiones bancarias y de terminal, intereses.",
+  otros: "Otros egresos.",
+};
+
+export const EXPENSE_STATUS_LABELS: Record<ExpenseStatus, string> = {
+  pendiente: "Pendiente de aprobación",
+  aprobado: "Aprobado",
+  rechazado: "Rechazado",
+  anulado: "Anulado",
+};
+
+export const EXPENSE_STATUS_TONES: Record<ExpenseStatus, StatusTone> = {
+  pendiente: "warning",
+  aprobado: "success",
+  rechazado: "danger",
+  anulado: "neutral",
+};
+
+export const EXPENSE_PAYMENT_METHOD_LABELS: Record<ExpensePaymentMethod, string> = {
+  efectivo: "Efectivo",
+  tarjeta: "Tarjeta",
+  transferencia: "Transferencia",
+  cheque: "Cheque",
+  otro: "Otro",
+};
+
+export const APPROVAL_EVENT_LABELS: Record<ApprovalEventKind, string> = {
+  solicitada: "Aprobación solicitada",
+  autoaprobada: "Autoaprobado (admin)",
+  aprobada: "Aprobado",
+  rechazada: "Rechazado",
+  editada: "Editado",
+  anulada: "Anulado",
+};
+
+/** Textos de egresos y P&L, idénticos en web y móvil. */
+export const expensesCopy = {
+  title: "Egresos",
+  description: "Salidas de dinero por centro, clasificadas para el estado de resultados.",
+  newExpense: "Nuevo egreso",
+  empty: "Sin egresos con estos filtros.",
+  forbidden: "Sin permiso para esta acción.",
+  notFound: "El egreso no existe o no tienes acceso.",
+  onlineOnly: "Los egresos requieren conexión: no se guardan sin internet.",
+  // Filtros
+  filters: "Filtros",
+  from: "Desde",
+  to: "Hasta",
+  allCategories: "Todas las categorías",
+  allVendors: "Todos los proveedores",
+  allStatuses: "Todos los estados",
+  apply: "Filtrar",
+  scopeCenter: "Centro activo",
+  scopeAll: "Todos mis centros",
+  total: "Total",
+  // Formulario
+  category: "Categoría",
+  vendor: "Proveedor (opcional)",
+  noVendor: "Sin proveedor",
+  concept: "Concepto",
+  amount: "Monto (MXN)",
+  paymentMethod: "Forma de pago",
+  paidOn: "Fecha del pago",
+  reference: "Referencia (opcional)",
+  notes: "Notas (opcional)",
+  receipt: "Comprobante (foto o PDF, opcional)",
+  create: "Registrar egreso",
+  created: "Egreso registrado.",
+  createdPending: "Egreso registrado: pendiente de aprobación.",
+  save: "Guardar cambios",
+  saved: "Egreso actualizado.",
+  reason: "Motivo del cambio",
+  edit: "Editar egreso",
+  approvalHint: (threshold: string) => `Los egresos de ${threshold} o más requieren aprobación del admin.`,
+  noApproval: "Este centro no exige aprobación de egresos.",
+  willNeedApproval: "Requerirá aprobación del admin.",
+  // Detalle
+  status: "Estado",
+  group: "Grupo del P&L",
+  createdBy: "Capturó",
+  approvedBy: "Aprobó",
+  receipts: "Comprobantes",
+  receiptsEmpty: "Sin comprobantes.",
+  addReceipt: "Adjuntar comprobante",
+  receiptAdded: "Comprobante adjuntado.",
+  removeReceipt: "Retirar",
+  removeReason: "Motivo para retirarlo",
+  receiptRemoved: "Comprobante retirado.",
+  receiptType: "Sube una foto (JPG, PNG o WebP) o un PDF.",
+  receiptSize: "El comprobante excede 10 MB.",
+  openReceipt: "Ver",
+  history: "Historial",
+  historyEmpty: "Sin movimientos de aprobación.",
+  approve: "Aprobar",
+  approved: "Egreso aprobado.",
+  approveNote: "Nota (opcional)",
+  reject: "Rechazar",
+  rejected: "Egreso rechazado.",
+  rejectReason: "Motivo del rechazo",
+  void: "Anular egreso",
+  voided: "Egreso anulado.",
+  voidReason: "Motivo de la anulación",
+  voidHint: "El egreso queda anulado con su historial y comprobantes; no cuenta en el P&L.",
+  readOnly: "Sólo lectura.",
+  // Configuración
+  settingsTitle: "Categorías, proveedores y aprobación",
+  categories: "Categorías",
+  categoryCode: "Clave",
+  categoryName: "Nombre",
+  position: "Orden",
+  active: "Activa",
+  saveCategory: "Guardar categoría",
+  categorySaved: "Categoría guardada.",
+  newCategory: "Nueva categoría",
+  categoryHint:
+    "Reclasificar una categoría sólo afecta egresos nuevos o editados: cada egreso conserva el grupo con que se capturó.",
+  vendors: "Proveedores",
+  vendorName: "Nombre",
+  rfc: "RFC (opcional)",
+  phone: "Teléfono (opcional)",
+  email: "Email (opcional)",
+  vendorActive: "Activo",
+  saveVendor: "Guardar proveedor",
+  vendorSaved: "Proveedor guardado.",
+  newVendor: "Nuevo proveedor",
+  threshold: "Umbral de aprobación (MXN)",
+  thresholdHint: "Vacío = los egresos no requieren aprobación.",
+  saveThreshold: "Guardar umbral",
+  thresholdSaved: "Umbral actualizado.",
+  // P&L
+  pnlTitle: "Estado de resultados",
+  pnlDescription: "P&L por centro: ventas (OS entregadas y membresías), costo directo y egresos aprobados.",
+  pnlEmpty: "Sin movimientos en el periodo.",
+  cashOut: "Salidas de caja del periodo",
+  pending: "Pendiente de aprobación (no cuenta)",
+  modelNote:
+    "El costo directo sale de la OS (costo estándar + variación de insumos). La compra de insumos es salida de caja, no gasto: no se cuenta dos veces.",
+  range30: "Últimos 30 días",
+  rangeMonth: "Mes en curso",
+  rangePrevMonth: "Mes anterior",
+} as const;

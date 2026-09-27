@@ -51,6 +51,14 @@ import {
   PLAN_TIERS,
   REDEEM_SCOPES,
   DISCOUNT_LEVELS,
+  APPROVAL_EVENT_KINDS,
+  EXPENSE_PAYMENT_METHODS,
+  EXPENSE_RECEIPT_BUCKET,
+  EXPENSE_RECEIPT_MAX_BYTES,
+  EXPENSE_RECEIPT_MIME_TYPES,
+  EXPENSE_STATUSES,
+  isPnlExpense,
+  PNL_GROUPS,
   ORDER_PAYMENT_STATUSES,
   PAYMENT_METHOD_CODES,
   PAYMENT_METHOD_RULES,
@@ -140,6 +148,12 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "payment_tenders",
   "payment_allocations",
   "payment_reversals",
+  "expense_categories",
+  "vendors",
+  "expense_settings",
+  "expenses",
+  "expense_attachments",
+  "approval_events",
   "user_detail_centers",
   "vehicles",
 ];
@@ -173,6 +187,19 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "payment_facts",
   "receivable_orders",
   "sales_reconciliation",
+  "upsert_expense_category",
+  "upsert_vendor",
+  "set_expense_approval_threshold",
+  "create_expense",
+  "update_expense",
+  "approve_expense",
+  "reject_expense",
+  "void_expense",
+  "register_expense_attachment",
+  "remove_expense_attachment",
+  "list_expenses",
+  "expense_detail",
+  "pnl_facts",
   "add_vehicle",
   "apply_b2b_account",
   "b2b_account_orders",
@@ -326,6 +353,30 @@ describe("paridad SQL ↔ TypeScript", () => {
     );
     const receipt = /status text not null default 'valido' check \(status in \(([^)]+)\)\)/.exec(allSql)?.[1];
     expect(receipt?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...RECEIPT_STATUSES]);
+  });
+
+  it("egresos: grupos del P&L, estados, formas de pago, historial y comprobantes coinciden", () => {
+    const sql = readFileSync(join(migrationsDir, "20261008000000_expenses.sql"), "utf8");
+    const listOf = (re: RegExp) =>
+      re
+        .exec(sql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listOf(/pnl_group text not null check \(pnl_group in \(\s*([^)]+)\)/)).toEqual([...PNL_GROUPS]);
+    expect(listOf(/status text not null check \(status in \(([^)]+)\)\)/)).toEqual([...EXPENSE_STATUSES]);
+    expect(listOf(/payment_method text not null check \(payment_method in \(([^)]+)\)\)/)).toEqual([
+      ...EXPENSE_PAYMENT_METHODS,
+    ]);
+    expect(listOf(/kind text not null check \(kind in \(([^)]+)\)\)/)).toEqual([...APPROVAL_EVENT_KINDS]);
+    expect(listOf(/content_type text not null check \(content_type in \(([^)]+)\)\)/)).toEqual([
+      ...EXPENSE_RECEIPT_MIME_TYPES,
+    ]);
+    expect(
+      Number(/size_bytes integer not null check \(size_bytes between 1 and (\d+)\)/.exec(sql)?.[1]),
+    ).toBe(EXPENSE_RECEIPT_MAX_BYTES);
+    expect(sql).toContain(`'${EXPENSE_RECEIPT_BUCKET}'`);
+    const seeded = [...sql.matchAll(/\(p_organization_id, '(\w+)', '[^']+', '(\w+)'/g)].map((m) => m[2]);
+    expect(seeded.filter((g) => !isPnlExpense(g as never))).toEqual(["insumos"]);
   });
 
   it("ejecución: estatus y transiciones de línea, unidades, momentos, eventos y límites de fotos coinciden", () => {

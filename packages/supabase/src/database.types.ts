@@ -177,6 +177,50 @@ export type Database = {
           },
         ];
       };
+      approval_events: {
+        Row: {
+          actor_id: string | null;
+          amount: number;
+          detail_center_id: string;
+          expense_id: string;
+          id: number;
+          kind: string;
+          note: string | null;
+          occurred_at: string;
+          organization_id: string;
+        };
+        Insert: {
+          actor_id?: string | null;
+          amount: number;
+          detail_center_id: string;
+          expense_id: string;
+          id?: never;
+          kind: string;
+          note?: string | null;
+          occurred_at?: string;
+          organization_id: string;
+        };
+        Update: {
+          actor_id?: string | null;
+          amount?: number;
+          detail_center_id?: string;
+          expense_id?: string;
+          id?: never;
+          kind?: string;
+          note?: string | null;
+          occurred_at?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_events_organization_id_expense_id_fkey";
+            columns: ["organization_id", "expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -1093,6 +1137,257 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_attachments: {
+        Row: {
+          content_type: string;
+          created_at: string;
+          detail_center_id: string;
+          expense_id: string;
+          file_name: string | null;
+          id: string;
+          organization_id: string;
+          remove_reason: string | null;
+          removed_at: string | null;
+          removed_by: string | null;
+          size_bytes: number;
+          storage_path: string;
+          updated_at: string;
+          uploaded_by: string | null;
+        };
+        Insert: {
+          content_type: string;
+          created_at?: string;
+          detail_center_id: string;
+          expense_id: string;
+          file_name?: string | null;
+          id?: string;
+          organization_id: string;
+          remove_reason?: string | null;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          size_bytes: number;
+          storage_path: string;
+          updated_at?: string;
+          uploaded_by?: string | null;
+        };
+        Update: {
+          content_type?: string;
+          created_at?: string;
+          detail_center_id?: string;
+          expense_id?: string;
+          file_name?: string | null;
+          id?: string;
+          organization_id?: string;
+          remove_reason?: string | null;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          size_bytes?: number;
+          storage_path?: string;
+          updated_at?: string;
+          uploaded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_attachments_organization_id_expense_id_fkey";
+            columns: ["organization_id", "expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      expense_categories: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          description: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          pnl_group: string;
+          position: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+          pnl_group: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          pnl_group?: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_settings: {
+        Row: {
+          approval_threshold: number | null;
+          detail_center_id: string;
+          organization_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          approval_threshold?: number | null;
+          detail_center_id: string;
+          organization_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          approval_threshold?: number | null;
+          detail_center_id?: string;
+          organization_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_settings_detail_center_id_fkey";
+            columns: ["detail_center_id"];
+            isOneToOne: true;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_settings_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      expenses: {
+        Row: {
+          amount: number;
+          approved_at: string | null;
+          approved_by: string | null;
+          category_id: string;
+          concept: string;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string;
+          folio: string;
+          id: string;
+          notes: string | null;
+          number: number;
+          organization_id: string;
+          paid_on: string;
+          payment_method: string;
+          pnl_group: string;
+          reference: string | null;
+          request_id: string;
+          requires_approval: boolean;
+          status: string;
+          updated_at: string;
+          vendor_id: string | null;
+          version: number;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          category_id: string;
+          concept: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id: string;
+          folio: string;
+          id?: string;
+          notes?: string | null;
+          number: number;
+          organization_id: string;
+          paid_on: string;
+          payment_method: string;
+          pnl_group: string;
+          reference?: string | null;
+          request_id: string;
+          requires_approval?: boolean;
+          status: string;
+          updated_at?: string;
+          vendor_id?: string | null;
+          version?: number;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          category_id?: string;
+          concept?: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string;
+          folio?: string;
+          id?: string;
+          notes?: string | null;
+          number?: number;
+          organization_id?: string;
+          paid_on?: string;
+          payment_method?: string;
+          pnl_group?: string;
+          reference?: string | null;
+          request_id?: string;
+          requires_approval?: boolean;
+          status?: string;
+          updated_at?: string;
+          vendor_id?: string | null;
+          version?: number;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expenses_organization_id_category_id_fkey";
+            columns: ["organization_id", "category_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "expenses_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "expenses_organization_id_vendor_id_fkey";
+            columns: ["organization_id", "vendor_id"];
+            isOneToOne: false;
+            referencedRelation: "vendors";
+            referencedColumns: ["organization_id", "id"];
           },
         ];
       };
@@ -3534,11 +3829,79 @@ export type Database = {
           },
         ];
       };
+      vendors: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          email: string | null;
+          id: string;
+          name: string;
+          notes: string | null;
+          organization_id: string;
+          phone: string | null;
+          rfc: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          organization_id: string;
+          phone?: string | null;
+          rfc?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          organization_id?: string;
+          phone?: string | null;
+          rfc?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vendors_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      approve_expense: {
+        Args: { p_expense_id: string; p_note?: string | null; p_version: number };
+        Returns: Database["public"]["Tables"]["expenses"]["Row"];
+        SetofOptions: { from: "*"; to: "expenses"; isOneToOne: true; isSetofReturn: false };
+      };
+      create_expense: {
+        Args: {
+          p_amount: number;
+          p_category_id: string;
+          p_concept: string;
+          p_detail_center_id: string;
+          p_notes?: string | null;
+          p_paid_on: string;
+          p_payment_method: string;
+          p_reference?: string | null;
+          p_request_id: string;
+          p_vendor_id: string | null;
+        };
+        Returns: Database["public"]["Tables"]["expenses"]["Row"];
+        SetofOptions: { from: "*"; to: "expenses"; isOneToOne: true; isSetofReturn: false };
+      };
       create_opportunity: {
         Args: {
           p_b2b_account_id?: string | null;
@@ -3560,6 +3923,40 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
         SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
+      };
+      expense_detail: {
+        Args: { p_expense_id: string };
+        Returns: Json;
+      };
+      list_expenses: {
+        Args: {
+          p_category_id?: string | null;
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_pnl_group?: string | null;
+          p_status?: string | null;
+          p_to: string;
+          p_vendor_id?: string | null;
+        };
+        Returns: {
+          amount: number;
+          attachments: number;
+          category_id: string;
+          category_name: string;
+          concept: string;
+          created_at: string;
+          created_by_name: string | null;
+          detail_center_id: string;
+          folio: string;
+          id: string;
+          paid_on: string;
+          payment_method: string;
+          pnl_group: string;
+          status: string;
+          vendor_id: string | null;
+          vendor_name: string | null;
+          version: number;
+        }[];
       };
       list_payments: {
         Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
@@ -3613,6 +4010,10 @@ export type Database = {
         Args: { p_payment_id: string };
         Returns: Json;
       };
+      pnl_facts: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: { amount: number; count: number; detail_center_id: string; item: string; section: string }[];
+      };
       receivable_orders: {
         Args: { p_detail_center_ids: string[] };
         Returns: {
@@ -3630,6 +4031,17 @@ export type Database = {
           total: number;
         }[];
       };
+      register_expense_attachment: {
+        Args: {
+          p_content_type: string;
+          p_expense_id: string;
+          p_file_name?: string | null;
+          p_size_bytes: number;
+          p_storage_path: string;
+        };
+        Returns: Database["public"]["Tables"]["expense_attachments"]["Row"];
+        SetofOptions: { from: "*"; to: "expense_attachments"; isOneToOne: true; isSetofReturn: false };
+      };
       register_payment: {
         Args: {
           p_cash_received?: number | null;
@@ -3641,6 +4053,16 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["payments"]["Row"];
         SetofOptions: { from: "*"; to: "payments"; isOneToOne: true; isSetofReturn: false };
+      };
+      reject_expense: {
+        Args: { p_expense_id: string; p_reason: string; p_version: number };
+        Returns: Database["public"]["Tables"]["expenses"]["Row"];
+        SetofOptions: { from: "*"; to: "expenses"; isOneToOne: true; isSetofReturn: false };
+      };
+      remove_expense_attachment: {
+        Args: { p_attachment_id: string; p_reason: string };
+        Returns: Database["public"]["Tables"]["expense_attachments"]["Row"];
+        SetofOptions: { from: "*"; to: "expense_attachments"; isOneToOne: true; isSetofReturn: false };
       };
       reverse_payment: {
         Args: { p_payment_id: string; p_reason: string };
@@ -3659,6 +4081,28 @@ export type Database = {
           reversed_in_range: number;
           sales_total: number;
         }[];
+      };
+      set_expense_approval_threshold: {
+        Args: { p_detail_center_id: string; p_reason: string; p_threshold: number | null };
+        Returns: Database["public"]["Tables"]["expense_settings"]["Row"];
+        SetofOptions: { from: "*"; to: "expense_settings"; isOneToOne: true; isSetofReturn: false };
+      };
+      update_expense: {
+        Args: {
+          p_amount: number;
+          p_category_id: string;
+          p_concept: string;
+          p_expense_id: string;
+          p_notes: string | null;
+          p_paid_on: string;
+          p_payment_method: string;
+          p_reason: string;
+          p_reference: string | null;
+          p_vendor_id: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["expenses"]["Row"];
+        SetofOptions: { from: "*"; to: "expenses"; isOneToOne: true; isSetofReturn: false };
       };
       update_opportunity: {
         Args: {
@@ -3687,6 +4131,41 @@ export type Database = {
       add_opportunity_note: {
         Args: { p_id: string; p_note: string };
         Returns: undefined;
+      };
+      upsert_expense_category: {
+        Args: {
+          p_active: boolean;
+          p_category_id: string | null;
+          p_code: string;
+          p_description: string | null;
+          p_name: string;
+          p_organization_id: string;
+          p_pnl_group: string;
+          p_position: number;
+          p_reason: string;
+        };
+        Returns: Database["public"]["Tables"]["expense_categories"]["Row"];
+        SetofOptions: { from: "*"; to: "expense_categories"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_vendor: {
+        Args: {
+          p_active?: boolean;
+          p_detail_center_id: string;
+          p_email?: string | null;
+          p_name: string;
+          p_notes?: string | null;
+          p_phone?: string | null;
+          p_reason?: string | null;
+          p_rfc?: string | null;
+          p_vendor_id: string | null;
+        };
+        Returns: Database["public"]["Tables"]["vendors"]["Row"];
+        SetofOptions: { from: "*"; to: "vendors"; isOneToOne: true; isSetofReturn: false };
+      };
+      void_expense: {
+        Args: { p_expense_id: string; p_reason: string; p_version: number };
+        Returns: Database["public"]["Tables"]["expenses"]["Row"];
+        SetofOptions: { from: "*"; to: "expenses"; isOneToOne: true; isSetofReturn: false };
       };
       win_opportunity: {
         Args: {
