@@ -463,3 +463,35 @@ insert into public.approval_events (organization_id, detail_center_id, expense_i
 select organization_id, detail_center_id, id, 'solicitada', amount from public.expenses e
  where e.id = '0e500000-0000-4000-8000-000000000003'
    and not exists (select 1 from public.approval_events x where x.expense_id = e.id);
+
+-- Corte de caja de ejemplo (AF3) en CDMX: ayer, turno único cerrado con un
+-- faltante de $20 explicado; hoy, caja abierta desde antes del anticipo de AF1
+-- (esperado = fondo $1,000 + efectivo $500).
+insert into public.cash_sessions (id, organization_id, detail_center_id, number, folio, business_date, shift,
+                                  opening_float, status, opened_at, window_end, closed_at, closings_count, request_id)
+select '0e600000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0',
+       '11111111-1111-4111-8111-111111111111', 1, 'CDMX-01-C-000001', d, 'unico', 1000, 'cerrada',
+       (d + time '09:00') at time zone 'America/Mexico_City', (d + time '20:00') at time zone 'America/Mexico_City',
+       (d + time '20:05') at time zone 'America/Mexico_City', 1, '0e600000-0000-4000-8000-000000000001'
+  from (select (now() at time zone 'America/Mexico_City')::date - 1 as d) x
+on conflict (id) do nothing;
+insert into public.cash_closings (id, organization_id, detail_center_id, session_id, sequence, window_from, window_to,
+  opening_float, cash_collected, cash_refunded, expected_cash, counted_cash, difference, card_total, transfer_total,
+  non_cash_total, payments_count, reversals_count, breakdown, notes, closed_at, request_id)
+select '0e700000-0000-4000-8000-000000000001', s.organization_id, s.detail_center_id, s.id, 1, s.opened_at, s.window_end,
+       1000, 0, 0, 1000, 980, -20, 0, 0, 0, 0, 0,
+       private.cash_window_totals(s.detail_center_id, s.opened_at, s.window_end, 1000) -> 'breakdown',
+       'Faltante de $20 por cambio mal entregado', s.closed_at, '0e700000-0000-4000-8000-000000000001'
+  from public.cash_sessions s where s.id = '0e600000-0000-4000-8000-000000000001'
+on conflict (id) do nothing;
+insert into public.cash_sessions (id, organization_id, detail_center_id, number, folio, business_date, shift,
+                                  opening_float, opened_at, request_id)
+select '0e600000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0',
+       '11111111-1111-4111-8111-111111111111', 2, 'CDMX-01-C-000002',
+       (now() at time zone 'America/Mexico_City')::date, 'unico', 1000,
+       coalesce((select min(p.received_at) from public.payments p
+                  where p.detail_center_id = '11111111-1111-4111-8111-111111111111'), now()) - interval '1 hour',
+       '0e600000-0000-4000-8000-000000000002'
+on conflict (id) do nothing;
+insert into private.cash_session_counters (detail_center_id, last_number) values ('11111111-1111-4111-8111-111111111111', 2)
+on conflict (detail_center_id) do update set last_number = greatest(private.cash_session_counters.last_number, 2);

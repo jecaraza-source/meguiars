@@ -59,6 +59,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó la cobranza de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(folio || ':' || pnl_group || ':' || status, ',' order by folio) from public.expenses")" == "CDMX-01-E-000001:operativo:aprobado,CDMX-01-E-000002:insumos:aprobado,CDMX-01-E-000003:personal:pendiente" && "$("${PSQL[@]}" -tAc "select count(*) from public.expense_categories c join public.organizations o on o.id = c.organization_id where o.slug = 'meguiars-demo'")" == "10" ]] \
   || { echo "El seed no cargó los egresos de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select string_agg(s.folio || ':' || s.status || ':' || coalesce(c.difference::text, (private.cash_window_totals(s.detail_center_id, s.opened_at, s.window_end, s.opening_float) ->> 'expected_cash')), ',' order by s.folio) from public.cash_sessions s left join public.cash_closings c on c.session_id = s.id")" == "CDMX-01-C-000001:cerrada:-20.00,CDMX-01-C-000002:abierta:1500.00" ]] \
+  || { echo "El seed no cargó los cortes de caja de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
