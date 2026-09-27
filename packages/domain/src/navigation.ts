@@ -116,6 +116,7 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   expenseNew: "expenses",
   expenseSettings: "expenses",
   cashSession: "cash",
+  pnlDrilldown: "pnl",
 };
 
 /** Ítem de menú que representa a la pantalla. */

@@ -161,16 +161,9 @@ describe("ExpenseRepository (Supabase)", () => {
     expect(r.ok ? null : r.error.kind).toBe("conflict");
   });
 
-  it("filtros y P&L", async () => {
-    const { client, rpc } = fake({
-      data: [{ detail_center_id: U, section: "egreso", item: "insumos", amount: "2500.00", count: 1 }],
-      error: null,
-    });
+  it("filtros", async () => {
+    const { client, rpc } = fake({ data: [], error: null });
     const repo = createExpenseRepository(client);
-    expect(await repo.pnlFacts([U], "2026-09-01", "2026-09-30")).toEqual({
-      ok: true,
-      data: [{ detailCenterId: U, section: "egreso", item: "insumos", amount: 2500, count: 1 }],
-    });
     await repo.list({ detailCenterIds: [U], from: "2026-09-01", to: "2026-09-30", status: "pendiente" });
     expect(rpc).toHaveBeenLastCalledWith("list_expenses", {
       p_detail_center_ids: [U],

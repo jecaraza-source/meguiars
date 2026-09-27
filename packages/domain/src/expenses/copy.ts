@@ -152,15 +152,4 @@ export const expensesCopy = {
   thresholdHint: "Vacío = los egresos no requieren aprobación.",
   saveThreshold: "Guardar umbral",
   thresholdSaved: "Umbral actualizado.",
-  // P&L
-  pnlTitle: "Estado de resultados",
-  pnlDescription: "P&L por centro: ventas (OS entregadas y membresías), costo directo y egresos aprobados.",
-  pnlEmpty: "Sin movimientos en el periodo.",
-  cashOut: "Salidas de caja del periodo",
-  pending: "Pendiente de aprobación (no cuenta)",
-  modelNote:
-    "El costo directo sale de la OS (costo estándar + variación de insumos). La compra de insumos es salida de caja, no gasto: no se cuenta dos veces.",
-  range30: "Últimos 30 días",
-  rangeMonth: "Mes en curso",
-  rangePrevMonth: "Mes anterior",
 } as const;

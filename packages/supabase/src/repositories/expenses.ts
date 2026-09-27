@@ -12,7 +12,6 @@ import {
   type ExpenseReceiptMimeType,
   type ExpenseRepository,
   type ExpenseStatus,
-  type PnlFact,
   type PnlGroup,
   type Vendor,
 } from "@meguiars/domain";
@@ -459,22 +458,6 @@ export function createExpenseRepository(client: MeguiarsSupabaseClient): Expense
             p_reason: parsed.data.reason,
           }),
         () => undefined,
-      );
-    },
-
-    pnlFacts(detailCenterIds, from, to) {
-      const parsed = expenseFilterSchema.safeParse({ detailCenterIds, from, to });
-      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
-      return run(
-        () => client.rpc("pnl_facts", { p_detail_center_ids: detailCenterIds, p_from: from, p_to: to }),
-        (rows) =>
-          rows.map((r): PnlFact => ({
-            detailCenterId: r.detail_center_id,
-            section: r.section as PnlFact["section"],
-            item: r.item,
-            amount: Number(r.amount),
-            count: r.count,
-          })),
       );
     },
   };

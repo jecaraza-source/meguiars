@@ -211,6 +211,8 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "list_cash_sessions",
   "cash_session_detail",
   "cash_uncovered",
+  "pnl_lines",
+  "pnl_drilldown",
   "add_vehicle",
   "apply_b2b_account",
   "b2b_account_orders",
