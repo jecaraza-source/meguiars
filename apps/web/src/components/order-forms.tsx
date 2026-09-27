@@ -7,8 +7,6 @@ import {
   formatDuration,
   formatMoney,
   ordersCopy,
-  PAYMENT_METHOD_LABELS,
-  PAYMENT_METHODS,
   membershipDiscountTotal,
   previewDiscount,
   SALES_CHANNEL_LABELS,
@@ -27,7 +25,6 @@ import {
   addDiscountAction,
   createFromAppointmentAction,
   createOrderAction,
-  recordPaymentAction,
   setItemAction,
   setOrderStatusAction,
   updateDetailsAction,
@@ -562,51 +559,6 @@ export function OrderStatusPanel({ order, actions }: { order: ServiceOrder; acti
           </p>
         ))}
       <Alert text={state.error} />
-    </form>
-  );
-}
-
-export function PaymentForm({ order, balance }: { order: ServiceOrder; balance: number }) {
-  const [state, action] = useActionState(recordPaymentAction, {});
-  useSuccessToast(state);
-  const f = state.fields ?? {};
-  return (
-    <form
-      key={`${state.at ?? 0}-${order.version}`}
-      action={action}
-      className="flex flex-col gap-md"
-      noValidate
-    >
-      <Versioned order={order} />
-      <div className="grid gap-lg md:grid-cols-3">
-        <Input
-          name="amount"
-          label={ordersCopy.paymentAmount}
-          inputMode="decimal"
-          defaultValue={valueOf(state, "amount", balance.toFixed(2))}
-          error={f.amount}
-        />
-        <Select
-          name="method"
-          label={ordersCopy.paymentMethod}
-          placeholder="Elige"
-          options={PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_METHOD_LABELS[m] }))}
-          defaultValue={valueOf(state, "method")}
-          error={f.method}
-        />
-        <Input
-          name="reference"
-          id="payment-reference"
-          label={ordersCopy.paymentReference}
-          defaultValue={valueOf(state, "reference")}
-          error={f.reference}
-        />
-      </div>
-      <p className="text-xs text-muted">{ordersCopy.paymentHint}</p>
-      <Alert text={state.error} />
-      <div>
-        <Submit label={ordersCopy.recordPayment} />
-      </div>
     </form>
   );
 }

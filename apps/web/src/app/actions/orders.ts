@@ -18,7 +18,6 @@ import {
   linesFromQuantities,
   newOrderFormSchema,
   orderDetailsFormSchema,
-  paymentFormSchema,
   setOrderItemSchema,
   setOrderStatusSchema,
   toCreateServiceOrderCommand,
@@ -229,23 +228,6 @@ export async function updateDetailsAction(_prev: OrderFormState, form: FormData)
         timeZone: ctx.center.timezone,
       }),
     ),
-    form,
-  );
-}
-
-export async function recordPaymentAction(_prev: OrderFormState, form: FormData): Promise<OrderFormState> {
-  const ctx = await context("orderNew");
-  if (!ctx) return stamp({ error: ordersCopy.notFound });
-  const orderId = text(form, "orderId");
-  const parsed = paymentFormSchema.safeParse({
-    amount: text(form, "amount"),
-    method: text(form, "method"),
-    reference: text(form, "reference"),
-  });
-  if (!parsed.success) return stamp({ fields: fieldErrors(parsed.error), values: values(form) });
-  return afterMutation(
-    orderId,
-    await ctx.repo.recordPayment({ ...parsed.data, orderId, version: version(form) }),
     form,
   );
 }
