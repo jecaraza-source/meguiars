@@ -46,6 +46,8 @@ import { MembershipNewScreen } from "@/screens/MembershipNewScreen";
 import { MembershipPlanScreen, MembershipPlansScreen } from "@/screens/MembershipPlansScreen";
 import { MembershipsScreen } from "@/screens/MembershipsScreen";
 import { OrderDetailScreen } from "@/screens/OrderDetailScreen";
+import { CashScreen } from "@/screens/CashScreen";
+import { ReceiptScreen } from "@/screens/ReceiptScreen";
 import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
 import { OrderNewScreen } from "@/screens/OrderNewScreen";
 import { OrdersScreen } from "@/screens/OrdersScreen";
@@ -132,6 +134,14 @@ export function Router() {
   ) => {
     setNewOpportunity(defaults);
     setScreen("opportunityNew");
+  };
+  // Parámetro del recibo (equivale a /finanzas/cobranza/recibos/[id] en web) y a dónde volver.
+  const [receiptId, setReceiptId] = useState<string | null>(null);
+  const [receiptBack, setReceiptBack] = useState<Screen>("payments");
+  const openReceipt = (id: string, from: Screen) => {
+    setReceiptId(id);
+    setReceiptBack(from);
+    setScreen("paymentReceipt");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -450,9 +460,25 @@ export function Router() {
             onBack={() => setScreen("orders")}
             onExecution={() => setScreen("orderExecution")}
             onNewMembership={() => setScreen("membershipNew")}
+            onOpenReceipt={(id) => openReceipt(id, "orderDetail")}
           />
         ) : (
           <OrdersScreen {...props} onOpen={openOrder} onNew={() => setScreen("orderNew")} />
+        );
+        break;
+      case "payments":
+        content = <CashScreen {...props} onOpenReceipt={(id) => openReceipt(id, "payments")} />;
+        break;
+      case "paymentReceipt":
+        content = receiptId ? (
+          <ReceiptScreen
+            key={receiptId}
+            {...props}
+            paymentId={receiptId}
+            onBack={() => setScreen(receiptBack)}
+          />
+        ) : (
+          <CashScreen {...props} onOpenReceipt={(id) => openReceipt(id, "payments")} />
         );
         break;
       case "orderExecution":
