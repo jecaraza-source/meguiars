@@ -182,7 +182,7 @@ export function ReopenCashForm({ session }: { session: Pick<CashSession, "id" | 
 /** Exportación del corte: CSV (mismo contenido que móvil) e impresión del resumen. */
 export function CashExport({ session }: { session: CashSession }) {
   const download = () => {
-    const blob = new Blob([`﻿${cashSummaryCsv(session)}`], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([`\uFEFF${cashSummaryCsv(session)}`], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
