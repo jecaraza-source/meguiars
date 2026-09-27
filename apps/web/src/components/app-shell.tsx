@@ -11,6 +11,7 @@ import {
 } from "@meguiars/domain";
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
+import { BrandLogo } from "./brand-logo";
 import { EnvironmentBanner } from "./environment-banner";
 import { BottomNav, SideNav, SubNav } from "./nav";
 import { Badge } from "./ui/display";
@@ -47,8 +48,11 @@ export function AppShell({
       </a>
       <EnvironmentBanner />
       <header className="flex flex-wrap items-center justify-between gap-sm border-b border-border bg-surface-raised px-lg py-sm print:hidden">
-        <Link href="/" className="text-sm font-semibold uppercase tracking-wide text-accent">
-          {APP_NAME}
+        <Link href="/" className="flex items-center gap-sm" aria-label={`${APP_NAME}: inicio`}>
+          <BrandLogo height={48} priority />
+          <span className="hidden text-sm font-semibold uppercase tracking-wide text-accent sm:inline">
+            Detail Center
+          </span>
         </Link>
         <div className="flex flex-wrap items-center gap-md text-sm">
           {active ? (
@@ -115,7 +119,8 @@ export function PlainShell({ title, children }: { title: string; children: React
         id="contenido"
         className="mx-auto flex w-full max-w-(--mg-layout-narrow) flex-1 flex-col justify-center gap-xl p-lg"
       >
-        <header className="flex flex-col gap-xs">
+        <header className="flex flex-col items-start gap-sm">
+          <BrandLogo height={96} priority />
           <p className="text-sm font-semibold uppercase tracking-wide text-accent">{APP_NAME}</p>
           <h1 className="text-xl font-semibold leading-tight">{title}</h1>
         </header>

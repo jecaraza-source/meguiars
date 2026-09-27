@@ -15,6 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth/AuthProvider";
 import { APP_ENV } from "@/lib/environment";
+import { BrandLogo } from "./brand";
 import { LinkButton } from "./controls";
 import { Badge } from "./display";
 import { textStyle } from "./theme";
@@ -40,12 +41,15 @@ export function EnvironmentBanner() {
 export function Screen({
   title,
   eyebrow,
+  brand,
   description,
   header,
   children,
 }: {
   title: string;
   eyebrow?: string;
+  /** Logo y nombre de la app arriba del título (pantallas sin encabezado: acceso y avisos). */
+  brand?: boolean;
   description?: string;
   header?: React.ReactNode;
   children: React.ReactNode;
@@ -55,6 +59,12 @@ export function Screen({
       <EnvironmentBanner />
       {header}
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {brand ? (
+          <View style={styles.brand}>
+            <BrandLogo height={88} />
+            <Text style={textStyle("caption", "accent")}>{APP_NAME.toUpperCase()}</Text>
+          </View>
+        ) : null}
         {eyebrow ? <Text style={textStyle("caption", "accent")}>{eyebrow}</Text> : null}
         <Text accessibilityRole="header" style={textStyle("title")}>
           {title}
@@ -80,7 +90,10 @@ export function AppHeader({
   const active = activeCenterAccess(state);
   return (
     <View style={styles.header}>
-      <Text style={textStyle("caption", "accent")}>{APP_NAME.toUpperCase()}</Text>
+      <View accessibilityLabel={APP_NAME} style={styles.headerRow}>
+        <BrandLogo height={36} />
+        <Text style={textStyle("caption", "accent")}>DETAIL CENTER</Text>
+      </View>
       {active ? (
         <View style={styles.headerRow}>
           <Text style={textStyle("label")}>{active.center.name}</Text>
@@ -180,6 +193,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.surfaceRaised,
   },
+  brand: { alignItems: "flex-start", gap: space.xs, marginBottom: space.sm },
   headerRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: space.sm },
   tabBar: { backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: colors.border },
   tabs: { flexDirection: "row" },

@@ -1,4 +1,4 @@
-import { APP_NAME, authCopy } from "@meguiars/domain";
+import { authCopy } from "@meguiars/domain";
 import { fieldErrors, resetPasswordSchema } from "@meguiars/validation";
 import { useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
@@ -27,7 +27,7 @@ export function ResetPasswordScreen() {
   };
 
   return (
-    <Screen eyebrow={APP_NAME.toUpperCase()} title={authCopy.resetTitle}>
+    <Screen brand title={authCopy.resetTitle}>
       <Field
         label={authCopy.newPasswordLabel}
         hint="Al menos 8 caracteres."
