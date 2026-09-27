@@ -19,6 +19,7 @@ import {
   todayIn,
   formatDateInCenterTimeZone,
   orderStatusActions,
+  PAYABLE_ORDER_STATUSES,
   ordersCopy,
   presentDiscount,
   presentHistory,
@@ -35,18 +36,14 @@ import {
   createCatalogRepository,
   createB2bRepository,
   createMembershipRepository,
+  createPaymentRepository,
   createUpsellRepository,
   createServiceOrderRepository,
 } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import {
-  OrderDetailsForm,
-  OrderDiscounts,
-  OrderLines,
-  OrderStatusPanel,
-  PaymentForm,
-} from "@/components/order-forms";
+import { OrderDetailsForm, OrderDiscounts, OrderLines, OrderStatusPanel } from "@/components/order-forms";
+import { OrderPaymentsCard } from "@/components/order-payments";
 import { ApplyB2bForm } from "@/components/b2b-forms";
 import { UpsellCard } from "@/components/upsell-forms";
 import { OrderMembershipRedeem, VoidRedemptionForm } from "@/components/membership-forms";
@@ -105,6 +102,17 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           .then((r) => (r.ok ? r.data : []))
           .catch(() => [])
       : [];
+  // Cobranza: recibos de la OS y, para cobrar, si la membresía aplica como forma de pago.
+  const paymentsRepo = createPaymentRepository(supabase);
+  const canReadPayments = canInActiveCenter(state, "payments.read");
+  // Se evalúa por estatus (no por saldo): el formulario sigue montado tras el cobro que salda la OS.
+  const canPay = canInActiveCenter(state, "payments.write") && PAYABLE_ORDER_STATUSES.includes(order.status);
+  const [payments, hasMembership] = await Promise.all([
+    canReadPayments ? paymentsRepo.orderPayments(order.id) : Promise.resolve(null),
+    canPay && !order.b2bAccountId
+      ? paymentsRepo.hasActiveMembership(order.clientId, todayIn(center.timezone)).then((r) => r.ok && r.data)
+      : Promise.resolve(false),
+  ]);
   const lineName = (itemId: string) => order.items.find((i) => i.id === itemId)?.serviceName ?? "—";
   const promised = order.promisedAt ? utcToZoned(order.promisedAt, center.timezone) : null;
 
@@ -221,10 +229,17 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
         />
       </Card>
 
-      {canWrite && view.canPay ? (
-        <Card title={ordersCopy.paymentTitle}>
-          <PaymentForm order={order} balance={view.balance} />
-        </Card>
+      {order.status !== "abierta" ? (
+        <OrderPaymentsCard
+          order={order}
+          timeZone={center.timezone}
+          payments={payments}
+          canRead={canReadPayments}
+          canWrite={canPay}
+          canReverse={canInActiveCenter(state, "payments.reverse")}
+          hasActiveMembership={hasMembership}
+          requestId={newRequestId()}
+        />
       ) : null}
 
       <Card title={ordersCopy.detailsTitle}>

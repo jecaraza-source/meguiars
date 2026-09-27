@@ -13,11 +13,10 @@ La Orden de Servicio (OS) es el eje operacional: une la recepción (cita o walk-
 - **Estatus controlados:** `abierta`, `autorizada`, `en_proceso`, `pausada`, `terminada`, `entregada` y `cancelada`, con historial auditado.
 - **Diagnóstico, observaciones, recomendaciones y próxima visita** (fecha y servicio recomendado).
 - **Reglas de autorización y entrega por canal** (B2C, membresía y B2B).
-- **Cobro mínimo:** registrar pagos hasta cubrir el saldo, como interfaz para el módulo de pagos.
+- **Cobro:** desde AF1 lo registra la [Cobranza](cobranza.md) (recibos, pagos mixtos y reversos); la OS expone `paid_amount` y `payment_status`.
 
 **Fuera de alcance (interfaces preparadas):**
 
-- **Pagos detallados, pagos parciales con conciliación y reembolsos:** hoy `paid_amount` y `record_service_order_payment`.
 - **Membresías y redenciones:** ver [Membresías](membresias.md) (C1); la redención deja la OS en canal `membresia` con el número de membresía.
 - **Cuentas B2B y facturación:** hoy `b2b_account_id` (sin FK todavía) y `channel_reference` (orden de compra).
 - **Consumo de insumos y evidencias (fotos):** ver [Ejecución y evidencias](ejecucion-evidencias.md) (O5).
@@ -66,9 +65,9 @@ Importes en MXN con IVA incluido. El desglose de IVA llega con facturación.
 | Autorizar          | Al menos una línea. Membresía exige número de membresía; B2B, orden de compra. Guarda quién, cuándo y el **total autorizado**.                                                                                                                                    |
 | Adicionales        | Después de autorizar, agregar o cambiar líneas exige motivo (p. ej., "cliente autorizó") y actualiza el total autorizado. Una OS terminada ya no cambia sus líneas.                                                                                               |
 | Entregar           | **B2C y membresía:** saldo cobrado completo (`paid_amount ≥ total`). **B2B:** con orden de compra, sin cobro (se factura a la cuenta).                                                                                                                            |
-| Cancelar           | Abierta: cualquier operador. Autorizada o pausada: encargado o admin. Nunca con cobros registrados (el reembolso llega con pagos). Una OS en proceso se pausa antes de cancelar.                                                                                  |
+| Cancelar           | Abierta: cualquier operador. Autorizada o pausada: encargado o admin. Nunca con cobros válidos: primero se revierten en [Cobranza](cobranza.md). Una OS en proceso se pausa antes de cancelar.                                                                    |
 | Descuentos         | Nivel exigido por el % acumulado de la OS: **operador ≤ 10 %**, **encargado ≤ 30 %**, **admin > 30 %** (`DISCOUNT_LEVEL_LIMITS`, con paridad SQL). Un descuento no excede el importe pendiente ni deja saldo a favor. Evento `service_order.discount_authorized`. |
-| Cobro              | OS autorizada y no entregada; nunca más que el saldo; formas: efectivo, tarjeta, transferencia u otro. Evento `service_order.payment_recorded` con forma y referencia.                                                                                            |
+| Cobro              | Ver [Cobranza](cobranza.md): desde autorizada (también entregada con saldo), nunca más que el saldo salvo el cambio del efectivo, pagos mixtos. Evento `service_order.payment_recorded`.                                                                          |
 | Tiempo real        | `worked_minutes` acumula los tramos en proceso; la pausa no cuenta.                                                                                                                                                                                               |
 | Cita               | La OS se abre con la cita recibida o en servicio; una cita tiene a lo sumo una OS. Al iniciar la OS la cita pasa a "en servicio"; al terminar, a "terminada" (libera la bahía); al entregar, a "entregada".                                                       |
 | Idempotencia       | `request_id`: el mismo formulario enviado dos veces, o desde web y móvil, abre una sola OS.                                                                                                                                                                       |
@@ -95,7 +94,7 @@ Importes en MXN con IVA incluido. El desglose de IVA llega con facturación.
 | `add_service_order_discount` / `void_service_order_discount`         | Descuento con nivel / anulación con motivo.                                    |
 | `set_service_order_status(order, version, status, reason?)`          | Transición con reglas por canal (`MG002` si falta algo).                       |
 | `update_service_order_details`                                       | Canal (sólo abierta), recursos, textos, próxima visita, kilometraje y promesa. |
-| `record_service_order_payment`                                       | Cobro (interfaz mínima).                                                       |
+| `record_service_order_payment`                                       | Cobro con una forma de pago; crea un recibo ([Cobranza](cobranza.md)).         |
 | `list_service_orders(center, status?, query?)`                       | Listado con búsqueda por folio, cliente o placa.                               |
 
 Errores: `40001` → conflicto (versión), `MG002` → regla de negocio visible, `42501` → permiso, `22023` → validación.

@@ -45,8 +45,9 @@ describe("navegación por rol", () => {
   it.each<[AppRole, string[]]>([
     ["admin_socio", ["inicio", "operacion", "comercial", "finanzas", "direccion"]],
     ["encargado", ["inicio", "operacion", "comercial", "finanzas"]],
-    // Vende y renueva membresías en recepción (Comercial → Membresías).
-    ["operador_recepcion", ["inicio", "operacion", "comercial"]],
+    // Vende y renueva membresías en recepción (Comercial → Membresías) y hace el
+    // corte de caja (Administración y Finanzas → Cobranza).
+    ["operador_recepcion", ["inicio", "operacion", "comercial", "finanzas"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).
     ["contador", ["inicio", "operacion", "comercial", "finanzas"]],
@@ -122,7 +123,21 @@ describe("navegación por rol", () => {
   });
 
   it("varios roles en el centro suman secciones", () => {
-    expect(sectionsOf(["operador_recepcion", "comercial_b2b"])).toEqual(["inicio", "operacion", "comercial"]);
+    expect(sectionsOf(["operador_recepcion", "comercial_b2b"])).toEqual([
+      "inicio",
+      "operacion",
+      "comercial",
+      "finanzas",
+    ]);
+  });
+
+  it("Cobranza: recepción, encargado, admin y contador; comercial no", () => {
+    expect(itemsOf(["operador_recepcion"])).toContain("payments");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("finanzas");
+    expect(itemsOf(["contador"])).toContain("payments");
+    expect(itemsOf(["comercial_b2b"])).not.toContain("payments");
+    expect(navScreenOf("paymentReceipt")).toBe("payments");
+    expect(sectionOfPath("/finanzas/cobranza/recibos/abc")).toBe("finanzas");
   });
 
   it("sin sesión o sin centro activo no hay navegación privada", () => {

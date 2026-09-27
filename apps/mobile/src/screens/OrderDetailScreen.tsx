@@ -9,8 +9,7 @@ import {
   orderErrorMessage,
   ordersCopy,
   orderStatusActions,
-  PAYMENT_METHOD_LABELS,
-  PAYMENT_METHODS,
+  PAYABLE_ORDER_STATUSES,
   presentDiscount,
   presentHistory,
   presentOrder,
@@ -37,7 +36,6 @@ import {
   discountFormSchema,
   fieldErrors,
   orderDetailsFormSchema,
-  paymentFormSchema,
   setOrderItemSchema,
   setOrderStatusSchema,
   toUpdateOrderDetailsCommand,
@@ -50,6 +48,7 @@ import type { FieldErrors, FormValues } from "@/components/ClientFields";
 import { OrderB2bCard } from "@/components/OrderB2bCard";
 import { UpsellCard } from "@/components/UpsellCard";
 import { OrderMembershipCard } from "@/components/OrderMembershipCard";
+import { OrderPaymentsCard } from "@/components/OrderPaymentsCard";
 import { ChannelFields } from "@/components/OrderFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
 import { Badge, Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
@@ -102,10 +101,12 @@ export function OrderDetailScreen({
   onBack,
   onExecution,
   onNewMembership,
+  onOpenReceipt,
 }: PrivateScreenProps & {
   orderId: string;
   onBack: () => void;
   onExecution: () => void;
+  onOpenReceipt: (id: string) => void;
   onNewMembership?: (() => void) | undefined;
 }) {
   const { client } = useAuth();
@@ -214,8 +215,16 @@ export function OrderDetailScreen({
         mutate={mutate}
         repo={repo}
       />
-      {canWrite && view.canPay && repo ? (
-        <PaymentCard key={`p-${k}`} order={order} balance={view.balance} mutate={mutate} repo={repo} />
+      {order.status !== "abierta" ? (
+        <OrderPaymentsCard
+          key={`p-${k}`}
+          state={state}
+          order={order}
+          timeZone={center.timezone}
+          canPay={PAYABLE_ORDER_STATUSES.includes(order.status)}
+          onChanged={reload}
+          onOpenReceipt={onOpenReceipt}
+        />
       ) : null}
       {canWrite && view.canEditDetails && repo ? (
         <DetailsCard
@@ -583,52 +592,6 @@ function DiscountsCard({
         </>
       ) : null}
       <Notice tone="danger" text={error} />
-    </Card>
-  );
-}
-
-function PaymentCard({ order, balance, mutate, repo }: SectionProps & { balance: number }) {
-  const [values, setValues] = useState<FormValues>({ amount: balance.toFixed(2), method: "", reference: "" });
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const set = (key: string, value: string) => setValues((v) => ({ ...v, [key]: value }));
-
-  const submit = async () => {
-    const parsed = paymentFormSchema.safeParse(values);
-    if (!parsed.success) return setErrors(fieldErrors(parsed.error));
-    setErrors({});
-    setBusy(true);
-    setError(
-      await mutate(() => repo.recordPayment({ ...parsed.data, orderId: order.id, version: order.version })),
-    );
-    setBusy(false);
-  };
-
-  return (
-    <Card title={ordersCopy.paymentTitle} subtitle={ordersCopy.paymentHint}>
-      <Field
-        label={ordersCopy.paymentAmount}
-        keyboardType="decimal-pad"
-        value={values.amount ?? ""}
-        onChangeText={(v) => set("amount", v)}
-        error={errors.amount}
-      />
-      <Select
-        label={ordersCopy.paymentMethod}
-        placeholder="Elige"
-        options={PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_METHOD_LABELS[m] }))}
-        value={values.method ?? ""}
-        onChange={(v) => set("method", v)}
-        error={errors.method}
-      />
-      <Field
-        label={ordersCopy.paymentReference}
-        value={values.reference ?? ""}
-        onChangeText={(v) => set("reference", v)}
-      />
-      <Notice tone="danger" text={error} />
-      <Button label={ordersCopy.recordPayment} loading={busy} onPress={() => void submit()} />
     </Card>
   );
 }

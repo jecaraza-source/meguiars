@@ -426,3 +426,12 @@ select o.organization_id, o.detail_center_id, o.id, e.kind, o.kind, fs.id, ts.id
   left join public.pipeline_stages ts on ts.organization_id = o.organization_id and ts.code = e.to_stage
  where not exists (select 1 from public.opportunity_events x where x.opportunity_id = o.id)
  order by e.opportunity_id, e.n;
+
+-- Cobranza de ejemplo (AF1): anticipo mixto (efectivo con cambio + tarjeta) de la
+-- OS en proceso de CDMX; queda parcial y aparece en "por cobrar".
+select private.create_order_payment(o, '0e300000-0000-4000-8000-0000000000a1',
+  '[{"method":"efectivo","amount":500},{"method":"tarjeta","amount":500,"reference":"AUT-4411"}]'::jsonb,
+  600, 'Anticipo al recibir el vehículo')
+  from public.service_orders o
+ where o.id = '0d000000-0000-4000-8000-000000000001'
+   and not exists (select 1 from public.payments p where p.request_id = '0e300000-0000-4000-8000-0000000000a1');

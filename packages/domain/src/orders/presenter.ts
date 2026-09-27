@@ -1,3 +1,4 @@
+import { PAYABLE_ORDER_STATUSES } from "../payments/payments";
 import { formatDuration, formatMoney } from "../catalog/presenter";
 import type { AppRole } from "../roles";
 import { formatInCenterTimeZone } from "../time";
@@ -23,7 +24,6 @@ import {
   DISCOUNT_EDITABLE_STATUSES,
   ITEM_EDITABLE_STATUSES,
   ORDER_STATUS_NEEDS_REASON,
-  PAYABLE_STATUSES,
   SERVICE_ORDER_TRANSITIONS,
 } from "./order";
 import { orderBalance, orderMargin } from "./totals";
@@ -89,7 +89,7 @@ export function presentOrder(order: ServiceOrder, now = new Date()) {
     canEditItems: ITEM_EDITABLE_STATUSES.includes(order.status),
     itemsNeedReason: order.status !== "abierta",
     canDiscount: DISCOUNT_EDITABLE_STATUSES.includes(order.status),
-    canPay: PAYABLE_STATUSES.includes(order.status) && balance > 0,
+    canPay: PAYABLE_ORDER_STATUSES.includes(order.status) && balance > 0,
     canEditDetails: !CLOSED_STATUSES.includes(order.status),
     canChangeChannel: order.status === "abierta",
     balance,
@@ -114,7 +114,7 @@ export function orderStatusActions(order: ServiceOrder, roles: readonly AppRole[
     if (to === "entregada") blocker = deliveryBlocker(order);
     if (to === "cancelada" && order.status !== "abierta" && !manager) blocker = ordersCopy.managerOnly;
     if (to === "cancelada" && order.paidAmount > 0)
-      blocker = "La OS tiene cobros registrados; los reembolsos llegan con el módulo de pagos";
+      blocker = "La OS tiene cobros válidos: revierte los recibos (reembolso) antes de cancelar";
     return {
       to,
       label: ORDER_ACTION_LABELS[to],

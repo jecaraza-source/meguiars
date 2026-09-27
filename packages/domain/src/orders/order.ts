@@ -1,5 +1,6 @@
 import type { RevenueEngine } from "../catalog/catalog";
 import type { Result } from "../result";
+import type { OrderPaymentStatus } from "../payments/payments";
 import type { AppRole } from "../roles";
 
 /** Estatus de una Orden de Servicio. Coincide con `public.service_order_status`. */
@@ -43,13 +44,6 @@ export const DISCOUNT_EDITABLE_STATUSES: readonly ServiceOrderStatus[] = [
   ...ITEM_EDITABLE_STATUSES,
   "terminada",
 ];
-/** Cobro: OS autorizada y no entregada. */
-export const PAYABLE_STATUSES: readonly ServiceOrderStatus[] = [
-  "autorizada",
-  "en_proceso",
-  "pausada",
-  "terminada",
-];
 /** OS cerradas: ya no se editan. */
 export const CLOSED_STATUSES: readonly ServiceOrderStatus[] = ["entregada", "cancelada"];
 
@@ -59,10 +53,6 @@ export const canTransitionOrder = (from: ServiceOrderStatus, to: ServiceOrderSta
 /** Canal de venta. Coincide con `public.sales_channel`. */
 export const SALES_CHANNELS = ["b2c", "membresia", "b2b"] as const;
 export type SalesChannel = (typeof SALES_CHANNELS)[number];
-
-/** Formas de pago del cobro (espejo de record_service_order_payment). */
-export const PAYMENT_METHODS = ["efectivo", "tarjeta", "transferencia", "otro"] as const;
-export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 /** Nivel de autorización de descuentos. Coincide con `public.discount_level` (ordenado). */
 export const DISCOUNT_LEVELS = ["operador", "encargado", "admin"] as const;
@@ -197,6 +187,10 @@ export interface ServiceOrder {
   costTotal: number;
   estimatedMinutes: number;
   paidAmount: number;
+  /** Columna generada service_orders.payment_status (cobranza, AF1). */
+  paymentStatus: OrderPaymentStatus;
+  /** OS a cuenta de una empresa (C3): se liquida a crédito B2B. */
+  b2bAccountId: string | null;
   authorizedAt: string | null;
   authorizedTotal: number | null;
   promisedAt: string | null;
@@ -287,12 +281,6 @@ export interface UpdateOrderDetailsCommand extends VersionedCommand {
   promisedAt?: string | undefined;
 }
 
-export interface RecordPaymentCommand extends VersionedCommand {
-  amount: number;
-  method: PaymentMethod;
-  reference?: string | undefined;
-}
-
 export interface OrderListFilter {
   status?: ServiceOrderStatus | undefined;
   query?: string | undefined;
@@ -316,7 +304,6 @@ export interface ServiceOrderRepository {
   voidDiscount(command: VoidDiscountCommand): Promise<Result<OrderMutation>>;
   setStatus(command: SetOrderStatusCommand): Promise<Result<OrderMutation>>;
   updateDetails(command: UpdateOrderDetailsCommand): Promise<Result<OrderMutation>>;
-  recordPayment(command: RecordPaymentCommand): Promise<Result<OrderMutation>>;
 }
 
 type BlockerInput = Pick<ServiceOrder, "channel" | "channelReference" | "paidAmount" | "total"> & {

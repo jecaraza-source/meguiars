@@ -1,5 +1,5 @@
 import type { StatusTone } from "../agenda/copy";
-import type { DiscountLevel, PaymentMethod, SalesChannel, ServiceOrderStatus } from "./order";
+import type { DiscountLevel, SalesChannel, ServiceOrderStatus } from "./order";
 
 export const ORDER_STATUS_LABELS: Record<ServiceOrderStatus, string> = {
   abierta: "Abierta",
@@ -43,13 +43,6 @@ export const CHANNEL_REFERENCE_LABELS: Record<SalesChannel, string> = {
   b2c: "Referencia (opcional)",
   membresia: "Número de membresía",
   b2b: "Orden de compra del cliente",
-};
-
-export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  efectivo: "Efectivo",
-  tarjeta: "Tarjeta",
-  transferencia: "Transferencia",
-  otro: "Otro",
 };
 
 export const DISCOUNT_LEVEL_LABELS: Record<DiscountLevel, string> = {
@@ -116,12 +109,6 @@ export const ordersCopy = {
   voidDiscount: "Anular",
   voided: "Anulado",
   discountLevel: "Nivel exigido",
-  paymentTitle: "Cobro",
-  paymentMethod: "Forma de pago",
-  paymentAmount: "Importe",
-  paymentReference: "Referencia (opcional)",
-  recordPayment: "Registrar cobro",
-  paymentHint: "Interfaz mínima: el módulo de pagos agregará pagos parciales detallados y reembolsos.",
   historyTitle: "Historial de estatus",
   subtotal: "Subtotal",
   discountTotal: "Descuentos",

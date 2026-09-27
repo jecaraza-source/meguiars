@@ -46,7 +46,7 @@ export function AppShell({
         Saltar al contenido
       </a>
       <EnvironmentBanner />
-      <header className="flex flex-wrap items-center justify-between gap-sm border-b border-border bg-surface-raised px-lg py-sm">
+      <header className="flex flex-wrap items-center justify-between gap-sm border-b border-border bg-surface-raised px-lg py-sm print:hidden">
         <Link href="/" className="text-sm font-semibold uppercase tracking-wide text-accent">
           {APP_NAME}
         </Link>
@@ -78,7 +78,7 @@ export function AppShell({
       </header>
 
       <div className="flex flex-1">
-        <aside className="hidden w-(--mg-layout-sidebar) shrink-0 flex-col justify-between gap-xl border-r border-border p-lg md:flex">
+        <aside className="hidden w-(--mg-layout-sidebar) shrink-0 flex-col justify-between gap-xl border-r border-border p-lg md:flex print:hidden">
           <SideNav sections={sections} />
           <Link href="/sistema" className="text-xs text-muted underline">
             Sistema de diseño
@@ -90,12 +90,18 @@ export function AppShell({
               <h1 className="text-xl font-semibold leading-tight md:text-xxl">{title}</h1>
               {description ? <p className="text-muted">{description}</p> : null}
             </div>
-            {section ? <SubNav section={section} /> : null}
+            {section ? (
+              <div className="print:hidden">
+                <SubNav section={section} />
+              </div>
+            ) : null}
             {children}
           </div>
         </main>
       </div>
-      <BottomNav sections={sections} />
+      <div className="print:hidden">
+        <BottomNav sections={sections} />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import {
   ORDER_STATUS_NEEDS_REASON,
-  PAYMENT_METHODS,
   SALES_CHANNELS,
   SERVICE_ORDER_STATUSES,
   zonedToUtc,
@@ -27,7 +26,6 @@ const optionalReason = z.preprocess(blankToUndefined, changeReasonSchema.optiona
 
 export const salesChannelSchema = z.enum(SALES_CHANNELS, { message: "Elige el canal" });
 export const orderStatusSchema = z.enum(SERVICE_ORDER_STATUSES);
-export const paymentMethodSchema = z.enum(PAYMENT_METHODS, { message: "Elige la forma de pago" });
 
 export const quantitySchema = z.coerce
   .number({ message: "Cantidad inválida" })
@@ -244,14 +242,6 @@ export const updateOrderDetailsSchema = z.object({
   odometerKm: odometerSchema,
   promisedAt: z.iso.datetime({ offset: true }).optional(),
 });
-
-export const paymentFormSchema = z.object({
-  amount: moneySchema.refine((n) => n > 0, "Debe ser mayor que 0"),
-  method: paymentMethodSchema,
-  reference: optionalText(80),
-});
-
-export const recordPaymentSchema = z.object({ ...versioned }).and(paymentFormSchema);
 
 export const orderFilterSchema = z.object({
   status: z.preprocess(blankToUndefined, orderStatusSchema.optional()),

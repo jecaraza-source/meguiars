@@ -63,6 +63,10 @@ export const CAPABILITIES = [
   "pipeline.write",
   "pipeline.metrics.read",
   "pipeline.manage",
+  // Cobranza (AF1): cobrar exige payments.write; revertir un recibo, payments.reverse.
+  "payments.read",
+  "payments.write",
+  "payments.reverse",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -81,7 +85,8 @@ export type Capability = (typeof CAPABILITIES)[number];
  * can_bill_b2b); `upsell.*`, en 20261005000000 (private.can_read_upsell_metrics /
  * private.can_manage_upsell, admin corporativo); `pipeline.*`, en 20261006000000
  * (private.can_read_pipeline / can_write_pipeline / can_read_pipeline_metrics /
- * can_manage_pipeline, admin corporativo).
+ * can_manage_pipeline, admin corporativo); `payments.*`, en 20261007000000
+ * (private.can_read_payments / can_use_orders / can_manage_orders).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -122,6 +127,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "pipeline.write",
     "pipeline.metrics.read",
     "pipeline.manage",
+    "payments.read",
+    "payments.write",
+    "payments.reverse",
   ],
   encargado: [
     "center.read",
@@ -148,6 +156,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "pipeline.read",
     "pipeline.write",
     "pipeline.metrics.read",
+    "payments.read",
+    "payments.write",
+    "payments.reverse",
   ],
   operador_recepcion: [
     "center.read",
@@ -164,6 +175,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.write",
     "crm.read",
     "crm.write",
+    "payments.read",
+    "payments.write",
   ],
   // El contador no ve datos personales de clientes.
   contador: [
@@ -175,6 +188,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "b2b.read",
     "upsell.read",
     "pipeline.metrics.read",
+    "payments.read",
   ],
   comercial_b2b: [
     "center.read",

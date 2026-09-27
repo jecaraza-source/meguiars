@@ -55,6 +55,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó las recomendaciones de venta de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.pipeline_stages s join public.organizations o on o.id = s.organization_id where o.slug = 'meguiars-demo'")" == "6" && "$("${PSQL[@]}" -tAc "select string_agg(status || '=' || (select count(*) from public.opportunity_events e where e.opportunity_id = o.id), ',' order by id) from public.sales_opportunities o")" == "abierta=3,abierta=2,abierta=2,perdida=2" ]] \
   || { echo "El seed no cargó el pipeline comercial de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select string_agg(o.folio || '=' || o.paid_amount || ':' || o.payment_status || ':' || p.receipt_folio || ':' || p.change_amount, ',') from public.service_orders o join public.payment_allocations a on a.service_order_id = o.id join public.payments p on p.id = a.payment_id")" == "CDMX-01-000001=1000.00:parcial:CDMX-01-R-000001:100.00" ]] \
+  || { echo "El seed no cargó la cobranza de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

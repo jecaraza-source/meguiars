@@ -6,8 +6,6 @@ import {
   linesFromQuantities,
   newOrderFormSchema,
   orderDetailsFormSchema,
-  paymentFormSchema,
-  recordPaymentSchema,
   setOrderItemSchema,
   setOrderStatusSchema,
   toCreateServiceOrderCommand,
@@ -176,17 +174,5 @@ describe("OS: validación compartida", () => {
       odometerKm: undefined,
       promisedAt: "2026-10-01T15:30:00.000Z",
     });
-  });
-
-  it("cobro: importe positivo y forma de pago conocida", () => {
-    expect(paymentFormSchema.parse({ amount: "1,000", method: "tarjeta", reference: "" })).toEqual({
-      amount: 1000,
-      method: "tarjeta",
-      reference: undefined,
-    });
-    expect(paymentFormSchema.safeParse({ amount: "0", method: "cripto" }).success).toBe(false);
-    expect(
-      recordPaymentSchema.safeParse({ orderId: ORDER, version: 1, amount: 10, method: "efectivo" }).success,
-    ).toBe(true);
   });
 });

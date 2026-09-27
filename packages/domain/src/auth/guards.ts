@@ -54,6 +54,8 @@ export const SCREEN_GUARDS = {
   opportunityNew: { center: true, capability: "pipeline.write" },
   pipelineMetrics: { center: true, capability: "pipeline.metrics.read" },
   finanzas: { center: true, capability: "finance.read" },
+  payments: { center: true, capability: "payments.read" },
+  paymentReceipt: { center: true, capability: "payments.read" },
   direccion: { center: true, capability: "executive.read" },
   designSystem: {},
   account: {},

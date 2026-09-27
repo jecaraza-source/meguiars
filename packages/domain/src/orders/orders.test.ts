@@ -51,6 +51,8 @@ const order = (patch: Partial<ServiceOrder> = {}): ServiceOrder => ({
   costTotal: 1040,
   estimatedMinutes: 170,
   paidAmount: 0,
+  paymentStatus: "pendiente",
+  b2bAccountId: null,
   authorizedAt: null,
   authorizedTotal: null,
   promisedAt: null,

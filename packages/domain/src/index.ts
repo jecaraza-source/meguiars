@@ -21,3 +21,4 @@ export * from "./crm";
 export * from "./b2b";
 export * from "./upsell";
 export * from "./pipeline";
+export * from "./payments";
