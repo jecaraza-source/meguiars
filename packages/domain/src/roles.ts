@@ -73,6 +73,10 @@ export const CAPABILITIES = [
   "expenses.write",
   "expenses.approve",
   "expenses.manage",
+  // Corte de caja (AF3): operate = abrir y cerrar (arqueo); reopen = reabrir un corte cerrado (admin).
+  "cash.read",
+  "cash.operate",
+  "cash.reopen",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -94,7 +98,8 @@ export type Capability = (typeof CAPABILITIES)[number];
  * can_manage_pipeline, admin corporativo); `payments.*`, en 20261007000000
  * (private.can_read_payments / can_use_orders / can_manage_orders); `expenses.*`, en
  * 20261008000000 (private.can_read_expenses / can_write_expenses /
- * can_approve_expenses / can_manage_expense_catalog, admin corporativo).
+ * can_approve_expenses / can_manage_expense_catalog, admin corporativo); `cash.*`, en
+ * 20261009000000 (private.can_read_cash / can_operate_cash / can_reopen_cash).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -142,6 +147,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "expenses.write",
     "expenses.approve",
     "expenses.manage",
+    "cash.read",
+    "cash.operate",
+    "cash.reopen",
   ],
   encargado: [
     "center.read",
@@ -173,6 +181,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.reverse",
     "expenses.read",
     "expenses.write",
+    "cash.read",
+    "cash.operate",
   ],
   operador_recepcion: [
     "center.read",
@@ -191,6 +201,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "crm.write",
     "payments.read",
     "payments.write",
+    "cash.read",
   ],
   // El contador no ve datos personales de clientes.
   contador: [
@@ -204,6 +215,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "pipeline.metrics.read",
     "payments.read",
     "expenses.read",
+    "cash.read",
   ],
   comercial_b2b: [
     "center.read",

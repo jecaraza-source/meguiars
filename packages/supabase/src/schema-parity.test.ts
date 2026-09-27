@@ -57,6 +57,8 @@ import {
   EXPENSE_RECEIPT_MAX_BYTES,
   EXPENSE_RECEIPT_MIME_TYPES,
   EXPENSE_STATUSES,
+  CASH_SESSION_STATUSES,
+  CASH_SHIFTS,
   isPnlExpense,
   PNL_GROUPS,
   ORDER_PAYMENT_STATUSES,
@@ -154,6 +156,9 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "expenses",
   "expense_attachments",
   "approval_events",
+  "cash_sessions",
+  "cash_closings",
+  "cash_reopenings",
   "user_detail_centers",
   "vehicles",
 ];
@@ -200,6 +205,12 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "list_expenses",
   "expense_detail",
   "pnl_facts",
+  "open_cash_session",
+  "close_cash_session",
+  "reopen_cash_session",
+  "list_cash_sessions",
+  "cash_session_detail",
+  "cash_uncovered",
   "add_vehicle",
   "apply_b2b_account",
   "b2b_account_orders",
@@ -377,6 +388,24 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect(sql).toContain(`'${EXPENSE_RECEIPT_BUCKET}'`);
     const seeded = [...sql.matchAll(/\(p_organization_id, '(\w+)', '[^']+', '(\w+)'/g)].map((m) => m[2]);
     expect(seeded.filter((g) => !isPnlExpense(g as never))).toEqual(["insumos"]);
+  });
+
+  it("corte de caja: turnos y estados coinciden; el efectivo esperado sólo cuenta la forma de pago efectivo", () => {
+    const sql = readFileSync(join(migrationsDir, "20261009000000_cash_sessions.sql"), "utf8");
+    const listOf = (re: RegExp) =>
+      re
+        .exec(sql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listOf(/shift text not null check \(shift in \(([^)]+)\)\)/)).toEqual([...CASH_SHIFTS]);
+    expect(listOf(/status text not null default 'abierta' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...CASH_SESSION_STATUSES,
+    ]);
+    expect(sql).toMatch(
+      /'expected_cash', p_opening_float \+ coalesce\(\(select sum\(collected - refunded\) from f where kind = 'efectivo'\)/,
+    );
+    expect(sql).toContain("check (expected_cash = opening_float + cash_collected - cash_refunded)");
+    expect(sql).toContain("check (difference = counted_cash - expected_cash)");
   });
 
   it("ejecución: estatus y transiciones de línea, unidades, momentos, eventos y límites de fotos coinciden", () => {

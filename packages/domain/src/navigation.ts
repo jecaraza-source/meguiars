@@ -69,6 +69,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     items: [
       { screen: "finanzas", label: "Resumen financiero", href: "/finanzas" },
       { screen: "payments", label: "Cobranza", href: "/finanzas/cobranza" },
+      { screen: "cash", label: "Corte de caja", href: "/finanzas/caja" },
       { screen: "expenses", label: "Egresos", href: "/finanzas/egresos" },
       { screen: "pnl", label: "Estado de resultados", href: "/finanzas/resultados" },
       { screen: "team", label: "Equipo del centro", href: "/equipo" },
@@ -114,6 +115,7 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   expenseDetail: "expenses",
   expenseNew: "expenses",
   expenseSettings: "expenses",
+  cashSession: "cash",
 };
 
 /** Ítem de menú que representa a la pantalla. */

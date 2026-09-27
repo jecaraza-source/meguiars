@@ -53,6 +53,8 @@ import { ExpenseNewScreen } from "@/screens/ExpenseNewScreen";
 import { ExpenseScreen } from "@/screens/ExpenseScreen";
 import { ExpenseSettingsScreen } from "@/screens/ExpenseSettingsScreen";
 import { PnlScreen } from "@/screens/PnlScreen";
+import { CashSessionsScreen } from "@/screens/CashSessionsScreen";
+import { CashSessionScreen } from "@/screens/CashSessionScreen";
 import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
 import { OrderNewScreen } from "@/screens/OrderNewScreen";
 import { OrdersScreen } from "@/screens/OrdersScreen";
@@ -153,6 +155,12 @@ export function Router() {
   const openExpense = (id: string) => {
     setExpenseId(id);
     setScreen("expenseDetail");
+  };
+  // Parámetro del corte de caja (equivale a /finanzas/caja/[id] en web).
+  const [cashSessionId, setCashSessionId] = useState<string | null>(null);
+  const openCashSession = (id: string) => {
+    setCashSessionId(id);
+    setScreen("cashSession");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -517,6 +525,21 @@ export function Router() {
         break;
       case "pnl":
         content = <PnlScreen {...props} />;
+        break;
+      case "cash":
+        content = <CashSessionsScreen {...props} onOpen={openCashSession} />;
+        break;
+      case "cashSession":
+        content = cashSessionId ? (
+          <CashSessionScreen
+            key={cashSessionId}
+            {...props}
+            sessionId={cashSessionId}
+            onBack={() => setScreen("cash")}
+          />
+        ) : (
+          <CashSessionsScreen {...props} onOpen={openCashSession} />
+        );
         break;
       case "paymentReceipt":
         content = receiptId ? (
