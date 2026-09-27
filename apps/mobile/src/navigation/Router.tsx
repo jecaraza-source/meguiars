@@ -6,6 +6,7 @@ import {
   sectionOfScreen,
   visibleNavigation,
   type OpportunityKind,
+  type PnlDrillQuery,
   type Screen,
 } from "@meguiars/domain";
 import { colors } from "@meguiars/ui-tokens";
@@ -53,6 +54,7 @@ import { ExpenseNewScreen } from "@/screens/ExpenseNewScreen";
 import { ExpenseScreen } from "@/screens/ExpenseScreen";
 import { ExpenseSettingsScreen } from "@/screens/ExpenseSettingsScreen";
 import { PnlScreen } from "@/screens/PnlScreen";
+import { PnlDrillScreen } from "@/screens/PnlDrillScreen";
 import { CashSessionsScreen } from "@/screens/CashSessionsScreen";
 import { CashSessionScreen } from "@/screens/CashSessionScreen";
 import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
@@ -155,6 +157,12 @@ export function Router() {
   const openExpense = (id: string) => {
     setExpenseId(id);
     setScreen("expenseDetail");
+  };
+  // Parámetros del drill-down del P&L (equivalen a /finanzas/resultados/detalle en web).
+  const [pnlDrill, setPnlDrill] = useState<PnlDrillQuery | null>(null);
+  const openPnlDrill = (query: PnlDrillQuery) => {
+    setPnlDrill(query);
+    setScreen("pnlDrilldown");
   };
   // Parámetro del corte de caja (equivale a /finanzas/caja/[id] en web).
   const [cashSessionId, setCashSessionId] = useState<string | null>(null);
@@ -524,7 +532,27 @@ export function Router() {
         content = <ExpenseSettingsScreen {...props} onBack={() => setScreen("expenses")} />;
         break;
       case "pnl":
-        content = <PnlScreen {...props} />;
+        content = <PnlScreen {...props} onDrill={openPnlDrill} />;
+        break;
+      case "pnlDrilldown":
+        content = pnlDrill ? (
+          <PnlDrillScreen
+            {...props}
+            query={pnlDrill}
+            onBack={() => setScreen("pnl")}
+            onOpen={(target, id) =>
+              target === "orderDetail"
+                ? openOrder(id)
+                : target === "membershipDetail"
+                  ? openMembership(id)
+                  : target === "b2bAgreementDetail"
+                    ? openB2bAgreement(id)
+                    : openExpense(id)
+            }
+          />
+        ) : (
+          <PnlScreen {...props} onDrill={openPnlDrill} />
+        );
         break;
       case "cash":
         content = <CashSessionsScreen {...props} onOpen={openCashSession} />;

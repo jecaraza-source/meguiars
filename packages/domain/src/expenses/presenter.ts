@@ -1,4 +1,3 @@
-import { addDays } from "../agenda/zoned-time";
 import { formatMoney } from "../catalog/presenter";
 import { formatDateOnly } from "../memberships/presenter";
 import { formatInCenterTimeZone } from "../time";
@@ -65,25 +64,6 @@ export function presentApprovalEvent(ev: ApprovalEvent, timeZone: string) {
 
 export const formatBytes = (n: number) =>
   n >= 1024 * 1024 ? `${(n / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`;
-
-export const PNL_RANGES = ["mes", "mes_anterior", "30"] as const;
-export type PnlRangeKey = (typeof PNL_RANGES)[number];
-export const PNL_RANGE_LABELS: Record<PnlRangeKey, string> = {
-  mes: expensesCopy.rangeMonth,
-  mes_anterior: expensesCopy.rangePrevMonth,
-  "30": expensesCopy.range30,
-};
-
-/** Rango del P&L a partir de la fecha del centro (AAAA-MM-DD). */
-export function pnlRange(key: PnlRangeKey, today: string): { from: string; to: string } {
-  const monthStart = `${today.slice(0, 7)}-01`;
-  if (key === "mes") return { from: monthStart, to: today };
-  if (key === "mes_anterior") {
-    const lastDay = addDays(monthStart, -1);
-    return { from: `${lastDay.slice(0, 7)}-01`, to: lastDay };
-  }
-  return { from: addDays(today, -29), to: today };
-}
 
 /** Mensaje de error de egresos para la UI. */
 export function expenseErrorMessage(error: { kind: string; code?: string; message: string }): string {

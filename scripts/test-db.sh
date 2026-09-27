@@ -41,7 +41,7 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó el catálogo con los 5 motores de ingreso" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.appointments a join public.appointment_services s on s.appointment_id = a.id where a.ends_at = a.starts_at + make_interval(mins => a.duration_minutes)")" == "3" ]] \
   || { echo "El seed no cargó la agenda de ejemplo" >&2; exit 1; }
-[[ "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total, ',' order by folio) from public.service_orders")" == "CDMX-01-000001=1890.00,CDMX-01-000002=2520.00,MTY-01-000001=220.00" ]] \
+[[ "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total, ',' order by folio) from public.service_orders")" == "CDMX-01-000001=1890.00,CDMX-01-000002=2520.00,CDMX-01-000003=2980.00,MTY-01-000001=220.00,MTY-01-000002=440.00" ]] \
   || { echo "El seed no cargó las órdenes de servicio de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.service_supply_standards")" == "4" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_order_consumptions c join public.service_order_items i on i.id = c.item_id where i.work_status = 'en_proceso'")" == "1" ]] \
   || { echo "El seed no cargó la ejecución y los consumos de ejemplo" >&2; exit 1; }
@@ -55,12 +55,14 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó las recomendaciones de venta de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.pipeline_stages s join public.organizations o on o.id = s.organization_id where o.slug = 'meguiars-demo'")" == "6" && "$("${PSQL[@]}" -tAc "select string_agg(status || '=' || (select count(*) from public.opportunity_events e where e.opportunity_id = o.id), ',' order by id) from public.sales_opportunities o")" == "abierta=3,abierta=2,abierta=2,perdida=2" ]] \
   || { echo "El seed no cargó el pipeline comercial de ejemplo" >&2; exit 1; }
-[[ "$("${PSQL[@]}" -tAc "select string_agg(o.folio || '=' || o.paid_amount || ':' || o.payment_status || ':' || p.receipt_folio || ':' || p.change_amount, ',') from public.service_orders o join public.payment_allocations a on a.service_order_id = o.id join public.payments p on p.id = a.payment_id")" == "CDMX-01-000001=1000.00:parcial:CDMX-01-R-000001:100.00" ]] \
+[[ "$("${PSQL[@]}" -tAc "select string_agg(o.folio || '=' || o.paid_amount || ':' || o.payment_status || ':' || p.receipt_folio || ':' || p.change_amount, ',') from public.service_orders o join public.payment_allocations a on a.service_order_id = o.id join public.payments p on p.id = a.payment_id where o.folio = 'CDMX-01-000001'")" == "CDMX-01-000001=1000.00:parcial:CDMX-01-R-000001:100.00" ]] \
   || { echo "El seed no cargó la cobranza de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(folio || ':' || pnl_group || ':' || status, ',' order by folio) from public.expenses")" == "CDMX-01-E-000001:operativo:aprobado,CDMX-01-E-000002:insumos:aprobado,CDMX-01-E-000003:personal:pendiente" && "$("${PSQL[@]}" -tAc "select count(*) from public.expense_categories c join public.organizations o on o.id = c.organization_id where o.slug = 'meguiars-demo'")" == "10" ]] \
   || { echo "El seed no cargó los egresos de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(s.folio || ':' || s.status || ':' || coalesce(c.difference::text, (private.cash_window_totals(s.detail_center_id, s.opened_at, s.window_end, s.opening_float) ->> 'expected_cash')), ',' order by s.folio) from public.cash_sessions s left join public.cash_closings c on c.session_id = s.id")" == "CDMX-01-C-000001:cerrada:-20.00,CDMX-01-C-000002:abierta:1500.00" ]] \
   || { echo "El seed no cargó los cortes de caja de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select string_agg(c.code || ':' || o.channel || '=' || o.total || ':' || o.payment_status, ',' order by c.code) from public.service_orders o join public.detail_centers c on c.id = o.detail_center_id where o.status = 'entregada' and (o.delivered_at at time zone c.timezone)::date = private.center_today(c.id)")" == "CDMX-01:b2c=2980.00:pagada,MTY-01:b2c=440.00:pagada" ]] \
+  || { echo "El seed no cargó el P&L de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

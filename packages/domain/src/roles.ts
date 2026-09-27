@@ -77,6 +77,8 @@ export const CAPABILITIES = [
   "cash.read",
   "cash.operate",
   "cash.reopen",
+  // P&L multicentro (AF4): estado de resultados y drill-down (sólo lectura).
+  "pnl.read",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -99,7 +101,8 @@ export type Capability = (typeof CAPABILITIES)[number];
  * (private.can_read_payments / can_use_orders / can_manage_orders); `expenses.*`, en
  * 20261008000000 (private.can_read_expenses / can_write_expenses /
  * can_approve_expenses / can_manage_expense_catalog, admin corporativo); `cash.*`, en
- * 20261009000000 (private.can_read_cash / can_operate_cash / can_reopen_cash).
+ * 20261009000000 (private.can_read_cash / can_operate_cash / can_reopen_cash); `pnl.read`, en
+ * 20261010000000 (private.can_read_pnl).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -150,6 +153,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "cash.read",
     "cash.operate",
     "cash.reopen",
+    "pnl.read",
   ],
   encargado: [
     "center.read",
@@ -183,6 +187,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "expenses.write",
     "cash.read",
     "cash.operate",
+    "pnl.read",
   ],
   operador_recepcion: [
     "center.read",
@@ -216,6 +221,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.read",
     "expenses.read",
     "cash.read",
+    "pnl.read",
   ],
   comercial_b2b: [
     "center.read",

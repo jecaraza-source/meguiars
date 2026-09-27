@@ -195,16 +195,6 @@ export interface Expense {
   events: ApprovalEvent[];
 }
 
-/** Hecho del P&L (pnl_facts). */
-export interface PnlFact {
-  detailCenterId: string;
-  section: "ingreso" | "costo_os" | "egreso" | "egreso_pendiente";
-  /** Canal (b2c, membresia, b2b), `membresias`, `estandar`/`variacion_insumos` o grupo del P&L. */
-  item: string;
-  amount: number;
-  count: number;
-}
-
 export interface ExpenseFilter {
   detailCenterIds: string[];
   from: string;
@@ -301,5 +291,4 @@ export interface ExpenseRepository {
   upsertVendor(input: VendorInput): Promise<Result<Vendor>>;
   threshold(detailCenterId: string): Promise<Result<number | null>>;
   setThreshold(detailCenterId: string, threshold: number | null, reason: string): Promise<Result<void>>;
-  pnlFacts(detailCenterIds: string[], from: string, to: string): Promise<Result<PnlFact[]>>;
 }

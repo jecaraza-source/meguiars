@@ -24,3 +24,4 @@ export * from "./pipeline";
 export * from "./payments";
 export * from "./expenses";
 export * from "./cash";
+export * from "./pnl";

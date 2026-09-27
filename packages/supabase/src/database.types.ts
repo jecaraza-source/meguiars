@@ -4276,9 +4276,42 @@ export type Database = {
         Args: { p_payment_id: string };
         Returns: Json;
       };
+      pnl_drilldown: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_dimension?: string | null;
+          p_from: string;
+          p_line?: string | null;
+          p_section: string;
+          p_to: string;
+        };
+        Returns: {
+          amount: number;
+          description: string;
+          detail_center_id: string;
+          dimension: string | null;
+          line: string;
+          occurred_on: string;
+          reference: string;
+          section: string;
+          source: string;
+          source_id: string;
+        }[];
+      };
       pnl_facts: {
         Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
         Returns: { amount: number; count: number; detail_center_id: string; item: string; section: string }[];
+      };
+      pnl_lines: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          amount: number;
+          detail_center_id: string;
+          dimension: string | null;
+          line: string;
+          movements: number;
+          section: string;
+        }[];
       };
       receivable_orders: {
         Args: { p_detail_center_ids: string[] };

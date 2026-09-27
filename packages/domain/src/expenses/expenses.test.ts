@@ -8,7 +8,7 @@ import {
   PNL_GROUPS,
   requiresApproval,
 } from "./expenses";
-import { expenseErrorMessage, pnlRange, presentExpenseRow } from "./presenter";
+import { expenseErrorMessage, presentExpenseRow } from "./presenter";
 
 describe("aprobación por umbral (espejo de la base)", () => {
   it("importe ≥ umbral requiere aprobación; sin umbral, nunca", () => {
@@ -53,12 +53,6 @@ describe("P&L y comprobantes", () => {
     expect(
       expenseReceiptPath({ organizationId: "o", detailCenterId: "c", id: "e" }, "f", "application/pdf"),
     ).toBe("o/c/e/f.pdf");
-  });
-
-  it("rangos del P&L por mes del centro", () => {
-    expect(pnlRange("mes", "2026-03-15")).toEqual({ from: "2026-03-01", to: "2026-03-15" });
-    expect(pnlRange("mes_anterior", "2026-03-15")).toEqual({ from: "2026-02-01", to: "2026-02-28" });
-    expect(pnlRange("30", "2026-03-15")).toEqual({ from: "2026-02-14", to: "2026-03-15" });
   });
 
   it("presentación y errores", () => {
