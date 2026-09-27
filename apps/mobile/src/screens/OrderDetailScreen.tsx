@@ -47,6 +47,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
+import { OrderB2bCard } from "@/components/OrderB2bCard";
 import { OrderMembershipCard } from "@/components/OrderMembershipCard";
 import { ChannelFields } from "@/components/OrderFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
@@ -177,6 +178,13 @@ export function OrderDetailScreen({
         needsReason={view.itemsNeedReason}
         mutate={mutate}
         repo={repo}
+      />
+      <OrderB2bCard
+        key={`b-${k}`}
+        order={order}
+        centerId={center.id}
+        canWrite={canWrite}
+        onChanged={reload}
       />
       {canInActiveCenter(state, "memberships.read") ? (
         <OrderMembershipCard

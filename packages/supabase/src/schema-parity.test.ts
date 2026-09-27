@@ -1,6 +1,15 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  AGREEMENT_STATES,
+  AGREEMENT_STATUSES,
+  B2B_ACCOUNT_STATUSES,
+  B2B_PAYMENT_METHODS,
+  BILLING_MODELS,
+  INVOICE_STATUSES,
+  PRICE_RULE_KINDS,
+  RFC_PATTERN,
+  VEHICLE_RULES,
   APP_ROLES,
   APPOINTMENT_STATUSES,
   APPOINTMENT_TRANSITIONS,
@@ -67,6 +76,14 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "appointment_services",
   "appointments",
   "audit_log",
+  "b2b_accounts",
+  "b2b_agreement_centers",
+  "b2b_agreements",
+  "b2b_contacts",
+  "b2b_invoices",
+  "b2b_payments",
+  "b2b_price_rules",
+  "b2b_vehicles",
   "bays",
   "client_centers",
   "clients",
@@ -104,6 +121,21 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_service_order_discount",
   "add_vehicle",
+  "apply_b2b_account",
+  "b2b_account_orders",
+  "b2b_account_statement",
+  "b2b_accounts_for_center",
+  "b2b_profitability_facts",
+  "create_b2b_invoice",
+  "create_b2b_service_order",
+  "record_b2b_payment",
+  "set_b2b_price_rule",
+  "set_b2b_vehicle",
+  "upsert_b2b_account",
+  "upsert_b2b_agreement",
+  "upsert_b2b_contact",
+  "void_b2b_invoice",
+  "void_b2b_payment",
   "cancel_crm_task",
   "complete_crm_task",
   "appointment_order_draft",
@@ -327,6 +359,41 @@ describe("paridad SQL ↔ TypeScript", () => {
       listIn(/source text not null default 'manual' check \(source in \(('manual', 'os_terminada'[^)]*)\)\)/),
     ).toEqual([...TASK_SOURCES]);
     expect(listIn(/outcome text check \(outcome in \(([^)]+)\)\)/)).toEqual([...TASK_OUTCOMES]);
+  });
+
+  it("B2B: estatus, modelos de cobro, estados del convenio, vehículos, tarifas, pagos y RFC coinciden", () => {
+    const b2b = allSql.slice(allSql.indexOf("-- C3 — Comercial / B2B"));
+    const listIn = (re: RegExp) =>
+      re
+        .exec(b2b)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listIn(/status text not null default 'activa' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...B2B_ACCOUNT_STATUSES,
+    ]);
+    expect(listIn(/billing_model text not null check \(billing_model in \(([^)]+)\)\)/)).toEqual([
+      ...BILLING_MODELS,
+    ]);
+    expect(listIn(/status text not null default 'activo' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...AGREEMENT_STATUSES,
+    ]);
+    expect(
+      listIn(/vehicle_rule text not null default 'lista' check \(vehicle_rule in \(([^)]+)\)\)/),
+    ).toEqual([...VEHICLE_RULES]);
+    expect(listIn(/kind text not null check \(kind in \(('precio_fijo'[^)]*)\)\)/)).toEqual([
+      ...PRICE_RULE_KINDS,
+    ]);
+    expect(listIn(/method text not null check \(method in \(('transferencia'[^)]*)\)\)/)).toEqual([
+      ...B2B_PAYMENT_METHODS,
+    ]);
+    expect(listIn(/status text not null default 'emitida' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...INVOICE_STATUSES,
+    ]);
+    const state = /function private\.b2b_agreement_state[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(b2b)?.[1] ?? "";
+    const states = new Set([...state.matchAll(/'(\w+)'/g)].map((m) => m[1]));
+    expect([...states].sort()).toEqual([...AGREEMENT_STATES].sort());
+    const rfc = /rfc is null or rfc ~ '([^']+)'/.exec(b2b)?.[1];
+    expect(rfc).toBe(RFC_PATTERN.source);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

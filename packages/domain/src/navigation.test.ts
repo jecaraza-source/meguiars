@@ -48,7 +48,8 @@ describe("navegación por rol", () => {
     // Vende y renueva membresías en recepción (Comercial → Membresías).
     ["operador_recepcion", ["inicio", "operacion", "comercial"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
-    ["contador", ["inicio", "operacion", "finanzas"]],
+    // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).
+    ["contador", ["inicio", "operacion", "comercial", "finanzas"]],
     // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día.
     ["comercial_b2b", ["inicio", "operacion", "comercial"]],
   ])("%s ve %j", (role, expected) => {
@@ -103,6 +104,15 @@ describe("navegación por rol", () => {
     expect(itemsOf(["operador_recepcion"])).not.toContain("comercial");
     expect(itemsOf(["comercial_b2b"])).toEqual(expect.arrayContaining(["comercial", "memberships"]));
     expect(itemsOf(["contador"])).not.toContain("memberships");
+  });
+
+  it("B2B: comercial administra; encargado y contador consultan; recepción no ve tarifas", () => {
+    expect(itemsOf(["comercial_b2b"])).toEqual(expect.arrayContaining(["b2bAccounts", "b2bProfitability"]));
+    expect(itemsOf(["contador"])).toEqual(expect.arrayContaining(["b2bAccounts", "b2bProfitability"]));
+    expect(itemsOf(["contador"])).not.toContain("crmCustomers");
+    expect(itemsOf(["encargado"])).toContain("b2bAccounts");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("b2bAccounts");
+    expect(navScreenOf("b2bAgreementDetail")).toBe("b2bAccounts");
   });
 
   it("CRM: recepción y comercial lo usan; el contador no (datos personales)", () => {

@@ -2,6 +2,7 @@ import { membershipKpis } from "@meguiars/analytics";
 import {
   activeCenterAccess,
   addDays,
+  b2bCopy,
   canInActiveCenter,
   crmCopy,
   membershipKpiCards,
@@ -45,6 +46,9 @@ export default async function Page({ searchParams }: PageProps<"/comercial">) {
             </Link>
             {canInActiveCenter(state, "memberships.read") ? (
               <ButtonLink href="/comercial/membresias" label={membershipsCopy.title} />
+            ) : null}
+            {canInActiveCenter(state, "b2b.read") ? (
+              <ButtonLink href="/comercial/b2b" label={b2bCopy.title} />
             ) : null}
             {canInActiveCenter(state, "crm.read") ? (
               <>

@@ -9,6 +9,7 @@ export * from "./repositories/orders";
 export * from "./repositories/execution";
 export * from "./repositories/memberships";
 export * from "./repositories/crm";
+export * from "./repositories/b2b";
 export * from "./auth";
 export * from "./storage";
 export type { Database, Json, Tables } from "./database.types";

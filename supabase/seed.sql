@@ -286,3 +286,52 @@ values
    current_date, 'Membresía MEM-000002 por vencer', 'membresia', '3c000000-0000-4000-8000-000000000002',
    'mem:3c000000-0000-4000-8000-000000000002:seed')
 on conflict (id) do nothing;
+
+-- B2B (C3): cuenta de Transportes del Norte (centro gestor Monterrey) con un
+-- convenio por vehículo vigente en ambos centros, tarifas y un vehículo
+-- autorizado. La OS MTY-01-000001 (B2B previa) queda a cuenta de la empresa.
+insert into public.b2b_accounts (id, organization_id, home_detail_center_id, client_id, name, legal_name, rfc, tax_regime,
+                                 fiscal_zip, billing_email, status, request_id)
+values ('b2000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+        'c1000000-0000-4000-8000-000000000002', 'Transportes del Norte', 'Transportes del Norte SA de CV', 'TNO150101AB1',
+        '601', '64000', 'facturacion@example.com', 'activa', 'b2000000-0000-4000-8000-0000000000a1')
+on conflict (id) do nothing;
+
+insert into public.b2b_contacts (id, organization_id, account_id, full_name, title, phone, email, is_primary)
+values ('b2c00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'b2000000-0000-4000-8000-000000000001',
+        'Ana Garza', 'Compras', '+528181230000', 'compras@example.com', true)
+on conflict (id) do nothing;
+
+insert into public.b2b_agreements (id, organization_id, account_id, name, billing_model, starts_on, ends_on, status,
+                                   vehicle_rule, payment_terms_days, credit_limit, notes, request_id)
+values ('b2100000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'b2000000-0000-4000-8000-000000000001',
+        'Flotilla 2026', 'por_vehiculo', current_date - 30, current_date + 335, 'activo', 'lista', 30, 50000,
+        'Lavado exprés a tarifa fija; 10 % sobre lista en el resto.', 'b2100000-0000-4000-8000-0000000000a1')
+on conflict (id) do nothing;
+
+insert into public.b2b_agreement_centers (agreement_id, detail_center_id, organization_id) values
+  ('b2100000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111', '00000000-0000-4000-8000-00000000d3e0'),
+  ('b2100000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222', '00000000-0000-4000-8000-00000000d3e0')
+on conflict do nothing;
+insert into public.client_centers (client_id, detail_center_id, organization_id)
+values ('c1000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', '00000000-0000-4000-8000-00000000d3e0')
+on conflict (client_id, detail_center_id) do nothing;
+
+insert into public.b2b_price_rules (id, organization_id, agreement_id, service_id, kind, value) values
+  ('b2e00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'b2100000-0000-4000-8000-000000000001',
+   '5e000000-0000-4000-8000-000000000001', 'precio_fijo', 199),
+  ('b2e00000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 'b2100000-0000-4000-8000-000000000001',
+   null, 'descuento_pct', 10)
+on conflict (id) do nothing;
+
+insert into public.b2b_vehicles (account_id, vehicle_id, organization_id, cost_center, driver_name)
+values ('b2000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0',
+        'Reparto', 'Ramiro Treviño')
+on conflict (account_id, vehicle_id) do nothing;
+
+select set_config('app.b2b_link', 'on', false);
+update public.service_orders
+   set b2b_account_id = 'b2000000-0000-4000-8000-000000000001',
+       b2b_agreement_id = 'b2100000-0000-4000-8000-000000000001'
+ where id = '0d000000-0000-4000-8000-000000000003' and b2b_account_id is null;
+select set_config('app.b2b_link', 'off', false);

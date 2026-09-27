@@ -52,6 +52,9 @@ export const CAPABILITIES = [
   // CRM de recurrencia (C2): mismos roles que leen clientes.
   "crm.read",
   "crm.write",
+  // Cuentas B2B (C3): b2b.write administra cuentas, convenios, tarifas y vehículos.
+  "b2b.read",
+  "b2b.billing",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -65,7 +68,9 @@ export type Capability = (typeof CAPABILITIES)[number];
  * (private.can_use_agenda / private.can_manage_agenda); `orders.*`, en
  * 20260930000000 (private.can_use_orders / private.can_manage_orders);
  * `memberships.*`, en 20261002000000 (private.can_use_memberships /
- * private.can_manage_memberships); `crm.*`, en 20261003000000 (private.can_use_crm).
+ * private.can_manage_memberships); `crm.*`, en 20261003000000 (private.can_use_crm);
+ * `b2b.*`, en 20261004000000 (private.can_read_b2b / can_manage_b2b = b2b.write /
+ * can_bill_b2b).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -98,6 +103,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.manage",
     "crm.read",
     "crm.write",
+    "b2b.read",
+    "b2b.billing",
   ],
   encargado: [
     "center.read",
@@ -119,6 +126,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.manage",
     "crm.read",
     "crm.write",
+    "b2b.read",
   ],
   operador_recepcion: [
     "center.read",
@@ -137,7 +145,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "crm.write",
   ],
   // El contador no ve datos personales de clientes.
-  contador: ["center.read", "finance.read", "members.read", "audit.read", "catalog.read"],
+  contador: ["center.read", "finance.read", "members.read", "audit.read", "catalog.read", "b2b.read"],
   comercial_b2b: [
     "center.read",
     "commercial.read",
@@ -148,6 +156,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.write",
     "crm.read",
     "crm.write",
+    "b2b.read",
+    "b2b.billing",
   ],
 };
 

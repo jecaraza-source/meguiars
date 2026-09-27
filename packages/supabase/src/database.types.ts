@@ -3,7 +3,8 @@
 // 20260925000000_advisor_fixes, 20260926000000_auth_session,
 // 20260927000000_clients_vehicles, 20260928000000_service_catalog,
 // 20260929000000_agenda, 20260930000000_service_orders,
-// 20261001000000_execution_evidence, 20261002000000_memberships y 20261003000000_crm. Regenerar tras
+// 20261001000000_execution_evidence, 20261002000000_memberships, 20261003000000_crm,
+// 20261003100000_crm_daily_tasks y 20261004000000_b2b. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -220,6 +221,474 @@ export type Database = {
           table_name?: string;
         };
         Relationships: [];
+      };
+      b2b_accounts: {
+        Row: {
+          billing_email: string | null;
+          client_id: string;
+          created_at: string;
+          created_by: string | null;
+          fiscal_zip: string | null;
+          home_detail_center_id: string;
+          id: string;
+          legal_name: string | null;
+          name: string;
+          notes: string | null;
+          organization_id: string;
+          request_id: string;
+          rfc: string | null;
+          status: string;
+          tax_regime: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          billing_email?: string | null;
+          client_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          fiscal_zip?: string | null;
+          home_detail_center_id: string;
+          id?: string;
+          legal_name?: string | null;
+          name: string;
+          notes?: string | null;
+          organization_id: string;
+          request_id: string;
+          rfc?: string | null;
+          status?: string;
+          tax_regime?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          billing_email?: string | null;
+          client_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          fiscal_zip?: string | null;
+          home_detail_center_id?: string;
+          id?: string;
+          legal_name?: string | null;
+          name?: string;
+          notes?: string | null;
+          organization_id?: string;
+          request_id?: string;
+          rfc?: string | null;
+          status?: string;
+          tax_regime?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_accounts_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: true;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "b2b_accounts_organization_id_home_detail_center_id_fkey";
+            columns: ["organization_id", "home_detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_agreement_centers: {
+        Row: {
+          agreement_id: string;
+          created_at: string;
+          detail_center_id: string;
+          organization_id: string;
+        };
+        Insert: {
+          agreement_id: string;
+          created_at?: string;
+          detail_center_id: string;
+          organization_id: string;
+        };
+        Update: {
+          agreement_id?: string;
+          created_at?: string;
+          detail_center_id?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_agreement_centers_organization_id_agreement_id_fkey";
+            columns: ["organization_id", "agreement_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_agreements";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "b2b_agreement_centers_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_agreements: {
+        Row: {
+          account_id: string;
+          billing_model: string;
+          created_at: string;
+          created_by: string | null;
+          credit_limit: number | null;
+          ends_on: string;
+          fee_amount: number | null;
+          id: string;
+          included_units: number | null;
+          name: string;
+          notes: string | null;
+          organization_id: string;
+          payment_terms_days: number;
+          request_id: string;
+          starts_on: string;
+          status: string;
+          updated_at: string;
+          vehicle_rule: string;
+        };
+        Insert: {
+          account_id: string;
+          billing_model: string;
+          created_at?: string;
+          created_by?: string | null;
+          credit_limit?: number | null;
+          ends_on: string;
+          fee_amount?: number | null;
+          id?: string;
+          included_units?: number | null;
+          name: string;
+          notes?: string | null;
+          organization_id: string;
+          payment_terms_days?: number;
+          request_id: string;
+          starts_on: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_rule?: string;
+        };
+        Update: {
+          account_id?: string;
+          billing_model?: string;
+          created_at?: string;
+          created_by?: string | null;
+          credit_limit?: number | null;
+          ends_on?: string;
+          fee_amount?: number | null;
+          id?: string;
+          included_units?: number | null;
+          name?: string;
+          notes?: string | null;
+          organization_id?: string;
+          payment_terms_days?: number;
+          request_id?: string;
+          starts_on?: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_rule?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_agreements_organization_id_account_id_fkey";
+            columns: ["organization_id", "account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_contacts: {
+        Row: {
+          account_id: string;
+          active: boolean;
+          created_at: string;
+          email: string | null;
+          full_name: string;
+          id: string;
+          is_primary: boolean;
+          organization_id: string;
+          phone: string | null;
+          title: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          account_id: string;
+          active?: boolean;
+          created_at?: string;
+          email?: string | null;
+          full_name: string;
+          id?: string;
+          is_primary?: boolean;
+          organization_id: string;
+          phone?: string | null;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          account_id?: string;
+          active?: boolean;
+          created_at?: string;
+          email?: string | null;
+          full_name?: string;
+          id?: string;
+          is_primary?: boolean;
+          organization_id?: string;
+          phone?: string | null;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_contacts_organization_id_account_id_fkey";
+            columns: ["organization_id", "account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_invoices: {
+        Row: {
+          account_id: string;
+          amount: number | null;
+          created_at: string;
+          created_by: string | null;
+          due_on: string;
+          fee_amount: number;
+          id: string;
+          issued_on: string;
+          notes: string | null;
+          orders_amount: number;
+          organization_id: string;
+          reference: string;
+          request_id: string;
+          status: string;
+          updated_at: string;
+          void_reason: string | null;
+        };
+        Insert: {
+          account_id: string;
+          amount?: never;
+          created_at?: string;
+          created_by?: string | null;
+          due_on: string;
+          fee_amount?: number;
+          id?: string;
+          issued_on: string;
+          notes?: string | null;
+          orders_amount: number;
+          organization_id: string;
+          reference: string;
+          request_id: string;
+          status?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          amount?: never;
+          created_at?: string;
+          created_by?: string | null;
+          due_on?: string;
+          fee_amount?: number;
+          id?: string;
+          issued_on?: string;
+          notes?: string | null;
+          orders_amount?: number;
+          organization_id?: string;
+          reference?: string;
+          request_id?: string;
+          status?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_invoices_organization_id_account_id_fkey";
+            columns: ["organization_id", "account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_payments: {
+        Row: {
+          account_id: string;
+          amount: number;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          invoice_id: string | null;
+          method: string;
+          organization_id: string;
+          paid_on: string;
+          reference: string | null;
+          request_id: string;
+          updated_at: string;
+          void_reason: string | null;
+          voided_at: string | null;
+        };
+        Insert: {
+          account_id: string;
+          amount: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_id?: string | null;
+          method: string;
+          organization_id: string;
+          paid_on: string;
+          reference?: string | null;
+          request_id: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          amount?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_id?: string | null;
+          method?: string;
+          organization_id?: string;
+          paid_on?: string;
+          reference?: string | null;
+          request_id?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_payments_organization_id_account_id_fkey";
+            columns: ["organization_id", "account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "b2b_payments_organization_id_invoice_id_fkey";
+            columns: ["organization_id", "invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_invoices";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_price_rules: {
+        Row: {
+          active: boolean;
+          agreement_id: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          min_monthly_orders: number;
+          notes: string | null;
+          organization_id: string;
+          service_id: string | null;
+          updated_at: string;
+          value: number | null;
+        };
+        Insert: {
+          active?: boolean;
+          agreement_id: string;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          min_monthly_orders?: number;
+          notes?: string | null;
+          organization_id: string;
+          service_id?: string | null;
+          updated_at?: string;
+          value?: number | null;
+        };
+        Update: {
+          active?: boolean;
+          agreement_id?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          min_monthly_orders?: number;
+          notes?: string | null;
+          organization_id?: string;
+          service_id?: string | null;
+          updated_at?: string;
+          value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_price_rules_organization_id_agreement_id_fkey";
+            columns: ["organization_id", "agreement_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_agreements";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "b2b_price_rules_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_vehicles: {
+        Row: {
+          account_id: string;
+          active: boolean;
+          cost_center: string | null;
+          created_at: string;
+          driver_name: string | null;
+          notes: string | null;
+          organization_id: string;
+          updated_at: string;
+          vehicle_id: string;
+        };
+        Insert: {
+          account_id: string;
+          active?: boolean;
+          cost_center?: string | null;
+          created_at?: string;
+          driver_name?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          updated_at?: string;
+          vehicle_id: string;
+        };
+        Update: {
+          account_id?: string;
+          active?: boolean;
+          cost_center?: string | null;
+          created_at?: string;
+          driver_name?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          updated_at?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_vehicles_organization_id_account_id_fkey";
+            columns: ["organization_id", "account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "b2b_vehicles_organization_id_vehicle_id_fkey";
+            columns: ["organization_id", "vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
       };
       bays: {
         Row: {
@@ -1584,6 +2053,7 @@ export type Database = {
       };
       service_order_items: {
         Row: {
+          b2b_price_rule_id: string | null;
           created_at: string;
           duration_minutes: number;
           finished_at: string | null;
@@ -1591,6 +2061,7 @@ export type Database = {
           kind: string;
           line_discount: number;
           line_subtotal: number | null;
+          list_unit_price: number | null;
           organization_id: string;
           position: number;
           price_source: string;
@@ -1610,6 +2081,7 @@ export type Database = {
           worked_minutes: number;
         };
         Insert: {
+          b2b_price_rule_id?: string | null;
           created_at?: string;
           duration_minutes: number;
           finished_at?: string | null;
@@ -1617,6 +2089,7 @@ export type Database = {
           kind: string;
           line_discount?: number;
           line_subtotal?: never;
+          list_unit_price?: number | null;
           organization_id: string;
           position?: number;
           price_source: string;
@@ -1636,6 +2109,7 @@ export type Database = {
           worked_minutes?: number;
         };
         Update: {
+          b2b_price_rule_id?: string | null;
           created_at?: string;
           duration_minutes?: number;
           finished_at?: string | null;
@@ -1643,6 +2117,7 @@ export type Database = {
           kind?: string;
           line_discount?: number;
           line_subtotal?: never;
+          list_unit_price?: number | null;
           organization_id?: string;
           position?: number;
           price_source?: string;
@@ -1662,6 +2137,13 @@ export type Database = {
           worked_minutes?: number;
         };
         Relationships: [
+          {
+            foreignKeyName: "service_order_items_b2b_price_rule_id_fkey";
+            columns: ["b2b_price_rule_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_price_rules";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "service_order_items_organization_id_service_id_fkey";
             columns: ["organization_id", "service_id"];
@@ -1771,6 +2253,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -1822,6 +2306,8 @@ export type Database = {
           authorized_by?: string | null;
           authorized_total?: number | null;
           b2b_account_id?: string | null;
+          b2b_agreement_id?: string | null;
+          b2b_invoice_id?: string | null;
           bay_id?: string | null;
           cancelled_at?: string | null;
           channel?: Database["public"]["Enums"]["sales_channel"];
@@ -1873,6 +2359,8 @@ export type Database = {
           authorized_by?: string | null;
           authorized_total?: number | null;
           b2b_account_id?: string | null;
+          b2b_agreement_id?: string | null;
+          b2b_invoice_id?: string | null;
           bay_id?: string | null;
           cancelled_at?: string | null;
           channel?: Database["public"]["Enums"]["sales_channel"];
@@ -1919,6 +2407,27 @@ export type Database = {
           worked_minutes?: number;
         };
         Relationships: [
+          {
+            foreignKeyName: "service_orders_b2b_account_fk";
+            columns: ["organization_id", "b2b_account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_orders_b2b_agreement_fk";
+            columns: ["organization_id", "b2b_agreement_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_agreements";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_orders_b2b_invoice_fk";
+            columns: ["organization_id", "b2b_invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_invoices";
+            referencedColumns: ["organization_id", "id"];
+          },
           {
             foreignKeyName: "service_orders_detail_center_id_bay_id_fkey";
             columns: ["detail_center_id", "bay_id"];
@@ -2276,6 +2785,212 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      apply_b2b_account: {
+        Args: { p_account_id: string; p_order_id: string; p_purchase_order?: string | null; p_version: number };
+        Returns: Database["public"]["Tables"]["service_orders"]["Row"];
+        SetofOptions: { from: "*"; to: "service_orders"; isOneToOne: true; isSetofReturn: false };
+      };
+      b2b_account_orders: {
+        Args: { p_account_id: string; p_from: string; p_to: string };
+        Returns: {
+          agreement_name: string | null;
+          center_name: string;
+          cost_total: number;
+          created_at: string;
+          detail_center_id: string;
+          evidence_count: number;
+          finished_at: string | null;
+          folio: string;
+          id: string;
+          invoice_id: string | null;
+          invoice_reference: string | null;
+          purchase_order: string | null;
+          status: Database["public"]["Enums"]["service_order_status"];
+          total: number;
+          vehicle_label: string;
+        }[];
+      };
+      b2b_account_statement: {
+        Args: { p_account_id: string };
+        Returns: {
+          consumption: number;
+          credit_available: number | null;
+          credit_limit: number | null;
+          exposure: number;
+          fees_accrued: number;
+          fees_invoiced: number;
+          invoiced: number;
+          open_orders: number;
+          orders_to_invoice: number;
+          overdue: number;
+          paid: number;
+          receivable: number;
+          to_invoice: number;
+        }[];
+      };
+      b2b_accounts_for_center: {
+        Args: { p_detail_center_id: string };
+        Returns: {
+          account_id: string;
+          account_name: string;
+          agreement_id: string;
+          agreement_name: string;
+          billing_model: string;
+          client_id: string;
+          ends_on: string;
+          vehicle_rule: string;
+          vehicles: Json;
+        }[];
+      };
+      b2b_profitability_facts: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          account_id: string;
+          account_name: string;
+          cost: number;
+          detail_center_id: string;
+          fee_revenue: number;
+          orders: number;
+          revenue: number;
+        }[];
+      };
+      create_b2b_invoice: {
+        Args: {
+          p_account_id: string;
+          p_fee_amount: number;
+          p_issued_on: string;
+          p_notes: string | null;
+          p_order_ids: string[];
+          p_reference: string;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["b2b_invoices"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_invoices"; isOneToOne: true; isSetofReturn: false };
+      };
+      create_b2b_service_order: {
+        Args: {
+          p_account_id: string;
+          p_bay_id?: string | null;
+          p_detail_center_id: string;
+          p_items: Json;
+          p_observations?: string | null;
+          p_odometer_km?: number | null;
+          p_promised_at?: string | null;
+          p_purchase_order?: string | null;
+          p_request_id: string;
+          p_technician_id?: string | null;
+          p_vehicle_id: string;
+        };
+        Returns: Database["public"]["Tables"]["service_orders"]["Row"];
+        SetofOptions: { from: "*"; to: "service_orders"; isOneToOne: true; isSetofReturn: false };
+      };
+      record_b2b_payment: {
+        Args: {
+          p_account_id: string;
+          p_amount: number;
+          p_invoice_id?: string | null;
+          p_method: string;
+          p_paid_on: string;
+          p_reference: string | null;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["b2b_payments"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_payments"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_b2b_price_rule: {
+        Args: {
+          p_active: boolean;
+          p_agreement_id: string;
+          p_id: string | null;
+          p_kind: string;
+          p_min_monthly_orders: number;
+          p_notes: string | null;
+          p_reason: string;
+          p_service_id: string | null;
+          p_value: number | null;
+        };
+        Returns: Database["public"]["Tables"]["b2b_price_rules"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_price_rules"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_b2b_vehicle: {
+        Args: {
+          p_account_id: string;
+          p_active: boolean;
+          p_cost_center: string | null;
+          p_driver_name: string | null;
+          p_notes: string | null;
+          p_reason: string;
+          p_vehicle_id: string;
+        };
+        Returns: Database["public"]["Tables"]["b2b_vehicles"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_vehicles"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_b2b_account: {
+        Args: {
+          p_billing_email: string | null;
+          p_client_id: string;
+          p_fiscal_zip: string | null;
+          p_home_detail_center_id: string;
+          p_id: string | null;
+          p_legal_name: string | null;
+          p_name: string;
+          p_notes: string | null;
+          p_reason: string;
+          p_request_id: string;
+          p_rfc: string | null;
+          p_status: string;
+          p_tax_regime: string | null;
+        };
+        Returns: Database["public"]["Tables"]["b2b_accounts"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_accounts"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_b2b_agreement: {
+        Args: {
+          p_account_id: string;
+          p_billing_model: string;
+          p_credit_limit: number | null;
+          p_detail_center_ids: string[];
+          p_ends_on: string;
+          p_fee_amount: number | null;
+          p_id: string | null;
+          p_included_units: number | null;
+          p_name: string;
+          p_notes: string | null;
+          p_payment_terms_days: number;
+          p_reason: string;
+          p_request_id: string;
+          p_starts_on: string;
+          p_status: string;
+          p_vehicle_rule: string;
+        };
+        Returns: Database["public"]["Tables"]["b2b_agreements"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_agreements"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_b2b_contact: {
+        Args: {
+          p_account_id: string;
+          p_active: boolean;
+          p_email: string | null;
+          p_full_name: string;
+          p_id: string | null;
+          p_is_primary: boolean;
+          p_phone: string | null;
+          p_reason: string;
+          p_title: string | null;
+        };
+        Returns: Database["public"]["Tables"]["b2b_contacts"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_contacts"; isOneToOne: true; isSetofReturn: false };
+      };
+      void_b2b_invoice: {
+        Args: { p_invoice_id: string; p_reason: string };
+        Returns: Database["public"]["Tables"]["b2b_invoices"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_invoices"; isOneToOne: true; isSetofReturn: false };
+      };
+      void_b2b_payment: {
+        Args: { p_payment_id: string; p_reason: string };
+        Returns: Database["public"]["Tables"]["b2b_payments"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_payments"; isOneToOne: true; isSetofReturn: false };
+      };
       add_service_order_discount: {
         Args: {
           p_item_id: string | null;
@@ -2291,6 +3006,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -2641,6 +3358,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -2708,6 +3427,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -2999,6 +3720,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -3414,6 +4137,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -3480,6 +4205,8 @@ export type Database = {
           id: string;
           kind: string;
           line_discount: number;
+          list_unit_price: number | null;
+          b2b_price_rule_id: string | null;
           line_subtotal: number | null;
           organization_id: string;
           position: number;
@@ -3540,6 +4267,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -3772,6 +4501,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];
@@ -3984,6 +4715,8 @@ export type Database = {
           authorized_by: string | null;
           authorized_total: number | null;
           b2b_account_id: string | null;
+          b2b_agreement_id: string | null;
+          b2b_invoice_id: string | null;
           bay_id: string | null;
           cancelled_at: string | null;
           channel: Database["public"]["Enums"]["sales_channel"];

@@ -2,6 +2,7 @@ import { membershipKpis } from "@meguiars/analytics";
 import {
   activeCenterAccess,
   addDays,
+  b2bCopy,
   canInActiveCenter,
   crmCopy,
   membershipKpiCards,
@@ -31,7 +32,13 @@ export function ComercialScreen({
   onMemberships,
   onCrm,
   onTasks,
-}: PrivateScreenProps & { onMemberships: () => void; onCrm: () => void; onTasks: () => void }) {
+  onB2b,
+}: PrivateScreenProps & {
+  onMemberships: () => void;
+  onCrm: () => void;
+  onTasks: () => void;
+  onB2b: () => void;
+}) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const [all, setAll] = useState(false);
@@ -89,6 +96,9 @@ export function ComercialScreen({
       </Card>
       {canInActiveCenter(state, "memberships.read") ? (
         <Button label={membershipsCopy.title} variant="secondary" onPress={onMemberships} />
+      ) : null}
+      {canInActiveCenter(state, "b2b.read") ? (
+        <Button label={b2bCopy.title} variant="secondary" onPress={onB2b} />
       ) : null}
       {canInActiveCenter(state, "crm.read") ? (
         <>

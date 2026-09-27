@@ -1,11 +1,13 @@
 import {
   activeCenterAccess,
   agendaCopy,
+  b2bCopy,
   clientErrorMessage,
   newRequestId,
   orderErrorMessage,
   ordersCopy,
   presentSearchResult,
+  type B2bAccountForOrder,
   type Bay,
   type CatalogItem,
   type ClientDetail,
@@ -13,6 +15,7 @@ import {
 } from "@meguiars/domain";
 import {
   createAgendaRepository,
+  createB2bRepository,
   createCatalogRepository,
   createClientRepository,
   createServiceOrderRepository,
@@ -25,6 +28,7 @@ import {
 } from "@meguiars/validation";
 import { useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
+import { NewB2bOrderEditor } from "@/components/B2bForms";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
 import { ChannelFields, QuantityFields } from "@/components/OrderFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
@@ -61,6 +65,17 @@ export function OrderNewScreen({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (key: string, value: string) => setValues((v) => ({ ...v, [key]: value }));
+  // Modo "A cuenta B2B" (web: /ordenes/nueva?modo=b2b).
+  const [b2b, setB2b] = useState<{ accounts: B2bAccountForOrder[]; services: CatalogItem[] } | null>(null);
+  const openB2b = async () => {
+    if (!client) return;
+    const [accounts, catalog] = await Promise.all([
+      createB2bRepository(client).accountsForCenter(center.id),
+      createCatalogRepository(client).listForCenter(center.id),
+    ]);
+    if (!accounts.ok) return setError(accounts.error.message);
+    setB2b({ accounts: accounts.data, services: catalog.ok ? catalog.data : [] });
+  };
 
   const search = async () => {
     if (!client) return;
@@ -110,6 +125,22 @@ export function OrderNewScreen({
     onOpen(result.data.id);
   };
 
+  if (b2b) {
+    return (
+      <Screen title={`${ordersCopy.newTitle} · ${b2bCopy.b2bMode}`} header={header}>
+        <LinkButton label={`← ${ordersCopy.newTitle}`} onPress={() => setB2b(null)} />
+        <Card>
+          <NewB2bOrderEditor
+            centerId={center.id}
+            accounts={b2b.accounts}
+            services={b2b.services}
+            onCreated={onOpen}
+          />
+        </Card>
+      </Screen>
+    );
+  }
+
   if (!resources) {
     return (
       <Screen title={ordersCopy.newTitle} description={ordersCopy.newDescription} header={header}>
@@ -124,6 +155,7 @@ export function OrderNewScreen({
           />
           <Button label="Buscar" variant="secondary" onPress={() => void search()} />
           <Notice tone="neutral" text={agendaCopy.noClient} />
+          <Button label={b2bCopy.b2bMode} variant="secondary" onPress={() => void openB2b()} />
         </Card>
         <Notice tone="danger" text={error} />
         {results ? (

@@ -1,14 +1,21 @@
 import {
   activeCenterAccess,
   agendaCopy,
+  b2bCopy,
   clientErrorMessage,
   newRequestId,
   ordersCopy,
   presentSearchResult,
 } from "@meguiars/domain";
-import { createAgendaRepository, createCatalogRepository, createClientRepository } from "@meguiars/supabase";
+import {
+  createAgendaRepository,
+  createB2bRepository,
+  createCatalogRepository,
+  createClientRepository,
+} from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { NewB2bOrderForm } from "@/components/b2b-forms";
 import { NewOrderForm } from "@/components/order-forms";
 import { Card, EmptyState, Table } from "@/components/ui/display";
 import { Input } from "@/components/ui/field";
@@ -22,8 +29,36 @@ export default async function NewOrderPage({ searchParams }: PageProps<"/ordenes
   const params = await searchParams;
   const param = (k: string) => (typeof params[k] === "string" ? (params[k] as string) : "");
   const clientId = param("cliente");
+  const b2bMode = param("modo") === "b2b";
   const q = param("q");
   const supabase = (await createSupabaseServerClient())!;
+
+  if (b2bMode) {
+    const [accounts, catalog] = await Promise.all([
+      createB2bRepository(supabase).accountsForCenter(center.id),
+      createCatalogRepository(supabase).listForCenter(center.id),
+    ]);
+    return (
+      <AppShell state={state} screen="orderNew" title={`${ordersCopy.newTitle} · ${b2bCopy.b2bMode}`}>
+        <Link href="/ordenes/nueva" className="text-sm underline">
+          ← {ordersCopy.newTitle}
+        </Link>
+        <Card>
+          {accounts.ok ? (
+            <NewB2bOrderForm
+              requestId={newRequestId()}
+              accounts={accounts.data}
+              services={catalog.ok ? catalog.data : []}
+            />
+          ) : (
+            <p role="alert" className="text-sm">
+              {accounts.error.message}
+            </p>
+          )}
+        </Card>
+      </AppShell>
+    );
+  }
 
   if (!clientId) {
     const results = q ? await createClientRepository(supabase).search(center.id, q) : null;
@@ -43,9 +78,14 @@ export default async function NewOrderPage({ searchParams }: PageProps<"/ordenes
               Buscar
             </button>
           </form>
-          <Link href="/clientes/nuevo" className="text-sm underline">
-            {agendaCopy.noClient}
-          </Link>
+          <div className="flex flex-wrap gap-md">
+            <Link href="/clientes/nuevo" className="text-sm underline">
+              {agendaCopy.noClient}
+            </Link>
+            <Link href="/ordenes/nueva?modo=b2b" className="text-sm underline">
+              {b2bCopy.b2bMode}
+            </Link>
+          </div>
         </Card>
         {results && !results.ok ? (
           <p role="alert" className="mg-tone rounded-md border p-md text-sm" data-tone="danger">

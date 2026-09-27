@@ -1,4 +1,7 @@
 import {
+  b2bCopy,
+  BILLING_MODEL_LABELS,
+  formatMoney,
   activeCenterAccess,
   activeRoles,
   canInActiveCenter,
@@ -29,6 +32,7 @@ import {
 import {
   createAgendaRepository,
   createCatalogRepository,
+  createB2bRepository,
   createMembershipRepository,
   createServiceOrderRepository,
 } from "@meguiars/supabase";
@@ -41,6 +45,7 @@ import {
   OrderStatusPanel,
   PaymentForm,
 } from "@/components/order-forms";
+import { ApplyB2bForm } from "@/components/b2b-forms";
 import { OrderMembershipRedeem, VoidRedemptionForm } from "@/components/membership-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
@@ -80,6 +85,15 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
   const [membership, redemptions] = canMemberships
     ? await Promise.all([memberships.forVehicle(order.vehicleId), memberships.redemptionsForOrder(order.id)])
     : [null, null];
+  // B2B: cuenta y convenio de la OS; o cuentas aplicables si la OS abierta es de una empresa con convenio.
+  const b2b = createB2bRepository(supabase);
+  const b2bInfo = await b2b.orderInfo(order.id);
+  const applicable =
+    canWrite && order.status === "abierta" && b2bInfo.ok && !b2bInfo.data
+      ? await b2b
+          .accountsForCenter(center.id)
+          .then((r) => (r.ok ? r.data.filter((a) => a.clientId === order.clientId) : []))
+      : [];
   const lineName = (itemId: string) => order.items.find((i) => i.id === itemId)?.serviceName ?? "—";
   const promised = order.promisedAt ? utcToZoned(order.promisedAt, center.timezone) : null;
 
@@ -127,6 +141,46 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           needsReason={view.itemsNeedReason}
         />
       </Card>
+
+      {(b2bInfo.ok && b2bInfo.data) || applicable.length > 0 ? (
+        <Card title={b2bCopy.orderCardTitle}>
+          {b2bInfo.ok && b2bInfo.data ? (
+            <div className="flex flex-col gap-xs text-sm" data-testid="order-b2b">
+              <span>
+                {b2bCopy.orderAccount}:{" "}
+                {canInActiveCenter(state, "b2b.read") ? (
+                  <Link href={`/comercial/b2b/${b2bInfo.data.accountId}`} className="underline">
+                    {b2bInfo.data.accountName}
+                  </Link>
+                ) : (
+                  <strong>{b2bInfo.data.accountName}</strong>
+                )}
+              </span>
+              <span>
+                {b2bCopy.orderAgreement}: {b2bInfo.data.agreementName ?? "—"}
+                {b2bInfo.data.billingModel ? ` · ${BILLING_MODEL_LABELS[b2bInfo.data.billingModel]}` : ""}
+              </span>
+              {order.items
+                .filter((i) => i.priceSource === "convenio")
+                .map((i) => (
+                  <span key={i.id} className="text-muted">
+                    {i.serviceName}: {formatMoney(i.unitPrice)} {b2bCopy.convenio.toLowerCase()}
+                    {i.listUnitPrice != null
+                      ? ` (${b2bCopy.listPrice.toLowerCase()} ${formatMoney(i.listUnitPrice)})`
+                      : ""}
+                  </span>
+                ))}
+            </div>
+          ) : (
+            <ApplyB2bForm
+              orderId={order.id}
+              version={order.version}
+              accounts={applicable}
+              purchaseOrder={order.channelReference}
+            />
+          )}
+        </Card>
+      ) : null}
 
       {canMemberships ? (
         <Card title={membershipsCopy.orderCardTitle}>
