@@ -11,6 +11,7 @@ export * from "./repositories/memberships";
 export * from "./repositories/crm";
 export * from "./repositories/b2b";
 export * from "./repositories/upsell";
+export * from "./repositories/pipeline";
 export * from "./auth";
 export * from "./storage";
 export type { Database, Json, Tables } from "./database.types";

@@ -54,6 +54,8 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "b2bAccounts", label: "Cuentas B2B", href: "/comercial/b2b" },
       { screen: "b2bProfitability", label: "Rentabilidad B2B", href: "/comercial/b2b/rentabilidad" },
       { screen: "upsell", label: "Recomendaciones", href: "/comercial/recomendaciones" },
+      { screen: "pipeline", label: "Pipeline", href: "/comercial/pipeline" },
+      { screen: "pipelineMetrics", label: "Indicadores del pipeline", href: "/comercial/pipeline/indicadores" },
     ],
   },
   {

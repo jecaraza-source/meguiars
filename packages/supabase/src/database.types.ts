@@ -923,7 +923,7 @@ export type Database = {
           assigned_to: string | null;
           cancel_reason: string | null;
           channel: string;
-          client_id: string;
+          client_id: string | null;
           completed_at: string | null;
           completed_by: string | null;
           created_at: string;
@@ -935,6 +935,7 @@ export type Database = {
           kind: string;
           membership_id: string | null;
           notes: string | null;
+          opportunity_id: string | null;
           organization_id: string;
           outcome: string | null;
           outcome_notes: string | null;
@@ -950,7 +951,7 @@ export type Database = {
           assigned_to?: string | null;
           cancel_reason?: string | null;
           channel: string;
-          client_id: string;
+          client_id?: string | null;
           completed_at?: string | null;
           completed_by?: string | null;
           created_at?: string;
@@ -962,6 +963,7 @@ export type Database = {
           kind: string;
           membership_id?: string | null;
           notes?: string | null;
+          opportunity_id?: string | null;
           organization_id: string;
           outcome?: string | null;
           outcome_notes?: string | null;
@@ -977,7 +979,7 @@ export type Database = {
           assigned_to?: string | null;
           cancel_reason?: string | null;
           channel?: string;
-          client_id?: string;
+          client_id?: string | null;
           completed_at?: string | null;
           completed_by?: string | null;
           created_at?: string;
@@ -989,6 +991,7 @@ export type Database = {
           kind?: string;
           membership_id?: string | null;
           notes?: string | null;
+          opportunity_id?: string | null;
           organization_id?: string;
           outcome?: string | null;
           outcome_notes?: string | null;
@@ -1001,6 +1004,13 @@ export type Database = {
           vehicle_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "crm_tasks_opportunity_fk";
+            columns: ["organization_id", "opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_opportunities";
+            referencedColumns: ["organization_id", "id"];
+          },
           {
             foreignKeyName: "crm_tasks_organization_id_client_id_fkey";
             columns: ["organization_id", "client_id"];
@@ -1045,7 +1055,6 @@ export type Database = {
           },
         ];
       };
-
       detail_centers: {
         Row: {
           active: boolean;
@@ -1550,6 +1559,79 @@ export type Database = {
           },
         ];
       };
+      opportunity_events: {
+        Row: {
+          actor_id: string | null;
+          detail_center_id: string;
+          from_stage_id: string | null;
+          id: string;
+          kind: string;
+          note: string | null;
+          occurred_at: string;
+          opportunity_id: string;
+          opportunity_kind: string;
+          organization_id: string;
+          owner_id: string | null;
+          seq: number;
+          to_stage_id: string | null;
+          value: number | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          detail_center_id: string;
+          from_stage_id?: string | null;
+          id?: string;
+          kind: string;
+          note?: string | null;
+          occurred_at?: string;
+          opportunity_id: string;
+          opportunity_kind: string;
+          organization_id: string;
+          owner_id?: string | null;
+          seq?: never;
+          to_stage_id?: string | null;
+          value?: number | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          detail_center_id?: string;
+          from_stage_id?: string | null;
+          id?: string;
+          kind?: string;
+          note?: string | null;
+          occurred_at?: string;
+          opportunity_id?: string;
+          opportunity_kind?: string;
+          organization_id?: string;
+          owner_id?: string | null;
+          seq?: never;
+          to_stage_id?: string | null;
+          value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_events_organization_id_from_stage_id_fkey";
+            columns: ["organization_id", "from_stage_id"];
+            isOneToOne: false;
+            referencedRelation: "pipeline_stages";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "opportunity_events_organization_id_opportunity_id_fkey";
+            columns: ["organization_id", "opportunity_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_opportunities";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "opportunity_events_organization_id_to_stage_id_fkey";
+            columns: ["organization_id", "to_stage_id"];
+            isOneToOne: false;
+            referencedRelation: "pipeline_stages";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       organizations: {
         Row: {
           active: boolean;
@@ -1576,6 +1658,53 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      pipeline_stages: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          name: string;
+          organization_id: string;
+          position: number;
+          probability: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          name: string;
+          organization_id: string;
+          position: number;
+          probability: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          name?: string;
+          organization_id?: string;
+          position?: number;
+          probability?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_stages_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       profiles: {
         Row: {
@@ -1647,6 +1776,181 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      sales_opportunities: {
+        Row: {
+          b2b_account_id: string | null;
+          client_id: string | null;
+          closed_at: string | null;
+          company_name: string | null;
+          contact_email: string | null;
+          contact_name: string | null;
+          contact_phone: string | null;
+          contact_title: string | null;
+          converted_account_id: string | null;
+          converted_agreement_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string;
+          estimated_value: number;
+          expected_close_on: string | null;
+          id: string;
+          kind: string;
+          legal_name: string | null;
+          loss_notes: string | null;
+          loss_reason: string | null;
+          next_action: string | null;
+          next_action_on: string | null;
+          notes: string | null;
+          organization_id: string;
+          owner_id: string | null;
+          proposed_billing_model: string | null;
+          proposed_credit_limit: number | null;
+          proposed_fee_amount: number | null;
+          proposed_included_units: number | null;
+          proposed_months: number | null;
+          proposed_payment_terms_days: number | null;
+          proposed_vehicle_rule: string | null;
+          request_id: string;
+          rfc: string | null;
+          source: string | null;
+          stage_id: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          version: number;
+          won_value: number | null;
+        };
+        Insert: {
+          b2b_account_id?: string | null;
+          client_id?: string | null;
+          closed_at?: string | null;
+          company_name?: string | null;
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          contact_title?: string | null;
+          converted_account_id?: string | null;
+          converted_agreement_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id: string;
+          estimated_value: number;
+          expected_close_on?: string | null;
+          id?: string;
+          kind: string;
+          legal_name?: string | null;
+          loss_notes?: string | null;
+          loss_reason?: string | null;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          owner_id?: string | null;
+          proposed_billing_model?: string | null;
+          proposed_credit_limit?: number | null;
+          proposed_fee_amount?: number | null;
+          proposed_included_units?: number | null;
+          proposed_months?: number | null;
+          proposed_payment_terms_days?: number | null;
+          proposed_vehicle_rule?: string | null;
+          request_id: string;
+          rfc?: string | null;
+          source?: string | null;
+          stage_id: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          version?: number;
+          won_value?: number | null;
+        };
+        Update: {
+          b2b_account_id?: string | null;
+          client_id?: string | null;
+          closed_at?: string | null;
+          company_name?: string | null;
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          contact_title?: string | null;
+          converted_account_id?: string | null;
+          converted_agreement_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string;
+          estimated_value?: number;
+          expected_close_on?: string | null;
+          id?: string;
+          kind?: string;
+          legal_name?: string | null;
+          loss_notes?: string | null;
+          loss_reason?: string | null;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          owner_id?: string | null;
+          proposed_billing_model?: string | null;
+          proposed_credit_limit?: number | null;
+          proposed_fee_amount?: number | null;
+          proposed_included_units?: number | null;
+          proposed_months?: number | null;
+          proposed_payment_terms_days?: number | null;
+          proposed_vehicle_rule?: string | null;
+          request_id?: string;
+          rfc?: string | null;
+          source?: string | null;
+          stage_id?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+          won_value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sales_opportunities_organization_id_b2b_account_id_fkey";
+            columns: ["organization_id", "b2b_account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "sales_opportunities_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "sales_opportunities_organization_id_converted_account_id_fkey";
+            columns: ["organization_id", "converted_account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "sales_opportunities_organization_id_converted_agreement_id_fkey";
+            columns: ["organization_id", "converted_agreement_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_agreements";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "sales_opportunities_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "sales_opportunities_organization_id_stage_id_fkey";
+            columns: ["organization_id", "stage_id"];
+            isOneToOne: false;
+            referencedRelation: "pipeline_stages";
+            referencedColumns: ["organization_id", "id"];
           },
         ];
       };
@@ -1846,7 +2150,6 @@ export type Database = {
           },
         ];
       };
-
       service_order_events: {
         Row: {
           actor_id: string | null;
@@ -2972,6 +3275,197 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_opportunity: {
+        Args: {
+          p_b2b_account_id?: string | null;
+          p_client_id?: string | null;
+          p_detail_center_id: string;
+          p_estimated_value: number;
+          p_expected_close_on?: string | null;
+          p_kind: string;
+          p_next_action?: string | null;
+          p_next_action_on?: string | null;
+          p_notes?: string | null;
+          p_owner_id?: string | null;
+          p_proposal?: Json;
+          p_prospect?: Json;
+          p_request_id: string;
+          p_source?: string | null;
+          p_stage_id?: string | null;
+          p_title: string;
+        };
+        Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
+        SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
+      };
+      update_opportunity: {
+        Args: {
+          p_estimated_value: number;
+          p_expected_close_on: string | null;
+          p_id: string;
+          p_next_action: string | null;
+          p_next_action_on: string | null;
+          p_notes: string | null;
+          p_owner_id: string | null;
+          p_proposal: Json;
+          p_prospect: Json;
+          p_reason: string;
+          p_source: string | null;
+          p_title: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
+        SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
+      };
+      move_opportunity_stage: {
+        Args: { p_id: string; p_note?: string | null; p_stage_id: string; p_version: number };
+        Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
+        SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
+      };
+      add_opportunity_note: {
+        Args: { p_id: string; p_note: string };
+        Returns: undefined;
+      };
+      win_opportunity: {
+        Args: {
+          p_agreement_starts_on?: string | null;
+          p_create_agreement?: boolean;
+          p_id: string;
+          p_note?: string | null;
+          p_version: number;
+          p_won_value?: number | null;
+        };
+        Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
+        SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
+      };
+      lose_opportunity: {
+        Args: { p_id: string; p_loss_reason: string; p_notes?: string | null; p_version: number };
+        Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
+        SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
+      };
+      reopen_opportunity: {
+        Args: { p_id: string; p_reason: string; p_stage_id: string | null; p_version: number };
+        Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
+        SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
+      };
+      create_opportunity_task: {
+        Args: {
+          p_assigned_to?: string | null;
+          p_channel: string | null;
+          p_due_on: string;
+          p_kind: string;
+          p_notes?: string | null;
+          p_opportunity_id: string;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["crm_tasks"]["Row"];
+        SetofOptions: { from: "*"; to: "crm_tasks"; isOneToOne: true; isSetofReturn: false };
+      };
+      list_opportunities: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_id?: string | null;
+          p_kind?: string | null;
+          p_owner_id?: string | null;
+          p_status?: string | null;
+        };
+        Returns: {
+          b2b_account_id: string | null;
+          center_name: string;
+          client_id: string | null;
+          closed_at: string | null;
+          company_name: string | null;
+          contact_email: string | null;
+          contact_name: string | null;
+          contact_phone: string | null;
+          contact_title: string | null;
+          converted_account_id: string | null;
+          converted_agreement_id: string | null;
+          created_at: string;
+          detail_center_id: string;
+          display_name: string;
+          estimated_value: number;
+          expected_close_on: string | null;
+          id: string;
+          kind: string;
+          legal_name: string | null;
+          loss_notes: string | null;
+          loss_reason: string | null;
+          next_action: string | null;
+          next_action_on: string | null;
+          notes: string | null;
+          open_tasks: number;
+          organization_id: string;
+          owner_id: string | null;
+          owner_name: string | null;
+          proposed_billing_model: string | null;
+          proposed_credit_limit: number | null;
+          proposed_fee_amount: number | null;
+          proposed_included_units: number | null;
+          proposed_months: number | null;
+          proposed_payment_terms_days: number | null;
+          proposed_vehicle_rule: string | null;
+          rfc: string | null;
+          source: string | null;
+          stage_id: string;
+          stage_name: string;
+          stage_position: number;
+          stage_probability: number;
+          status: string;
+          title: string;
+          today: string;
+          version: number;
+          won_value: number | null;
+        }[];
+      };
+      opportunity_timeline: {
+        Args: { p_id: string };
+        Returns: {
+          actor_name: string | null;
+          from_stage_name: string | null;
+          id: string;
+          kind: string;
+          note: string | null;
+          occurred_at: string;
+          owner_name: string | null;
+          seq: number;
+          to_stage_name: string | null;
+          value: number | null;
+        }[];
+      };
+      pipeline_owners: {
+        Args: { p_detail_center_id: string; p_kind?: string };
+        Returns: { full_name: string; user_id: string }[];
+      };
+      pipeline_metric_facts: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          closed_on: string | null;
+          created_on: string;
+          created_value: number;
+          current_stage_id: string | null;
+          current_value: number | null;
+          cycle_days: number | null;
+          detail_center_id: string;
+          kind: string;
+          opportunity_id: string;
+          outcome: string | null;
+          stages_reached: string[] | null;
+          won_value: number | null;
+        }[];
+      };
+      upsert_pipeline_stage: {
+        Args: {
+          p_active: boolean;
+          p_id: string | null;
+          p_name: string;
+          p_organization_id: string;
+          p_position: number;
+          p_probability: number;
+          p_reason: string;
+        };
+        Returns: Database["public"]["Tables"]["pipeline_stages"]["Row"];
+        SetofOptions: { from: "*"; to: "pipeline_stages"; isOneToOne: true; isSetofReturn: false };
+      };
       accept_upsell: {
         Args: { p_order_id: string; p_rule_id: string; p_version: number };
         Returns: Database["public"]["Tables"]["service_orders"]["Row"];

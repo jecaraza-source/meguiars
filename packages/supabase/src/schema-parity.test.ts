@@ -1,6 +1,14 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  DEFAULT_PIPELINE_STAGES,
+  LOSS_REASONS,
+  OPEN_STAGE_POSITIONS,
+  OPPORTUNITY_EVENT_KINDS,
+  OPPORTUNITY_KINDS,
+  OPPORTUNITY_SOURCES,
+  OPPORTUNITY_STATUSES,
+  OPPORTUNITY_TASK_KINDS,
   OFFER_STATUSES,
   REJECTION_REASONS,
   RULE_STAGES,
@@ -119,6 +127,9 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "technicians",
   "upsell_offers",
   "upsell_rules",
+  "pipeline_stages",
+  "sales_opportunities",
+  "opportunity_events",
   "user_detail_centers",
   "vehicles",
 ];
@@ -131,6 +142,19 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "upsell_metric_facts",
   "upsell_suggestions",
   "upsert_upsell_rule",
+  "create_opportunity",
+  "update_opportunity",
+  "move_opportunity_stage",
+  "add_opportunity_note",
+  "win_opportunity",
+  "lose_opportunity",
+  "reopen_opportunity",
+  "create_opportunity_task",
+  "list_opportunities",
+  "opportunity_timeline",
+  "pipeline_owners",
+  "pipeline_metric_facts",
+  "upsert_pipeline_stage",
   "add_vehicle",
   "apply_b2b_account",
   "b2b_account_orders",
@@ -430,6 +454,49 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect(stage).toContain("in ('en_proceso', 'pausada', 'terminada') then 'cierre'");
     const score = /function private\.upsell_score[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(up)?.[1] ?? "";
     expect(score).toContain("(coalesce(p_accepted, 0) + 1)::numeric / (coalesce(p_offered, 0) + 2), 4");
+  });
+
+  it("Pipeline: tipos, estados, orígenes, motivos, eventos, etapas mínimas y tareas coinciden", () => {
+    const pl = allSql.slice(allSql.indexOf("-- C5 — Comercial / Pipeline"));
+    const listIn = (re: RegExp) =>
+      re
+        .exec(pl)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listIn(/kind text not null check \(kind in \(('b2b', 'b2c_premium')\)\)/)).toEqual([
+      ...OPPORTUNITY_KINDS,
+    ]);
+    expect(listIn(/status text not null default 'abierta' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...OPPORTUNITY_STATUSES,
+    ]);
+    expect(listIn(/kind text not null check \(kind in \(('abierta'[^)]*)\)\)/)).toEqual([
+      ...OPPORTUNITY_STATUSES,
+    ]);
+    expect(listIn(/source text check \(source in \(([^)]+)\)\)/)).toEqual([...OPPORTUNITY_SOURCES]);
+    expect(listIn(/loss_reason text check \(loss_reason in \(([^)]+)\)\)/)).toEqual([...LOSS_REASONS]);
+    expect(listIn(/kind text not null check \(kind in \(\s*('creada'[^)]*)\)\)/)).toEqual([
+      ...OPPORTUNITY_EVENT_KINDS,
+    ]);
+    const taskKinds = listIn(/p_kind not in \(('llamar'[^)]*)\)/);
+    expect(taskKinds).toEqual([...OPPORTUNITY_TASK_KINDS]);
+    expect(listIn(/add constraint crm_tasks_kind_check\s+check \(kind in \(([^)]+)\)\)/)).toEqual([
+      ...TASK_KINDS,
+      "reunion",
+    ]);
+    const seed = /function private\.seed_pipeline_stages[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(pl)?.[1] ?? "";
+    const stages = [
+      ...seed.matchAll(/\(p_organization_id, '(\w+)', '([^']+)', '(\w+)', (\d+), (\d+)\)/g),
+    ].map((m) => ({
+      code: m[1],
+      name: m[2],
+      kind: m[3],
+      position: Number(m[4]),
+      probability: Number(m[5]),
+    }));
+    expect(stages).toEqual(DEFAULT_PIPELINE_STAGES.map((s) => ({ ...s })));
+    expect(pl).toContain(
+      `p_position not between ${OPEN_STAGE_POSITIONS.min} and ${OPEN_STAGE_POSITIONS.max}`,
+    );
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

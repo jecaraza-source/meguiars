@@ -61,7 +61,8 @@ type TaskRow = Tables<"crm_tasks"> & {
 const toTask = (r: TaskRow): CrmTask => ({
   id: r.id,
   detailCenterId: r.detail_center_id,
-  clientId: r.client_id,
+  // La cola del CRM excluye las tareas del pipeline (las únicas sin cliente).
+  clientId: r.client_id ?? "",
   clientName: r.clients?.full_name ?? "—",
   clientPhone: r.clients?.phone ?? null,
   clientEmail: r.clients?.email ?? null,
@@ -122,7 +123,8 @@ export function createCrmRepository(client: MeguiarsSupabaseClient): CrmReposito
           let q = client
             .from("crm_tasks")
             .select("*, clients(full_name, phone, email)")
-            .in("detail_center_id", detailCenterIds);
+            .in("detail_center_id", detailCenterIds)
+            .is("opportunity_id", null);
           if (filter.status) q = q.eq("status", filter.status);
           if (filter.clientId) q = q.eq("client_id", filter.clientId);
           if (filter.due) {
