@@ -131,6 +131,16 @@ describe("navegación por rol", () => {
     ]);
   });
 
+  it("Egresos y estado de resultados: admin, encargado y contador; recepción y comercial no", () => {
+    expect(itemsOf(["contador"])).toEqual(expect.arrayContaining(["expenses", "pnl"]));
+    expect(itemsOf(["encargado"])).toEqual(expect.arrayContaining(["expenses", "pnl"]));
+    expect(itemsOf(["operador_recepcion"])).not.toContain("expenses");
+    expect(itemsOf(["comercial_b2b"])).not.toContain("pnl");
+    expect(navScreenOf("expenseDetail")).toBe("expenses");
+    expect(sectionOfPath("/finanzas/egresos/nuevo")).toBe("finanzas");
+    expect(sectionOfPath("/finanzas/resultados")).toBe("finanzas");
+  });
+
   it("Cobranza: recepción, encargado, admin y contador; comercial no", () => {
     expect(itemsOf(["operador_recepcion"])).toContain("payments");
     expect(itemsOf(["operador_recepcion"])).not.toContain("finanzas");

@@ -48,6 +48,11 @@ import { MembershipsScreen } from "@/screens/MembershipsScreen";
 import { OrderDetailScreen } from "@/screens/OrderDetailScreen";
 import { CashScreen } from "@/screens/CashScreen";
 import { ReceiptScreen } from "@/screens/ReceiptScreen";
+import { ExpensesScreen } from "@/screens/ExpensesScreen";
+import { ExpenseNewScreen } from "@/screens/ExpenseNewScreen";
+import { ExpenseScreen } from "@/screens/ExpenseScreen";
+import { ExpenseSettingsScreen } from "@/screens/ExpenseSettingsScreen";
+import { PnlScreen } from "@/screens/PnlScreen";
 import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
 import { OrderNewScreen } from "@/screens/OrderNewScreen";
 import { OrdersScreen } from "@/screens/OrdersScreen";
@@ -142,6 +147,12 @@ export function Router() {
     setReceiptId(id);
     setReceiptBack(from);
     setScreen("paymentReceipt");
+  };
+  // Parámetro del egreso (equivale a /finanzas/egresos/[id] en web).
+  const [expenseId, setExpenseId] = useState<string | null>(null);
+  const openExpense = (id: string) => {
+    setExpenseId(id);
+    setScreen("expenseDetail");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -468,6 +479,44 @@ export function Router() {
         break;
       case "payments":
         content = <CashScreen {...props} onOpenReceipt={(id) => openReceipt(id, "payments")} />;
+        break;
+      case "expenses":
+        content = (
+          <ExpensesScreen
+            {...props}
+            onOpen={openExpense}
+            onNew={() => setScreen("expenseNew")}
+            onSettings={() => setScreen("expenseSettings")}
+          />
+        );
+        break;
+      case "expenseNew":
+        content = (
+          <ExpenseNewScreen {...props} onCreated={openExpense} onCancel={() => setScreen("expenses")} />
+        );
+        break;
+      case "expenseDetail":
+        content = expenseId ? (
+          <ExpenseScreen
+            key={expenseId}
+            {...props}
+            expenseId={expenseId}
+            onBack={() => setScreen("expenses")}
+          />
+        ) : (
+          <ExpensesScreen
+            {...props}
+            onOpen={openExpense}
+            onNew={() => setScreen("expenseNew")}
+            onSettings={() => setScreen("expenseSettings")}
+          />
+        );
+        break;
+      case "expenseSettings":
+        content = <ExpenseSettingsScreen {...props} onBack={() => setScreen("expenses")} />;
+        break;
+      case "pnl":
+        content = <PnlScreen {...props} />;
         break;
       case "paymentReceipt":
         content = receiptId ? (

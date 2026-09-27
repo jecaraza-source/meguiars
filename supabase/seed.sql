@@ -435,3 +435,31 @@ select private.create_order_payment(o, '0e300000-0000-4000-8000-0000000000a1',
   from public.service_orders o
  where o.id = '0d000000-0000-4000-8000-000000000001'
    and not exists (select 1 from public.payments p where p.request_id = '0e300000-0000-4000-8000-0000000000a1');
+
+-- Egresos de ejemplo (AF2): umbral de $5,000 en CDMX, un proveedor, una renta
+-- aprobada, una compra de insumos (fuera del P&L) y una nómina pendiente.
+insert into public.vendors (id, organization_id, name, rfc)
+values ('0e400000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'Químicos del Valle', 'QVA010101AB1')
+on conflict do nothing;
+insert into public.expense_settings (detail_center_id, organization_id, approval_threshold)
+values ('11111111-1111-4111-8111-111111111111', '00000000-0000-4000-8000-00000000d3e0', 5000)
+on conflict do nothing;
+insert into public.expenses (id, organization_id, detail_center_id, number, folio, category_id, pnl_group, vendor_id,
+                             concept, amount, payment_method, paid_on, status, requires_approval, approved_at, request_id)
+select x.id, c.organization_id, '11111111-1111-4111-8111-111111111111', x.n, 'CDMX-01-E-' || lpad(x.n::text, 6, '0'),
+       c.id, c.pnl_group, x.vendor, x.concept, x.amount, x.method, current_date - x.age, x.status, x.amount >= 5000,
+       case when x.status = 'aprobado' then now() end, x.id
+  from (values
+    ('0e500000-0000-4000-8000-000000000001'::uuid, 1, 'renta', null::uuid, 'Renta del local', 18000, 'transferencia', 3, 'aprobado'),
+    ('0e500000-0000-4000-8000-000000000002'::uuid, 2, 'insumos', '0e400000-0000-4000-8000-000000000001'::uuid,
+     'Shampoo y cera (galones)', 3200, 'efectivo', 2, 'aprobado'),
+    ('0e500000-0000-4000-8000-000000000003'::uuid, 3, 'nomina', null::uuid, 'Nómina quincenal', 22000, 'transferencia', 1, 'pendiente')
+  ) as x(id, n, category, vendor, concept, amount, method, age, status)
+  join public.expense_categories c on c.organization_id = '00000000-0000-4000-8000-00000000d3e0' and c.code = x.category
+on conflict (id) do nothing;
+insert into private.expense_counters (detail_center_id, last_number) values ('11111111-1111-4111-8111-111111111111', 3)
+on conflict (detail_center_id) do update set last_number = greatest(private.expense_counters.last_number, 3);
+insert into public.approval_events (organization_id, detail_center_id, expense_id, kind, amount)
+select organization_id, detail_center_id, id, 'solicitada', amount from public.expenses e
+ where e.id = '0e500000-0000-4000-8000-000000000003'
+   and not exists (select 1 from public.approval_events x where x.expense_id = e.id);

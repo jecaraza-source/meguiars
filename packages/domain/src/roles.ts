@@ -67,6 +67,12 @@ export const CAPABILITIES = [
   "payments.read",
   "payments.write",
   "payments.reverse",
+  // Egresos y P&L (AF2): approve = aprobar, rechazar, anular aprobados y fijar el umbral;
+  // manage = catálogo de categorías (admin corporativo).
+  "expenses.read",
+  "expenses.write",
+  "expenses.approve",
+  "expenses.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -86,7 +92,9 @@ export type Capability = (typeof CAPABILITIES)[number];
  * private.can_manage_upsell, admin corporativo); `pipeline.*`, en 20261006000000
  * (private.can_read_pipeline / can_write_pipeline / can_read_pipeline_metrics /
  * can_manage_pipeline, admin corporativo); `payments.*`, en 20261007000000
- * (private.can_read_payments / can_use_orders / can_manage_orders).
+ * (private.can_read_payments / can_use_orders / can_manage_orders); `expenses.*`, en
+ * 20261008000000 (private.can_read_expenses / can_write_expenses /
+ * can_approve_expenses / can_manage_expense_catalog, admin corporativo).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -130,6 +138,10 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.read",
     "payments.write",
     "payments.reverse",
+    "expenses.read",
+    "expenses.write",
+    "expenses.approve",
+    "expenses.manage",
   ],
   encargado: [
     "center.read",
@@ -159,6 +171,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.read",
     "payments.write",
     "payments.reverse",
+    "expenses.read",
+    "expenses.write",
   ],
   operador_recepcion: [
     "center.read",
@@ -189,6 +203,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "upsell.read",
     "pipeline.metrics.read",
     "payments.read",
+    "expenses.read",
   ],
   comercial_b2b: [
     "center.read",

@@ -9,6 +9,7 @@
     "@meguiars/ui-tokens": "*",
     "@meguiars/validation": "*",
     "expo": "~57.0.24",
+    "expo-document-picker": "~57.0.2",
     "expo-image-manipulator": "~57.0.20",
     "expo-image-picker": "~57.0.20",
     "expo-secure-store": "~57.0.4",

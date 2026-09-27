@@ -69,6 +69,8 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     items: [
       { screen: "finanzas", label: "Resumen financiero", href: "/finanzas" },
       { screen: "payments", label: "Cobranza", href: "/finanzas/cobranza" },
+      { screen: "expenses", label: "Egresos", href: "/finanzas/egresos" },
+      { screen: "pnl", label: "Estado de resultados", href: "/finanzas/resultados" },
       { screen: "team", label: "Equipo del centro", href: "/equipo" },
     ],
   },
@@ -109,6 +111,9 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   b2bAccountNew: "b2bAccounts",
   b2bAgreementDetail: "b2bAccounts",
   paymentReceipt: "payments",
+  expenseDetail: "expenses",
+  expenseNew: "expenses",
+  expenseSettings: "expenses",
 };
 
 /** Ítem de menú que representa a la pantalla. */

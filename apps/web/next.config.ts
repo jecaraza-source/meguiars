@@ -10,9 +10,10 @@ checkSupabaseTarget(
 
 const nextConfig: NextConfig = {
   experimental: {
-    // Fotos de evidencia: el navegador las redimensiona (≤ 1600 px, JPEG) antes de
-    // enviarlas; el bucket acepta hasta 5 MB. Margen para el multipart.
-    serverActions: { bodySizeLimit: "6mb" },
+    // Fotos de evidencia: el navegador las redimensiona (≤ 1600 px, JPEG); el bucket
+    // acepta hasta 5 MB. Comprobantes de egresos (foto o PDF): hasta 10 MB. Margen
+    // para el multipart.
+    serverActions: { bodySizeLimit: "11mb" },
   },
   // Los paquetes @meguiars/* se publican como TypeScript fuente dentro del monorepo.
   transpilePackages: [
