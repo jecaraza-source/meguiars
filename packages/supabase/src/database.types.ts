@@ -4,7 +4,7 @@
 // 20260927000000_clients_vehicles, 20260928000000_service_catalog,
 // 20260929000000_agenda, 20260930000000_service_orders,
 // 20261001000000_execution_evidence, 20261002000000_memberships, 20261003000000_crm,
-// 20261003100000_crm_daily_tasks y 20261004000000_b2b. Regenerar tras
+// 20261003100000_crm_daily_tasks, 20261004000000_b2b y 20261005000000_upselling. Regenerar tras
 // cada migración con `npm run db:types` (requiere `npm run db:start`).
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -2676,6 +2676,193 @@ export type Database = {
           },
         ];
       };
+      upsell_offers: {
+        Row: {
+          accepted_item_id: string | null;
+          accepted_value: number | null;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          detail_center_id: string;
+          id: string;
+          offered_at: string;
+          offered_by: string | null;
+          organization_id: string;
+          rejection_reason: string | null;
+          rule_id: string;
+          service_order_id: string;
+          stage: string;
+          status: string;
+          suggested_price: number;
+          target_plan_id: string | null;
+          target_service_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          accepted_item_id?: string | null;
+          accepted_value?: number | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          detail_center_id: string;
+          id?: string;
+          offered_at?: string;
+          offered_by?: string | null;
+          organization_id: string;
+          rejection_reason?: string | null;
+          rule_id: string;
+          service_order_id: string;
+          stage: string;
+          status?: string;
+          suggested_price: number;
+          target_plan_id?: string | null;
+          target_service_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          accepted_item_id?: string | null;
+          accepted_value?: number | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          detail_center_id?: string;
+          id?: string;
+          offered_at?: string;
+          offered_by?: string | null;
+          organization_id?: string;
+          rejection_reason?: string | null;
+          rule_id?: string;
+          service_order_id?: string;
+          stage?: string;
+          status?: string;
+          suggested_price?: number;
+          target_plan_id?: string | null;
+          target_service_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "upsell_offers_accepted_item_id_fkey";
+            columns: ["accepted_item_id"];
+            isOneToOne: false;
+            referencedRelation: "service_order_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "upsell_offers_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "upsell_offers_organization_id_rule_id_fkey";
+            columns: ["organization_id", "rule_id"];
+            isOneToOne: false;
+            referencedRelation: "upsell_rules";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "upsell_offers_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      upsell_rules: {
+        Row: {
+          active: boolean;
+          center_ids: string[] | null;
+          channels: string[];
+          created_at: string;
+          created_by: string | null;
+          ends_on: string | null;
+          id: string;
+          min_order_total: number | null;
+          name: string;
+          organization_id: string;
+          pitch: string;
+          priority: number;
+          source_service_id: string | null;
+          stage: string;
+          starts_on: string;
+          target_plan_id: string | null;
+          target_service_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          center_ids?: string[] | null;
+          channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          ends_on?: string | null;
+          id?: string;
+          min_order_total?: number | null;
+          name: string;
+          organization_id: string;
+          pitch: string;
+          priority?: number;
+          source_service_id?: string | null;
+          stage?: string;
+          starts_on?: string;
+          target_plan_id?: string | null;
+          target_service_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          center_ids?: string[] | null;
+          channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          ends_on?: string | null;
+          id?: string;
+          min_order_total?: number | null;
+          name?: string;
+          organization_id?: string;
+          pitch?: string;
+          priority?: number;
+          source_service_id?: string | null;
+          stage?: string;
+          starts_on?: string;
+          target_plan_id?: string | null;
+          target_service_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "upsell_rules_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "upsell_rules_organization_id_source_service_id_fkey";
+            columns: ["organization_id", "source_service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "upsell_rules_organization_id_target_service_id_fkey";
+            columns: ["organization_id", "target_service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "upsell_rules_target_plan_id_fkey";
+            columns: ["target_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "membership_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_detail_centers: {
         Row: {
           active: boolean;
@@ -2785,6 +2972,71 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_upsell: {
+        Args: { p_order_id: string; p_rule_id: string; p_version: number };
+        Returns: Database["public"]["Tables"]["service_orders"]["Row"];
+        SetofOptions: { from: "*"; to: "service_orders"; isOneToOne: true; isSetofReturn: false };
+      };
+      reject_upsell: {
+        Args: { p_order_id: string; p_reason?: string | null; p_rule_id: string };
+        Returns: undefined;
+      };
+      upsell_metric_facts: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          accepted: number;
+          detail_center_id: string;
+          incremental_revenue: number;
+          membership_value: number;
+          offered: number;
+          orders: number;
+          rejected: number;
+          rule_id: string;
+          rule_name: string;
+          target_kind: string;
+        }[];
+      };
+      upsell_suggestions: {
+        Args: { p_limit?: number; p_order_id: string };
+        Returns: {
+          acceptance_rate: number;
+          offer_id: string;
+          offered_count: number;
+          pitch: string;
+          price: number;
+          priority: number;
+          rule_id: string;
+          rule_name: string;
+          source_service_name: string | null;
+          stage: string;
+          target_kind: string;
+          target_name: string;
+          target_plan_id: string | null;
+          target_service_id: string | null;
+        }[];
+      };
+      upsert_upsell_rule: {
+        Args: {
+          p_active: boolean;
+          p_center_ids: string[] | null;
+          p_channels: string[];
+          p_ends_on: string | null;
+          p_id: string | null;
+          p_min_order_total: number | null;
+          p_name: string;
+          p_organization_id: string;
+          p_pitch: string;
+          p_priority: number;
+          p_reason: string;
+          p_source_service_id: string | null;
+          p_stage: string;
+          p_starts_on: string;
+          p_target_plan_id: string | null;
+          p_target_service_id: string | null;
+        };
+        Returns: Database["public"]["Tables"]["upsell_rules"]["Row"];
+        SetofOptions: { from: "*"; to: "upsell_rules"; isOneToOne: true; isSetofReturn: false };
+      };
       apply_b2b_account: {
         Args: { p_account_id: string; p_order_id: string; p_purchase_order?: string | null; p_version: number };
         Returns: Database["public"]["Tables"]["service_orders"]["Row"];

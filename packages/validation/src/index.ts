@@ -9,3 +9,4 @@ export * from "./execution";
 export * from "./memberships";
 export * from "./crm";
 export * from "./b2b";
+export * from "./upsell";

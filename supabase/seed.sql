@@ -335,3 +335,34 @@ update public.service_orders
        b2b_agreement_id = 'b2100000-0000-4000-8000-000000000001'
  where id = '0d000000-0000-4000-8000-000000000003' and b2b_account_id is null;
 select set_config('app.b2b_link', 'off', false);
+
+-- Recomendaciones de venta (C4): cadena lavado -> descontaminación -> pulido ->
+-- protección -> membresía, y un producto al cierre.
+insert into public.services (id, organization_id, code, name, description, revenue_engine,
+                             standard_duration_minutes, base_price, standard_direct_cost)
+values ('5e000000-0000-4000-8000-000000000008', '00000000-0000-4000-8000-00000000d3e0', 'DESC-ARC', 'Descontaminación con clay bar',
+        'Retira contaminantes adheridos antes de pulir o proteger.', 'valor_medio', 60, 650, 180)
+on conflict (id) do nothing;
+
+insert into public.upsell_rules (id, organization_id, name, source_service_id, target_service_id, target_plan_id, stage,
+                                 priority, pitch, channels)
+values
+  ('0c000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'Lavado → descontaminación',
+   '5e000000-0000-4000-8000-000000000001', '5e000000-0000-4000-8000-000000000008', null, 'diagnostico', 90,
+   'Si la pintura se siente áspera tras el lavado, la descontaminación la deja lista para pulir.', '{b2c,membresia,b2b}'),
+  ('0c000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 'Descontaminación → pulido',
+   '5e000000-0000-4000-8000-000000000008', '5e000000-0000-4000-8000-000000000004', null, 'diagnostico', 80,
+   'Con la pintura descontaminada, el pulido corrige micro rayones y devuelve el brillo.', '{b2c,membresia,b2b}'),
+  ('0c000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', 'Pulido → protección cerámica',
+   '5e000000-0000-4000-8000-000000000004', '5e000000-0000-4000-8000-000000000005', null, 'diagnostico', 70,
+   'Tras pulir es el mejor momento para proteger: el cerámico conserva el resultado por años.', '{b2c,membresia}'),
+  ('0c000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0', 'Protección → membresía PLUS',
+   '5e000000-0000-4000-8000-000000000005', null, '3b000000-0000-4000-8000-000000000002', 'cierre', 60,
+   'La membresía PLUS mantiene el cerámico con lavados premium incluidos.', '{b2c,membresia}'),
+  ('0c000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-00000000d3e0', 'Lavado → membresía CARE',
+   '5e000000-0000-4000-8000-000000000001', null, '3b000000-0000-4000-8000-000000000001', 'cierre', 55,
+   'Con CARE, dos lavados exprés al mes por menos de lo que cuestan sueltos.', '{b2c}'),
+  ('0c000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-00000000d3e0', 'Aromatizante al entregar',
+   null, '5e000000-0000-4000-8000-000000000006', null, 'cierre', 40,
+   'Un detalle para entregar el auto con olor a nuevo.', '{b2c,membresia,b2b}')
+on conflict (id) do nothing;

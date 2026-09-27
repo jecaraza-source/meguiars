@@ -3,6 +3,7 @@ import {
   activeCenterAccess,
   addDays,
   b2bCopy,
+  upsellCopy,
   canInActiveCenter,
   crmCopy,
   membershipKpiCards,
@@ -33,11 +34,13 @@ export function ComercialScreen({
   onCrm,
   onTasks,
   onB2b,
+  onUpsell,
 }: PrivateScreenProps & {
   onMemberships: () => void;
   onCrm: () => void;
   onTasks: () => void;
   onB2b: () => void;
+  onUpsell: () => void;
 }) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
@@ -96,6 +99,9 @@ export function ComercialScreen({
       </Card>
       {canInActiveCenter(state, "memberships.read") ? (
         <Button label={membershipsCopy.title} variant="secondary" onPress={onMemberships} />
+      ) : null}
+      {canInActiveCenter(state, "upsell.read") ? (
+        <Button label={upsellCopy.title} variant="secondary" onPress={onUpsell} />
       ) : null}
       {canInActiveCenter(state, "b2b.read") ? (
         <Button label={b2bCopy.title} variant="secondary" onPress={onB2b} />

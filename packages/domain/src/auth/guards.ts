@@ -48,6 +48,7 @@ export const SCREEN_GUARDS = {
   b2bAccountNew: { center: true, capability: "b2b.write" },
   b2bAgreementDetail: { center: true, capability: "b2b.read" },
   b2bProfitability: { center: true, capability: "b2b.read" },
+  upsell: { center: true, capability: "upsell.read" },
   finanzas: { center: true, capability: "finance.read" },
   direccion: { center: true, capability: "executive.read" },
   designSystem: {},
