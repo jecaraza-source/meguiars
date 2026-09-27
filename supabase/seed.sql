@@ -495,3 +495,49 @@ select '0e600000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000
 on conflict (id) do nothing;
 insert into private.cash_session_counters (detail_center_id, last_number) values ('11111111-1111-4111-8111-111111111111', 2)
 on conflict (detail_center_id) do update set last_number = greatest(private.cash_session_counters.last_number, 2);
+
+-- P&L de ejemplo (AF4): una OS entregada hoy en cada centro, pagadas con tarjeta
+-- (la venta se reconoce por la entrega; el cobro no mueve el efectivo esperado).
+insert into public.service_orders (id, organization_id, detail_center_id, folio, folio_number, client_id, vehicle_id,
+                                   channel, status, client_name, client_phone, client_email, vehicle_make, vehicle_model,
+                                   vehicle_year, vehicle_plate, authorized_at, started_at, finished_at, delivered_at,
+                                   request_id)
+values
+  ('0d000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+   'CDMX-01-000003', 3, 'c1000000-0000-4000-8000-000000000001', 'c2000000-0000-4000-8000-000000000001', 'b2c', 'entregada',
+   'José Pérez', '+525512345678', 'jose.perez@example.com', 'Mazda', '3 Hatchback', 2021, 'ABC1234',
+   now() - interval '3 hours', now() - interval '170 minutes', now() - interval '20 minutes', now() - interval '10 minutes',
+   '0d000000-0000-4000-8000-0000000000a4'),
+  ('0d000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+   'MTY-01-000002', 2, 'c1000000-0000-4000-8000-000000000002', 'c2000000-0000-4000-8000-000000000002', 'b2c', 'entregada',
+   'Transportes del Norte', '+528181234567', 'flotilla@example.com', 'Nissan', 'NP300', 2020, 'NL4521A',
+   now() - interval '2 hours', now() - interval '110 minutes', now() - interval '20 minutes', now() - interval '10 minutes',
+   '0d000000-0000-4000-8000-0000000000a5')
+on conflict (id) do nothing;
+insert into public.service_order_items (id, organization_id, service_order_id, position, kind, service_id, service_code,
+                                        service_name, revenue_engine, unit_price, unit_direct_cost, duration_minutes,
+                                        price_source, quantity) values
+  ('0e100000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000004',
+   0, 'servicio', '5e000000-0000-4000-8000-000000000004', 'PUL-1E', 'Pulido en una etapa', 'valor_medio',
+   2800, 950, 300, 'base', 1),
+  ('0e100000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000004',
+   1, 'producto', '5e000000-0000-4000-8000-000000000006', 'AROM', 'Aromatizante', 'producto_complemento',
+   90, 30, 5, 'base', 2),
+  ('0e100000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000005',
+   0, 'servicio', '5e000000-0000-4000-8000-000000000001', 'LAV-EXP', 'Lavado exprés', 'recurrente',
+   220, 70, 40, 'center', 2)
+on conflict (id) do nothing;
+select count(private.recalc_service_order(id)) from public.service_orders
+ where id in ('0d000000-0000-4000-8000-000000000004', '0d000000-0000-4000-8000-000000000005');
+update public.service_orders set authorized_total = total
+ where id in ('0d000000-0000-4000-8000-000000000004', '0d000000-0000-4000-8000-000000000005') and authorized_total is null;
+insert into private.service_order_counters (detail_center_id, last_number) values
+  ('11111111-1111-4111-8111-111111111111', 3), ('22222222-2222-4222-8222-222222222222', 2)
+on conflict (detail_center_id) do update set last_number = greatest(private.service_order_counters.last_number, excluded.last_number);
+select count(private.create_order_payment(o, x.request_id, jsonb_build_array(jsonb_build_object('method', 'tarjeta',
+         'amount', o.total, 'reference', x.reference)), null, 'Pago al entregar'))
+  from public.service_orders o
+  join (values ('0d000000-0000-4000-8000-000000000004'::uuid, '0e300000-0000-4000-8000-0000000000a4'::uuid, 'AUT-7001'),
+               ('0d000000-0000-4000-8000-000000000005'::uuid, '0e300000-0000-4000-8000-0000000000a5'::uuid, 'AUT-7002'))
+    as x(order_id, request_id, reference) on x.order_id = o.id
+ where not exists (select 1 from public.payments p where p.request_id = x.request_id);
