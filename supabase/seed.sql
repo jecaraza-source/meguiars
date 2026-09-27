@@ -366,3 +366,63 @@ values
    null, '5e000000-0000-4000-8000-000000000006', null, 'cierre', 40,
    'Un detalle para entregar el auto con olor a nuevo.', '{b2c,membresia,b2b}')
 on conflict (id) do nothing;
+
+-- Pipeline comercial (C5): las etapas mínimas se crean con la organización.
+-- Oportunidades de ejemplo con su historial (las métricas salen de los eventos):
+-- un prospecto B2B con propuesta de iguala, un cliente B2C premium, una
+-- ampliación de la cuenta de Transportes del Norte y una oportunidad perdida.
+insert into public.sales_opportunities (id, organization_id, detail_center_id, kind, title, client_id, b2b_account_id,
+                                        company_name, legal_name, rfc, contact_name, contact_title, contact_phone,
+                                        contact_email, estimated_value, stage_id, status, next_action, next_action_on,
+                                        expected_close_on, source, proposed_billing_model, proposed_months,
+                                        proposed_vehicle_rule, proposed_payment_terms_days, proposed_fee_amount,
+                                        proposed_included_units, closed_at, loss_reason, request_id, created_at)
+select x.id, '00000000-0000-4000-8000-00000000d3e0', x.center, x.kind, x.title, x.client, x.account, x.company, x.legal,
+       x.rfc, x.contact, x.contact_title, x.phone, x.email, x.value, s.id, s.kind, x.next_action, x.next_on,
+       x.close_on, x.source, x.model, x.months, x.vehicle_rule, x.terms, x.fee, x.units,
+       case when s.kind <> 'abierta' then now() - interval '2 days' end, x.loss, x.id, now() - x.age
+  from (values
+    ('0f000000-0000-4000-8000-000000000001'::uuid, '11111111-1111-4111-8111-111111111111'::uuid, 'b2b',
+     'Hoteles Reforma: flotilla de 12 camionetas', null::uuid, null::uuid, 'Hoteles Reforma',
+     'Hoteles Reforma SA de CV', 'HRE100101AB1', 'Laura Castillo', 'Gerente de compras', '+525544443333',
+     'compras@hotelesreforma.example.com', 114000::numeric, 'propuesta', 'Resolver dudas de la propuesta',
+     current_date + 1, current_date + 20, 'referido', 'iguala', 12::smallint, 'cualquiera', 30::smallint,
+     9500::numeric, 24, null, interval '12 days'),
+    ('0f000000-0000-4000-8000-000000000002', '11111111-1111-4111-8111-111111111111', 'b2c_premium',
+     'José Pérez: protección cerámica', 'c1000000-0000-4000-8000-000000000001', null, null, null, null, null, null,
+     null, null, 12000, 'contactado', 'Enviar cotización por WhatsApp', current_date, current_date + 10, 'cliente_actual',
+     null, null, null, null, null, null, null, interval '3 days'),
+    ('0f000000-0000-4000-8000-000000000003', '22222222-2222-4222-8222-222222222222', 'b2b',
+     'Transportes del Norte: ampliación a 20 unidades', 'c1000000-0000-4000-8000-000000000002',
+     'b2000000-0000-4000-8000-000000000001', null, null, null, null, null, null, null, 60000, 'negociacion',
+     'Confirmar volumen mensual', current_date + 3, current_date + 15, 'cliente_actual', null, null, null, null, null,
+     null, null, interval '20 days'),
+    ('0f000000-0000-4000-8000-000000000004', '11111111-1111-4111-8111-111111111111', 'b2b',
+     'Mensajería Rápida: lavado semanal', null, null, 'Mensajería Rápida', null, null, 'Óscar Vidal', null,
+     '+525566667777', null, 35000, 'perdido', null, null, null, 'llamada', null, null, null, null, null, null,
+     'precio', interval '30 days')
+  ) as x(id, center, kind, title, client, account, company, legal, rfc, contact, contact_title, phone, email, value,
+         stage, next_action, next_on, close_on, source, model, months, vehicle_rule, terms, fee, units, loss, age)
+  join public.pipeline_stages s on s.organization_id = '00000000-0000-4000-8000-00000000d3e0' and s.code = x.stage
+on conflict (id) do nothing;
+
+insert into public.opportunity_events (organization_id, detail_center_id, opportunity_id, kind, opportunity_kind,
+                                       from_stage_id, to_stage_id, value, note, occurred_at)
+select o.organization_id, o.detail_center_id, o.id, e.kind, o.kind, fs.id, ts.id, e.value, e.note, now() - e.age
+  from (values
+    ('0f000000-0000-4000-8000-000000000001'::uuid, 1, 'creada', null, 'prospecto', 114000::numeric,
+     'Referido por un cliente', interval '12 days'),
+    ('0f000000-0000-4000-8000-000000000001', 2, 'etapa', 'prospecto', 'contactado', 114000, 'Primera llamada', interval '9 days'),
+    ('0f000000-0000-4000-8000-000000000001', 3, 'etapa', 'contactado', 'propuesta', 114000, 'Propuesta enviada', interval '4 days'),
+    ('0f000000-0000-4000-8000-000000000002', 1, 'creada', null, 'prospecto', 12000, null, interval '3 days'),
+    ('0f000000-0000-4000-8000-000000000002', 2, 'etapa', 'prospecto', 'contactado', 12000, null, interval '2 days'),
+    ('0f000000-0000-4000-8000-000000000003', 1, 'creada', null, 'propuesta', 60000, null, interval '20 days'),
+    ('0f000000-0000-4000-8000-000000000003', 2, 'etapa', 'propuesta', 'negociacion', 60000, null, interval '6 days'),
+    ('0f000000-0000-4000-8000-000000000004', 1, 'creada', null, 'prospecto', 35000, null, interval '30 days'),
+    ('0f000000-0000-4000-8000-000000000004', 2, 'perdida', 'prospecto', 'perdido', 35000, 'precio', interval '2 days')
+  ) as e(opportunity_id, n, kind, from_stage, to_stage, value, note, age)
+  join public.sales_opportunities o on o.id = e.opportunity_id
+  left join public.pipeline_stages fs on fs.organization_id = o.organization_id and fs.code = e.from_stage
+  left join public.pipeline_stages ts on ts.organization_id = o.organization_id and ts.code = e.to_stage
+ where not exists (select 1 from public.opportunity_events x where x.opportunity_id = o.id)
+ order by e.opportunity_id, e.n;
