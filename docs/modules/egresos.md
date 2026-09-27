@@ -60,22 +60,9 @@ Todas con RLS de sólo lectura; las escrituras van por RPC. Categorías, proveed
 | P&L                | Sólo cuentan los aprobados (por fecha del pago). Los pendientes se muestran aparte y los anulados y rechazados no cuentan.                                                                        |
 | Sin conexión       | Las mutaciones requieren conexión (sin cola offline); el `request_id` y el uuid del archivo hacen seguro el reintento.                                                                            |
 
-## Estado de resultados (`@meguiars/analytics`)
+## Estado de resultados
 
-`pnlStatement` a partir de `pnl_facts`:
-
-| Línea                       | Fórmula                                                                                                               |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Ventas                      | Σ total de OS entregadas en el periodo (por canal: B2C, membresía, B2B) + cobro de altas y renovaciones de membresía. |
-| Costo directo               | Costo estándar de esas OS + variación real de insumos + egresos `costo_directo`.                                      |
-| Utilidad bruta              | Ventas − costo directo.                                                                                               |
-| Gastos de operación         | Personal + operativo + administrativo + marketing.                                                                    |
-| Utilidad de operación       | Utilidad bruta − gastos de operación.                                                                                 |
-| Otros gastos                | Financiero + otros.                                                                                                   |
-| Utilidad antes de impuestos | Utilidad de operación − otros gastos.                                                                                 |
-| Salidas de caja (aparte)    | Σ egresos aprobados, incluida la compra de insumos.                                                                   |
-
-KPIs registrados: `pnl.revenue`, `pnl.gross_profit`, `pnl.gross_margin`, `pnl.operating_profit`, `pnl.net_before_tax` y `expenses.cash_out`.
+Desde AF4 el estado de resultados vive en [P&L multicentro](pnl.md): ahí están las fórmulas vigentes (utilidad bruta, EBITDA gerencial), el drill-down y la exportación. Los egresos aprobados alimentan sus líneas de costo directo, personal, operativos y financieros; la compra de insumos y los pendientes quedan fuera del P&L. `pnl_facts` conserva su contrato y sale de los mismos movimientos.
 
 ## Permisos
 
@@ -113,7 +100,7 @@ El contador consulta egresos, comprobantes y P&L, y sigue de sólo lectura. Rece
 | `/finanzas/egresos/nuevo`         | `ExpenseNewScreen`      | Alta con aviso de aprobación y comprobante (web: archivo; móvil: cámara, galería o PDF).    |
 | `/finanzas/egresos/[id]`          | `ExpenseScreen`         | Datos, aprobar/rechazar, comprobantes (ver, adjuntar, retirar), historial, editar y anular. |
 | `/finanzas/egresos/configuracion` | `ExpenseSettingsScreen` | Umbral, proveedores y categorías.                                                           |
-| `/finanzas/resultados`            | `PnlScreen`             | Estado de resultados (mes en curso, mes anterior o 30 días; centro activo o todos).         |
+| `/finanzas/resultados`            | `PnlScreen`             | Estado de resultados (ver [P&L multicentro](pnl.md)).                                       |
 
 Estados de carga, vacío, error y sin permiso en todas. Móvil agrega `expo-document-picker` para elegir PDFs.
 
