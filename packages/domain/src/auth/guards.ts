@@ -61,6 +61,8 @@ export const SCREEN_GUARDS = {
   expenseNew: { center: true, capability: "expenses.write" },
   expenseSettings: { center: true, capability: "expenses.read" },
   pnl: { center: true, capability: "expenses.read" },
+  cash: { center: true, capability: "cash.read" },
+  cashSession: { center: true, capability: "cash.read" },
   direccion: { center: true, capability: "executive.read" },
   designSystem: {},
   account: {},

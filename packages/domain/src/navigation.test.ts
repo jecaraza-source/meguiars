@@ -141,6 +141,14 @@ describe("navegación por rol", () => {
     expect(sectionOfPath("/finanzas/resultados")).toBe("finanzas");
   });
 
+  it("Corte de caja: admin, encargado, recepción y contador; comercial no", () => {
+    expect(itemsOf(["operador_recepcion"])).toContain("cash");
+    expect(itemsOf(["contador"])).toContain("cash");
+    expect(itemsOf(["comercial_b2b"])).not.toContain("cash");
+    expect(navScreenOf("cashSession")).toBe("cash");
+    expect(sectionOfPath("/finanzas/caja")).toBe("finanzas");
+  });
+
   it("Cobranza: recepción, encargado, admin y contador; comercial no", () => {
     expect(itemsOf(["operador_recepcion"])).toContain("payments");
     expect(itemsOf(["operador_recepcion"])).not.toContain("finanzas");

@@ -772,6 +772,217 @@ export type Database = {
           },
         ];
       };
+      cash_closings: {
+        Row: {
+          breakdown: Json;
+          card_total: number;
+          cash_collected: number;
+          cash_refunded: number;
+          closed_at: string;
+          closed_by: string | null;
+          counted_cash: number;
+          detail_center_id: string;
+          difference: number;
+          expected_cash: number;
+          id: string;
+          non_cash_total: number;
+          notes: string | null;
+          opening_float: number;
+          organization_id: string;
+          payments_count: number;
+          request_id: string;
+          reversals_count: number;
+          sequence: number;
+          session_id: string;
+          transfer_total: number;
+          window_from: string;
+          window_to: string;
+        };
+        Insert: {
+          breakdown: Json;
+          card_total: number;
+          cash_collected: number;
+          cash_refunded: number;
+          closed_at?: string;
+          closed_by?: string | null;
+          counted_cash: number;
+          detail_center_id: string;
+          difference: number;
+          expected_cash: number;
+          id?: string;
+          non_cash_total: number;
+          notes?: string | null;
+          opening_float: number;
+          organization_id: string;
+          payments_count: number;
+          request_id: string;
+          reversals_count: number;
+          sequence: number;
+          session_id: string;
+          transfer_total: number;
+          window_from: string;
+          window_to: string;
+        };
+        Update: {
+          breakdown?: Json;
+          card_total?: number;
+          cash_collected?: number;
+          cash_refunded?: number;
+          closed_at?: string;
+          closed_by?: string | null;
+          counted_cash?: number;
+          detail_center_id?: string;
+          difference?: number;
+          expected_cash?: number;
+          id?: string;
+          non_cash_total?: number;
+          notes?: string | null;
+          opening_float?: number;
+          organization_id?: string;
+          payments_count?: number;
+          request_id?: string;
+          reversals_count?: number;
+          sequence?: number;
+          session_id?: string;
+          transfer_total?: number;
+          window_from?: string;
+          window_to?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_closings_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      cash_reopenings: {
+        Row: {
+          closing_id: string;
+          detail_center_id: string;
+          id: string;
+          organization_id: string;
+          reason: string;
+          reopened_at: string;
+          reopened_by: string | null;
+          session_id: string;
+        };
+        Insert: {
+          closing_id: string;
+          detail_center_id: string;
+          id?: string;
+          organization_id: string;
+          reason: string;
+          reopened_at?: string;
+          reopened_by?: string | null;
+          session_id: string;
+        };
+        Update: {
+          closing_id?: string;
+          detail_center_id?: string;
+          id?: string;
+          organization_id?: string;
+          reason?: string;
+          reopened_at?: string;
+          reopened_by?: string | null;
+          session_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_reopenings_closing_id_fkey";
+            columns: ["closing_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_closings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_reopenings_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      cash_sessions: {
+        Row: {
+          business_date: string;
+          closed_at: string | null;
+          closed_by: string | null;
+          closings_count: number;
+          created_at: string;
+          detail_center_id: string;
+          folio: string;
+          id: string;
+          notes: string | null;
+          number: number;
+          opened_at: string;
+          opened_by: string | null;
+          opening_float: number;
+          organization_id: string;
+          request_id: string;
+          shift: string;
+          status: string;
+          updated_at: string;
+          version: number;
+          window_end: string | null;
+        };
+        Insert: {
+          business_date: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closings_count?: number;
+          created_at?: string;
+          detail_center_id: string;
+          folio: string;
+          id?: string;
+          notes?: string | null;
+          number: number;
+          opened_at?: string;
+          opened_by?: string | null;
+          opening_float: number;
+          organization_id: string;
+          request_id: string;
+          shift: string;
+          status?: string;
+          updated_at?: string;
+          version?: number;
+          window_end?: string | null;
+        };
+        Update: {
+          business_date?: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closings_count?: number;
+          created_at?: string;
+          detail_center_id?: string;
+          folio?: string;
+          id?: string;
+          notes?: string | null;
+          number?: number;
+          opened_at?: string;
+          opened_by?: string | null;
+          opening_float?: number;
+          organization_id?: string;
+          request_id?: string;
+          shift?: string;
+          status?: string;
+          updated_at?: string;
+          version?: number;
+          window_end?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_sessions_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       client_centers: {
         Row: {
           client_id: string;
@@ -3886,6 +4097,25 @@ export type Database = {
         Returns: Database["public"]["Tables"]["expenses"]["Row"];
         SetofOptions: { from: "*"; to: "expenses"; isOneToOne: true; isSetofReturn: false };
       };
+      cash_session_detail: {
+        Args: { p_session_id: string };
+        Returns: Json;
+      };
+      cash_uncovered: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: { cash_amount: number; day: string; detail_center_id: string; payments_count: number }[];
+      };
+      close_cash_session: {
+        Args: {
+          p_counted_cash: number;
+          p_notes?: string | null;
+          p_request_id: string;
+          p_session_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["cash_closings"]["Row"];
+        SetofOptions: { from: "*"; to: "cash_closings"; isOneToOne: true; isSetofReturn: false };
+      };
       create_expense: {
         Args: {
           p_amount: number;
@@ -3927,6 +4157,31 @@ export type Database = {
       expense_detail: {
         Args: { p_expense_id: string };
         Returns: Json;
+      };
+      list_cash_sessions: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          business_date: string;
+          card_total: number;
+          closed_at: string | null;
+          closed_by_name: string | null;
+          closings_count: number;
+          counted_cash: number | null;
+          detail_center_id: string;
+          difference: number | null;
+          expected_cash: number;
+          folio: string;
+          id: string;
+          opened_at: string;
+          opened_by_name: string | null;
+          opening_float: number;
+          reopenings_count: number;
+          shift: string;
+          status: string;
+          transfer_total: number;
+          version: number;
+          window_end: string | null;
+        }[];
       };
       list_expenses: {
         Args: {
@@ -3972,6 +4227,17 @@ export type Database = {
           receipt_folio: string;
           status: string;
         }[];
+      };
+      open_cash_session: {
+        Args: {
+          p_detail_center_id: string;
+          p_notes?: string | null;
+          p_opening_float: number;
+          p_request_id: string;
+          p_shift: string;
+        };
+        Returns: Database["public"]["Tables"]["cash_sessions"]["Row"];
+        SetofOptions: { from: "*"; to: "cash_sessions"; isOneToOne: true; isSetofReturn: false };
       };
       order_payments: {
         Args: { p_order_id: string };
@@ -4063,6 +4329,11 @@ export type Database = {
         Args: { p_attachment_id: string; p_reason: string };
         Returns: Database["public"]["Tables"]["expense_attachments"]["Row"];
         SetofOptions: { from: "*"; to: "expense_attachments"; isOneToOne: true; isSetofReturn: false };
+      };
+      reopen_cash_session: {
+        Args: { p_reason: string; p_session_id: string; p_version: number };
+        Returns: Database["public"]["Tables"]["cash_sessions"]["Row"];
+        SetofOptions: { from: "*"; to: "cash_sessions"; isOneToOne: true; isSetofReturn: false };
       };
       reverse_payment: {
         Args: { p_payment_id: string; p_reason: string };

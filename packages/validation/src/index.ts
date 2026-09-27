@@ -13,3 +13,4 @@ export * from "./upsell";
 export * from "./pipeline";
 export * from "./payments";
 export * from "./expenses";
+export * from "./cash";
