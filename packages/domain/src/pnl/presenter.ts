@@ -3,7 +3,7 @@ import { formatDateOnly } from "../memberships/presenter";
 import { PNL_ITEM_LABELS, PNL_SECTION_LABELS, PNL_SOURCE_LABELS } from "./copy";
 import { PNL_SECTIONS, type PnlDrillQuery, type PnlMovement, type PnlSectionKey } from "./pnl";
 
-export const formatPercent = (p: number | null) => (p === null ? "—" : `${p.toFixed(1)} %`);
+export const formatPercent = (p: number | null) => (p === null ? "—" : `${p.toFixed(2)} %`);
 
 /** Etiqueta de una línea o dimensión del P&L. */
 export const pnlItemLabel = (key: string | null | undefined) =>
@@ -129,4 +129,32 @@ export function pnlErrorMessage(error: { kind: string; message: string }): strin
   if (error.kind === "permission_denied" && !error.message)
     return "Sin permiso para ver el estado de resultados.";
   return error.message;
+}
+
+/**
+ * KPIs del P&L para Dirección y el resumen financiero (mismas cifras que el
+ * estado de resultados: vienen de pnlStatement de @meguiars/analytics).
+ */
+export function pnlSummaryKpis(s: {
+  revenue: number;
+  grossProfit: number;
+  grossMargin: number | null;
+  ebitda: number;
+  ebitdaMargin: number | null;
+  netBeforeTax: number;
+}): { label: string; value: string; caption?: string }[] {
+  return [
+    { label: "Ventas", value: formatMoney(s.revenue) },
+    {
+      label: "Utilidad bruta",
+      value: formatMoney(s.grossProfit),
+      caption: `Margen ${formatPercent(s.grossMargin)}`,
+    },
+    {
+      label: "EBITDA gerencial",
+      value: formatMoney(s.ebitda),
+      caption: `Margen ${formatPercent(s.ebitdaMargin)}`,
+    },
+    { label: "Utilidad antes de impuestos", value: formatMoney(s.netBeforeTax) },
+  ];
 }

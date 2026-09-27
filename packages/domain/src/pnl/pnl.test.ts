@@ -122,3 +122,24 @@ describe("exportación CSV (Excel-friendly)", () => {
     );
   });
 });
+
+describe("resumen para Dirección", () => {
+  it("mismas cifras y márgenes del estado de resultados", async () => {
+    const { pnlSummaryKpis } = await import("./presenter");
+    expect(
+      pnlSummaryKpis({
+        revenue: 9699,
+        grossProfit: 6949,
+        grossMargin: 71.65,
+        ebitda: 5249,
+        ebitdaMargin: 54.12,
+        netBeforeTax: 5199,
+      }),
+    ).toEqual([
+      { label: "Ventas", value: "$9,699.00" },
+      { label: "Utilidad bruta", value: "$6,949.00", caption: "Margen 71.65 %" },
+      { label: "EBITDA gerencial", value: "$5,249.00", caption: "Margen 54.12 %" },
+      { label: "Utilidad antes de impuestos", value: "$5,199.00" },
+    ]);
+  });
+});

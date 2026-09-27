@@ -85,6 +85,6 @@ export const pnlCopy = {
   detail: "Detalle",
   exportCsv: "Descargar CSV",
   print: "Imprimir / PDF",
-  share: "Compartir CSV",
+  shareCsv: "Compartir CSV",
   back: "Estado de resultados",
 } as const;
