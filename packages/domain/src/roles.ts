@@ -58,6 +58,11 @@ export const CAPABILITIES = [
   // Recomendaciones de venta (C4): indicadores y reglas (las sugerencias en la OS usan orders.write).
   "upsell.read",
   "upsell.manage",
+  // Pipeline comercial (C5): pipeline.write basta para B2C premium; B2B exige además b2b.write.
+  "pipeline.read",
+  "pipeline.write",
+  "pipeline.metrics.read",
+  "pipeline.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -74,7 +79,9 @@ export type Capability = (typeof CAPABILITIES)[number];
  * private.can_manage_memberships); `crm.*`, en 20261003000000 (private.can_use_crm);
  * `b2b.*`, en 20261004000000 (private.can_read_b2b / can_manage_b2b = b2b.write /
  * can_bill_b2b); `upsell.*`, en 20261005000000 (private.can_read_upsell_metrics /
- * private.can_manage_upsell, admin corporativo).
+ * private.can_manage_upsell, admin corporativo); `pipeline.*`, en 20261006000000
+ * (private.can_read_pipeline / can_write_pipeline / can_read_pipeline_metrics /
+ * can_manage_pipeline, admin corporativo).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -111,6 +118,10 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "b2b.billing",
     "upsell.read",
     "upsell.manage",
+    "pipeline.read",
+    "pipeline.write",
+    "pipeline.metrics.read",
+    "pipeline.manage",
   ],
   encargado: [
     "center.read",
@@ -134,6 +145,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "crm.write",
     "b2b.read",
     "upsell.read",
+    "pipeline.read",
+    "pipeline.write",
+    "pipeline.metrics.read",
   ],
   operador_recepcion: [
     "center.read",
@@ -160,6 +174,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "catalog.read",
     "b2b.read",
     "upsell.read",
+    "pipeline.metrics.read",
   ],
   comercial_b2b: [
     "center.read",
@@ -174,6 +189,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "b2b.read",
     "b2b.billing",
     "upsell.read",
+    "pipeline.read",
+    "pipeline.write",
+    "pipeline.metrics.read",
   ],
 };
 

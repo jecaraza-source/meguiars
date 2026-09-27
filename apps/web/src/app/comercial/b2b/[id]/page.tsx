@@ -1,4 +1,6 @@
 import {
+  canInActiveCenter,
+  pipelineCopy,
   activeCenterAccess,
   addDays,
   b2bCopy,
@@ -99,6 +101,14 @@ export default async function B2bAccountPage({ params, searchParams }: PageProps
           label={B2B_ACCOUNT_STATUS_LABELS[account.status]}
           tone={B2B_ACCOUNT_STATUS_TONES[account.status]}
         />
+        {canWrite && canInActiveCenter(state, "pipeline.write") ? (
+          <Link
+            href={`/comercial/pipeline/nueva?tipo=b2b&cuenta=${account.id}`}
+            className="text-sm underline"
+          >
+            {pipelineCopy.newOpportunity}
+          </Link>
+        ) : null}
       </div>
       {created ? (
         <p role="status" className="mg-tone rounded-md border p-md text-sm" data-tone="success">

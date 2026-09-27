@@ -7,7 +7,9 @@ import {
   B2B_ACCOUNT_STATUS_TONES,
   B2B_PAYMENT_METHOD_LABELS,
   can,
+  canInActiveCenter,
   canInCenter,
+  pipelineCopy,
   formatDateInCenterTimeZone,
   formatDateOnly,
   formatMoney,
@@ -59,7 +61,13 @@ export function B2bAccountScreen({
   accountId,
   onBack,
   onOpenAgreement,
-}: PrivateScreenProps & { accountId: string; onBack: () => void; onOpenAgreement: (id: string) => void }) {
+  onNewOpportunity,
+}: PrivateScreenProps & {
+  accountId: string;
+  onBack: () => void;
+  onOpenAgreement: (id: string) => void;
+  onNewOpportunity?: (accountId: string) => void;
+}) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const today = todayIn(center.timezone);
@@ -130,6 +138,11 @@ export function B2bAccountScreen({
       header={header}
     >
       <LinkButton label={`← ${b2bCopy.title}`} onPress={onBack} />
+      {onNewOpportunity &&
+      canInCenter(state, account.homeDetailCenterId, "b2b.write") &&
+      canInActiveCenter(state, "pipeline.write") ? (
+        <LinkButton label={pipelineCopy.newOpportunity} onPress={() => onNewOpportunity(account.id)} />
+      ) : null}
       <Badge
         label={B2B_ACCOUNT_STATUS_LABELS[account.status]}
         tone={B2B_ACCOUNT_STATUS_TONES[account.status]}

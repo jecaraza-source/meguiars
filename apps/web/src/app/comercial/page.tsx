@@ -3,6 +3,7 @@ import {
   activeCenterAccess,
   addDays,
   b2bCopy,
+  pipelineCopy,
   upsellCopy,
   canInActiveCenter,
   crmCopy,
@@ -53,6 +54,9 @@ export default async function Page({ searchParams }: PageProps<"/comercial">) {
             ) : null}
             {canInActiveCenter(state, "b2b.read") ? (
               <ButtonLink href="/comercial/b2b" label={b2bCopy.title} />
+            ) : null}
+            {canInActiveCenter(state, "pipeline.read") ? (
+              <ButtonLink href="/comercial/pipeline" label={pipelineCopy.title} />
             ) : null}
             {canInActiveCenter(state, "crm.read") ? (
               <>

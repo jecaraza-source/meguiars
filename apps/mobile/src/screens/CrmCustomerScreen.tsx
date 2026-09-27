@@ -3,6 +3,7 @@ import {
   allowedTaskChannels,
   allowedTaskKinds,
   canInActiveCenter,
+  pipelineCopy,
   channelForKind,
   CONTACT_CHANNEL_LABELS,
   CONTACT_CHANNELS,
@@ -49,7 +50,12 @@ export function CrmCustomerScreen({
   header,
   clientId,
   onBack,
-}: PrivateScreenProps & { clientId: string; onBack: () => void }) {
+  onNewOpportunity,
+}: PrivateScreenProps & {
+  clientId: string;
+  onBack: () => void;
+  onNewOpportunity?: (clientId: string) => void;
+}) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
   const today = todayIn(center.timezone);
@@ -101,6 +107,9 @@ export function CrmCustomerScreen({
       header={header}
     >
       <LinkButton label={`← ${crmCopy.customersTitle}`} onPress={onBack} />
+      {onNewOpportunity && c.kind === "person" && canInActiveCenter(state, "pipeline.write") ? (
+        <LinkButton label={pipelineCopy.newOpportunity} onPress={() => onNewOpportunity(clientId)} />
+      ) : null}
       <Badge label={view.segment} tone={view.segmentTone} />
       <View style={styles.kpis}>
         <KpiCard

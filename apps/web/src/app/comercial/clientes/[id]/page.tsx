@@ -1,4 +1,5 @@
 import {
+  pipelineCopy,
   activeCenterAccess,
   canInActiveCenter,
   CONTACT_CHANNELS,
@@ -63,6 +64,14 @@ export default async function CrmCustomerPage({ params }: PageProps<"/comercial/
           Expediente del cliente
         </Link>
         <Badge label={view.segment} tone={view.segmentTone} />
+        {c.kind === "person" && canInActiveCenter(state, "pipeline.write") ? (
+          <Link
+            href={`/comercial/pipeline/nueva?tipo=b2c_premium&cliente=${c.clientId}`}
+            className="text-sm underline"
+          >
+            {pipelineCopy.newOpportunity}
+          </Link>
+        ) : null}
       </div>
       <div className="grid gap-lg md:grid-cols-2 lg:grid-cols-4">
         <KpiCard

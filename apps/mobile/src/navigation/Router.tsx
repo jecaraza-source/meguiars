@@ -5,6 +5,7 @@ import {
   navScreenOf,
   sectionOfScreen,
   visibleNavigation,
+  type OpportunityKind,
   type Screen,
 } from "@meguiars/domain";
 import { colors } from "@meguiars/ui-tokens";
@@ -34,6 +35,10 @@ import { B2bAgreementScreen } from "@/screens/B2bAgreementScreen";
 import { B2bProfitabilityScreen } from "@/screens/B2bProfitabilityScreen";
 import { CrmCustomerScreen } from "@/screens/CrmCustomerScreen";
 import { UpsellScreen } from "@/screens/UpsellScreen";
+import { OpportunityNewScreen } from "@/screens/OpportunityNewScreen";
+import { OpportunityScreen } from "@/screens/OpportunityScreen";
+import { PipelineMetricsScreen } from "@/screens/PipelineMetricsScreen";
+import { PipelineScreen } from "@/screens/PipelineScreen";
 import { CrmCustomersScreen } from "@/screens/CrmCustomersScreen";
 import { CrmTasksScreen } from "@/screens/CrmTasksScreen";
 import { MembershipDetailScreen } from "@/screens/MembershipDetailScreen";
@@ -110,6 +115,23 @@ export function Router() {
   const openB2bAgreement = (id: string) => {
     setB2bAgreementId(id);
     setScreen("b2bAgreementDetail");
+  };
+  // Parámetros del pipeline (equivalen a /comercial/pipeline/[id] y /nueva?tipo=&cliente=&cuenta= en web).
+  const [opportunityId, setOpportunityId] = useState<string | null>(null);
+  const openOpportunity = (id: string) => {
+    setOpportunityId(id);
+    setScreen("opportunityDetail");
+  };
+  const [newOpportunity, setNewOpportunity] = useState<{
+    kind?: OpportunityKind;
+    clientId?: string;
+    accountId?: string;
+  }>({});
+  const startOpportunity = (
+    defaults: { kind?: OpportunityKind; clientId?: string; accountId?: string } = {},
+  ) => {
+    setNewOpportunity(defaults);
+    setScreen("opportunityNew");
   };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
@@ -195,6 +217,7 @@ export function Router() {
             onTasks={() => setScreen("crmTasks")}
             onB2b={() => setScreen("b2bAccounts")}
             onUpsell={() => setScreen("upsell")}
+            onPipeline={() => setScreen("pipeline")}
           />
         );
         break;
@@ -221,6 +244,7 @@ export function Router() {
             accountId={b2bAccountId}
             onBack={() => setScreen("b2bAccounts")}
             onOpenAgreement={openB2bAgreement}
+            onNewOpportunity={(accountId) => startOpportunity({ kind: "b2b", accountId })}
           />
         ) : (
           <B2bAccountsScreen
@@ -251,6 +275,47 @@ export function Router() {
       case "upsell":
         content = <UpsellScreen {...props} />;
         break;
+      case "pipeline":
+        content = (
+          <PipelineScreen
+            {...props}
+            onOpen={openOpportunity}
+            onNew={() => startOpportunity()}
+            onMetrics={() => setScreen("pipelineMetrics")}
+          />
+        );
+        break;
+      case "opportunityNew":
+        content = (
+          <OpportunityNewScreen
+            {...props}
+            defaults={newOpportunity}
+            onCreated={openOpportunity}
+            onCancel={() => setScreen("pipeline")}
+          />
+        );
+        break;
+      case "opportunityDetail":
+        content = opportunityId ? (
+          <OpportunityScreen
+            key={opportunityId}
+            {...props}
+            opportunityId={opportunityId}
+            onBack={() => setScreen("pipeline")}
+            onOpenAccount={openB2bAccount}
+          />
+        ) : (
+          <PipelineScreen
+            {...props}
+            onOpen={openOpportunity}
+            onNew={() => startOpportunity()}
+            onMetrics={() => setScreen("pipelineMetrics")}
+          />
+        );
+        break;
+      case "pipelineMetrics":
+        content = <PipelineMetricsScreen {...props} />;
+        break;
       case "b2bProfitability":
         content = <B2bProfitabilityScreen {...props} onOpen={openB2bAccount} />;
         break;
@@ -266,6 +331,7 @@ export function Router() {
             {...props}
             clientId={crmClientId}
             onBack={() => setScreen("crmCustomers")}
+            onNewOpportunity={(clientId) => startOpportunity({ kind: "b2c_premium", clientId })}
           />
         ) : (
           <CrmCustomersScreen {...props} onOpen={openCrmCustomer} onTasks={() => setScreen("crmTasks")} />
