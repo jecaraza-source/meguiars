@@ -51,7 +51,12 @@ import {
   PLAN_TIERS,
   REDEEM_SCOPES,
   DISCOUNT_LEVELS,
+  ORDER_PAYMENT_STATUSES,
+  PAYMENT_METHOD_CODES,
+  PAYMENT_METHOD_RULES,
   PAYMENT_METHODS,
+  RECEIPT_STATUSES,
+  type PaymentMethodCode,
   REVENUE_ENGINES,
   SALES_CHANNELS,
   SERVICE_ORDER_STATUSES,
@@ -130,6 +135,11 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "pipeline_stages",
   "sales_opportunities",
   "opportunity_events",
+  "payment_methods",
+  "payments",
+  "payment_tenders",
+  "payment_allocations",
+  "payment_reversals",
   "user_detail_centers",
   "vehicles",
 ];
@@ -155,6 +165,14 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "pipeline_owners",
   "pipeline_metric_facts",
   "upsert_pipeline_stage",
+  "register_payment",
+  "reverse_payment",
+  "order_payments",
+  "payment_receipt",
+  "list_payments",
+  "payment_facts",
+  "receivable_orders",
+  "sales_reconciliation",
   "add_vehicle",
   "apply_b2b_account",
   "b2b_account_orders",
@@ -263,7 +281,7 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect(sqlPairs.sort()).toEqual(domainPairs.sort());
   });
 
-  it("canales, niveles de descuento (con sus límites) y formas de pago: SQL y dominio coinciden", () => {
+  it("canales y niveles de descuento (con sus límites): SQL y dominio coinciden", () => {
     const enumOf = (name: string) =>
       new RegExp(`create type public\\.${name} as enum \\(([^)]+)\\)`, "i")
         .exec(allSql)?.[1]
@@ -280,8 +298,34 @@ describe("paridad SQL ↔ TypeScript", () => {
       ["operador", DISCOUNT_LEVEL_LIMITS.operador],
       ["encargado", DISCOUNT_LEVEL_LIMITS.encargado],
     ]);
-    const pay = /p_method not in \(([^)]+)\)/.exec(allSql)?.[1];
-    expect(pay?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...PAYMENT_METHODS]);
+  });
+
+  it("cobranza: catálogo de formas de pago y estado de pago de la OS coinciden", () => {
+    const values =
+      /insert into public\.payment_methods \([^)]+\)\s*values([\s\S]*?);/.exec(allSql)?.[1] ?? "";
+    const rows = [
+      ...values.matchAll(
+        /\('(\w+)', '[^']+', '(\w+)', (true|false), (true|false), (true|false), \d+, (true|false)\)/g,
+      ),
+    ].map((m) => ({
+      code: m[1],
+      kind: m[2],
+      collectsCash: m[3] === "true",
+      requiresReference: m[4] === "true",
+      allowsChange: m[5] === "true",
+      active: m[6] === "true",
+    }));
+    expect(rows.map((r) => r.code)).toEqual([...PAYMENT_METHOD_CODES]);
+    expect(rows.filter((r) => r.active).map((r) => r.code)).toEqual([...PAYMENT_METHODS]);
+    for (const { code, ...rule } of rows)
+      expect(PAYMENT_METHOD_RULES[code as PaymentMethodCode]).toEqual(rule);
+    const status =
+      /payment_status text generated always as \(\s*case([\s\S]*?)\send\s*\)/.exec(allSql)?.[1] ?? "";
+    expect([...status.matchAll(/'(\w+)'/g)].map((m) => m[1]).sort()).toEqual(
+      [...ORDER_PAYMENT_STATUSES].sort(),
+    );
+    const receipt = /status text not null default 'valido' check \(status in \(([^)]+)\)\)/.exec(allSql)?.[1];
+    expect(receipt?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...RECEIPT_STATUSES]);
   });
 
   it("ejecución: estatus y transiciones de línea, unidades, momentos, eventos y límites de fotos coinciden", () => {

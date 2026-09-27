@@ -1659,6 +1659,267 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_allocations: {
+        Row: {
+          amount: number;
+          created_at: string;
+          id: string;
+          organization_id: string;
+          payment_id: string;
+          service_order_id: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          id?: string;
+          organization_id: string;
+          payment_id: string;
+          service_order_id: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          id?: string;
+          organization_id?: string;
+          payment_id?: string;
+          service_order_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_allocations_organization_id_payment_id_fkey";
+            columns: ["organization_id", "payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "payment_allocations_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      payment_methods: {
+        Row: {
+          active: boolean;
+          allows_change: boolean;
+          code: string;
+          collects_cash: boolean;
+          kind: string;
+          name: string;
+          position: number;
+          requires_reference: boolean;
+        };
+        Insert: {
+          active?: boolean;
+          allows_change?: boolean;
+          code: string;
+          collects_cash: boolean;
+          kind: string;
+          name: string;
+          position: number;
+          requires_reference?: boolean;
+        };
+        Update: {
+          active?: boolean;
+          allows_change?: boolean;
+          code?: string;
+          collects_cash?: boolean;
+          kind?: string;
+          name?: string;
+          position?: number;
+          requires_reference?: boolean;
+        };
+        Relationships: [
+        ];
+      };
+      payment_reversals: {
+        Row: {
+          amount: number;
+          detail_center_id: string;
+          id: string;
+          organization_id: string;
+          payment_id: string;
+          reason: string;
+          reversed_at: string;
+          reversed_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          detail_center_id: string;
+          id?: string;
+          organization_id: string;
+          payment_id: string;
+          reason: string;
+          reversed_at?: string;
+          reversed_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          detail_center_id?: string;
+          id?: string;
+          organization_id?: string;
+          payment_id?: string;
+          reason?: string;
+          reversed_at?: string;
+          reversed_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_reversals_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "payment_reversals_organization_id_payment_id_fkey";
+            columns: ["organization_id", "payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      payment_tenders: {
+        Row: {
+          amount: number;
+          b2b_account_id: string | null;
+          created_at: string;
+          id: string;
+          membership_id: string | null;
+          method: string;
+          organization_id: string;
+          payment_id: string;
+          reference: string | null;
+        };
+        Insert: {
+          amount: number;
+          b2b_account_id?: string | null;
+          created_at?: string;
+          id?: string;
+          membership_id?: string | null;
+          method: string;
+          organization_id: string;
+          payment_id: string;
+          reference?: string | null;
+        };
+        Update: {
+          amount?: number;
+          b2b_account_id?: string | null;
+          created_at?: string;
+          id?: string;
+          membership_id?: string | null;
+          method?: string;
+          organization_id?: string;
+          payment_id?: string;
+          reference?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_tenders_method_fkey";
+            columns: ["method"];
+            isOneToOne: false;
+            referencedRelation: "payment_methods";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "payment_tenders_organization_id_b2b_account_id_fkey";
+            columns: ["organization_id", "b2b_account_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "payment_tenders_organization_id_membership_id_fkey";
+            columns: ["organization_id", "membership_id"];
+            isOneToOne: false;
+            referencedRelation: "memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "payment_tenders_organization_id_payment_id_fkey";
+            columns: ["organization_id", "payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      payments: {
+        Row: {
+          amount: number;
+          cash_received: number | null;
+          change_amount: number;
+          client_id: string | null;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          receipt_folio: string;
+          receipt_number: number;
+          received_at: string;
+          received_by: string | null;
+          request_id: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          cash_received?: number | null;
+          change_amount?: number;
+          client_id?: string | null;
+          created_at?: string;
+          detail_center_id: string;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          receipt_folio: string;
+          receipt_number: number;
+          received_at?: string;
+          received_by?: string | null;
+          request_id: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          cash_received?: number | null;
+          change_amount?: number;
+          client_id?: string | null;
+          created_at?: string;
+          detail_center_id?: string;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          receipt_folio?: string;
+          receipt_number?: number;
+          received_at?: string;
+          received_by?: string | null;
+          request_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "payments_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       pipeline_stages: {
         Row: {
           active: boolean;
@@ -2585,6 +2846,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -2638,6 +2900,7 @@ export type Database = {
           odometer_km?: number | null;
           organization_id: string;
           paid_amount?: number;
+          payment_status?: never;
           promised_at?: string | null;
           recommendations?: string | null;
           request_id: string;
@@ -2691,6 +2954,7 @@ export type Database = {
           odometer_km?: number | null;
           organization_id?: string;
           paid_amount?: number;
+          payment_status?: never;
           promised_at?: string | null;
           recommendations?: string | null;
           request_id?: string;
@@ -3297,6 +3561,105 @@ export type Database = {
         Returns: Database["public"]["Tables"]["sales_opportunities"]["Row"];
         SetofOptions: { from: "*"; to: "sales_opportunities"; isOneToOne: true; isSetofReturn: false };
       };
+      list_payments: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          amount: number;
+          client_name: string | null;
+          detail_center_id: string;
+          id: string;
+          methods: string | null;
+          order_folios: string | null;
+          received_at: string;
+          received_by_name: string | null;
+          receipt_folio: string;
+          status: string;
+        }[];
+      };
+      order_payments: {
+        Args: { p_order_id: string };
+        Returns: {
+          amount: number;
+          applied: number;
+          cash_received: number | null;
+          change_amount: number;
+          id: string;
+          received_at: string;
+          received_by_name: string | null;
+          receipt_folio: string;
+          reversal_reason: string | null;
+          reversed_at: string | null;
+          reversed_by_name: string | null;
+          status: string;
+          tenders: Json | null;
+        }[];
+      };
+      payment_facts: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          change_amount: number;
+          collects_cash: boolean;
+          day: string;
+          detail_center_id: string;
+          method: string;
+          method_name: string;
+          reversed_amount: number;
+          reversed_count: number;
+          valid_amount: number;
+          valid_count: number;
+        }[];
+      };
+      payment_receipt: {
+        Args: { p_payment_id: string };
+        Returns: Json;
+      };
+      receivable_orders: {
+        Args: { p_detail_center_ids: string[] };
+        Returns: {
+          b2b_account_id: string | null;
+          balance: number;
+          channel: Database["public"]["Enums"]["sales_channel"];
+          client_name: string | null;
+          created_at: string;
+          detail_center_id: string;
+          folio: string;
+          id: string;
+          paid_amount: number;
+          payment_status: string | null;
+          status: Database["public"]["Enums"]["service_order_status"];
+          total: number;
+        }[];
+      };
+      register_payment: {
+        Args: {
+          p_cash_received?: number | null;
+          p_notes?: string | null;
+          p_order_id: string;
+          p_request_id: string;
+          p_tenders: Json;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["payments"]["Row"];
+        SetofOptions: { from: "*"; to: "payments"; isOneToOne: true; isSetofReturn: false };
+      };
+      reverse_payment: {
+        Args: { p_payment_id: string; p_reason: string };
+        Returns: Database["public"]["Tables"]["payments"]["Row"];
+        SetofOptions: { from: "*"; to: "payments"; isOneToOne: true; isSetofReturn: false };
+      };
+      sales_reconciliation: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          cash_in_range: number;
+          collected_for_sales: number;
+          collected_in_range: number;
+          delivered_orders: number;
+          detail_center_id: string;
+          pending_for_sales: number;
+          reversed_in_range: number;
+          sales_total: number;
+        }[];
+      };
       update_opportunity: {
         Args: {
           p_estimated_value: number;
@@ -3781,6 +4144,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -4133,6 +4497,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -4202,6 +4567,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -4495,6 +4861,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -4912,6 +5279,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -5042,6 +5410,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -5276,6 +5645,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;
@@ -5490,6 +5860,7 @@ export type Database = {
           odometer_km: number | null;
           organization_id: string;
           paid_amount: number;
+          payment_status: string | null;
           promised_at: string | null;
           recommendations: string | null;
           request_id: string;

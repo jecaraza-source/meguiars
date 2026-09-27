@@ -1,3 +1,4 @@
+import { orderPaymentStatus, type OrderPaymentStatus } from "@meguiars/domain";
 import type {
   OrderMutation,
   ServiceOrder,
@@ -9,7 +10,6 @@ import {
   createFromAppointmentSchema,
   createServiceOrderSchema,
   orderFilterSchema,
-  recordPaymentSchema,
   setOrderItemSchema,
   setOrderStatusSchema,
   updateOrderDetailsSchema,
@@ -81,6 +81,9 @@ export const toServiceOrder = (row: DetailRow): ServiceOrder => ({
   costTotal: Number(row.cost_total),
   estimatedMinutes: row.estimated_minutes,
   paidAmount: Number(row.paid_amount),
+  paymentStatus: (row.payment_status ??
+    orderPaymentStatus(Number(row.total), Number(row.paid_amount))) as OrderPaymentStatus,
+  b2bAccountId: row.b2b_account_id,
   authorizedAt: row.authorized_at,
   authorizedTotal: num(row.authorized_total),
   promisedAt: row.promised_at,
@@ -310,23 +313,6 @@ export function createServiceOrderRepository(client: MeguiarsSupabaseClient): Se
             p_next_visit_notes: c.nextVisitNotes ?? null,
             p_odometer_km: c.odometerKm ?? null,
             p_promised_at: c.promisedAt ?? null,
-          }),
-        toMutation,
-      );
-    },
-
-    recordPayment(command) {
-      const parsed = recordPaymentSchema.safeParse(command);
-      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
-      const c = parsed.data;
-      return run(
-        () =>
-          client.rpc("record_service_order_payment", {
-            p_order_id: c.orderId,
-            p_version: c.version,
-            p_amount: c.amount,
-            p_method: c.method,
-            ...(c.reference ? { p_reference: c.reference } : {}),
           }),
         toMutation,
       );

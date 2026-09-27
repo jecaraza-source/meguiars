@@ -500,7 +500,7 @@ language sql stable security definer set search_path = '' as $$
     'id', p.id, 'receipt_folio', p.receipt_folio, 'status', p.status, 'amount', p.amount,
     'cash_received', p.cash_received, 'change_amount', p.change_amount, 'notes', p.notes,
     'received_at', p.received_at, 'received_by', rb.full_name,
-    'center_name', c.name, 'center_timezone', c.timezone, 'organization_name', org.name,
+    'detail_center_id', p.detail_center_id, 'center_name', c.name, 'center_timezone', c.timezone, 'organization_name', org.name,
     -- El contador no ve datos personales de clientes (sólo importes y folios).
     'client_name', case when private.can_read_clients(p.detail_center_id) then cl.full_name end,
     'tenders', (select jsonb_agg(jsonb_build_object('method', t.method, 'name', m.name, 'amount', t.amount,
