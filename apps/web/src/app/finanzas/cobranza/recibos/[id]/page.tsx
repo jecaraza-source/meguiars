@@ -101,10 +101,12 @@ export default async function ReceiptPage({ params }: PageProps<"/finanzas/cobra
           </p>
         </article>
       </Card>
-      {canReverse && result.data.status === "valido" ? (
-        <Card title={paymentsCopy.reverseTitle}>
-          <ReversePaymentForm paymentId={result.data.id} orderId={result.data.orders[0]?.id} />
-        </Card>
+      {canReverse ? (
+        <ReversePaymentForm
+          paymentId={result.data.id}
+          orderId={result.data.orders[0]?.id}
+          reversed={result.data.status !== "valido"}
+        />
       ) : null}
     </AppShell>
   );

@@ -61,11 +61,7 @@ export function OrderPaymentsCard({
 
       {canWrite ? (
         <div className="mt-md">
-          {view.payable ? (
-            <OrderPaymentForm order={order} allowed={allowed} requestId={requestId} />
-          ) : (
-            <p className="text-sm text-muted">{view.blocked}</p>
-          )}
+          <OrderPaymentForm order={order} allowed={allowed} requestId={requestId} blocked={view.blocked} />
         </div>
       ) : null}
 
@@ -103,8 +99,8 @@ export function OrderPaymentsCard({
                       {r.who} · {r.when}
                     </span>
                     {r.reversal ? <span className="text-muted">{r.reversal}</span> : null}
-                    {canReverse && r.valid ? (
-                      <ReversePaymentForm paymentId={p.id} orderId={order.id} />
+                    {canReverse ? (
+                      <ReversePaymentForm paymentId={p.id} orderId={order.id} reversed={!r.valid} />
                     ) : null}
                   </li>
                 );

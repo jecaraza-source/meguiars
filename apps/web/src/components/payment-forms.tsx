@@ -56,13 +56,17 @@ export function OrderPaymentForm({
   order,
   allowed,
   requestId,
+  blocked,
 }: {
   order: { id: string; version: number; total: number; paidAmount: number; b2bAccountId: string | null };
   allowed: readonly PaymentMethod[];
   requestId: string;
+  /** Por qué ya no se cobra (p. ej. "La OS está pagada"); el componente sigue montado para avisar el éxito. */
+  blocked: string | null;
 }) {
   const [state, action] = useActionState(registerPaymentAction, {});
   useToastOnMessage(state);
+  if (blocked) return <p className="text-sm text-muted">{blocked}</p>;
   return (
     <form action={action} className="flex flex-col gap-md" noValidate data-testid="payment-form">
       <input type="hidden" name="orderId" value={order.id} />
@@ -212,9 +216,19 @@ function PaymentFields({
 }
 
 /** Reverso de un recibo completo, con motivo (encargado o admin). */
-export function ReversePaymentForm({ paymentId, orderId }: { paymentId: string; orderId?: string }) {
+export function ReversePaymentForm({
+  paymentId,
+  orderId,
+  reversed,
+}: {
+  paymentId: string;
+  orderId?: string | undefined;
+  /** Ya revertido: no se muestra, pero sigue montado para avisar el éxito. */
+  reversed: boolean;
+}) {
   const [state, action] = useActionState(reversePaymentAction, {});
   useToastOnMessage(state);
+  if (reversed) return null;
   return (
     <details className="text-sm">
       <summary className="cursor-pointer underline">{paymentsCopy.reverse}</summary>

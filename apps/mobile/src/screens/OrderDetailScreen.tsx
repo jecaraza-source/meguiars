@@ -9,6 +9,7 @@ import {
   orderErrorMessage,
   ordersCopy,
   orderStatusActions,
+  PAYABLE_ORDER_STATUSES,
   presentDiscount,
   presentHistory,
   presentOrder,
@@ -220,7 +221,7 @@ export function OrderDetailScreen({
           state={state}
           order={order}
           timeZone={center.timezone}
-          canPay={view.canPay}
+          canPay={PAYABLE_ORDER_STATUSES.includes(order.status)}
           onChanged={reload}
           onOpenReceipt={onOpenReceipt}
         />

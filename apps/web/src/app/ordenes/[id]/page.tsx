@@ -19,6 +19,7 @@ import {
   todayIn,
   formatDateInCenterTimeZone,
   orderStatusActions,
+  PAYABLE_ORDER_STATUSES,
   ordersCopy,
   presentDiscount,
   presentHistory,
@@ -104,7 +105,8 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
   // Cobranza: recibos de la OS y, para cobrar, si la membresía aplica como forma de pago.
   const paymentsRepo = createPaymentRepository(supabase);
   const canReadPayments = canInActiveCenter(state, "payments.read");
-  const canPay = canInActiveCenter(state, "payments.write") && view.canPay;
+  // Se evalúa por estatus (no por saldo): el formulario sigue montado tras el cobro que salda la OS.
+  const canPay = canInActiveCenter(state, "payments.write") && PAYABLE_ORDER_STATUSES.includes(order.status);
   const [payments, hasMembership] = await Promise.all([
     canReadPayments ? paymentsRepo.orderPayments(order.id) : Promise.resolve(null),
     canPay && !order.b2bAccountId
