@@ -126,6 +126,8 @@ export const pipelineCopy = {
   contactEmail: "Email",
   prospectHint: "Si la empresa ya existe (RFC, teléfono o email) se liga sola: nunca se duplica.",
   proposalSection: "Propuesta de convenio (opcional)",
+  proposalLabel: "Propuesta de convenio",
+  edit: "Editar datos",
   proposalHint:
     "Al ganar se crea el convenio con estos términos; las tarifas se ajustan después en la cuenta.",
   billingModel: "Modelo de cobro",
