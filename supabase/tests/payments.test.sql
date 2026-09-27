@@ -273,8 +273,12 @@ reset role;
 select pg_temp.login('00000000-0000-0000-0000-0000000000c1');
 select pg_temp.assert(
   pg_temp.n('select 1 from public.payments') = 5
-  and (select (public.payment_receipt(:'p1')) ->> 'receipt_folio') = 'A-01-R-000001',
-  'el contador consulta recibos y el recibo interno');
+  and (select (public.payment_receipt(:'p1')) ->> 'receipt_folio') = 'A-01-R-000001'
+  and (public.payment_receipt(:'p1')) ->> 'client_name' is null
+  and not exists (select 1 from public.list_payments(array[:'A'::uuid], :'today'::date, :'today'::date)
+                   where client_name is not null)
+  and not exists (select 1 from public.receivable_orders(array[:'A'::uuid]) where client_name is not null),
+  'el contador consulta recibos y el recibo interno, sin datos personales del cliente');
 select pg_temp.assert_fails($$select pg_temp.pay('$$ || :'ob' || $$', '[{"method":"efectivo","amount":1}]')$$,
   '42501', 'el contador no cobra (sólo lectura)');
 reset role;
@@ -318,6 +322,10 @@ select pg_temp.assert(
   (select string_agg(folio || '=' || balance || ':' || payment_status, ',') from public.receivable_orders(array[:'A'::uuid]))
     = (select folio from public.service_orders where id = :'o4') || '=250.00:pendiente',
   'por cobrar: sólo las OS autorizadas con saldo');
+select pg_temp.assert(
+  (select (public.payment_receipt(:'p1')) ->> 'client_name') = 'Ana Ruiz'
+  and (select client_name from public.receivable_orders(array[:'A'::uuid]) limit 1) = 'Luis Mora',
+  'recepción sí ve el nombre del cliente en el recibo y en por cobrar');
 reset role;
 
 rollback;

@@ -501,7 +501,8 @@ language sql stable security definer set search_path = '' as $$
     'cash_received', p.cash_received, 'change_amount', p.change_amount, 'notes', p.notes,
     'received_at', p.received_at, 'received_by', rb.full_name,
     'center_name', c.name, 'center_timezone', c.timezone, 'organization_name', org.name,
-    'client_name', cl.full_name,
+    -- El contador no ve datos personales de clientes (sólo importes y folios).
+    'client_name', case when private.can_read_clients(p.detail_center_id) then cl.full_name end,
     'tenders', (select jsonb_agg(jsonb_build_object('method', t.method, 'name', m.name, 'amount', t.amount,
                                                     'reference', t.reference) order by m.position, t.created_at)
                   from public.payment_tenders t join public.payment_methods m on m.code = t.method
@@ -538,7 +539,8 @@ returns table (
   received_by_name text
 )
 language sql stable security definer set search_path = '' as $$
-  select p.id, p.detail_center_id, p.receipt_folio, p.received_at, p.amount, p.status, cl.full_name,
+  select p.id, p.detail_center_id, p.receipt_folio, p.received_at, p.amount, p.status,
+         case when private.can_read_clients(p.detail_center_id) then cl.full_name end,
          (select string_agg(o.folio, ', ' order by o.folio) from public.payment_allocations a
             join public.service_orders o on o.id = a.service_order_id where a.payment_id = p.id),
          (select string_agg(m.name, ' + ' order by m.position) from public.payment_tenders t
@@ -605,7 +607,8 @@ returns table (
   created_at timestamptz
 )
 language sql stable security definer set search_path = '' as $$
-  select o.id, o.detail_center_id, o.folio, o.client_name, o.channel, o.status, o.b2b_account_id, o.total,
+  select o.id, o.detail_center_id, o.folio,
+         case when private.can_read_clients(o.detail_center_id) then o.client_name end, o.channel, o.status, o.b2b_account_id, o.total,
          o.paid_amount, o.total - o.paid_amount, o.payment_status, o.created_at
     from public.service_orders o
    where o.detail_center_id = any (p_detail_center_ids)
