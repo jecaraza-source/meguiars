@@ -126,7 +126,7 @@ export function presentWidget(
     id: widget.id,
     type: widget.type,
     title: widget.title ?? m?.name ?? widget.metricId,
-    subtitle: widget.title && m ? m.name : null,
+    subtitle: widget.title && m && widget.title !== m.name ? m.name : null,
     status: result.status,
     message: null,
     value: null,
