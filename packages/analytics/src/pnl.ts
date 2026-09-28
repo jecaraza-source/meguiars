@@ -298,6 +298,30 @@ export const pnlNetBeforeTax = kpi(
   "currency",
   (s) => s.netBeforeTax,
 );
+/**
+ * Margen de contribución: ventas menos los costos variables de la OS (costo
+ * estándar congelado y variación real de insumos). A diferencia de la utilidad
+ * bruta, no resta los egresos de costo directo que no pasan por una OS.
+ */
+export function contributionMargin(facts: readonly PnlLineFact[]): number {
+  const variableCost = (f: PnlLineFact) =>
+    f.section === "costo_directo" && (f.line === "estandar" || f.line === "variacion_insumos");
+  return round2(sumOf(facts, (f) => f.section === "ingreso") - sumOf(facts, variableCost));
+}
+
+export const pnlContributionMargin = kpiRegistry.register(
+  defineKpi<PnlKpiInput>({
+    id: "pnl.contribution_margin",
+    name: "Margen de contribución",
+    formula:
+      "Ventas − costo estándar de las OS entregadas − variación real de insumos (sin egresos de costo directo fuera de la OS)",
+    sources: SOURCES,
+    unit: "currency",
+    scopes: ["center", "corporate"],
+    compute: ({ facts }) => contributionMargin(facts),
+  }),
+);
+
 export const pnlPersonnelRatio = kpi(
   "pnl.personnel_ratio",
   "Gasto de personal sobre ventas",

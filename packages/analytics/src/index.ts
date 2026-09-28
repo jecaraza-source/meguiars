@@ -5,4 +5,7 @@ export * from "./upsell";
 export * from "./pipeline";
 export * from "./payments";
 export * from "./pnl";
+export * from "./orders";
+export * from "./customers";
 export * from "./dashboards";
+export * from "./kpis";

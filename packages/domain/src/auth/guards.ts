@@ -69,6 +69,7 @@ export const SCREEN_GUARDS = {
   receivableDocument: { center: true, capability: "b2b.read" },
   direccion: { center: true, capability: "executive.read" },
   dashboards: { center: true, capability: "dashboards.read" },
+  kpis: { center: true, capability: "dashboards.read" },
   dashboardDetail: { center: true, capability: "dashboards.read" },
   dashboardNew: { center: true, capability: "dashboards.manage" },
   dashboardEdit: { center: true, capability: "dashboards.manage" },

@@ -137,3 +137,53 @@ export const dashboardsCopy = {
   columns: (n: number) => String(n),
   rows: (n: number) => String(n),
 } as const;
+
+export const METRIC_UNIT_LABELS: Record<string, string> = {
+  currency: "Pesos (MXN)",
+  percent: "Porcentaje (%)",
+  count: "Conteo",
+  minutes: "Minutos",
+  hours: "Horas",
+  ratio: "Razón",
+};
+
+export const KPI_FILTER_LABELS: Record<string, string> = {
+  centros: "Centros",
+  periodo: "Periodo",
+  canal: "Canal",
+  motor: "Motor de ingreso",
+};
+
+export const KPI_PERIOD_LABELS: Record<"rango" | "corte", string> = {
+  rango: "Suma del periodo elegido",
+  corte: "Foto al último día del periodo",
+};
+
+/** Textos de Dirección → KPIs, idénticos en web y móvil. */
+export const kpisCopy = {
+  title: "KPIs",
+  description:
+    "Indicadores de rentabilidad y gestión con una sola fórmula por KPI, por centro y consolidados.",
+  definition: "Definición",
+  numerator: "Numerador",
+  denominator: "Denominador",
+  validFilters: "Filtros válidos",
+  period: "Periodo",
+  unit: "Unidad",
+  notes: "Interpretación",
+  formula: "Fórmula",
+  source: "Fuente",
+  permission: "Permiso",
+  fixedChannel: (c: string) => `Canal fijo: ${c}`,
+  sheet: "Ficha del KPI",
+  settings: "Parámetros de los KPIs",
+  settingsHint: "Afectan la ocupación (capacidad) y el LTV gerencial de toda la organización.",
+  ltvYears: "Vida esperada del cliente (años, LTV)",
+  hoursPerDay: "Horas operativas por día",
+  daysPerWeek: "Días operativos por semana",
+  reason: "Motivo del cambio",
+  saveSettings: "Guardar parámetros",
+  settingsSaved: "Parámetros guardados",
+  settingsSummary: (years: number, hours: number, days: number) =>
+    `LTV con ${years} años de vida · capacidad de ${hours} h × ${days} días por semana`,
+} as const;

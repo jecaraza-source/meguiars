@@ -147,8 +147,9 @@ describe("navegación por rol", () => {
 
   it("Tableros: todos salvo recepción; la vista consolidada y el constructor, sólo el admin", () => {
     for (const role of ["admin_socio", "encargado", "contador", "comercial_b2b"] as const)
-      expect(itemsOf([role])).toContain("dashboards");
+      expect(itemsOf([role])).toEqual(expect.arrayContaining(["dashboards", "kpis"]));
     expect(itemsOf(["operador_recepcion"])).not.toContain("dashboards");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("kpis");
     expect(itemsOf(["encargado"])).not.toContain("direccion");
     expect(sectionOfScreen("dashboardEdit")).toBe("direccion");
   });

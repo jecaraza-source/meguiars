@@ -1,10 +1,29 @@
+import {
+  customersLtv,
+  customersRecurrenceRate,
+  customersVisitFrequency,
+  type CustomerFact,
+} from "../customers";
 import type { KpiUnit } from "../kpi";
 import {
   membershipActiveCount,
+  membershipCancellationCount,
+  membershipRenewalCount,
   membershipMrr,
   membershipNewCount,
   type MembershipFact,
 } from "../memberships";
+import {
+  opsAvgDuration,
+  opsOccupancy,
+  opsProductivity,
+  opsReworkRate,
+  ordersAvgTicket,
+  ordersProductSales,
+  ordersVehiclesServed,
+  type CenterResourceFact,
+  type OrderFact,
+} from "../orders";
 import { paymentsCashIn, paymentsCollected, type PaymentFactInput } from "../payments";
 import {
   pipelineConversionRate,
@@ -15,18 +34,21 @@ import {
   type PipelineStageRef,
 } from "../pipeline";
 import {
+  contributionMargin,
   expensesCashOut,
   pnlDirectCost,
   pnlEbitda,
   pnlEbitdaMargin,
   pnlGrossMargin,
   pnlGrossProfit,
+  pnlContributionMargin,
   pnlNetBeforeTax,
   pnlPersonnelRatio,
   pnlRevenue,
   pnlStatement,
   type PnlLineFact,
 } from "../pnl";
+import { upsellAcceptanceRate, type UpsellFact } from "../upsell";
 
 /**
  * Catálogo de métricas de los tableros ejecutivos (D1). ÚNICO lugar donde se
@@ -42,7 +64,15 @@ import {
 export const WIDGET_TYPES = ["kpi", "timeseries", "bars", "ranking", "funnel", "distribution"] as const;
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 
-export const METRIC_SOURCES = ["pnl", "payments", "pipeline", "memberships"] as const;
+export const METRIC_SOURCES = [
+  "pnl",
+  "payments",
+  "pipeline",
+  "memberships",
+  "orders",
+  "upsell",
+  "customers",
+] as const;
 export type MetricSource = (typeof METRIC_SOURCES)[number];
 
 /** Filtros globales que una métrica puede respetar (además de centros y periodo). */
@@ -115,6 +145,11 @@ export interface DashboardFacts {
   pipeline?: readonly PipelineFact[];
   pipelineStages?: readonly PipelineStageRef[];
   memberships?: readonly MembershipCenterFact[];
+  orders?: readonly OrderFact[];
+  /** Recursos y parámetros por centro (vienen con orders o customers). */
+  centers?: readonly CenterResourceFact[];
+  upsell?: readonly UpsellFact[];
+  customers?: readonly CustomerFact[];
 }
 
 /** Filtros globales ya resueltos. */
@@ -129,6 +164,8 @@ export interface MetricInput<F> {
   from: string;
   to: string;
   stages: readonly PipelineStageRef[];
+  /** Recursos y parámetros de los centros evaluados (capacidad, técnicos, vida del LTV). */
+  centers: readonly CenterResourceFact[];
 }
 
 export interface BreakdownRow {
@@ -201,6 +238,40 @@ const membershipsSource: SourceSpec<MembershipCenterFact> = {
   centerOf: (f) => f.detailCenterId,
   bucketOf: null,
   matches: () => true,
+};
+
+const ordersSource: SourceSpec<OrderFact> = {
+  pick: (f) => f.orders ?? [],
+  centerOf: (f) => f.detailCenterId,
+  bucketOf: (f) => f.bucket,
+  matches: (f, filters, declared) =>
+    !declared.includes("canal") || !filters.channel || f.channel === filters.channel,
+};
+
+const upsellSource: SourceSpec<UpsellFact> = {
+  pick: (f) => f.upsell ?? [],
+  centerOf: (f) => f.detailCenterId,
+  bucketOf: null,
+  matches: () => true,
+};
+
+const customersSource: SourceSpec<CustomerFact> = {
+  pick: (f) => f.customers ?? [],
+  centerOf: (f) => f.detailCenterId,
+  bucketOf: null,
+  matches: (f, filters, declared) =>
+    !declared.includes("canal") || !filters.channel || f.channel === filters.channel,
+};
+
+/** Margen de contribución: el motor filtra ingreso y costo estándar; la variación de insumos no tiene motor. */
+const pnlContributionSource: SourceSpec<PnlBucketFact> = {
+  ...pnlSource,
+  matches: (f, filters, declared) => {
+    if (!declared.includes("motor") || !filters.engine) return true;
+    if (f.section === "ingreso") return f.dimension === filters.engine;
+    if (f.section === "costo_directo" && f.line === "estandar") return f.dimension === filters.engine;
+    return f.section !== "costo_directo" || f.line !== "variacion_insumos";
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -519,6 +590,156 @@ export const METRIC_CATALOG: readonly MetricDefinition[] = [
     capability: "memberships.metrics.read",
     widgets: ["kpi", "bars", "ranking"],
     value: (i) => membershipMrr.compute(i),
+  }),
+  defineMetric("pnl", pnlContributionSource, {
+    id: "pnl.contribution_margin",
+    version: 1,
+    kpi: pnlContributionMargin,
+    description: "Lo que aportan las OS después de sus costos variables (costo estándar e insumos reales).",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars", "ranking", "distribution"],
+    filters: ["motor"],
+    breakdowns: ["motor"],
+    value: ({ facts }) => pnlContributionMargin.compute({ facts }),
+    breakdown: ({ facts }) => {
+      const byEngine = new Map<string, PnlBucketFact[]>();
+      for (const f of facts) {
+        if (f.section !== "ingreso" && !(f.section === "costo_directo" && f.line !== "egresos_costo_directo"))
+          continue;
+        const key = f.line === "variacion_insumos" ? "-" : (f.dimension ?? "-");
+        byEngine.set(key, [...(byEngine.get(key) ?? []), f]);
+      }
+      return [...byEngine.entries()]
+        .map(([key, rows]) => ({ key, label: ENGINE_LABELS[key] ?? key, value: contributionMargin(rows) }))
+        .sort(byRank(ENGINE_RANK));
+    },
+  }),
+  defineMetric("orders", ordersSource, {
+    id: "orders.vehicles_served",
+    version: 1,
+    kpi: ordersVehiclesServed,
+    description: "Visitas terminadas: OS entregadas en el periodo.",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars", "ranking"],
+    filters: ["canal"],
+    value: (i) => ordersVehiclesServed.compute(i),
+  }),
+  defineMetric("orders", ordersSource, {
+    id: "orders.avg_ticket",
+    version: 1,
+    kpi: ordersAvgTicket,
+    description: "Venta promedio por OS entregada.",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars", "ranking"],
+    filters: ["canal"],
+    value: (i) => ordersAvgTicket.compute(i),
+  }),
+  defineMetric("orders", ordersSource, {
+    id: "orders.product_sales",
+    version: 1,
+    kpi: ordersProductSales,
+    description: "Productos vendidos dentro de las OS entregadas (no servicios).",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars", "ranking"],
+    filters: ["canal"],
+    value: (i) => ordersProductSales.compute(i),
+  }),
+  defineMetric("orders", ordersSource, {
+    id: "ops.occupancy",
+    version: 1,
+    kpi: opsOccupancy,
+    description: "Qué tanto de la capacidad instalada de bahías se usó en servicios entregados.",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars", "ranking"],
+    value: (i) => opsOccupancy.compute(i),
+  }),
+  defineMetric("orders", ordersSource, {
+    id: "ops.avg_duration",
+    version: 1,
+    kpi: opsAvgDuration,
+    description: "Tiempo real de trabajo por OS, del inicio al fin de la ejecución.",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars"],
+    filters: ["canal"],
+    value: (i) => opsAvgDuration.compute(i),
+  }),
+  defineMetric("orders", ordersSource, {
+    id: "ops.productivity",
+    version: 1,
+    kpi: opsProductivity,
+    description: "Vehículos entregados por cada técnico activo del centro.",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars", "ranking"],
+    value: (i) => opsProductivity.compute(i),
+  }),
+  defineMetric("orders", ordersSource, {
+    id: "ops.rework_rate",
+    version: 1,
+    kpi: opsReworkRate,
+    description: "Porcentaje de OS entregadas que tuvieron una incidencia o un retrabajo.",
+    capability: "pnl.read",
+    widgets: ["kpi", "timeseries", "bars", "ranking"],
+    filters: ["canal"],
+    value: (i) => opsReworkRate.compute(i),
+  }),
+  defineMetric("upsell", upsellSource, {
+    id: "upsell.acceptance_rate",
+    version: 1,
+    kpi: upsellAcceptanceRate,
+    name: "Tasa de upselling",
+    description: "Porcentaje de sugerencias de venta aceptadas en las OS.",
+    capability: "upsell.read",
+    widgets: ["kpi", "bars", "ranking"],
+    value: (i) => upsellAcceptanceRate.compute(i),
+  }),
+  defineMetric("memberships", membershipsSource, {
+    id: "membership.renewal_count",
+    version: 1,
+    kpi: membershipRenewalCount,
+    description: "Renovaciones de membresía registradas en el periodo.",
+    capability: "memberships.metrics.read",
+    widgets: ["kpi", "bars"],
+    value: (i) => membershipRenewalCount.compute(i),
+  }),
+  defineMetric("memberships", membershipsSource, {
+    id: "membership.cancellation_count",
+    version: 1,
+    kpi: membershipCancellationCount,
+    description: "Membresías canceladas en el periodo (las vencidas sin renovar se cuentan aparte en Bajas).",
+    capability: "memberships.metrics.read",
+    widgets: ["kpi", "bars"],
+    value: (i) => membershipCancellationCount.compute(i),
+  }),
+  defineMetric("customers", customersSource, {
+    id: "customers.recurrence_rate",
+    version: 1,
+    kpi: customersRecurrenceRate,
+    description: "Porcentaje de clientes atendidos en el periodo que ya habían venido antes al centro.",
+    capability: "customers.metrics.read",
+    widgets: ["kpi", "bars", "ranking"],
+    filters: ["canal"],
+    value: (i) => customersRecurrenceRate.compute(i),
+  }),
+  defineMetric("customers", customersSource, {
+    id: "customers.visit_frequency",
+    version: 1,
+    kpi: customersVisitFrequency,
+    description: "Visitas promedio por cliente atendido en el periodo.",
+    capability: "customers.metrics.read",
+    widgets: ["kpi", "bars", "ranking"],
+    filters: ["canal"],
+    value: (i) => customersVisitFrequency.compute(i),
+  }),
+  defineMetric("customers", customersSource, {
+    id: "customers.ltv",
+    version: 1,
+    kpi: customersLtv,
+    description:
+      "Valor de vida del cliente con una fórmula gerencial explícita y configurable; no es una predicción.",
+    capability: "customers.metrics.read",
+    widgets: ["kpi", "bars"],
+    filters: ["canal"],
+    value: (i) => customersLtv.compute(i),
   }),
 ];
 

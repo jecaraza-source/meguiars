@@ -11,6 +11,41 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      kpi_settings: {
+        Row: {
+          ltv_lifetime_years: number;
+          operating_days_per_week: number;
+          operating_hours_per_day: number;
+          organization_id: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          ltv_lifetime_years?: number;
+          operating_days_per_week?: number;
+          operating_hours_per_day?: number;
+          organization_id: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          ltv_lifetime_years?: number;
+          operating_days_per_week?: number;
+          operating_hours_per_day?: number;
+          organization_id?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kpi_settings_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       dashboard_definitions: {
         Row: {
           archived_at: string | null;
@@ -4366,6 +4401,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      set_kpi_settings: {
+        Args: {
+          p_ltv_lifetime_years: number;
+          p_operating_days_per_week: number;
+          p_operating_hours_per_day: number;
+          p_organization_id: string;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["kpi_settings"]["Row"];
+        SetofOptions: { from: "*"; to: "kpi_settings"; isOneToOne: true; isSetofReturn: false };
+      };
       save_dashboard: {
         Args: {
           p_audience_role: Database["public"]["Enums"]["app_role"] | null;

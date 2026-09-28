@@ -84,6 +84,8 @@ export const CAPABILITIES = [
   "dashboards.manage",
   // Indicadores de membresías (private.can_read_membership_metrics): métricas de los tableros.
   "memberships.metrics.read",
+  // Indicadores de clientes sin datos personales (D2): recurrencia, frecuencia y LTV.
+  "customers.metrics.read",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -109,7 +111,8 @@ export type Capability = (typeof CAPABILITIES)[number];
  * 20261009000000 (private.can_read_cash / can_operate_cash / can_reopen_cash); `pnl.read`, en
  * 20261010000000 (private.can_read_pnl); `dashboards.*`, en 20261013000000
  * (private.can_read_dashboards / can_manage_dashboards, admin corporativo);
- * `memberships.metrics.read` = private.can_read_membership_metrics (20261002000000).
+ * `memberships.metrics.read` = private.can_read_membership_metrics (20261002000000);
+ * `customers.metrics.read` = private.can_read_customer_metrics (20261015000000).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -164,6 +167,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "dashboards.read",
     "dashboards.manage",
     "memberships.metrics.read",
+    "customers.metrics.read",
   ],
   encargado: [
     "center.read",
@@ -200,6 +204,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "pnl.read",
     "dashboards.read",
     "memberships.metrics.read",
+    "customers.metrics.read",
   ],
   operador_recepcion: [
     "center.read",
@@ -236,6 +241,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "pnl.read",
     "dashboards.read",
     "memberships.metrics.read",
+    "customers.metrics.read",
   ],
   comercial_b2b: [
     "center.read",
@@ -255,6 +261,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "pipeline.metrics.read",
     "dashboards.read",
     "memberships.metrics.read",
+    "customers.metrics.read",
   ],
 };
 
