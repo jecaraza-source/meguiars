@@ -15,6 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth/AuthProvider";
 import { APP_ENV } from "@/lib/environment";
+import { BrandLogo } from "./brand";
 import { LinkButton } from "./controls";
 import { Badge } from "./display";
 import { textStyle } from "./theme";
@@ -40,12 +41,15 @@ export function EnvironmentBanner() {
 export function Screen({
   title,
   eyebrow,
+  brand,
   description,
   header,
   children,
 }: {
   title: string;
   eyebrow?: string;
+  /** Logo y nombre de la app arriba del título (pantallas sin encabezado: acceso y avisos). */
+  brand?: boolean;
   description?: string;
   header?: React.ReactNode;
   children: React.ReactNode;
@@ -55,8 +59,14 @@ export function Screen({
       <EnvironmentBanner />
       {header}
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {brand ? (
+          <View style={styles.brand}>
+            <BrandLogo height={88} />
+            <Text style={textStyle("menu", "accent")}>{APP_NAME.toUpperCase()}</Text>
+          </View>
+        ) : null}
         {eyebrow ? <Text style={textStyle("caption", "accent")}>{eyebrow}</Text> : null}
-        <Text accessibilityRole="header" style={textStyle("title")}>
+        <Text accessibilityRole="header" style={textStyle("title", "accent")}>
           {title}
         </Text>
         {description ? <Text style={textStyle("bodySmall", "muted")}>{description}</Text> : null}
@@ -80,7 +90,10 @@ export function AppHeader({
   const active = activeCenterAccess(state);
   return (
     <View style={styles.header}>
-      <Text style={textStyle("caption", "accent")}>{APP_NAME.toUpperCase()}</Text>
+      <View accessibilityLabel={APP_NAME} style={styles.headerRow}>
+        <BrandLogo height={36} />
+        <Text style={textStyle("menu", "accent")}>DETAIL CENTER</Text>
+      </View>
       {active ? (
         <View style={styles.headerRow}>
           <Text style={textStyle("label")}>{active.center.name}</Text>
@@ -123,15 +136,11 @@ export function TabBar({
               accessibilityState={{ selected }}
               accessibilityLabel={section.label}
               onPress={() => onSelect(section.items[0]!.screen)}
-              style={styles.tab}
+              style={[styles.tab, selected ? styles.tabActive : null]}
             >
-              <Text
-                numberOfLines={1}
-                style={textStyle(selected ? "label" : "caption", selected ? "foreground" : "muted")}
-              >
+              <Text numberOfLines={1} style={textStyle("menu", selected ? "brandForeground" : "foreground")}>
                 {section.shortLabel}
               </Text>
-              {selected ? <View style={styles.indicator} /> : null}
             </Pressable>
           );
         })}
@@ -161,7 +170,9 @@ export function SubNav({
           onPress={() => onSelect(item.screen)}
           style={[styles.chip, item.screen === current ? styles.chipActive : null]}
         >
-          <Text style={textStyle(item.screen === current ? "label" : "bodySmall")}>{item.label}</Text>
+          <Text style={textStyle("menu", item.screen === current ? "brandForeground" : "accent")}>
+            {item.label}
+          </Text>
         </Pressable>
       ))}
     </View>
@@ -180,19 +191,20 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.surfaceRaised,
   },
+  brand: { alignItems: "flex-start", gap: space.xs, marginBottom: space.sm },
   headerRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: space.sm },
   tabBar: { backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: colors.border },
   tabs: { flexDirection: "row" },
   tab: { flex: 1, minHeight: touchTarget, alignItems: "center", justifyContent: "center", gap: space.xxs },
-  indicator: { width: space.xl, height: space.xxs, backgroundColor: colors.brand },
+  tabActive: { backgroundColor: colors.accent },
   subnav: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   chip: {
     minHeight: touchTarget,
     justifyContent: "center",
     paddingHorizontal: space.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.accent,
     borderRadius: radius.full,
   },
-  chipActive: { borderColor: colors.brand, backgroundColor: colors.surface },
+  chipActive: { borderColor: colors.accent, backgroundColor: colors.accent },
 });

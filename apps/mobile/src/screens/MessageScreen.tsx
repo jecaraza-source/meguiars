@@ -1,4 +1,3 @@
-import { APP_NAME } from "@meguiars/domain";
 import type { Tone } from "@meguiars/ui-tokens";
 import { Button } from "@/ui/controls";
 import { EmptyState } from "@/ui/display";
@@ -20,7 +19,7 @@ export function MessageScreen({
   header?: React.ReactNode;
 }) {
   return (
-    <Screen eyebrow={header ? undefined : APP_NAME.toUpperCase()} title={title} header={header}>
+    <Screen brand={!header} title={title} header={header}>
       {tone ? <Notice tone={tone} text={message} /> : <EmptyState title={title} message={message} />}
       {action ? <Button label={action.label} variant="secondary" onPress={action.onPress} /> : null}
     </Screen>

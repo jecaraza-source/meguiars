@@ -1,4 +1,4 @@
-import { APP_NAME, authCopy } from "@meguiars/domain";
+import { authCopy } from "@meguiars/domain";
 import { fieldErrors, forgotPasswordSchema } from "@meguiars/validation";
 import { useState } from "react";
 import { Text } from "react-native";
@@ -29,7 +29,7 @@ export function ForgotPasswordScreen({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <Screen eyebrow={APP_NAME.toUpperCase()} title={authCopy.forgotTitle}>
+    <Screen brand title={authCopy.forgotTitle}>
       <Text style={textStyle("bodySmall", "muted")}>{authCopy.forgotHelp}</Text>
       <Field
         label={authCopy.emailLabel}

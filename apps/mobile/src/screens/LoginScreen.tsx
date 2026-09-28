@@ -1,4 +1,4 @@
-import { APP_NAME, authCopy } from "@meguiars/domain";
+import { authCopy } from "@meguiars/domain";
 import { fieldErrors, loginSchema } from "@meguiars/validation";
 import { useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
@@ -24,7 +24,7 @@ export function LoginScreen({ onForgot }: { onForgot: () => void }) {
   };
 
   return (
-    <Screen eyebrow={APP_NAME.toUpperCase()} title={authCopy.loginTitle}>
+    <Screen brand title={authCopy.loginTitle}>
       <Notice tone="danger" text={linkError} />
       <Field
         label={authCopy.emailLabel}
