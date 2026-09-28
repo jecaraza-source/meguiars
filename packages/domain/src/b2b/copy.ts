@@ -5,7 +5,6 @@ import type {
   B2bAccountStatus,
   B2bPaymentMethod,
   BillingModel,
-  InvoiceStatus,
   PriceRuleKind,
   VehicleRule,
 } from "./b2b";
@@ -75,11 +74,6 @@ export const B2B_PAYMENT_METHOD_LABELS: Record<B2bPaymentMethod, string> = {
   tarjeta: "Tarjeta",
   efectivo: "Efectivo",
   otro: "Otro",
-};
-
-export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
-  emitida: "Emitida",
-  anulada: "Anulada",
 };
 
 /** Textos del módulo B2B, idénticos en web y móvil. */
@@ -177,24 +171,7 @@ export const b2bCopy = {
   ordersEmpty: "Sin OS en el periodo.",
   evidences: "Evidencias",
   purchaseOrder: "Orden de compra",
-  // Facturación
-  billingTitle: "Facturación y pagos",
-  billingHint: "Registra el corte con la referencia del CFDI emitido fuera de la plataforma.",
-  newInvoice: "Registrar corte",
-  invoiceReference: "Referencia (folio del CFDI)",
-  issuedOn: "Fecha de emisión",
-  invoiceOrders: "OS entregadas por facturar",
-  invoiceFee: "Cuota a facturar",
-  invoicesEmpty: "Sin cortes.",
-  voidInvoice: "Anular corte",
-  newPayment: "Registrar pago",
-  paymentAmount: "Importe",
-  paymentMethod: "Forma de pago",
-  paymentReference: "Referencia (opcional)",
-  paidOn: "Fecha de pago",
-  paymentInvoice: "Corte (opcional)",
-  paymentsEmpty: "Sin pagos.",
-  voidPayment: "Anular pago",
+  // Facturación y cobro: módulo de cuentas por cobrar (receivablesCopy).
   // OS
   orderCardTitle: "Cuenta B2B",
   orderAccount: "Cuenta",

@@ -1,7 +1,6 @@
 import {
   AGREEMENT_STATUSES,
   B2B_ACCOUNT_STATUSES,
-  B2B_PAYMENT_METHODS,
   BILLING_MODELS,
   FEE_MODELS,
   PRICE_RULE_KINDS,
@@ -171,31 +170,6 @@ export const applyB2bAccountSchema = z.object({
   version: z.coerce.number().int().min(1),
   accountId: z.uuid({ message: "Elige la cuenta" }),
   purchaseOrder: optionalText(80),
-});
-
-export const b2bInvoiceSchema = z
-  .object({
-    accountId: z.uuid(),
-    requestId: z.uuid(),
-    reference: z.string().trim().min(1, "Captura la referencia").max(80),
-    issuedOn: isoDate,
-    orderIds: z.array(z.uuid()),
-    feeAmount: z.preprocess((v) => blankToUndefined(v) ?? 0, moneySchema),
-    notes: optionalText(1000),
-  })
-  .refine((i) => i.orderIds.length > 0 || i.feeAmount > 0, {
-    message: "Elige OS o captura la cuota a facturar",
-    path: ["orderIds"],
-  });
-
-export const b2bPaymentSchema = z.object({
-  accountId: z.uuid(),
-  requestId: z.uuid(),
-  amount: moneySchema.refine((n) => n > 0, "El importe debe ser mayor que 0"),
-  method: z.enum(B2B_PAYMENT_METHODS, { message: "Elige la forma de pago" }),
-  reference: optionalText(120),
-  paidOn: isoDate,
-  invoiceId: optionalUuid,
 });
 
 export const b2bVoidSchema = z.object({ id: z.uuid(), reason: changeReasonSchema });

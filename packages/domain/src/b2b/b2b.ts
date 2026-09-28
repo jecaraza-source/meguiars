@@ -251,35 +251,6 @@ export interface B2bAccountOrder {
   evidenceCount: number;
 }
 
-export interface B2bInvoice {
-  id: string;
-  reference: string;
-  issuedOn: string;
-  dueOn: string;
-  ordersAmount: number;
-  feeAmount: number;
-  amount: number;
-  status: InvoiceStatus;
-  voidReason: string | null;
-  notes: string | null;
-}
-
-export interface B2bPayment {
-  id: string;
-  invoiceId: string | null;
-  amount: number;
-  method: B2bPaymentMethod;
-  reference: string | null;
-  paidOn: string;
-  voidedAt: string | null;
-  voidReason: string | null;
-}
-
-export interface B2bBilling {
-  invoices: B2bInvoice[];
-  payments: B2bPayment[];
-}
-
 /** Cuenta con convenio vigente en el centro, para abrir una OS (lo ve el operador). */
 export interface B2bAccountForOrder {
   accountId: string;
@@ -403,26 +374,6 @@ export interface CreateB2bOrderCommand {
   observations?: string | undefined;
 }
 
-export interface CreateInvoiceCommand {
-  accountId: string;
-  requestId: string;
-  reference: string;
-  issuedOn: string;
-  orderIds: string[];
-  feeAmount: number;
-  notes?: string | undefined;
-}
-
-export interface RecordB2bPaymentCommand {
-  accountId: string;
-  requestId: string;
-  amount: number;
-  method: B2bPaymentMethod;
-  reference?: string | undefined;
-  paidOn: string;
-  invoiceId?: string | undefined;
-}
-
 export interface OrderMutationRef {
   id: string;
   version: number;
@@ -456,11 +407,6 @@ export interface B2bRepository {
   orderInfo(orderId: string): Promise<Result<OrderB2bInfo | null>>;
   statement(accountId: string): Promise<Result<B2bStatement>>;
   accountOrders(accountId: string, from: string, to: string): Promise<Result<B2bAccountOrder[]>>;
-  billing(accountId: string): Promise<Result<B2bBilling>>;
-  createInvoice(command: CreateInvoiceCommand): Promise<Result<{ id: string }>>;
-  voidInvoice(invoiceId: string, reason: string): Promise<Result<void>>;
-  recordPayment(command: RecordB2bPaymentCommand): Promise<Result<void>>;
-  voidPayment(paymentId: string, reason: string): Promise<Result<void>>;
   profitabilityFacts(
     detailCenterIds: string[],
     from: string,
