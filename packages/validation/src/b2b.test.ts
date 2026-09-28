@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  b2bAccountSchema,
-  b2bAgreementSchema,
-  b2bContactSchema,
-  b2bInvoiceSchema,
-  b2bPriceRuleSchema,
-} from "./b2b";
+import { b2bAccountSchema, b2bAgreementSchema, b2bContactSchema, b2bPriceRuleSchema } from "./b2b";
 
 const U = "00000000-0000-4000-8000-000000000001";
 
@@ -78,18 +72,5 @@ describe("validación B2B", () => {
       value: undefined,
       minMonthlyOrders: 0,
     });
-  });
-
-  it("corte: OS o cuota", () => {
-    const base = {
-      accountId: U,
-      requestId: U,
-      reference: "A-1",
-      issuedOn: "2026-10-01",
-      orderIds: [],
-      feeAmount: "",
-    };
-    expect(b2bInvoiceSchema.safeParse(base).success).toBe(false);
-    expect(b2bInvoiceSchema.parse({ ...base, feeAmount: "1000" }).feeAmount).toBe(1000);
   });
 });

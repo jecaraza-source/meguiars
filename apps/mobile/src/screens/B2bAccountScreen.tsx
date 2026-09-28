@@ -5,39 +5,31 @@ import {
   b2bErrorMessage,
   B2B_ACCOUNT_STATUS_LABELS,
   B2B_ACCOUNT_STATUS_TONES,
-  B2B_PAYMENT_METHOD_LABELS,
   can,
   canInActiveCenter,
   canInCenter,
   pipelineCopy,
   formatDateInCenterTimeZone,
-  formatDateOnly,
-  formatMoney,
-  INVOICE_STATUS_LABELS,
+  guardScreen,
+  presentDocumentRow,
+  receivablesCopy,
+  receivablesErrorMessage,
   presentAccountOrder,
   presentAgreement,
   statementCards,
   todayIn,
   type B2bAccountDetail,
   type B2bAccountOrder,
-  type B2bBilling,
+  type B2bBillingDocument,
   type B2bStatement,
   type ViewState,
 } from "@meguiars/domain";
-import { createB2bRepository } from "@meguiars/supabase";
+import { createB2bRepository, createReceivablesRepository } from "@meguiars/supabase";
 import { space } from "@meguiars/ui-tokens";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
-import {
-  AccountEditor,
-  AgreementEditor,
-  ContactEditor,
-  InvoiceEditor,
-  PaymentEditor,
-  ReasonAction,
-  VehicleToggle,
-} from "@/components/B2bForms";
+import { AccountEditor, AgreementEditor, ContactEditor, VehicleToggle } from "@/components/B2bForms";
 import { LinkButton } from "@/ui/controls";
 import { Badge, Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
 import { Screen } from "@/ui/layout";
@@ -49,7 +41,8 @@ interface Loaded {
   detail: B2bAccountDetail;
   statement: B2bStatement | null;
   orders: B2bAccountOrder[];
-  billing: B2bBilling | null;
+  /** Documentos de cobro abiertos (CxC B2B, centro gestor). */
+  documents: B2bBillingDocument[] | null;
   /** Errores de secciones que no impiden mostrar la ficha. */
   errors: string[];
 }
@@ -62,11 +55,13 @@ export function B2bAccountScreen({
   onBack,
   onOpenAgreement,
   onNewOpportunity,
+  onOpenReceivables,
 }: PrivateScreenProps & {
   accountId: string;
   onBack: () => void;
   onOpenAgreement: (id: string) => void;
   onNewOpportunity?: (accountId: string) => void;
+  onOpenReceivables?: (accountId: string) => void;
 }) {
   const { client } = useAuth();
   const center = activeCenterAccess(state)!.center;
@@ -83,18 +78,25 @@ export function B2bAccountScreen({
       repo.getAccount(accountId),
       repo.statement(accountId),
       repo.accountOrders(accountId, addDays(today, -89), today),
-      repo.billing(accountId),
-    ]).then(([d, s, o, b]) => {
+    ]).then(async ([d, s, o]) => {
       if (!active) return;
       if (!d.ok) return setData({ status: "permission_denied", message: b2bCopy.notFound });
+      // La cartera es del centro gestor de la cuenta.
+      const docs = await createReceivablesRepository(client).documents([d.data.account.homeDetailCenterId], {
+        accountId,
+      });
+      if (!active) return;
       setData({
         status: "ready",
         data: {
           detail: d.data,
           statement: s.ok ? s.data : null,
           orders: o.ok ? o.data : [],
-          billing: b.ok ? b.data : null,
-          errors: [s, o, b].flatMap((r) => (r.ok ? [] : [b2bErrorMessage(r.error)])),
+          documents: docs.ok ? docs.data : null,
+          errors: [
+            ...[s, o].flatMap((r) => (r.ok ? [] : [b2bErrorMessage(r.error)])),
+            ...(docs.ok ? [] : [receivablesErrorMessage(docs.error)]),
+          ],
         },
       });
     });
@@ -114,11 +116,10 @@ export function B2bAccountScreen({
       </Screen>
     );
   }
-  const { detail, statement, orders, billing, errors } = data.data;
+  const { detail, statement, orders, documents, errors } = data.data;
   const { account, agreements, vehicles, contacts } = detail;
   // Administrar y facturar se deciden en el centro gestor de la cuenta (la base lo vuelve a validar).
   const canWrite = canInCenter(state, account.homeDetailCenterId, "b2b.write");
-  const canBill = canInCenter(state, account.homeDetailCenterId, "b2b.billing");
   const centerNames = new Map(state.access.map((a) => [a.center.id, a.center.name]));
   const centerName = (id: string) => centerNames.get(id) ?? "Otro centro";
   const writableCenters = state.access
@@ -129,7 +130,6 @@ export function B2bAccountScreen({
   const orgCenters = state.access
     .filter((a) => a.center.active && a.center.organizationId === account.organizationId)
     .map((a) => ({ id: a.center.id, name: a.center.name }));
-  const invoiceable = orders.filter((o) => o.status === "entregada" && !o.invoiceId);
 
   return (
     <Screen
@@ -221,65 +221,25 @@ export function B2bAccountScreen({
         />
       </Card>
 
-      <Card title={b2bCopy.billingTitle}>
-        {billing ? (
-          <>
-            {billing.invoices.length === 0 ? (
-              <Text style={textStyle("bodySmall", "muted")}>{b2bCopy.invoicesEmpty}</Text>
-            ) : null}
-            {billing.invoices.map((i) => (
-              <View key={i.id} style={styles.row}>
-                <Text style={textStyle("body")}>
-                  {i.reference} · {formatMoney(i.amount)} · vence {formatDateOnly(i.dueOn)} ·{" "}
-                  {INVOICE_STATUS_LABELS[i.status]}
-                </Text>
-                {canBill && i.status === "emitida" ? (
-                  <ReasonAction
-                    label={b2bCopy.voidInvoice}
-                    run={(repo, reason) => repo.voidInvoice(i.id, reason)}
-                    onDone={reload}
-                  />
-                ) : null}
-              </View>
-            ))}
-            {billing.payments.length === 0 ? (
-              <Text style={textStyle("bodySmall", "muted")}>{b2bCopy.paymentsEmpty}</Text>
-            ) : null}
-            {billing.payments.map((p) => (
-              <View key={p.id} style={styles.row}>
-                <Text style={textStyle("body")}>
-                  {formatMoney(p.amount)} · {B2B_PAYMENT_METHOD_LABELS[p.method]} · {formatDateOnly(p.paidOn)}
-                  {p.voidedAt ? ` · Anulado (${p.voidReason})` : ""}
-                </Text>
-                {canBill && !p.voidedAt ? (
-                  <ReasonAction
-                    label={b2bCopy.voidPayment}
-                    run={(repo, reason) => repo.voidPayment(p.id, reason)}
-                    onDone={reload}
-                  />
-                ) : null}
-              </View>
-            ))}
-          </>
+      <Card title={receivablesCopy.title} subtitle={receivablesCopy.notCfdi}>
+        {documents && documents.length === 0 ? (
+          <Text style={textStyle("bodySmall", "muted")}>{receivablesCopy.empty}</Text>
+        ) : null}
+        {(documents ?? []).map(presentDocumentRow).map((d) => (
+          <View key={d.id} style={styles.row}>
+            <Text style={textStyle("body")}>
+              {d.folio} · {d.period} · {receivablesCopy.dueOn.toLowerCase()} {d.dueOn}
+            </Text>
+            <Badge label={`${d.status} · ${d.balance}`} tone={d.statusTone} />
+          </View>
+        ))}
+        {onOpenReceivables && guardScreen(state, "receivableAccount").allow ? (
+          <LinkButton
+            label={`${receivablesCopy.openReceivables} →`}
+            onPress={() => onOpenReceivables(account.id)}
+          />
         ) : null}
       </Card>
-      {canBill && billing ? (
-        <>
-          <Card title={b2bCopy.newInvoice}>
-            <InvoiceEditor
-              key={`inv-${version}`}
-              accountId={account.id}
-              orders={invoiceable.map((o) => ({ id: o.id, folio: o.folio, total: o.total }))}
-              feePending={statement ? Math.max(0, statement.feesAccrued - statement.feesInvoiced) : 0}
-              today={today}
-              onDone={reload}
-            />
-          </Card>
-          <Card title={b2bCopy.newPayment}>
-            <PaymentEditor accountId={account.id} invoices={billing.invoices} today={today} onDone={reload} />
-          </Card>
-        </>
-      ) : null}
 
       <Card title={b2bCopy.contactsTitle}>
         {contacts.filter((c) => c.active).length === 0 ? (

@@ -7,49 +7,41 @@ import {
   b2bErrorMessage,
   B2B_ACCOUNT_STATUS_LABELS,
   B2B_ACCOUNT_STATUS_TONES,
-  B2B_PAYMENT_METHOD_LABELS,
   can,
   canInCenter,
   formatDateInCenterTimeZone,
-  formatDateOnly,
-  formatMoney,
-  INVOICE_STATUS_LABELS,
+  guardScreen,
+  presentDocumentRow,
+  receivablesCopy,
+  receivablesErrorMessage,
   newRequestId,
   presentAccountOrder,
   presentAgreement,
   statementCards,
   todayIn,
 } from "@meguiars/domain";
-import { createB2bRepository } from "@meguiars/supabase";
+import { createB2bRepository, createReceivablesRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import {
-  AccountForm,
-  AgreementForm,
-  B2bPaymentForm,
-  ContactForm,
-  InvoiceForm,
-  VehicleToggle,
-  VoidBillingButton,
-} from "@/components/b2b-forms";
+import { AccountForm, AgreementForm, ContactForm, VehicleToggle } from "@/components/b2b-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-/** Ficha de la cuenta B2B: estado de cuenta, convenios, vehículos, contactos, OS y facturación. */
+/** Ficha de la cuenta B2B: estado de cuenta, convenios, vehículos, contactos, OS y documentos por cobrar. */
 export default async function B2bAccountPage({ params, searchParams }: PageProps<"/comercial/b2b/[id]">) {
   const state = await requireScreen("b2bAccountDetail");
   const center = activeCenterAccess(state)!.center;
   const { id } = await params;
   const created = (await searchParams).nueva === "1";
-  const repo = createB2bRepository((await createSupabaseServerClient())!);
+  const supabase = (await createSupabaseServerClient())!;
+  const repo = createB2bRepository(supabase);
   const today = todayIn(center.timezone);
-  const [detail, statement, orders, billing] = await Promise.all([
+  const [detail, statement, orders] = await Promise.all([
     repo.getAccount(id),
     repo.statement(id),
     repo.accountOrders(id, addDays(today, -89), today),
-    repo.billing(id),
   ]);
   if (!detail.ok) {
     return (
@@ -62,9 +54,12 @@ export default async function B2bAccountPage({ params, searchParams }: PageProps
     );
   }
   const { account, contacts, agreements, vehicles } = detail.data;
+  // Documentos de cobro abiertos (CxC B2B): la cartera es del centro gestor.
+  const documents = await createReceivablesRepository(supabase).documents([account.homeDetailCenterId], {
+    accountId: account.id,
+  });
   // Administrar y facturar se deciden en el centro gestor de la cuenta (la base lo vuelve a validar).
   const canWrite = canInCenter(state, account.homeDetailCenterId, "b2b.write");
-  const canBill = canInCenter(state, account.homeDetailCenterId, "b2b.billing");
   const centerNames = new Map(state.access.map((a) => [a.center.id, a.center.name]));
   const centerName = (cid: string) => centerNames.get(cid) ?? "Otro centro";
   const writableCenters = state.access
@@ -79,11 +74,6 @@ export default async function B2bAccountPage({ params, searchParams }: PageProps
     ? orders.data.map((o) =>
         presentAccountOrder(o, (iso) => formatDateInCenterTimeZone(iso, center.timezone)),
       )
-    : [];
-  const invoiceable = orders.ok
-    ? orders.data
-        .filter((o) => o.status === "entregada" && !o.invoiceId)
-        .map((o) => ({ id: o.id, folio: o.folio, total: o.total }))
     : [];
 
   return (
@@ -212,87 +202,37 @@ export default async function B2bAccountPage({ params, searchParams }: PageProps
         />
       </Card>
 
-      <Card title={b2bCopy.billingTitle}>
-        {billing.ok ? (
-          <div className="flex flex-col gap-md">
-            <h3 className="font-medium">Cortes</h3>
-            {billing.data.invoices.length === 0 ? (
-              <p className="text-sm text-muted">{b2bCopy.invoicesEmpty}</p>
-            ) : null}
-            <ul className="flex flex-col gap-sm" aria-label="Cortes">
-              {billing.data.invoices.map((i) => (
-                <li key={i.id} className="flex flex-col gap-xs border-b border-border pb-sm">
-                  <span>
-                    <strong>{i.reference}</strong> · {formatMoney(i.amount)} · emitido{" "}
-                    {formatDateOnly(i.issuedOn)} · vence {formatDateOnly(i.dueOn)} ·{" "}
-                    {INVOICE_STATUS_LABELS[i.status]}
-                    {i.voidReason ? ` (${i.voidReason})` : ""}
-                  </span>
-                  {canBill && i.status === "emitida" ? (
-                    <VoidBillingButton
-                      accountId={account.id}
-                      kind="invoice"
-                      id={i.id}
-                      label={b2bCopy.voidInvoice}
-                    />
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-            <h3 className="font-medium">Pagos</h3>
-            {billing.data.payments.length === 0 ? (
-              <p className="text-sm text-muted">{b2bCopy.paymentsEmpty}</p>
-            ) : null}
-            <ul className="flex flex-col gap-sm" aria-label="Pagos">
-              {billing.data.payments.map((p) => (
-                <li key={p.id} className="flex flex-col gap-xs border-b border-border pb-sm">
-                  <span>
-                    {formatMoney(p.amount)} · {B2B_PAYMENT_METHOD_LABELS[p.method]} ·{" "}
-                    {formatDateOnly(p.paidOn)}
-                    {p.reference ? ` · ${p.reference}` : ""}
-                    {p.voidedAt ? ` · Anulado (${p.voidReason})` : ""}
-                  </span>
-                  {canBill && !p.voidedAt ? (
-                    <VoidBillingButton
-                      accountId={account.id}
-                      kind="payment"
-                      id={p.id}
-                      label={b2bCopy.voidPayment}
-                    />
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-            {canBill ? (
-              <div className="grid gap-lg lg:grid-cols-2">
-                <div>
-                  <h3 className="mb-sm font-medium">{b2bCopy.newInvoice}</h3>
-                  <InvoiceForm
-                    accountId={account.id}
-                    requestId={newRequestId()}
-                    orders={invoiceable}
-                    feePending={
-                      statement.ok ? Math.max(0, statement.data.feesAccrued - statement.data.feesInvoiced) : 0
-                    }
-                    today={today}
-                  />
-                </div>
-                <div>
-                  <h3 className="mb-sm font-medium">{b2bCopy.newPayment}</h3>
-                  <B2bPaymentForm
-                    accountId={account.id}
-                    requestId={newRequestId()}
-                    invoices={billing.data.invoices}
-                    today={today}
-                  />
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ) : (
+      <Card
+        title={receivablesCopy.title}
+        subtitle={receivablesCopy.notCfdi}
+        actions={
+          guardScreen(state, "receivableAccount").allow ? (
+            <Link href={`/finanzas/cxc/cuentas/${account.id}`} className="text-sm underline">
+              {receivablesCopy.openReceivables} →
+            </Link>
+          ) : null
+        }
+      >
+        {!documents.ok ? (
           <p role="alert" className="text-sm">
-            {b2bErrorMessage(billing.error)}
+            {receivablesErrorMessage(documents.error)}
           </p>
+        ) : documents.data.length === 0 ? (
+          <p className="text-sm text-muted">{receivablesCopy.empty}</p>
+        ) : (
+          <ul className="flex flex-col gap-sm" aria-label={receivablesCopy.documents}>
+            {documents.data.map(presentDocumentRow).map((d) => (
+              <li key={d.id} className="flex flex-wrap items-center justify-between gap-sm text-sm">
+                <span>
+                  <strong>{d.folio}</strong> · {d.period} · {receivablesCopy.dueOn.toLowerCase()} {d.dueOn}
+                </span>
+                <span className="flex items-center gap-sm">
+                  <Badge label={d.status} tone={d.statusTone} />
+                  {d.balance}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
 

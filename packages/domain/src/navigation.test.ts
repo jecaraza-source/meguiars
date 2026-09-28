@@ -51,8 +51,9 @@ describe("navegación por rol", () => {
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).
     ["contador", ["inicio", "operacion", "comercial", "finanzas"]],
-    // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día.
-    ["comercial_b2b", ["inicio", "operacion", "comercial"]],
+    // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día;
+    // en Finanzas sólo ve Cuentas por cobrar B2B (factura y cobra a las cuentas).
+    ["comercial_b2b", ["inicio", "operacion", "comercial", "finanzas"]],
   ])("%s ve %j", (role, expected) => {
     expect(sectionsOf([role])).toEqual(expected);
   });
@@ -105,6 +106,17 @@ describe("navegación por rol", () => {
     expect(itemsOf(["operador_recepcion"])).not.toContain("comercial");
     expect(itemsOf(["comercial_b2b"])).toEqual(expect.arrayContaining(["comercial", "memberships"]));
     expect(itemsOf(["contador"])).not.toContain("memberships");
+  });
+
+  it("Cuentas por cobrar B2B: admin, comercial B2B, encargado y contador; recepción no", () => {
+    expect(itemsOf(["comercial_b2b"])).toContain("receivables");
+    expect(itemsOf(["comercial_b2b"])).not.toContain("payments");
+    expect(itemsOf(["contador"])).toContain("receivables");
+    expect(itemsOf(["encargado"])).toContain("receivables");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("receivables");
+    expect(navScreenOf("receivableAccount")).toBe("receivables");
+    expect(navScreenOf("receivableDocument")).toBe("receivables");
+    expect(sectionOfScreen("receivableDocument")).toBe("finanzas");
   });
 
   it("B2B: comercial administra; encargado y contador consultan; recepción no ve tarifas", () => {

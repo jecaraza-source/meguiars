@@ -1,0 +1,135 @@
+import type { StatusTone } from "../agenda/copy";
+import type { B2bDocumentStatus } from "./receivables";
+
+export const B2B_DOCUMENT_STATUS_LABELS: Record<B2bDocumentStatus, string> = {
+  por_facturar: "Por facturar",
+  facturado_externo: "Facturado (externo)",
+  parcial: "Cobro parcial",
+  cobrado: "Cobrado",
+  vencido: "Vencido",
+  anulado: "Anulado",
+};
+
+export const B2B_DOCUMENT_STATUS_TONES: Record<B2bDocumentStatus, StatusTone> = {
+  por_facturar: "neutral",
+  facturado_externo: "info",
+  parcial: "warning",
+  cobrado: "success",
+  vencido: "danger",
+  anulado: "neutral",
+};
+
+/** Textos de cuentas por cobrar B2B, idénticos en web y móvil. */
+export const receivablesCopy = {
+  title: "Cuentas por cobrar B2B",
+  shortTitle: "CxC B2B",
+  description:
+    "Servicios B2B realizados, agrupados para facturar fuera de la plataforma y cobrados: saldo por cuenta y antigüedad.",
+  notCfdi: "La factura (CFDI) se emite fuera de la plataforma; aquí sólo se registra su referencia.",
+  pnlNote: "Agrupar, facturar o cobrar no cambia el estado de resultados: la venta es la OS entregada.",
+  empty: "Sin saldo por cobrar.",
+  forbidden: "Sin permiso para esta acción.",
+  notFound: "El documento no existe o no tienes acceso.",
+  onlineOnly: "Cuentas por cobrar requiere conexión: no se guarda sin internet.",
+  scopeCenter: "Centro activo",
+  scopeAll: "Todos mis centros",
+  // Resumen
+  accounts: "Saldo por cuenta",
+  account: "Cuenta",
+  balance: "Saldo",
+  consumption: "Consumo",
+  paid: "Pagado",
+  unbilled: "OS sin agrupar",
+  unbilledFees: "Cuota sin agrupar",
+  documentsBalance: "Documentos",
+  unapplied: "Saldo a favor",
+  overdue: "Vencido",
+  traceOk: "Saldo trazable: consumo − pagos = sin agrupar + documentos − saldo a favor.",
+  traceGap: "El saldo no cuadra con sus partes: revisa la auditoría.",
+  aging: "Antigüedad de saldos",
+  agingHint:
+    "Documentos por días desde su fecha; OS sin agrupar por días desde la entrega. Vencido = fecha compromiso pasada.",
+  agingDocuments: "Documentos",
+  agingUnbilled: "Sin agrupar",
+  total: "Total",
+  // Documentos
+  documents: "Documentos de cobro",
+  documentsOpen: "Abiertos",
+  documentsAll: "Incluir cobrados y anulados",
+  documentsEmpty: "Sin documentos.",
+  folio: "Folio",
+  period: "Periodo",
+  issuedOn: "Fecha",
+  externalRef: "Factura externa",
+  externalRefHint: "Folio o UUID del CFDI emitido fuera (opcional).",
+  externalInvoicedOn: "Fecha de la factura externa",
+  dueOn: "Fecha compromiso",
+  dueOnReason: "Motivo del cambio de fecha",
+  amount: "Importe",
+  status: "Estado",
+  age: "Antigüedad",
+  daysOverdue: "Días vencido",
+  orders: "OS incluidas",
+  fee: "Cuota",
+  notes: "Notas",
+  // Agrupar
+  newBatch: "Agrupar para facturar",
+  newBatchHint:
+    "Agrupa las OS entregadas de la cuenta en el periodo que aún no tienen documento; vence según la condición de pago del convenio.",
+  periodFrom: "Desde (entrega)",
+  periodTo: "Hasta (entrega)",
+  batchFee: "Cuota devengada a incluir (MXN)",
+  batchDue: "Fecha compromiso (opcional)",
+  batchCreated: "Documento creado.",
+  unbilledOrders: "OS entregadas por agrupar",
+  unbilledEmpty: "Sin OS por agrupar.",
+  // Editar
+  edit: "Factura externa y compromiso",
+  editHint:
+    "Registra la referencia de la factura emitida fuera y, si cambia, la fecha compromiso (con motivo).",
+  reason: "Motivo",
+  saved: "Guardado.",
+  // Anular
+  void: "Anular documento",
+  voidHint: "Sólo sin pagos aplicados. Sus OS vuelven a quedar por agrupar.",
+  voidReason: "Motivo de la anulación",
+  voided: "Documento anulado.",
+  // Pagos
+  payments: "Pagos",
+  paymentsEmpty: "Sin pagos.",
+  newPayment: "Registrar pago",
+  newPaymentHint:
+    "Aplica el pago a uno o varios documentos; sin aplicación, se cubre primero el compromiso más antiguo. Lo no aplicado queda a favor.",
+  paymentAmount: "Importe (MXN)",
+  paymentMethod: "Forma de pago",
+  paymentReference: "Referencia (opcional)",
+  paidOn: "Fecha del pago",
+  allocation: "Aplicar a",
+  allocationAuto: "Automática (compromiso más antiguo primero)",
+  allocationManual: "Indicar importe por documento",
+  applied: "Aplicado",
+  paymentRecorded: "Pago registrado.",
+  allocate: "Aplicar saldo a favor",
+  allocated: "Saldo a favor aplicado.",
+  voidPayment: "Anular pago",
+  voidPaymentReason: "Motivo de la anulación del pago",
+  paymentVoided: "Pago anulado.",
+  voidedTag: "anulado",
+  // Export
+  export: "Export para el contador",
+  exportHint:
+    "Una fila por OS o cuota de cada documento vigente emitido en el periodo, con datos fiscales y saldo.",
+  exportCsv: "Descargar CSV",
+  share: "Compartir CSV",
+  exportFrom: "Documentos desde",
+  exportTo: "hasta",
+  // Datos fiscales
+  fiscal: "Datos de facturación",
+  legalName: "Razón social",
+  rfc: "RFC",
+  taxRegime: "Régimen fiscal",
+  fiscalZip: "CP fiscal",
+  billingEmail: "Email de facturación",
+  openAccount: "Ver cuenta B2B",
+  openReceivables: "Ver cuentas por cobrar",
+} as const;

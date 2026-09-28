@@ -6,8 +6,6 @@ import {
   b2bCopy,
   B2B_ACCOUNT_STATUS_LABELS,
   B2B_ACCOUNT_STATUSES,
-  B2B_PAYMENT_METHOD_LABELS,
-  B2B_PAYMENT_METHODS,
   BILLING_MODEL_HINTS,
   BILLING_MODEL_LABELS,
   BILLING_MODELS,
@@ -20,7 +18,6 @@ import {
   type B2bAccount,
   type B2bAccountForOrder,
   type B2bAgreement,
-  type B2bInvoice,
   type B2bPriceRule,
   type B2bVehicle,
   type BillingModel,
@@ -32,14 +29,11 @@ import { useFormStatus } from "react-dom";
 import {
   applyB2bAccountAction,
   createB2bOrderAction,
-  createInvoiceAction,
-  recordPaymentAction,
   setPriceRuleAction,
   setVehicleAction,
   upsertAccountAction,
   upsertAgreementAction,
   upsertContactAction,
-  voidBillingAction,
   type B2bFormState,
 } from "@/app/actions/b2b";
 import { Button } from "./ui/button";
@@ -559,185 +553,6 @@ export function RuleToggle({ rule }: { rule: B2bPriceRule }) {
         />
       </div>
       <Submit label={label} variant={rule.active ? "danger" : "primary"} />
-      <Alert text={state.error} />
-    </form>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Facturación
-// ---------------------------------------------------------------------------
-
-export function InvoiceForm({
-  accountId,
-  requestId,
-  orders,
-  feePending,
-  today,
-}: {
-  accountId: string;
-  requestId: string;
-  orders: { id: string; folio: string; total: number }[];
-  feePending: number;
-  today: string;
-}) {
-  const [state, action] = useActionState(createInvoiceAction, {});
-  useSuccessToast(state);
-  const f = state.fields ?? {};
-  const selected = valuesOf(
-    state,
-    "orderIds",
-    orders.map((o) => o.id),
-  );
-  return (
-    <form key={state.at ?? 0} action={action} className="flex flex-col gap-sm" noValidate>
-      <input type="hidden" name="accountId" value={accountId} />
-      <input type="hidden" name="requestId" value={requestId} />
-      <p className="text-sm text-muted">{b2bCopy.billingHint}</p>
-      <div className="grid gap-md md:grid-cols-2">
-        <Input
-          name="reference"
-          label={b2bCopy.invoiceReference}
-          required
-          defaultValue={valueOf(state, "reference")}
-          error={f.reference}
-        />
-        <Input
-          name="issuedOn"
-          type="date"
-          label={b2bCopy.issuedOn}
-          required
-          defaultValue={valueOf(state, "issuedOn", today)}
-          error={f.issuedOn}
-        />
-      </div>
-      <fieldset className="flex flex-col gap-xs">
-        <legend className="mg-label">{b2bCopy.invoiceOrders}</legend>
-        {orders.length === 0 ? <span className="text-sm text-muted">—</span> : null}
-        {orders.map((o) => (
-          <Checkbox
-            key={o.id}
-            name="orderIds"
-            value={o.id}
-            label={`${o.folio} · ${formatMoney(o.total)}`}
-            checked={selected.includes(o.id)}
-          />
-        ))}
-        {f.orderIds ? (
-          <span className="mg-error" role="alert">
-            {f.orderIds}
-          </span>
-        ) : null}
-      </fieldset>
-      {feePending > 0 ? (
-        <Input
-          name="feeAmount"
-          label={`${b2bCopy.invoiceFee} (pendiente ${formatMoney(feePending)})`}
-          inputMode="decimal"
-          defaultValue={valueOf(state, "feeAmount", String(feePending))}
-          error={f.feeAmount}
-        />
-      ) : null}
-      <Alert text={state.error} />
-      <div>
-        <Submit label={b2bCopy.newInvoice} variant="primary" />
-      </div>
-    </form>
-  );
-}
-
-export function B2bPaymentForm({
-  accountId,
-  requestId,
-  invoices,
-  today,
-}: {
-  accountId: string;
-  requestId: string;
-  invoices: B2bInvoice[];
-  today: string;
-}) {
-  const [state, action] = useActionState(recordPaymentAction, {});
-  useSuccessToast(state);
-  const f = state.fields ?? {};
-  return (
-    <form key={state.at ?? 0} action={action} className="flex flex-col gap-sm" noValidate>
-      <input type="hidden" name="accountId" value={accountId} />
-      <input type="hidden" name="requestId" value={requestId} />
-      <div className="grid gap-md md:grid-cols-3">
-        <Input
-          name="amount"
-          label={b2bCopy.paymentAmount}
-          inputMode="decimal"
-          required
-          defaultValue={valueOf(state, "amount")}
-          error={f.amount}
-        />
-        <Select
-          name="method"
-          label={b2bCopy.paymentMethod}
-          options={B2B_PAYMENT_METHODS.map((m) => ({ value: m, label: B2B_PAYMENT_METHOD_LABELS[m] }))}
-          defaultValue={valueOf(state, "method", "transferencia")}
-        />
-        <Input
-          name="paidOn"
-          id="paid-on"
-          type="date"
-          label={b2bCopy.paidOn}
-          required
-          defaultValue={valueOf(state, "paidOn", today)}
-          error={f.paidOn}
-        />
-        <Input
-          name="reference"
-          id="payment-reference"
-          label={b2bCopy.paymentReference}
-          defaultValue={valueOf(state, "reference")}
-        />
-        <Select
-          name="invoiceId"
-          label={b2bCopy.paymentInvoice}
-          options={[
-            { value: "", label: "—" },
-            ...invoices
-              .filter((i) => i.status === "emitida")
-              .map((i) => ({ value: i.id, label: `${i.reference} · ${formatMoney(i.amount)}` })),
-          ]}
-          defaultValue={valueOf(state, "invoiceId")}
-        />
-      </div>
-      <Alert text={state.error} />
-      <div>
-        <Submit label={b2bCopy.newPayment} variant="primary" />
-      </div>
-    </form>
-  );
-}
-
-export function VoidBillingButton({
-  accountId,
-  kind,
-  id,
-  label,
-}: {
-  accountId: string;
-  kind: "invoice" | "payment";
-  id: string;
-  label: string;
-}) {
-  const [state, action] = useActionState(voidBillingAction, {});
-  useSuccessToast(state);
-  const [open, setOpen] = useState(false);
-  if (!open) return <Button label={label} variant="secondary" onClick={() => setOpen(true)} />;
-  return (
-    <form key={state.at ?? 0} action={action} className="flex flex-wrap items-end gap-sm" noValidate>
-      <input type="hidden" name="accountId" value={accountId} />
-      <input type="hidden" name="kind" value={kind} />
-      <input type="hidden" name="id" value={id} />
-      <div className="flex-1">
-        <Input name="reason" id={`void-${id}`} label={b2bCopy.reason} required error={state.fields?.reason} />
-      </div>
-      <Submit label={label} variant="danger" />
       <Alert text={state.error} />
     </form>
   );

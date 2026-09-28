@@ -6,10 +6,8 @@ import {
   type B2bAccountListItem,
   type B2bAccountStatus,
   type B2bAgreement,
-  type B2bPaymentMethod,
   type B2bRepository,
   type BillingModel,
-  type InvoiceStatus,
   type PriceRuleKind,
   type Result,
   type VehicleRule,
@@ -19,11 +17,8 @@ import {
   b2bAccountSchema,
   b2bAgreementSchema,
   b2bContactSchema,
-  b2bInvoiceSchema,
-  b2bPaymentSchema,
   b2bPriceRuleSchema,
   b2bVehicleSchema,
-  b2bVoidSchema,
   createB2bOrderSchema,
 } from "@meguiars/validation";
 import type { MeguiarsSupabaseClient } from "../client";
@@ -537,110 +532,6 @@ export function createB2bRepository(client: MeguiarsSupabaseClient): B2bReposito
             invoiceReference: o.invoice_reference,
             evidenceCount: o.evidence_count,
           })),
-      );
-    },
-
-    async billing(accountId) {
-      const [invoices, payments] = await Promise.all([
-        run(
-          () =>
-            client
-              .from("b2b_invoices")
-              .select("*")
-              .eq("account_id", accountId)
-              .order("issued_on", { ascending: false }),
-          (rows) => rows,
-        ),
-        run(
-          () =>
-            client
-              .from("b2b_payments")
-              .select("*")
-              .eq("account_id", accountId)
-              .order("paid_on", { ascending: false }),
-          (rows) => rows,
-        ),
-      ]);
-      if (!invoices.ok) return invoices;
-      if (!payments.ok) return payments;
-      return {
-        ok: true,
-        data: {
-          invoices: invoices.data.map((i) => ({
-            id: i.id,
-            reference: i.reference,
-            issuedOn: i.issued_on,
-            dueOn: i.due_on,
-            ordersAmount: Number(i.orders_amount),
-            feeAmount: Number(i.fee_amount),
-            amount: Number(i.amount),
-            status: i.status as InvoiceStatus,
-            voidReason: i.void_reason,
-            notes: i.notes,
-          })),
-          payments: payments.data.map((p) => ({
-            id: p.id,
-            invoiceId: p.invoice_id,
-            amount: Number(p.amount),
-            method: p.method as B2bPaymentMethod,
-            reference: p.reference,
-            paidOn: p.paid_on,
-            voidedAt: p.voided_at,
-            voidReason: p.void_reason,
-          })),
-        },
-      };
-    },
-
-    createInvoice(command) {
-      const parsed = b2bInvoiceSchema.safeParse(command);
-      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
-      const c = parsed.data;
-      return run(
-        () =>
-          client.rpc("create_b2b_invoice", {
-            p_account_id: c.accountId,
-            p_request_id: c.requestId,
-            p_reference: c.reference,
-            p_issued_on: c.issuedOn,
-            p_order_ids: c.orderIds,
-            p_fee_amount: c.feeAmount,
-            p_notes: c.notes ?? null,
-          }),
-        (row) => ({ id: row.id }),
-      );
-    },
-
-    async voidInvoice(invoiceId, reason) {
-      const parsed = b2bVoidSchema.safeParse({ id: invoiceId, reason });
-      if (!parsed.success) return invalid(parsed.error);
-      return done(
-        client.rpc("void_b2b_invoice", { p_invoice_id: parsed.data.id, p_reason: parsed.data.reason }),
-      );
-    },
-
-    async recordPayment(command) {
-      const parsed = b2bPaymentSchema.safeParse(command);
-      if (!parsed.success) return invalid(parsed.error);
-      const c = parsed.data;
-      return done(
-        client.rpc("record_b2b_payment", {
-          p_account_id: c.accountId,
-          p_request_id: c.requestId,
-          p_amount: c.amount,
-          p_method: c.method,
-          p_reference: c.reference ?? null,
-          p_paid_on: c.paidOn,
-          p_invoice_id: c.invoiceId ?? null,
-        }),
-      );
-    },
-
-    async voidPayment(paymentId, reason) {
-      const parsed = b2bVoidSchema.safeParse({ id: paymentId, reason });
-      if (!parsed.success) return invalid(parsed.error);
-      return done(
-        client.rpc("void_b2b_payment", { p_payment_id: parsed.data.id, p_reason: parsed.data.reason }),
       );
     },
 

@@ -14,11 +14,8 @@ import {
   b2bAccountSchema,
   b2bAgreementSchema,
   b2bContactSchema,
-  b2bInvoiceSchema,
-  b2bPaymentSchema,
   b2bPriceRuleSchema,
   b2bVehicleSchema,
-  b2bVoidSchema,
   createB2bOrderSchema,
   fieldErrors,
   linesFromQuantities,
@@ -172,64 +169,6 @@ export async function setVehicleAction(_prev: B2bFormState, form: FormData): Pro
     return stamp(validationState(fieldErrors(parsed.error), ["accountId", "vehicleId", "active"], form));
   const result = await ctx.repo.setVehicle(parsed.data);
   refreshAccount(parsed.data.accountId);
-  if (!result.ok) return failed(result.error, form);
-  return stamp({ message: b2bCopy.saved });
-}
-
-export async function createInvoiceAction(_prev: B2bFormState, form: FormData): Promise<B2bFormState> {
-  const ctx = await context("b2bAccountDetail");
-  if (!ctx) return stamp({ error: b2bCopy.forbidden });
-  const parsed = b2bInvoiceSchema.safeParse({
-    accountId: text(form, "accountId"),
-    requestId: text(form, "requestId"),
-    reference: text(form, "reference"),
-    issuedOn: text(form, "issuedOn"),
-    orderIds: all(form, "orderIds"),
-    feeAmount: text(form, "feeAmount"),
-    notes: text(form, "notes"),
-  });
-  if (!parsed.success)
-    return stamp({
-      ...validationState(fieldErrors(parsed.error), ["accountId", "requestId"], form),
-      values: values(form, ["orderIds"]),
-    });
-  const result = await ctx.repo.createInvoice(parsed.data);
-  refreshAccount(parsed.data.accountId);
-  if (!result.ok) return failed(result.error, form, ["orderIds"]);
-  return stamp({ message: b2bCopy.saved });
-}
-
-export async function recordPaymentAction(_prev: B2bFormState, form: FormData): Promise<B2bFormState> {
-  const ctx = await context("b2bAccountDetail");
-  if (!ctx) return stamp({ error: b2bCopy.forbidden });
-  const parsed = b2bPaymentSchema.safeParse({
-    accountId: text(form, "accountId"),
-    requestId: text(form, "requestId"),
-    amount: text(form, "amount"),
-    method: text(form, "method"),
-    reference: text(form, "reference"),
-    paidOn: text(form, "paidOn"),
-    invoiceId: text(form, "invoiceId"),
-  });
-  if (!parsed.success)
-    return stamp(validationState(fieldErrors(parsed.error), ["accountId", "requestId"], form));
-  const result = await ctx.repo.recordPayment(parsed.data);
-  refreshAccount(parsed.data.accountId);
-  if (!result.ok) return failed(result.error, form);
-  return stamp({ message: b2bCopy.saved });
-}
-
-/** Anular un corte o un pago (botón `kind`), con motivo. */
-export async function voidBillingAction(_prev: B2bFormState, form: FormData): Promise<B2bFormState> {
-  const ctx = await context("b2bAccountDetail");
-  if (!ctx) return stamp({ error: b2bCopy.forbidden });
-  const parsed = b2bVoidSchema.safeParse({ id: text(form, "id"), reason: text(form, "reason") });
-  if (!parsed.success) return stamp(validationState(fieldErrors(parsed.error), ["id"], form));
-  const result =
-    text(form, "kind") === "invoice"
-      ? await ctx.repo.voidInvoice(parsed.data.id, parsed.data.reason)
-      : await ctx.repo.voidPayment(parsed.data.id, parsed.data.reason);
-  refreshAccount(text(form, "accountId"));
   if (!result.ok) return failed(result.error, form);
   return stamp({ message: b2bCopy.saved });
 }

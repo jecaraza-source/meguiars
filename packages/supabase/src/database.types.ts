@@ -502,13 +502,19 @@ export type Database = {
           created_at: string;
           created_by: string | null;
           due_on: string;
+          due_on_reason: string | null;
+          external_invoiced_on: string | null;
           fee_amount: number;
+          folio: string;
+          folio_number: number;
           id: string;
           issued_on: string;
           notes: string | null;
           orders_amount: number;
           organization_id: string;
-          reference: string;
+          period_from: string;
+          period_to: string;
+          reference: string | null;
           request_id: string;
           status: string;
           updated_at: string;
@@ -520,13 +526,19 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           due_on: string;
+          due_on_reason?: string | null;
+          external_invoiced_on?: string | null;
           fee_amount?: number;
+          folio: string;
+          folio_number: number;
           id?: string;
           issued_on: string;
           notes?: string | null;
           orders_amount: number;
           organization_id: string;
-          reference: string;
+          period_from: string;
+          period_to: string;
+          reference?: string | null;
           request_id: string;
           status?: string;
           updated_at?: string;
@@ -538,13 +550,19 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           due_on?: string;
+          due_on_reason?: string | null;
+          external_invoiced_on?: string | null;
           fee_amount?: number;
+          folio?: string;
+          folio_number?: number;
           id?: string;
           issued_on?: string;
           notes?: string | null;
           orders_amount?: number;
           organization_id?: string;
-          reference?: string;
+          period_from?: string;
+          period_to?: string;
+          reference?: string | null;
           request_id?: string;
           status?: string;
           updated_at?: string;
@@ -556,6 +574,51 @@ export type Database = {
             columns: ["organization_id", "account_id"];
             isOneToOne: false;
             referencedRelation: "b2b_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      b2b_payment_allocations: {
+        Row: {
+          amount: number;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          invoice_id: string;
+          organization_id: string;
+          payment_id: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_id: string;
+          organization_id: string;
+          payment_id: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_id?: string;
+          organization_id?: string;
+          payment_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "b2b_payment_allocations_organization_id_invoice_id_fkey";
+            columns: ["organization_id", "invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_invoices";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "b2b_payment_allocations_organization_id_payment_id_fkey";
+            columns: ["organization_id", "payment_id"];
+            isOneToOne: false;
+            referencedRelation: "b2b_payments";
             referencedColumns: ["organization_id", "id"];
           },
         ];
@@ -4745,6 +4808,173 @@ export type Database = {
           orders: number;
           revenue: number;
         }[];
+      };
+      allocate_b2b_payment: {
+        Args: { p_allocations?: Json | null; p_payment_id: string };
+        Returns: number;
+      };
+      b2b_account_payments: {
+        Args: { p_account_id: string };
+        Returns: {
+          allocations: Json;
+          amount: number;
+          applied: number;
+          created_at: string;
+          id: string;
+          method: string;
+          paid_on: string;
+          reference: string | null;
+          unapplied: number;
+          void_reason: string | null;
+          voided_at: string | null;
+        }[];
+      };
+      b2b_billing_document: {
+        Args: { p_invoice_id: string };
+        Returns: Json;
+      };
+      b2b_billing_documents: {
+        Args: {
+          p_account_id?: string | null;
+          p_detail_center_ids: string[];
+          p_from?: string | null;
+          p_include_closed?: boolean;
+          p_to?: string | null;
+        };
+        Returns: {
+          account_id: string;
+          account_name: string;
+          age_days: number;
+          amount: number;
+          balance: number;
+          created_at: string;
+          days_overdue: number;
+          due_on: string;
+          due_on_reason: string | null;
+          external_invoiced_on: string | null;
+          external_ref: string | null;
+          fee_amount: number;
+          folio: string;
+          home_detail_center_id: string;
+          id: string;
+          issued_on: string;
+          notes: string | null;
+          orders_amount: number;
+          orders_count: number;
+          paid: number;
+          period_from: string;
+          period_to: string;
+          status: string;
+          void_reason: string | null;
+        }[];
+      };
+      b2b_receivables: {
+        Args: { p_detail_center_ids: string[] };
+        Returns: {
+          account_id: string;
+          account_name: string;
+          balance: number;
+          consumption: number;
+          credit_limit: number | null;
+          documents_balance: number;
+          facturado_externo: number;
+          home_detail_center_id: string;
+          oldest_unbilled_on: string | null;
+          paid: number;
+          parcial: number;
+          por_facturar: number;
+          status: string;
+          unapplied: number;
+          unbilled_fees: number;
+          unbilled_orders: number;
+          unbilled_orders_count: number;
+          vencido: number;
+        }[];
+      };
+      b2b_receivables_export: {
+        Args: { p_account_id?: string | null; p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          account_name: string;
+          billing_email: string | null;
+          center_name: string | null;
+          delivered_on: string | null;
+          document_amount: number;
+          document_balance: number;
+          document_paid: number;
+          due_on: string;
+          external_invoiced_on: string | null;
+          external_ref: string | null;
+          fiscal_zip: string | null;
+          folio: string;
+          issued_on: string;
+          legal_name: string | null;
+          line_amount: number;
+          line_kind: string;
+          order_folio: string | null;
+          period_from: string;
+          period_to: string;
+          purchase_order: string | null;
+          rfc: string | null;
+          status: string;
+          tax_regime: string | null;
+          vehicle_label: string | null;
+        }[];
+      };
+      b2b_unbilled_orders: {
+        Args: { p_account_id?: string | null; p_detail_center_ids: string[] };
+        Returns: {
+          account_id: string;
+          account_name: string;
+          age_days: number;
+          center_name: string;
+          delivered_on: string;
+          detail_center_id: string;
+          folio: string;
+          id: string;
+          purchase_order: string | null;
+          total: number;
+          vehicle_label: string;
+        }[];
+      };
+      create_b2b_billing_batch: {
+        Args: {
+          p_account_id: string;
+          p_due_on?: string | null;
+          p_external_invoiced_on?: string | null;
+          p_external_ref?: string | null;
+          p_fee_amount?: number;
+          p_notes?: string | null;
+          p_order_ids?: string[] | null;
+          p_period_from: string;
+          p_period_to: string;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["b2b_invoices"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_invoices"; isOneToOne: true; isSetofReturn: false };
+      };
+      register_b2b_payment: {
+        Args: {
+          p_account_id: string;
+          p_allocations?: Json | null;
+          p_amount: number;
+          p_method: string;
+          p_paid_on: string | null;
+          p_reference: string | null;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["b2b_payments"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_payments"; isOneToOne: true; isSetofReturn: false };
+      };
+      update_b2b_billing_batch: {
+        Args: {
+          p_due_on: string;
+          p_external_invoiced_on: string | null;
+          p_external_ref: string | null;
+          p_invoice_id: string;
+          p_reason: string;
+        };
+        Returns: Database["public"]["Tables"]["b2b_invoices"]["Row"];
+        SetofOptions: { from: "*"; to: "b2b_invoices"; isOneToOne: true; isSetofReturn: false };
       };
       create_b2b_invoice: {
         Args: {

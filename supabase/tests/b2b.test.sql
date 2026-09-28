@@ -380,7 +380,7 @@ select (public.create_b2b_invoice(:'acc', '40000000-0000-4000-8000-000000000001'
   array[:'os1'::uuid], 0, null)).id as inv \gset
 select pg_temp.assert(
   (select amount = 2680 and due_on = :'today'::date + 30 from public.b2b_invoices where id = :'inv')
-  and (select invoice_id = :'inv' and invoice_reference = 'A-123'
+  and (select invoice_id = :'inv' and invoice_reference = 'CXC-000001 · A-123'
          from public.b2b_account_orders(:'acc', :'today'::date - 1, :'today'::date + 1) where id = :'os1')
   and (select to_invoice = 0 and invoiced = 2680 and receivable = 2680 from public.b2b_account_statement(:'acc')),
   'corte de facturación: agrupa las OS entregadas, vence según la condición de pago');

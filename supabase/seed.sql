@@ -541,3 +541,67 @@ select count(private.create_order_payment(o, x.request_id, jsonb_build_array(jso
                ('0d000000-0000-4000-8000-000000000005'::uuid, '0e300000-0000-4000-8000-0000000000a5'::uuid, 'AUT-7002'))
     as x(order_id, request_id, reference) on x.order_id = o.id
  where not exists (select 1 from public.payments p where p.request_id = x.request_id);
+
+-- Cuentas por cobrar B2B de ejemplo (AF5): Transportes del Norte tiene una OS
+-- entregada hace 25 días agrupada en el documento CXC-000001 (factura externa
+-- A-1523, compromiso vencido hace 5 días, $200 cobrados: queda vencido) y una OS
+-- entregada hace 3 días aún por agrupar.
+select set_config('app.b2b_link', 'on', false);
+insert into public.service_orders (id, organization_id, detail_center_id, folio, folio_number, client_id, vehicle_id,
+                                   channel, channel_reference, status, client_name, client_phone, client_email,
+                                   vehicle_make, vehicle_model, vehicle_year, vehicle_plate, authorized_at, started_at,
+                                   finished_at, delivered_at, b2b_account_id, b2b_agreement_id, request_id)
+values
+  ('0d000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+   'MTY-01-000003', 3, 'c1000000-0000-4000-8000-000000000002', 'c2000000-0000-4000-8000-000000000002', 'b2b', 'OC-5480',
+   'entregada', 'Transportes del Norte', '+528181234567', 'flotilla@example.com', 'Nissan', 'NP300', 2020, 'NL4521A',
+   now() - interval '25 days 3 hours', now() - interval '25 days 2 hours', now() - interval '25 days 1 hour',
+   now() - interval '25 days', 'b2000000-0000-4000-8000-000000000001', 'b2100000-0000-4000-8000-000000000001',
+   '0d000000-0000-4000-8000-0000000000a6'),
+  ('0d000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+   'MTY-01-000004', 4, 'c1000000-0000-4000-8000-000000000002', 'c2000000-0000-4000-8000-000000000002', 'b2b', 'OC-5533',
+   'entregada', 'Transportes del Norte', '+528181234567', 'flotilla@example.com', 'Nissan', 'NP300', 2020, 'NL4521A',
+   now() - interval '3 days 3 hours', now() - interval '3 days 2 hours', now() - interval '3 days 1 hour',
+   now() - interval '3 days', 'b2000000-0000-4000-8000-000000000001', 'b2100000-0000-4000-8000-000000000001',
+   '0d000000-0000-4000-8000-0000000000a7')
+on conflict (id) do nothing;
+select set_config('app.b2b_link', 'off', false);
+insert into public.service_order_items (id, organization_id, service_order_id, position, kind, service_id, service_code,
+                                        service_name, revenue_engine, unit_price, unit_direct_cost, duration_minutes,
+                                        price_source, list_unit_price, b2b_price_rule_id, quantity) values
+  ('0e100000-0000-4000-8000-000000000008', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000006',
+   0, 'servicio', '5e000000-0000-4000-8000-000000000001', 'LAV-EXP', 'Lavado exprés', 'recurrente',
+   199, 70, 40, 'convenio', 220, 'b2e00000-0000-4000-8000-000000000001', 2),
+  ('0e100000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-00000000d3e0', '0d000000-0000-4000-8000-000000000007',
+   0, 'servicio', '5e000000-0000-4000-8000-000000000001', 'LAV-EXP', 'Lavado exprés', 'recurrente',
+   199, 70, 40, 'convenio', 220, 'b2e00000-0000-4000-8000-000000000001', 1)
+on conflict (id) do nothing;
+select count(private.recalc_service_order(id)) from public.service_orders
+ where id in ('0d000000-0000-4000-8000-000000000006', '0d000000-0000-4000-8000-000000000007');
+update public.service_orders set authorized_total = total
+ where id in ('0d000000-0000-4000-8000-000000000006', '0d000000-0000-4000-8000-000000000007') and authorized_total is null;
+insert into private.service_order_counters (detail_center_id, last_number) values ('22222222-2222-4222-8222-222222222222', 4)
+on conflict (detail_center_id) do update set last_number = greatest(private.service_order_counters.last_number, 4);
+
+insert into public.b2b_invoices (id, organization_id, account_id, folio, folio_number, reference, issued_on, due_on,
+                                 period_from, period_to, external_invoiced_on, orders_amount, fee_amount, notes, request_id)
+select '0e800000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0',
+       'b2000000-0000-4000-8000-000000000001', 'CXC-000001', 1, 'A-1523', d - 20, d - 5, d - 28, d - 21, d - 19,
+       398, 0, 'Compromiso de pago a 15 días acordado con compras', '0e800000-0000-4000-8000-000000000001'
+  from (select private.center_today('22222222-2222-4222-8222-222222222222') as d) x
+on conflict (id) do nothing;
+select set_config('app.b2b_invoice', 'on', false);
+update public.service_orders set b2b_invoice_id = '0e800000-0000-4000-8000-000000000001'
+ where id = '0d000000-0000-4000-8000-000000000006' and b2b_invoice_id is null;
+select set_config('app.b2b_invoice', 'off', false);
+insert into private.b2b_document_counters (organization_id, last_number) values ('00000000-0000-4000-8000-00000000d3e0', 1)
+on conflict (organization_id) do update set last_number = greatest(private.b2b_document_counters.last_number, 1);
+insert into public.b2b_payments (id, organization_id, account_id, invoice_id, amount, method, reference, paid_on, request_id)
+values ('0e900000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'b2000000-0000-4000-8000-000000000001',
+        '0e800000-0000-4000-8000-000000000001', 200, 'transferencia', 'SPEI 0045',
+        private.center_today('22222222-2222-4222-8222-222222222222') - 8, '0e900000-0000-4000-8000-000000000001')
+on conflict (id) do nothing;
+insert into public.b2b_payment_allocations (id, organization_id, payment_id, invoice_id, amount)
+values ('0ea00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '0e900000-0000-4000-8000-000000000001',
+        '0e800000-0000-4000-8000-000000000001', 200)
+on conflict (id) do nothing;

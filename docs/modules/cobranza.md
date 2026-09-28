@@ -130,7 +130,7 @@ Ninguna nueva.
 
 ## Pendientes
 
-- Cobranza del estado de cuenta B2B (el crédito B2B se liquida en la OS; los pagos de la cuenta siguen en C3).
+- ~~Cobranza del estado de cuenta B2B~~: [Cuentas por cobrar B2B](cxc-b2b.md) (AF5).
 - Repartir un recibo entre varias OS (el modelo lo permite; la UI cobra una OS a la vez).
 - Reverso parcial (hoy es por recibo completo).
 - ~~Apertura y cierre de caja por turno con arqueo~~: [Corte de caja](corte-caja.md) (AF3).

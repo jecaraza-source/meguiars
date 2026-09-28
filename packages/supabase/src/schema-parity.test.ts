@@ -59,6 +59,7 @@ import {
   EXPENSE_STATUSES,
   CASH_SESSION_STATUSES,
   CASH_SHIFTS,
+  B2B_DOCUMENT_STATUSES,
   isPnlExpense,
   PNL_GROUPS,
   ORDER_PAYMENT_STATUSES,
@@ -159,6 +160,7 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "cash_sessions",
   "cash_closings",
   "cash_reopenings",
+  "b2b_payment_allocations",
   "user_detail_centers",
   "vehicles",
 ];
@@ -213,6 +215,16 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "cash_uncovered",
   "pnl_lines",
   "pnl_drilldown",
+  "create_b2b_billing_batch",
+  "update_b2b_billing_batch",
+  "register_b2b_payment",
+  "allocate_b2b_payment",
+  "b2b_receivables",
+  "b2b_billing_documents",
+  "b2b_unbilled_orders",
+  "b2b_account_payments",
+  "b2b_billing_document",
+  "b2b_receivables_export",
   "add_vehicle",
   "apply_b2b_account",
   "b2b_account_orders",
@@ -408,6 +420,16 @@ describe("paridad SQL ↔ TypeScript", () => {
     );
     expect(sql).toContain("check (expected_cash = opening_float + cash_collected - cash_refunded)");
     expect(sql).toContain("check (difference = counted_cash - expected_cash)");
+  });
+
+  it("cuentas por cobrar B2B: estados del documento, precedencia y orden de aplicación automática coinciden", () => {
+    const sql = readFileSync(join(migrationsDir, "20261012000000_b2b_receivables.sql"), "utf8");
+    const fn = /function private\.b2b_document_status[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(sql)?.[1] ?? "";
+    const order = [...fn.matchAll(/(?:then|else) '(\w+)'/g)].map((m) => m[1]);
+    expect(order).toEqual(["anulado", "cobrado", "vencido", "parcial", "facturado_externo", "por_facturar"]);
+    expect([...order].sort()).toEqual([...B2B_DOCUMENT_STATUSES].sort());
+    // autoAllocation ordena igual: fecha compromiso, fecha del documento y folio.
+    expect(sql).toContain("order by i.due_on, i.issued_on, i.folio_number");
   });
 
   it("ejecución: estatus y transiciones de línea, unidades, momentos, eventos y límites de fotos coinciden", () => {
