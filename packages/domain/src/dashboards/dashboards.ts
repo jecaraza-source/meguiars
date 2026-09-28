@@ -52,6 +52,8 @@ export interface WidgetOptionsValue {
   grain?: WidgetGrain | undefined;
   limit?: number | undefined;
   breakdown?: WidgetBreakdown | undefined;
+  /** Canal fijo (vistas de KPI como "Ventas B2C"; no se guarda en tableros). */
+  channel?: DashboardChannelKey | undefined;
 }
 
 export interface DashboardWidget {
@@ -404,7 +406,64 @@ export interface DashboardFactsRow {
     expiredInRange: boolean;
     revenueInRange: number;
   }[];
+  orders?: {
+    detailCenterId: string;
+    bucket: string;
+    channel: DashboardChannelKey;
+    orders: number;
+    sales: number;
+    productSales: number;
+    standardMinutes: number;
+    timedOrders: number;
+    actualMinutes: number;
+    reworkOrders: number;
+  }[];
+  centers?: {
+    detailCenterId: string;
+    bays: number;
+    technicians: number;
+    operatingHoursPerDay: number;
+    operatingDaysPerWeek: number;
+    ltvLifetimeYears: number;
+  }[];
+  upsell?: {
+    ruleId: string;
+    ruleName: string;
+    detailCenterId: string;
+    targetKind: "servicio" | "membresia";
+    offered: number;
+    accepted: number;
+    rejected: number;
+    orders: number;
+    incrementalRevenue: number;
+    membershipValue: number;
+  }[];
+  customers?: {
+    detailCenterId: string;
+    clientKey: string;
+    channel: DashboardChannelKey;
+    visits: number;
+    sales: number;
+    cost: number;
+    priorVisit: boolean;
+  }[];
 }
+
+/** Parámetros gerenciales de los KPIs (public.kpi_settings). */
+export interface KpiSettings {
+  organizationId: string;
+  ltvLifetimeYears: number;
+  operatingHoursPerDay: number;
+  operatingDaysPerWeek: number;
+  version: number;
+}
+
+/** Valores por defecto (iguales a private.kpi_settings_of). */
+export const DEFAULT_KPI_SETTINGS = {
+  ltvLifetimeYears: 3,
+  operatingHoursPerDay: 10,
+  operatingDaysPerWeek: 6,
+} as const;
 
 /** Puerto de tableros. Web y móvil usan el mismo adaptador (`@meguiars/supabase`). */
 export interface DashboardRepository {
@@ -419,4 +478,7 @@ export interface DashboardRepository {
   resetPreferences(dashboardId: string): Promise<Result<void>>;
   /** Una sola llamada por tablero y filtro (sin N+1). */
   facts(query: DashboardFactsQuery): Promise<Result<DashboardFactsRow>>;
+  /** Parámetros de KPIs de la organización (valores por defecto si no tiene fila). */
+  kpiSettings(organizationId: string): Promise<Result<KpiSettings>>;
+  setKpiSettings(input: KpiSettings & { reason: string }): Promise<Result<KpiSettings>>;
 }

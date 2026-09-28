@@ -83,6 +83,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     items: [
       { screen: "direccion", label: "Vista consolidada", href: "/direccion" },
       { screen: "dashboards", label: "Tableros", href: "/direccion/tableros" },
+      { screen: "kpis", label: "KPIs", href: "/direccion/kpis" },
     ],
   },
 ];

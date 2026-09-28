@@ -1,4 +1,5 @@
 import {
+  DEFAULT_KPI_SETTINGS,
   fail,
   type AppRole,
   type DashboardDefinition,
@@ -8,6 +9,7 @@ import {
   type DashboardRepository,
   type DashboardWidget,
   type DashboardWidgetType,
+  type KpiSettings,
   type MetricRegistryEntry,
   type Result,
   type SavedDashboardFilters,
@@ -19,6 +21,7 @@ import {
   dashboardFactsSchema,
   dashboardPreferencesSchema,
   dashboardSchema,
+  kpiSettingsSchema,
 } from "@meguiars/validation";
 import type { MeguiarsSupabaseClient } from "../client";
 import type { Json, Tables } from "../database.types";
@@ -153,8 +156,65 @@ export function toDashboardFacts(raw: J): DashboardFactsRow {
       expiredInRange: Boolean(r.expired_in_range),
       revenueInRange: num(r.revenue_in_range),
     }));
+  const orders = list("orders");
+  if (orders)
+    out.orders = orders.map((r) => ({
+      detailCenterId: String(r.detail_center_id),
+      bucket: String(r.bucket),
+      channel: r.channel as "b2c",
+      orders: num(r.orders),
+      sales: num(r.sales),
+      productSales: num(r.product_sales),
+      standardMinutes: num(r.standard_minutes),
+      timedOrders: num(r.timed_orders),
+      actualMinutes: num(r.actual_minutes),
+      reworkOrders: num(r.rework_orders),
+    }));
+  const centers = list("centers");
+  if (centers)
+    out.centers = centers.map((r) => ({
+      detailCenterId: String(r.detail_center_id),
+      bays: num(r.bays),
+      technicians: num(r.technicians),
+      operatingHoursPerDay: num(r.operating_hours_per_day),
+      operatingDaysPerWeek: num(r.operating_days_per_week),
+      ltvLifetimeYears: num(r.ltv_lifetime_years),
+    }));
+  const upsell = list("upsell");
+  if (upsell)
+    out.upsell = upsell.map((r) => ({
+      ruleId: String(r.rule_id),
+      ruleName: String(r.rule_name),
+      detailCenterId: String(r.detail_center_id),
+      targetKind: r.target_kind as "servicio",
+      offered: num(r.offered),
+      accepted: num(r.accepted),
+      rejected: num(r.rejected),
+      orders: num(r.orders),
+      incrementalRevenue: num(r.incremental_revenue),
+      membershipValue: num(r.membership_value),
+    }));
+  const customers = list("customers");
+  if (customers)
+    out.customers = customers.map((r) => ({
+      detailCenterId: String(r.detail_center_id),
+      clientKey: String(r.client_key),
+      channel: r.channel as "b2c",
+      visits: num(r.visits),
+      sales: num(r.sales),
+      cost: num(r.cost),
+      priorVisit: Boolean(r.prior_visit),
+    }));
   return out;
 }
+
+const toKpiSettings = (r: Tables<"kpi_settings">): KpiSettings => ({
+  organizationId: r.organization_id,
+  ltvLifetimeYears: Number(r.ltv_lifetime_years),
+  operatingHoursPerDay: Number(r.operating_hours_per_day),
+  operatingDaysPerWeek: r.operating_days_per_week,
+  version: r.version,
+});
 
 async function runVoid(call: () => PromiseLike<{ error: unknown }>): Promise<Result<void>> {
   try {
@@ -281,6 +341,34 @@ export function createDashboardRepository(client: MeguiarsSupabaseClient): Dashb
             p_grain: q.grain,
           }),
         (raw) => toDashboardFacts(raw as J),
+      );
+    },
+
+    async kpiSettings(organizationId) {
+      const r = await run(
+        () => client.from("kpi_settings").select("*").eq("organization_id", organizationId).maybeSingle(),
+        (row) => toKpiSettings(row),
+      );
+      if (!r.ok && r.error.kind === "not_found")
+        return { ok: true, data: { organizationId, version: 1, ...DEFAULT_KPI_SETTINGS } };
+      return r;
+    },
+
+    setKpiSettings(input) {
+      const parsed = kpiSettingsSchema.safeParse(input);
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      const v = parsed.data;
+      return run(
+        () =>
+          client.rpc("set_kpi_settings", {
+            p_organization_id: v.organizationId,
+            p_version: v.version,
+            p_ltv_lifetime_years: v.ltvLifetimeYears,
+            p_operating_hours_per_day: v.operatingHoursPerDay,
+            p_operating_days_per_week: v.operatingDaysPerWeek,
+            p_reason: v.reason,
+          }),
+        toKpiSettings,
       );
     },
   };

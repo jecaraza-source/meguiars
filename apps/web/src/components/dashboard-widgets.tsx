@@ -86,7 +86,14 @@ function Ranking({ rows, caption }: { rows: PresentedWidget["rows"]; caption: st
   );
 }
 
-export function DashboardWidgetCard({ widget }: { widget: PresentedWidget }) {
+export function DashboardWidgetCard({
+  widget,
+  children,
+}: {
+  widget: PresentedWidget;
+  /** Contenido extra (p. ej. la ficha del KPI). */
+  children?: React.ReactNode;
+}) {
   const w = widget;
   return (
     <section
@@ -134,6 +141,7 @@ export function DashboardWidgetCard({ widget }: { widget: PresentedWidget }) {
           </Link>
         ) : null}
       </div>
+      {children}
     </section>
   );
 }

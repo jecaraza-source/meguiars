@@ -5,7 +5,11 @@ import {
   DASHBOARD_CHANNEL_LABELS,
   DASHBOARD_ENGINE_LABELS,
   dashboardsCopy,
+  KPI_FILTER_LABELS,
+  KPI_PERIOD_LABELS,
+  kpisCopy,
   METRIC_SOURCE_LABELS,
+  METRIC_UNIT_LABELS,
 } from "./copy";
 import {
   dashboardDrill,
@@ -122,7 +126,7 @@ export function presentWidget(
     id: widget.id,
     type: widget.type,
     title: widget.title ?? m?.name ?? widget.metricId,
-    subtitle: widget.title && m ? m.name : null,
+    subtitle: widget.title && m && widget.title !== m.name ? m.name : null,
     status: result.status,
     message: null,
     value: null,
@@ -247,4 +251,49 @@ export function dashboardsErrorMessage(error: { kind: string; message: string })
   if (error.kind === "permission_denied" && !error.message) return dashboardsCopy.forbiddenDashboard;
   if (error.kind === "not_found" && !error.message) return dashboardsCopy.notFound;
   return error.message;
+}
+
+/** KPI del registro (mismo contrato que KpiEntry de @meguiars/analytics). */
+export interface KpiSheetInput {
+  definition: string;
+  numerator: string;
+  denominator: string | null;
+  period: "rango" | "corte";
+  notes: string;
+  channel: string | null;
+  validFilters: readonly string[];
+  metric: {
+    unit: string;
+    formula: string;
+    source: string;
+    sourceTables: readonly string[];
+    capability: string;
+  };
+}
+
+/** Ficha del KPI para mostrarla igual en web y móvil. */
+export function kpiSheet(k: KpiSheetInput): { label: string; value: string }[] {
+  return [
+    { label: kpisCopy.definition, value: k.definition },
+    { label: kpisCopy.numerator, value: k.numerator },
+    { label: kpisCopy.denominator, value: k.denominator ?? "—" },
+    {
+      label: kpisCopy.validFilters,
+      value: [
+        ...k.validFilters.map((f) => KPI_FILTER_LABELS[f] ?? f),
+        ...(k.channel
+          ? [kpisCopy.fixedChannel(DASHBOARD_CHANNEL_LABELS[k.channel as "b2c"] ?? k.channel)]
+          : []),
+      ].join(", "),
+    },
+    { label: kpisCopy.period, value: KPI_PERIOD_LABELS[k.period] },
+    { label: kpisCopy.unit, value: METRIC_UNIT_LABELS[k.metric.unit] ?? k.metric.unit },
+    { label: kpisCopy.formula, value: k.metric.formula },
+    {
+      label: kpisCopy.source,
+      value: `${METRIC_SOURCE_LABELS[k.metric.source] ?? k.metric.source} · ${k.metric.sourceTables.join(", ")}`,
+    },
+    { label: kpisCopy.permission, value: k.metric.capability },
+    { label: kpisCopy.notes, value: k.notes },
+  ];
 }

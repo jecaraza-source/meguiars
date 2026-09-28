@@ -82,6 +82,18 @@ export const membershipRenewalCount = kpiRegistry.register(
   }),
 );
 
+export const membershipCancellationCount = kpiRegistry.register(
+  defineKpi<MembershipKpiInput>({
+    id: "membership.cancellation_count",
+    name: "Cancelaciones",
+    formula: "Membresías canceladas dentro del rango",
+    sources: SOURCES,
+    unit: "count",
+    scopes: ["center", "corporate"],
+    compute: ({ facts }) => facts.filter((f) => f.cancelledInRange).length,
+  }),
+);
+
 export const membershipMrr = kpiRegistry.register(
   defineKpi<MembershipKpiInput>({
     id: "membership.mrr",

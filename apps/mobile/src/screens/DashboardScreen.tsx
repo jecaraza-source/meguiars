@@ -143,7 +143,7 @@ export function DashboardScreen({
       {v ? (
         <Text style={textStyle("bodySmall", "muted")}>{dashboardFiltersLabel(v.filters, v.centerName)}</Text>
       ) : null}
-      <View style={styles.row}>
+      <View style={dashboardStyles.row}>
         <Button
           label={dashboardsCopy.shareCsv}
           variant="secondary"
@@ -197,7 +197,7 @@ export function DashboardScreen({
       {!v ? <Skeleton lines={6} /> : null}
       {v?.error ? <Notice text={v.error} tone="danger" /> : null}
       {v && !v.error && v.widgets.length === 0 ? <EmptyState title={dashboardsCopy.noData} /> : null}
-      <View style={styles.grid}>
+      <View style={dashboardStyles.grid}>
         {(v?.widgets ?? []).map((w) => (
           <WidgetCard key={w.id} widget={w} onDrill={onDrill} />
         ))}
@@ -206,7 +206,7 @@ export function DashboardScreen({
   );
 }
 
-function FiltersCard({
+export function FiltersCard({
   initial,
   centers,
   onApply,
@@ -235,7 +235,7 @@ function FiltersCard({
         options={PNL_PERIODS.map((k) => ({ value: k, label: PNL_PERIOD_LABELS[k] }))}
       />
       {draft.periodo === "personalizado" ? (
-        <View style={styles.row}>
+        <View style={dashboardStyles.row}>
           <Field
             label={dashboardsCopy.from}
             value={draft.desde ?? ""}
@@ -312,11 +312,13 @@ function ViewEditor({
   return (
     <Card title={dashboardsCopy.myView} subtitle={dashboardsCopy.hiddenWidgets}>
       {order.map((id, i) => (
-        <View key={id} style={styles.editorRow}>
-          <Text style={[textStyle("bodySmall", off.includes(id) ? "muted" : "foreground"), styles.flex]}>
+        <View key={id} style={dashboardStyles.editorRow}>
+          <Text
+            style={[textStyle("bodySmall", off.includes(id) ? "muted" : "foreground"), dashboardStyles.flex]}
+          >
             {name(id)}
           </Text>
-          <View style={styles.row}>
+          <View style={dashboardStyles.row}>
             <Button
               label={dashboardsCopy.moveUp}
               size="sm"
@@ -341,7 +343,7 @@ function ViewEditor({
         </View>
       ))}
       <Checkbox label={dashboardsCopy.setFavorite} checked={favorite} onChange={setFavorite} />
-      <View style={styles.row}>
+      <View style={dashboardStyles.row}>
         <Button
           label={dashboardsCopy.saveView}
           size="sm"
@@ -362,16 +364,22 @@ function ViewEditor({
   );
 }
 
-function WidgetCard({
+export function WidgetCard({
   widget: w,
   onDrill,
+  children,
 }: {
   widget: PresentedWidget;
   onDrill: (t: DashboardDrillTarget) => void;
+  /** Contenido extra (p. ej. la ficha del KPI). */
+  children?: React.ReactNode;
 }) {
   const [details, setDetails] = useState(false);
   return (
-    <View style={[styles.widget, w.type === "kpi" ? styles.half : styles.full]} accessibilityLabel={w.title}>
+    <View
+      style={[dashboardStyles.widget, w.type === "kpi" ? dashboardStyles.half : dashboardStyles.full]}
+      accessibilityLabel={w.title}
+    >
       <Text style={textStyle("bodySmall", "muted")}>{w.title}</Text>
       {w.subtitle ? <Text style={textStyle("caption", "muted")}>{w.subtitle}</Text> : null}
       {w.value !== null ? <Text style={textStyle("kpi")}>{w.value}</Text> : null}
@@ -379,18 +387,18 @@ function WidgetCard({
       {!w.message && w.type === "timeseries" ? (
         <View>
           <View
-            style={styles.series}
+            style={dashboardStyles.series}
             accessible
             accessibilityLabel={w.rows.map((r) => `${r.label}: ${r.value}`).join(", ")}
           >
             {w.rows.map((r) => (
               <View
                 key={r.key}
-                style={[styles.column, { height: `${Math.max(r.pct, r.raw === 0 ? 0 : 2)}%` }]}
+                style={[dashboardStyles.column, { height: `${Math.max(r.pct, r.raw === 0 ? 0 : 2)}%` }]}
               />
             ))}
           </View>
-          <View style={styles.between}>
+          <View style={dashboardStyles.between}>
             <Text style={textStyle("caption", "muted")}>{w.rows[0]?.label}</Text>
             <Text style={textStyle("caption", "muted")}>{w.rows[w.rows.length - 1]?.label}</Text>
           </View>
@@ -398,9 +406,9 @@ function WidgetCard({
       ) : null}
       {!w.message && w.type !== "timeseries"
         ? w.rows.map((r, i) => (
-            <View key={r.key} style={styles.rowItem}>
-              <View style={styles.between}>
-                <Text style={[textStyle("bodySmall"), styles.flex]}>
+            <View key={r.key} style={dashboardStyles.rowItem}>
+              <View style={dashboardStyles.between}>
+                <Text style={[textStyle("bodySmall"), dashboardStyles.flex]}>
                   {w.type === "ranking" ? `${i + 1}. ` : ""}
                   {r.label}
                 </Text>
@@ -409,8 +417,8 @@ function WidgetCard({
                   {r.share ? ` · ${r.share}` : ""}
                 </Text>
               </View>
-              <View style={styles.track}>
-                <View style={[styles.bar, { width: `${r.pct}%` }]} />
+              <View style={dashboardStyles.track}>
+                <View style={[dashboardStyles.bar, { width: `${r.pct}%` }]} />
               </View>
             </View>
           ))
@@ -418,7 +426,7 @@ function WidgetCard({
       {w.notes.map((n) => (
         <Notice key={n} text={n} tone="warning" />
       ))}
-      <View style={styles.between}>
+      <View style={dashboardStyles.between}>
         {w.formula ? (
           <Pressable accessibilityRole="button" onPress={() => setDetails((x) => !x)}>
             <Text style={textStyle("caption", "muted")}>
@@ -433,7 +441,7 @@ function WidgetCard({
         ) : null}
       </View>
       {details ? (
-        <View style={styles.details}>
+        <View style={dashboardStyles.details}>
           <Text style={textStyle("caption", "muted")}>
             {dashboardsCopy.definition}: {w.definition}
           </Text>
@@ -445,11 +453,12 @@ function WidgetCard({
           </Text>
         </View>
       ) : null}
+      {children}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+export const dashboardStyles = StyleSheet.create({
   row: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, alignItems: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: space.md },
   widget: {

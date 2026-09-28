@@ -118,7 +118,9 @@ export const dashboardPreferencesSchema = z.object({
 
 export const dashboardFactsSchema = z
   .object({
-    sources: z.array(z.enum(["pnl", "payments", "pipeline", "memberships"])).min(1),
+    sources: z
+      .array(z.enum(["pnl", "payments", "pipeline", "memberships", "orders", "upsell", "customers"]))
+      .min(1),
     detailCenterIds: z.array(z.uuid()).min(1, "Elige al menos un centro").max(50),
     from: z.string(),
     to: z.string(),
@@ -136,3 +138,22 @@ export const archiveDashboardSchema = z.object({
 });
 
 export type DashboardSchemaInput = z.infer<typeof dashboardSchema>;
+
+export const kpiSettingsSchema = z.object({
+  organizationId: z.uuid(),
+  version: z.number().int().min(1),
+  ltvLifetimeYears: z.coerce
+    .number({ message: "Escribe un número" })
+    .min(0.5, "La vida esperada va de 0.5 a 10 años")
+    .max(10, "La vida esperada va de 0.5 a 10 años"),
+  operatingHoursPerDay: z.coerce
+    .number({ message: "Escribe un número" })
+    .min(1, "De 1 a 24 horas por día")
+    .max(24, "De 1 a 24 horas por día"),
+  operatingDaysPerWeek: z.coerce
+    .number({ message: "Escribe un número" })
+    .int("Días enteros")
+    .min(1, "De 1 a 7 días por semana")
+    .max(7, "De 1 a 7 días por semana"),
+  reason: changeReasonSchema,
+});

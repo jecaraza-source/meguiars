@@ -1,5 +1,6 @@
 import {
   metricById,
+  type DashboardChannel,
   type DashboardFacts,
   type FactsGrain,
   type MetricBreakdown,
@@ -28,6 +29,8 @@ export const DAILY_MAX_DAYS = 93;
 
 export interface WidgetOptions {
   grain?: GrainOption | undefined;
+  /** Canal fijo del widget (vista de un KPI como "Ventas B2C"); pisa el filtro global. */
+  channel?: DashboardChannel | undefined;
   limit?: number | undefined;
   breakdown?: MetricBreakdown | undefined;
 }
@@ -180,18 +183,35 @@ export function resolveWidget(
   if (centers.length === 0) return { status: "forbidden", widgetId: widget.id, metric };
   const ids = new Set(centers.map((c) => c.id));
   const { impl } = metric;
-  const all = impl.pick(facts).filter((f) => ids.has(impl.centerOf(f)) && impl.matches(f, ctx.filters));
-  const input = (sub: readonly unknown[], from = ctx.from, to = ctx.to): MetricInput<unknown> => ({
+  const filters: MetricFilters = widget.options.channel
+    ? { ...ctx.filters, channel: widget.options.channel }
+    : ctx.filters;
+  const all = impl.pick(facts).filter((f) => ids.has(impl.centerOf(f)) && impl.matches(f, filters));
+  const resources = facts.centers ?? [];
+  const input = (
+    sub: readonly unknown[],
+    from = ctx.from,
+    to = ctx.to,
+    scope: ReadonlySet<string> = ids,
+  ): MetricInput<unknown> => ({
     facts: sub,
     from,
     to,
     stages: facts.pipelineStages ?? [],
+    centers: resources.filter((r) => scope.has(r.detailCenterId)),
   });
   const perCenter = () =>
     centers.map((c) => ({
       key: c.id,
       label: c.name,
-      value: impl.value(input(all.filter((f) => impl.centerOf(f) === c.id))),
+      value: impl.value(
+        input(
+          all.filter((f) => impl.centerOf(f) === c.id),
+          ctx.from,
+          ctx.to,
+          new Set([c.id]),
+        ),
+      ),
     }));
   const additive = metric.unit !== "percent" && metric.unit !== "ratio";
 
@@ -257,7 +277,7 @@ export function resolveWidget(
     widgetId: widget.id,
     metric,
     data,
-    ignoredFilters: ACTIVE_FILTERS(ctx.filters).filter((f) => !metric.filters.includes(f)),
+    ignoredFilters: ACTIVE_FILTERS(filters).filter((f) => !metric.filters.includes(f)),
     centersWithoutAccess: ctx.centers.filter((c) => !permitted.has(c.id)).map((c) => c.name),
   };
 }
