@@ -67,6 +67,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó las cuentas por cobrar B2B de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(d.name || '=' || (select count(*) from public.dashboard_widgets w where w.dashboard_id = d.id), ',' order by d.name) from public.dashboard_definitions d join public.organizations o on o.id = d.organization_id where o.slug = 'meguiars-demo'")" == "Comercial=4,Finanzas=5,Tablero corporativo=12" ]] \
   || { echo "El seed no cargó los tableros ejecutivos de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select ltv_lifetime_years || ':' || operating_hours_per_day || ':' || operating_days_per_week from public.kpi_settings s join public.organizations o on o.id = s.organization_id where o.slug = 'meguiars-demo'")" == "3.00:10.00:6" ]] \
+  || { echo "El seed no cargó los parámetros de KPIs" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

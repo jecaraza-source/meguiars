@@ -639,3 +639,9 @@ values
    'pnl.gross_margin', 'bars', 5, 2, 1, '{}')
 on conflict (id) do nothing;
 select set_config('app.change_reason', '', false);
+
+-- KPIs (D2): parámetros gerenciales de la organización demo (valores por defecto).
+select set_config('app.change_reason', 'Parámetros de KPIs de ejemplo', false);
+insert into public.kpi_settings (organization_id) values ('00000000-0000-4000-8000-00000000d3e0')
+on conflict (organization_id) do nothing;
+select set_config('app.change_reason', '', false);
