@@ -335,7 +335,7 @@ select pg_temp.assert(
 select pg_temp.assert(public.generate_crm_tasks(:'A') = 0, 'generar otra vez no duplica (idempotente)');
 select id as t_ren from public.crm_tasks where dedupe_key like 'mem:%' \gset
 select pg_temp.assert_fails($$select public.cancel_crm_task('$$ || :'t_ren' || $$', '')$$, '22023', 'cancelar exige motivo');
-select pg_temp.assert_fails($$select public.reschedule_crm_task('$$ || :'t_ren' || $$', current_date - 1, 'Atrás')$$,
+select pg_temp.assert_fails($$select public.reschedule_crm_task('$$ || :'t_ren' || $$', '$$ || (:'today'::date - 1) || $$', 'Atrás')$$,
   '22023', 'no se reprograma al pasado');
 select pg_temp.assert(
   (select due_on = :'today'::date + 3 from public.reschedule_crm_task(:'t_ren', :'today'::date + 3, 'Cliente pidió el jueves')),

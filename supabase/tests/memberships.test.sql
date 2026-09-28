@@ -112,6 +112,27 @@ select pg_temp.assert_fails($$select public.upsert_membership_plan('0e000000-000
   '23514', 'la periodicidad es mensual, trimestral, semestral o anual');
 reset role;
 
+-- Vigencia en la fecha local, no en UTC: entre las 18:00 y las 24:00 de la
+-- Ciudad de México un plan dado de alta "hoy" debe venderse de inmediato.
+select pg_temp.assert(
+  (select available_from = private.org_today('0e000000-0000-0000-0000-000000000001') from public.membership_plans where id = :'care')
+  and private.org_today('0e000000-0000-0000-0000-000000000001') =
+      (select min((now() at time zone timezone)::date) from public.detail_centers
+        where organization_id = '0e000000-0000-0000-0000-000000000001'),
+  'un plan sin fecha de inicio queda vigente desde el hoy local de la organización');
+savepoint local_today;
+select set_config('app.change_reason', 'Prueba', true);
+insert into public.detail_centers (id, organization_id, code, name, timezone) values
+  ('cccccccc-0000-0000-0000-000000000000', '0e000000-0000-0000-0000-000000000001', 'Z-01', 'Centro Z', 'Pacific/Pago_Pago');
+insert into public.membership_plans (organization_id, code, tier, name, price, period_months)
+  values ('0e000000-0000-0000-0000-000000000001', 'DIRECTO', 'care', 'Directo', 100, 1)
+  returning available_from as direct_from \gset
+select pg_temp.assert(
+  :'direct_from'::date = (now() at time zone 'Pacific/Pago_Pago')::date
+  and private.org_today('0e000000-0000-0000-0000-000000000001') = (now() at time zone 'Pacific/Pago_Pago')::date,
+  'el centro con la fecha local más temprana define el hoy de la organización (también en inserciones directas)');
+rollback to savepoint local_today;
+
 select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
 select pg_temp.assert_fails($$select public.upsert_membership_plan('0e000000-0000-0000-0000-000000000001', null, 'X-3', 'care',
   'X', null, 10, 1::smallint, 'centro_origen', null, 7::smallint, null, null, true, 'Intento')$$,

@@ -109,6 +109,9 @@ select (public.upsert_upsell_rule(:'ORG', null, 'Inactiva', :'lav', :'cer', null
   'No debe aparecer', null, null, null, null, null, false, 'Alta')).id as r5 \gset
 select (public.upsert_upsell_rule(:'ORG', null, 'Vencida', :'lav', :'cer', null, 'ambos', 95::smallint,
   'No debe aparecer', null, null, null, (:'today'::date - 10), (:'today'::date - 1), true, 'Alta')).id as r6 \gset
+select pg_temp.assert(
+  (select starts_on = private.org_today(:'ORG') from public.upsell_rules where id = :'r1'),
+  'una regla sin fecha de inicio arranca en el hoy local de la organización, no en la fecha UTC');
 select (public.upsert_upsell_rule(:'ORG', null, 'Sólo centro B', :'lav', :'pol', null, 'diagnostico', 70::smallint,
   'Sólo en B', null, array[:'B'::uuid], null, null, null, true, 'Alta')).id as r7 \gset
 select (public.upsert_upsell_rule(:'ORG', null, 'Ticket alto', :'lav', :'cer', null, 'diagnostico', 50::smallint,

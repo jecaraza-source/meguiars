@@ -4,7 +4,7 @@
 
 Sugerencias simples, explicables y configurables para subir el ticket promedio, con paridad web y móvil:
 
-- **Reglas:** servicio origen (o cualquier OS) → servicio/producto sugerido o plan de membresía. Cada regla tiene etapa (diagnóstico, cierre o ambas), prioridad, argumento para el cliente, elegibilidad (canales, centros, total mínimo) y vigencia.
+- **Reglas:** servicio origen (o cualquier OS) → servicio/producto sugerido o plan de membresía. Cada regla tiene etapa (diagnóstico, cierre o ambas), prioridad, argumento para el cliente, elegibilidad (canales, centros, total mínimo) y vigencia. Sin fecha de inicio, la regla arranca el hoy local de la organización (la fecha más temprana entre sus centros), no la fecha UTC.
 - **Sugerencias en la OS** durante el diagnóstico (OS abierta o autorizada) y al cierre (en proceso, pausada o terminada), en una tarjeta discreta y plegable.
 - **Registro** de cada sugerencia ofrecida, aceptada o rechazada (con motivo opcional) y de su valor incremental.
 - **Indicadores:** tasa de aceptación, ingreso incremental, incremento por OS y membresías aceptadas, por regla y centro, del centro activo o consolidados.

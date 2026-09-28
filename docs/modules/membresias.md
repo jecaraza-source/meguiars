@@ -6,7 +6,7 @@ Motor de ingreso recurrente para planes de cuidado continuo del vehículo, con p
 
 - **Catálogo de planes** CARE / PLUS / PREMIUM de la organización. Cada plan define:
   - precio por periodo y periodicidad (mensual, trimestral, semestral o anual);
-  - vigencia de venta (desde / hasta) y días de aviso antes de vencer;
+  - vigencia de venta (desde / hasta; sin "desde", el plan vale desde el hoy local de la organización —la fecha más temprana entre sus centros—, nunca la fecha UTC) y días de aviso antes de vencer;
   - alcance de redención (sólo en el centro de origen o en cualquier centro);
   - restricciones (texto) y servicios incluidos con unidades por periodo.
 - **Alta** por cliente y vehículo en el centro activo, con referencia de pago. Las condiciones del plan (precio, periodicidad, alcance y beneficios) se **congelan** en la membresía; cambiar el plan después no altera lo vendido.
