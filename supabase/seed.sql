@@ -605,3 +605,37 @@ insert into public.b2b_payment_allocations (id, organization_id, payment_id, inv
 values ('0ea00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '0e900000-0000-4000-8000-000000000001',
         '0e800000-0000-4000-8000-000000000001', 200)
 on conflict (id) do nothing;
+
+-- Tableros ejecutivos (D1): el corporativo por defecto y dos tableros por rol.
+select private.seed_default_dashboard('00000000-0000-4000-8000-00000000d3e0');
+select set_config('app.change_reason', 'Tableros de ejemplo', false);
+insert into public.dashboard_definitions (id, organization_id, name, description, audience_role, default_range)
+values
+  ('0eb00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'Comercial',
+   'Pipeline B2B y B2C premium, y membresías.', 'comercial_b2b', 'mes'),
+  ('0eb00000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 'Finanzas',
+   'Resultados y cobranza para el contador.', 'contador', 'mes')
+on conflict (id) do nothing;
+insert into public.dashboard_widgets (id, organization_id, dashboard_id, metric_id, widget_type, position, col_span,
+                                      row_span, options)
+values
+  ('0ec00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000001',
+   'pipeline.won_value', 'kpi', 1, 1, 1, '{}'),
+  ('0ec00000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000001',
+   'pipeline.conversion_rate', 'kpi', 2, 1, 1, '{}'),
+  ('0ec00000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000001',
+   'membership.mrr', 'kpi', 3, 1, 1, '{}'),
+  ('0ec00000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000001',
+   'pipeline.created', 'funnel', 4, 2, 2, '{}'),
+  ('0ec00000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000002',
+   'pnl.revenue', 'kpi', 1, 1, 1, '{}'),
+  ('0ec00000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000002',
+   'payments.collected', 'kpi', 2, 1, 1, '{}'),
+  ('0ec00000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000002',
+   'expenses.cash_out', 'kpi', 3, 1, 1, '{}'),
+  ('0ec00000-0000-4000-8000-000000000008', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000002',
+   'payments.collected', 'distribution', 4, 2, 2, '{"breakdown": "forma_pago"}'),
+  ('0ec00000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-00000000d3e0', '0eb00000-0000-4000-8000-000000000002',
+   'pnl.gross_margin', 'bars', 5, 2, 1, '{}')
+on conflict (id) do nothing;
+select set_config('app.change_reason', '', false);
