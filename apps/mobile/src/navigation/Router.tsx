@@ -57,6 +57,9 @@ import { PnlScreen } from "@/screens/PnlScreen";
 import { PnlDrillScreen } from "@/screens/PnlDrillScreen";
 import { CashSessionsScreen } from "@/screens/CashSessionsScreen";
 import { CashSessionScreen } from "@/screens/CashSessionScreen";
+import { ReceivableAccountScreen } from "@/screens/ReceivableAccountScreen";
+import { ReceivableDocumentScreen } from "@/screens/ReceivableDocumentScreen";
+import { ReceivablesScreen } from "@/screens/ReceivablesScreen";
 import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
 import { OrderNewScreen } from "@/screens/OrderNewScreen";
 import { OrdersScreen } from "@/screens/OrdersScreen";
@@ -170,6 +173,17 @@ export function Router() {
     setCashSessionId(id);
     setScreen("cashSession");
   };
+  // Cuentas por cobrar B2B (equivalen a /finanzas/cxc/cuentas/[id] y /documentos/[id]).
+  const [receivableAccountId, setReceivableAccountId] = useState<string | null>(null);
+  const openReceivableAccount = (id: string) => {
+    setReceivableAccountId(id);
+    setScreen("receivableAccount");
+  };
+  const [receivableDocumentId, setReceivableDocumentId] = useState<string | null>(null);
+  const openReceivableDocument = (id: string) => {
+    setReceivableDocumentId(id);
+    setScreen("receivableDocument");
+  };
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
 
@@ -282,6 +296,7 @@ export function Router() {
             onBack={() => setScreen("b2bAccounts")}
             onOpenAgreement={openB2bAgreement}
             onNewOpportunity={(accountId) => startOpportunity({ kind: "b2b", accountId })}
+            onOpenReceivables={openReceivableAccount}
           />
         ) : (
           <B2bAccountsScreen
@@ -552,6 +567,49 @@ export function Router() {
           />
         ) : (
           <PnlScreen {...props} onDrill={openPnlDrill} />
+        );
+        break;
+      case "receivables":
+        content = (
+          <ReceivablesScreen
+            {...props}
+            onOpenAccount={openReceivableAccount}
+            onOpenDocument={openReceivableDocument}
+          />
+        );
+        break;
+      case "receivableAccount":
+        content = receivableAccountId ? (
+          <ReceivableAccountScreen
+            key={receivableAccountId}
+            {...props}
+            accountId={receivableAccountId}
+            onBack={() => setScreen("receivables")}
+            onOpenDocument={openReceivableDocument}
+            onOpenB2bAccount={guardScreen(state, "b2bAccountDetail").allow ? openB2bAccount : undefined}
+          />
+        ) : (
+          <ReceivablesScreen
+            {...props}
+            onOpenAccount={openReceivableAccount}
+            onOpenDocument={openReceivableDocument}
+          />
+        );
+        break;
+      case "receivableDocument":
+        content = receivableDocumentId ? (
+          <ReceivableDocumentScreen
+            key={receivableDocumentId}
+            {...props}
+            documentId={receivableDocumentId}
+            onBack={(accountId) => (accountId ? openReceivableAccount(accountId) : setScreen("receivables"))}
+          />
+        ) : (
+          <ReceivablesScreen
+            {...props}
+            onOpenAccount={openReceivableAccount}
+            onOpenDocument={openReceivableDocument}
+          />
         );
         break;
       case "cash":

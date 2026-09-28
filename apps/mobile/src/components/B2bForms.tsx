@@ -5,8 +5,6 @@ import {
   b2bErrorMessage,
   B2B_ACCOUNT_STATUS_LABELS,
   B2B_ACCOUNT_STATUSES,
-  B2B_PAYMENT_METHOD_LABELS,
-  B2B_PAYMENT_METHODS,
   BILLING_MODEL_HINTS,
   BILLING_MODEL_LABELS,
   BILLING_MODELS,
@@ -20,7 +18,6 @@ import {
   type B2bAccount,
   type B2bAccountForOrder,
   type B2bAgreement,
-  type B2bInvoice,
   type B2bPriceRule,
   type B2bVehicle,
   type BillingModel,
@@ -33,8 +30,6 @@ import {
   b2bAccountSchema,
   b2bAgreementSchema,
   b2bContactSchema,
-  b2bInvoiceSchema,
-  b2bPaymentSchema,
   b2bPriceRuleSchema,
   b2bVehicleSchema,
   createB2bOrderSchema,
@@ -562,7 +557,7 @@ export function PriceRuleEditor({
   );
 }
 
-/** Acción con motivo (desactivar tarifa, anular corte o pago). */
+/** Acción con motivo (desactivar tarifa). */
 export function ReasonAction({
   label,
   run,
@@ -612,154 +607,6 @@ export const toggleRule = (rule: B2bPriceRule) => (repo: Repo, reason: string) =
     active: !rule.active,
     reason,
   });
-
-// ---------------------------------------------------------------------------
-// Facturación
-// ---------------------------------------------------------------------------
-
-export function InvoiceEditor({
-  accountId,
-  orders,
-  feePending,
-  today,
-  onDone,
-}: {
-  accountId: string;
-  orders: { id: string; folio: string; total: number }[];
-  feePending: number;
-  today: string;
-  onDone: () => void;
-}) {
-  const { busy, error, fields, submit } = useSubmit();
-  const [requestId, setRequestId] = useState(newRequestId);
-  const [v, setV] = useState({
-    reference: "",
-    issuedOn: today,
-    feeAmount: feePending > 0 ? String(feePending) : "",
-  });
-  const [orderIds, setOrderIds] = useState<string[]>(orders.map((o) => o.id));
-  const set = (k: keyof typeof v) => (x: string) => setV((s) => ({ ...s, [k]: x }));
-  const command = { ...v, accountId, requestId, orderIds } as unknown as Parameters<Repo["createInvoice"]>[0];
-  return (
-    <View style={styles.stack}>
-      <Text style={textStyle("bodySmall", "muted")}>{b2bCopy.billingHint}</Text>
-      <Field
-        label={b2bCopy.invoiceReference}
-        required
-        value={v.reference}
-        onChangeText={set("reference")}
-        error={fields.reference}
-      />
-      <Field label={`${b2bCopy.issuedOn} (AAAA-MM-DD)`} value={v.issuedOn} onChangeText={set("issuedOn")} />
-      <Text style={textStyle("label")}>{b2bCopy.invoiceOrders}</Text>
-      {orders.map((o) => (
-        <Checkbox
-          key={o.id}
-          label={`${o.folio} · ${formatMoney(o.total)}`}
-          checked={orderIds.includes(o.id)}
-          onChange={(on) => setOrderIds((ids) => (on ? [...ids, o.id] : ids.filter((x) => x !== o.id)))}
-        />
-      ))}
-      {feePending > 0 ? (
-        <Field
-          label={`${b2bCopy.invoiceFee} (pendiente ${formatMoney(feePending)})`}
-          value={v.feeAmount}
-          onChangeText={set("feeAmount")}
-          keyboardType="decimal-pad"
-        />
-      ) : null}
-      <Notice tone="danger" text={error} />
-      <Button
-        label={b2bCopy.newInvoice}
-        loading={busy}
-        onPress={() =>
-          void submit(
-            b2bInvoiceSchema,
-            command,
-            (repo) => repo.createInvoice(command),
-            () => {
-              setRequestId(newRequestId());
-              setV((s) => ({ ...s, reference: "" }));
-              onDone();
-            },
-          )
-        }
-      />
-    </View>
-  );
-}
-
-export function PaymentEditor({
-  accountId,
-  invoices,
-  today,
-  onDone,
-}: {
-  accountId: string;
-  invoices: B2bInvoice[];
-  today: string;
-  onDone: () => void;
-}) {
-  const { busy, error, fields, submit } = useSubmit();
-  const [requestId, setRequestId] = useState(newRequestId);
-  const [v, setV] = useState({
-    amount: "",
-    method: "transferencia",
-    reference: "",
-    paidOn: today,
-    invoiceId: "",
-  });
-  const set = (k: keyof typeof v) => (x: string) => setV((s) => ({ ...s, [k]: x }));
-  const command = { ...v, accountId, requestId } as unknown as Parameters<Repo["recordPayment"]>[0];
-  return (
-    <View style={styles.stack}>
-      <Field
-        label={b2bCopy.paymentAmount}
-        required
-        value={v.amount}
-        onChangeText={set("amount")}
-        keyboardType="decimal-pad"
-        error={fields.amount}
-      />
-      <Select
-        label={b2bCopy.paymentMethod}
-        options={B2B_PAYMENT_METHODS.map((m) => ({ value: m, label: B2B_PAYMENT_METHOD_LABELS[m] }))}
-        value={v.method}
-        onChange={set("method")}
-      />
-      <Field label={`${b2bCopy.paidOn} (AAAA-MM-DD)`} value={v.paidOn} onChangeText={set("paidOn")} />
-      <Field label={b2bCopy.paymentReference} value={v.reference} onChangeText={set("reference")} />
-      <Select
-        label={b2bCopy.paymentInvoice}
-        options={[
-          { value: "", label: "—" },
-          ...invoices
-            .filter((i) => i.status === "emitida")
-            .map((i) => ({ value: i.id, label: `${i.reference} · ${formatMoney(i.amount)}` })),
-        ]}
-        value={v.invoiceId}
-        onChange={set("invoiceId")}
-      />
-      <Notice tone="danger" text={error} />
-      <Button
-        label={b2bCopy.newPayment}
-        loading={busy}
-        onPress={() =>
-          void submit(
-            b2bPaymentSchema,
-            command,
-            (repo) => repo.recordPayment(command),
-            () => {
-              setRequestId(newRequestId());
-              setV((s) => ({ ...s, amount: "", reference: "" }));
-              onDone();
-            },
-          )
-        }
-      />
-    </View>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // OS

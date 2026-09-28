@@ -15,7 +15,9 @@ Operación de cuentas empresariales con paridad web y móvil:
 
 Decisiones en [ADR 0015](../adr/0015-b2b-tarifa-convenida-en-la-base.md).
 
-**Fuera de alcance (interfaces preparadas):** CFDI (los cortes guardan la referencia del CFDI emitido fuera; son la base de un export / API), portal de clientes B2B, aprobación de OS por el cliente.
+**Fuera de alcance (interfaces preparadas):** CFDI, portal de clientes B2B, aprobación de OS por el cliente.
+
+**Facturación y cobro:** desde AF5 los cortes (documentos de cobro) y los pagos se administran en [Cuentas por cobrar B2B](cxc-b2b.md); la ficha de la cuenta muestra sus documentos abiertos y enlaza ahí.
 
 ## Modelo de datos (`20261004000000_b2b.sql`)
 
@@ -111,6 +113,6 @@ Ninguna nueva.
 
 ## Pendientes
 
-- CFDI y export / API de facturación (los cortes ya guardan la referencia).
+- CFDI (el export de soporte está en [Cuentas por cobrar B2B](cxc-b2b.md)).
 - Bloqueo opcional por saldo vencido (hoy sólo se informa).
 - Portal del cliente B2B y aprobación de OS por su parte.
