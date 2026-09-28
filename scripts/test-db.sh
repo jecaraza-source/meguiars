@@ -41,7 +41,7 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó el catálogo con los 5 motores de ingreso" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.appointments a join public.appointment_services s on s.appointment_id = a.id where a.ends_at = a.starts_at + make_interval(mins => a.duration_minutes)")" == "3" ]] \
   || { echo "El seed no cargó la agenda de ejemplo" >&2; exit 1; }
-[[ "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total, ',' order by folio) from public.service_orders")" == "CDMX-01-000001=1890.00,CDMX-01-000002=2520.00,CDMX-01-000003=2980.00,MTY-01-000001=220.00,MTY-01-000002=440.00" ]] \
+[[ "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total, ',' order by folio) from public.service_orders")" == "CDMX-01-000001=1890.00,CDMX-01-000002=2520.00,CDMX-01-000003=2980.00,MTY-01-000001=220.00,MTY-01-000002=440.00,MTY-01-000003=398.00,MTY-01-000004=199.00" ]] \
   || { echo "El seed no cargó las órdenes de servicio de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.service_supply_standards")" == "4" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_order_consumptions c join public.service_order_items i on i.id = c.item_id where i.work_status = 'en_proceso'")" == "1" ]] \
   || { echo "El seed no cargó la ejecución y los consumos de ejemplo" >&2; exit 1; }
@@ -49,7 +49,7 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó las membresías de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.crm_tasks where status = 'pendiente'")" == "2" && "$("${PSQL[@]}" -tAc "select count(*) from public.contact_preferences where opted_in")" -ge "2" ]] \
   || { echo "El seed no cargó el CRM de ejemplo" >&2; exit 1; }
-[[ "$("${PSQL[@]}" -tAc "select count(*) from public.b2b_price_rules r join public.b2b_agreements g on g.id = r.agreement_id where g.status = 'activo'")" == "2" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_orders where b2b_account_id is not null")" == "1" ]] \
+[[ "$("${PSQL[@]}" -tAc "select count(*) from public.b2b_price_rules r join public.b2b_agreements g on g.id = r.agreement_id where g.status = 'activo'")" == "2" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_orders where b2b_account_id is not null")" == "3" ]] \
   || { echo "El seed no cargó la cuenta B2B de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.upsell_rules where active")" == "6" ]] \
   || { echo "El seed no cargó las recomendaciones de venta de ejemplo" >&2; exit 1; }
@@ -63,6 +63,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó los cortes de caja de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(c.code || ':' || o.channel || '=' || o.total || ':' || o.payment_status, ',' order by c.code) from public.service_orders o join public.detail_centers c on c.id = o.detail_center_id where o.status = 'entregada' and (o.delivered_at at time zone c.timezone)::date = private.center_today(c.id)")" == "CDMX-01:b2c=2980.00:pagada,MTY-01:b2c=440.00:pagada" ]] \
   || { echo "El seed no cargó el P&L de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select string_agg(i.folio || ':' || private.b2b_document_status(i.status, i.amount, private.b2b_invoice_paid(i.id), i.reference, i.due_on, private.center_today(a.home_detail_center_id)) || ':' || (i.amount - private.b2b_invoice_paid(i.id)), ',') from public.b2b_invoices i join public.b2b_accounts a on a.id = i.account_id")" == "CXC-000001:vencido:198.00" && "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total, ',') from public.service_orders where b2b_account_id is not null and status = 'entregada' and b2b_invoice_id is null")" == "MTY-01-000004=199.00" ]] \
+  || { echo "El seed no cargó las cuentas por cobrar B2B de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
