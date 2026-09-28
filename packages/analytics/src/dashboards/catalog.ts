@@ -22,6 +22,7 @@ import {
   pnlGrossMargin,
   pnlGrossProfit,
   pnlNetBeforeTax,
+  pnlPersonnelRatio,
   pnlRevenue,
   pnlStatement,
   type PnlLineFact,
@@ -138,7 +139,7 @@ export interface BreakdownRow {
 
 /** Destino del drill-down (lo traduce @meguiars/domain a ruta web / pantalla móvil). */
 export type MetricDrill =
-  | { kind: "pnl"; section: "ingreso" | "costo_directo" | "gasto" }
+  | { kind: "pnl"; section: "ingreso" | "costo_directo" | "gasto"; line?: string }
   | { kind: "payments" }
   | { kind: "pipeline" };
 
@@ -411,6 +412,15 @@ export const METRIC_CATALOG: readonly MetricDefinition[] = [
     description: "EBITDA gerencial menos gastos financieros.",
     widgets: ["kpi", "bars", "ranking"],
     value: pnlValue(pnlNetBeforeTax),
+  }),
+  pnl({
+    id: "pnl.personnel_ratio",
+    version: 1,
+    kpi: pnlPersonnelRatio,
+    description: "Cuánto de cada peso vendido se va en nómina y prestaciones.",
+    widgets: ["kpi", "timeseries", "bars", "ranking"],
+    drill: { kind: "pnl", section: "gasto", line: "personal" },
+    value: pnlValue(pnlPersonnelRatio),
   }),
   pnl({
     id: "expenses.cash_out",

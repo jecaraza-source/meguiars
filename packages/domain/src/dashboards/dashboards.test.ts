@@ -142,6 +142,9 @@ describe("drill-down", () => {
     expect(dashboardDrill({ kind: "pnl", section: "costo_directo" }, filters()).href).toContain(
       "alcance=todos",
     );
+    expect(dashboardDrill({ kind: "pnl", section: "gasto", line: "personal" }, filters()).href).toContain(
+      "seccion=gasto&desde=2026-09-01&hasta=2026-09-17&linea=personal&alcance=todos",
+    );
     expect(dashboardDrill({ kind: "payments" }, filters()).href).toBe("/finanzas/cobranza?alcance=todos");
     expect(dashboardDrill({ kind: "pipeline" }, filters({ centerIds: [A] })).href).toBe(
       "/comercial/pipeline/indicadores",

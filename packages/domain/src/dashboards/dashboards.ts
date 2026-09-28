@@ -266,7 +266,7 @@ export function moveTo<T>(list: readonly T[], from: number, to: number): T[] {
 // ---------------------------------------------------------------------------
 
 export type MetricDrillRef =
-  | { kind: "pnl"; section: "ingreso" | "costo_directo" | "gasto" }
+  | { kind: "pnl"; section: "ingreso" | "costo_directo" | "gasto"; line?: string | undefined }
   | { kind: "payments" }
   | { kind: "pipeline" };
 
@@ -282,7 +282,7 @@ export type DashboardDrillTarget =
 export function dashboardDrill(drill: MetricDrillRef, f: DashboardFilters): DashboardDrillTarget {
   const all = f.centerIds.length > 1;
   if (drill.kind === "pnl") {
-    const line = drill.section === "ingreso" && f.channel ? f.channel : undefined;
+    const line = drill.line ?? (drill.section === "ingreso" && f.channel ? f.channel : undefined);
     const dimension = drill.section === "ingreso" && f.engine ? f.engine : undefined;
     const qs = new URLSearchParams(
       pnlDrillParams({ section: drill.section, line, dimension }, { from: f.from, to: f.to, all }),

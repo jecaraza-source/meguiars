@@ -176,6 +176,20 @@ describe("resolución de widgets", () => {
     expect(kpi("payments.collected")).toBe(3000);
   });
 
+  it("métrica agregada sólo en el catálogo (ejemplo): gasto de personal sobre ventas", () => {
+    // $500 de personal ÷ $8,349 de ventas = 5.99 %; sin tocar pantallas.
+    expect(kpi("pnl.personnel_ratio")).toBe(5.99);
+    const bars = ok(resolveWidget(w("pnl.personnel_ratio", "bars"), facts, ctx()));
+    expect(bars.data).toEqual({
+      kind: "bars",
+      rows: [
+        { key: A, label: "Centro A", value: 10.31, share: null },
+        { key: B, label: "Centro B", value: 0, share: null },
+      ],
+    });
+    expect(bars.metric.drill).toEqual({ kind: "pnl", section: "gasto", line: "personal" });
+  });
+
   it("el filtro de canal y motor se propaga sólo a las métricas compatibles", () => {
     const b2b = ctx({ filters: { channel: "b2b", engine: null } });
     expect(kpi("pnl.revenue", b2b)).toBe(4500); // OS B2B + cuota B2B
