@@ -17,7 +17,8 @@ export const colors = {
   borderStrong: "#a1a1aa",
   brand: "#111111",
   brandForeground: "#ffffff",
-  accent: "#c8102e",
+  /** Rojo del logotipo de Meguiar's (#E81C24, AA sobre blanco): menús y encabezados. */
+  accent: "#e81c24",
   focus: "#1d4ed8",
   success: "#15803d",
   successSurface: "#f0fdf4",
@@ -44,8 +45,10 @@ export const lineHeight = { tight: 1.25, normal: 1.5 } as const;
 /** Estilos de texto con nombre: la UI usa estos, no tamaños sueltos. */
 export const typography = {
   display: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, lineHeight: lineHeight.tight },
-  title: { fontSize: fontSize.xl, fontWeight: fontWeight.semibold, lineHeight: lineHeight.tight },
-  heading: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, lineHeight: lineHeight.tight },
+  title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, lineHeight: lineHeight.tight },
+  heading: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, lineHeight: lineHeight.tight },
+  /** Menús y navegación: en negrita, en el rojo de la marca. */
+  menu: { fontSize: fontSize.sm, fontWeight: fontWeight.bold, lineHeight: lineHeight.normal },
   body: { fontSize: fontSize.md, fontWeight: fontWeight.regular, lineHeight: lineHeight.normal },
   bodySmall: { fontSize: fontSize.sm, fontWeight: fontWeight.regular, lineHeight: lineHeight.normal },
   label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, lineHeight: lineHeight.normal },

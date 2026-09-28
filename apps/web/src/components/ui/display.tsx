@@ -23,7 +23,7 @@ export function Card({
       {title || actions ? (
         <header className="flex flex-wrap items-start justify-between gap-sm">
           <div className="flex flex-col gap-xxs">
-            {title ? <h2 className="text-lg font-semibold">{title}</h2> : null}
+            {title ? <h2 className="text-lg font-bold text-accent">{title}</h2> : null}
             {subtitle ? <p className="text-sm text-muted">{subtitle}</p> : null}
           </div>
           {actions}

@@ -4,22 +4,37 @@ import { sectionOfPath, type NavSection } from "@meguiars/domain";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+/**
+ * Ítem de menú que corresponde a la ruta: el de href más largo que la contiene
+ * (así /finanzas/resultados marca "Estado de resultados" y no también "Resumen financiero").
+ */
+function currentItemHref(sections: NavSection[], pathname: string): string | null {
+  let best: string | null = null;
+  for (const item of sections.flatMap((s) => s.items)) {
+    const match =
+      item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (match && (best === null || item.href.length > best.length)) best = item.href;
+  }
+  return best;
+}
+
 /** Navegación lateral (tablet y escritorio): secciones con sus pantallas. */
 export function SideNav({ sections }: { sections: NavSection[] }) {
   const pathname = usePathname();
+  const currentHref = currentItemHref(sections, pathname);
   return (
     <nav aria-label="Principal" className="flex flex-col gap-lg">
       {sections.map((section) => (
         <div key={section.id} className="flex flex-col gap-xxs">
-          <p className="px-sm text-xs font-medium uppercase tracking-wide text-muted">{section.label}</p>
+          <p className="px-sm text-xs font-bold uppercase tracking-wide text-accent">{section.label}</p>
           {section.items.map((item) => {
-            const current = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const current = item.href === currentHref;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={current ? "page" : undefined}
-                className="flex min-h-(--mg-touch-target) items-center rounded-md px-sm text-sm hover:bg-surface aria-[current=page]:bg-surface aria-[current=page]:font-semibold"
+                className="flex min-h-(--mg-touch-target) items-center rounded-md px-sm text-sm font-bold text-accent hover:bg-surface aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
               >
                 {item.label}
               </Link>
@@ -44,7 +59,7 @@ export function BottomNav({ sections }: { sections: NavSection[] }) {
           key={section.id}
           href={section.items[0]!.href}
           aria-current={section.id === active ? "page" : undefined}
-          className="flex min-h-(--mg-touch-target) flex-1 items-center justify-center px-xs py-sm text-xs text-muted aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
+          className="flex min-h-(--mg-touch-target) flex-1 items-center justify-center px-xs py-sm text-xs font-bold text-accent aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
         >
           {section.shortLabel}
         </Link>
@@ -63,9 +78,8 @@ export function SubNav({ section }: { section: NavSection }) {
         <Link
           key={item.href}
           href={item.href}
-          aria-current={pathname === item.href ? "page" : undefined}
-          className="mg-badge min-h-(--mg-touch-target) whitespace-nowrap px-md aria-[current=page]:font-semibold"
-          data-tone="neutral"
+          aria-current={currentItemHref([section], pathname) === item.href ? "page" : undefined}
+          className="inline-flex min-h-(--mg-touch-target) items-center whitespace-nowrap rounded-full border border-accent px-md text-sm font-bold text-accent hover:bg-surface aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
         >
           {item.label}
         </Link>

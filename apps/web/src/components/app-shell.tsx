@@ -50,7 +50,7 @@ export function AppShell({
       <header className="flex flex-wrap items-center justify-between gap-sm border-b border-border bg-surface-raised px-lg py-sm print:hidden">
         <Link href="/" className="flex items-center gap-sm" aria-label={`${APP_NAME}: inicio`}>
           <BrandLogo height={48} priority />
-          <span className="hidden text-sm font-semibold uppercase tracking-wide text-accent sm:inline">
+          <span className="hidden text-sm font-bold uppercase tracking-wide text-accent sm:inline">
             Detail Center
           </span>
         </Link>
@@ -91,7 +91,7 @@ export function AppShell({
         <main id="contenido" className="min-w-0 flex-1 px-lg pt-lg pb-xxxl md:p-xl">
           <div className="mx-auto flex w-full max-w-(--mg-layout-content) flex-col gap-xl">
             <div className="flex flex-col gap-xs">
-              <h1 className="text-xl font-semibold leading-tight md:text-xxl">{title}</h1>
+              <h1 className="text-xl font-bold leading-tight text-accent md:text-xxl">{title}</h1>
               {description ? <p className="text-muted">{description}</p> : null}
             </div>
             {section ? (
@@ -121,8 +121,8 @@ export function PlainShell({ title, children }: { title: string; children: React
       >
         <header className="flex flex-col items-start gap-sm">
           <BrandLogo height={96} priority />
-          <p className="text-sm font-semibold uppercase tracking-wide text-accent">{APP_NAME}</p>
-          <h1 className="text-xl font-semibold leading-tight">{title}</h1>
+          <p className="text-sm font-bold uppercase tracking-wide text-accent">{APP_NAME}</p>
+          <h1 className="text-xl font-bold leading-tight text-accent">{title}</h1>
         </header>
         {children}
       </main>

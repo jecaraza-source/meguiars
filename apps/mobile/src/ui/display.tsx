@@ -26,7 +26,7 @@ export function Card({ title, subtitle, children }: CardContract & { children?: 
   return (
     <View style={styles.card}>
       {title ? (
-        <Text accessibilityRole="header" style={textStyle("heading")}>
+        <Text accessibilityRole="header" style={textStyle("heading", "accent")}>
           {title}
         </Text>
       ) : null}

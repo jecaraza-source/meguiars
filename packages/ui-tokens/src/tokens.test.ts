@@ -28,6 +28,12 @@ describe("contraste WCAG AA", () => {
     expect(contrastRatio(colors.accent, colors.background)).toBeGreaterThanOrEqual(AA_TEXT);
   });
 
+  it("menús y encabezados en el rojo de la marca: rojo sobre blanco y blanco sobre rojo (ítem activo)", () => {
+    expect(colors.accent).toBe("#e81c24");
+    expect(contrastRatio(colors.accent, colors.surfaceRaised)).toBeGreaterThanOrEqual(AA_TEXT);
+    expect(contrastRatio(colors.brandForeground, colors.accent)).toBeGreaterThanOrEqual(AA_TEXT);
+  });
+
   it("foco y bordes de controles se distinguen (≥ 3:1, WCAG 1.4.11)", () => {
     expect(contrastRatio(colors.focus, colors.background)).toBeGreaterThanOrEqual(AA_NON_TEXT);
     expect(contrastRatio(colors.borderStrong, colors.background)).toBeGreaterThanOrEqual(2.5);
