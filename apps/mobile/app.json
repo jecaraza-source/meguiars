@@ -33,6 +33,12 @@
           "microphonePermission": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c2f9d08f-8ccc-4a5c-b275-c6bf13a30ed0"
+      }
+    },
+    "owner": "javierec"
   }
 }
