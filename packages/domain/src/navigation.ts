@@ -80,7 +80,10 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     id: "direccion",
     label: "Dirección",
     shortLabel: "Dirección",
-    items: [{ screen: "direccion", label: "Vista consolidada", href: "/direccion" }],
+    items: [
+      { screen: "direccion", label: "Vista consolidada", href: "/direccion" },
+      { screen: "dashboards", label: "Tableros", href: "/direccion/tableros" },
+    ],
   },
 ];
 
@@ -120,6 +123,9 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   pnlDrilldown: "pnl",
   receivableAccount: "receivables",
   receivableDocument: "receivables",
+  dashboardDetail: "dashboards",
+  dashboardNew: "dashboards",
+  dashboardEdit: "dashboards",
 };
 
 /** Ítem de menú que representa a la pantalla. */

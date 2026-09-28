@@ -298,6 +298,13 @@ export const pnlNetBeforeTax = kpi(
   "currency",
   (s) => s.netBeforeTax,
 );
+export const pnlPersonnelRatio = kpi(
+  "pnl.personnel_ratio",
+  "Gasto de personal sobre ventas",
+  "Gastos de personal aprobados ÷ ventas × 100 (0 si no hay ventas)",
+  "percent",
+  (s) => (s.revenue > 0 ? round2((s.personnel * 100) / s.revenue) : 0),
+);
 export const expensesCashOut = kpi(
   "expenses.cash_out",
   "Salidas de caja",

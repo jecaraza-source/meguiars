@@ -68,6 +68,10 @@ export const SCREEN_GUARDS = {
   receivableAccount: { center: true, capability: "b2b.read" },
   receivableDocument: { center: true, capability: "b2b.read" },
   direccion: { center: true, capability: "executive.read" },
+  dashboards: { center: true, capability: "dashboards.read" },
+  dashboardDetail: { center: true, capability: "dashboards.read" },
+  dashboardNew: { center: true, capability: "dashboards.manage" },
+  dashboardEdit: { center: true, capability: "dashboards.manage" },
   designSystem: {},
   account: {},
 } as const satisfies Record<string, GuardRequirement>;

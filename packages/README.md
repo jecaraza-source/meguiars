@@ -7,7 +7,7 @@ Todos se publican como TypeScript fuente (`exports` → `src/index.ts`). Web los
 | `@meguiars/domain`     | —                               | entidades (`DetailCenter`), roles y `canAssignRole`, reglas de fecha (UTC → zona del centro), `Result`/`RepoError`, `ViewState`, textos compartidos y **puertos** de repositorio (`DetailCenterRepository`) |
 | `@meguiars/validation` | domain, zod                     | esquemas de entrada (centro, membresía, motivo) y `parseSupabasePublicEnv`                                                                                                                                  |
 | `@meguiars/supabase`   | domain, validation, supabase-js | `createMeguiarsClient`, `database.types.ts` (generado), `toRepoError`, **adaptadores** (`createDetailCenterRepository`, `createAccessRepository`)                                                           |
-| `@meguiars/analytics`  | —                               | `defineKpi` y `kpiRegistry`: cada KPI tiene un id único, su fórmula, su fuente, su unidad y su nivel (centro o corporativo)                                                                                 |
+| `@meguiars/analytics`  | —                               | `defineKpi` y `kpiRegistry`: cada KPI tiene un id único, su fórmula, su fuente, su unidad y su nivel (centro o corporativo). `METRIC_CATALOG` y el servicio de métricas de los tableros (D1)                |
 | `@meguiars/ui-tokens`  | —                               | tokens (color, tipografía, espacio, radios, estados, densidad, breakpoints…), recetas de variantes/tonos, contratos de componentes, `toCssVariables()`, `toComponentCss()` y `contrastRatio`                |
 
 Reglas:

@@ -65,6 +65,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó el P&L de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(i.folio || ':' || private.b2b_document_status(i.status, i.amount, private.b2b_invoice_paid(i.id), i.reference, i.due_on, private.center_today(a.home_detail_center_id)) || ':' || (i.amount - private.b2b_invoice_paid(i.id)), ',') from public.b2b_invoices i join public.b2b_accounts a on a.id = i.account_id")" == "CXC-000001:vencido:198.00" && "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total, ',') from public.service_orders where b2b_account_id is not null and status = 'entregada' and b2b_invoice_id is null")" == "MTY-01-000004=199.00" ]] \
   || { echo "El seed no cargó las cuentas por cobrar B2B de ejemplo" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select string_agg(d.name || '=' || (select count(*) from public.dashboard_widgets w where w.dashboard_id = d.id), ',' order by d.name) from public.dashboard_definitions d join public.organizations o on o.id = d.organization_id where o.slug = 'meguiars-demo'")" == "Comercial=4,Finanzas=5,Tablero corporativo=12" ]] \
+  || { echo "El seed no cargó los tableros ejecutivos de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

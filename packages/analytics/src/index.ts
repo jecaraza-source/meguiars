@@ -5,3 +5,4 @@ export * from "./upsell";
 export * from "./pipeline";
 export * from "./payments";
 export * from "./pnl";
+export * from "./dashboards";

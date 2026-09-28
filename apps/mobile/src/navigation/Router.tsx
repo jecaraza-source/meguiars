@@ -1,11 +1,13 @@
 import {
   authCopy,
   centersCopy,
+  dashboardsCopy,
   guardScreen,
   navScreenOf,
   sectionOfScreen,
   visibleNavigation,
   type OpportunityKind,
+  type DashboardDrillTarget,
   type PnlDrillQuery,
   type Screen,
 } from "@meguiars/domain";
@@ -23,6 +25,8 @@ import { ClientDetailScreen } from "@/screens/ClientDetailScreen";
 import { ClientNewScreen } from "@/screens/ClientNewScreen";
 import { ClientsScreen } from "@/screens/ClientsScreen";
 import { DesignSystemScreen } from "@/screens/DesignSystemScreen";
+import { DashboardScreen } from "@/screens/DashboardScreen";
+import { DashboardsScreen } from "@/screens/DashboardsScreen";
 import { DireccionScreen } from "@/screens/DireccionScreen";
 import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
@@ -184,6 +188,14 @@ export function Router() {
     setReceivableDocumentId(id);
     setScreen("receivableDocument");
   };
+  // Tablero (equivale a /direccion/tableros/[id] en web) y su drill-down.
+  const [dashboardId, setDashboardId] = useState<string | null>(null);
+  const openDashboard = (id: string) => {
+    setDashboardId(id);
+    setScreen("dashboardDetail");
+  };
+  const drillFromDashboard = (target: DashboardDrillTarget) =>
+    target.screen === "pnlDrilldown" ? openPnlDrill(target.query) : setScreen(target.screen);
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
 
@@ -447,6 +459,34 @@ export function Router() {
         break;
       case "direccion":
         content = <DireccionScreen {...props} />;
+        break;
+      case "dashboards":
+        content = <DashboardsScreen {...props} onOpen={openDashboard} />;
+        break;
+      case "dashboardDetail":
+        content = dashboardId ? (
+          <DashboardScreen
+            key={dashboardId}
+            {...props}
+            dashboardId={dashboardId}
+            onBack={() => setScreen("dashboards")}
+            onDrill={drillFromDashboard}
+          />
+        ) : (
+          <DashboardsScreen {...props} onOpen={openDashboard} />
+        );
+        break;
+      case "dashboardNew":
+      case "dashboardEdit":
+        // El constructor (arrastrar y redimensionar) es de la web; en móvil se consultan y ajustan.
+        content = (
+          <MessageScreen
+            header={header}
+            title={dashboardsCopy.builderTitle}
+            message="El constructor de tableros está en la web. En móvil puedes consultarlos y ajustar tu vista."
+            action={{ label: dashboardsCopy.title, onPress: () => setScreen("dashboards") }}
+          />
+        );
         break;
       case "clients":
         content = <ClientsScreen {...props} onOpen={openClient} onNew={() => setScreen("clientNew")} />;

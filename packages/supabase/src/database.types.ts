@@ -11,6 +11,217 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      dashboard_definitions: {
+        Row: {
+          archived_at: string | null;
+          audience_role: Database["public"]["Enums"]["app_role"] | null;
+          center_ids: string[] | null;
+          created_at: string;
+          created_by: string | null;
+          default_range: string;
+          description: string | null;
+          id: string;
+          is_default: boolean;
+          name: string;
+          organization_id: string;
+          request_id: string | null;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          archived_at?: string | null;
+          audience_role?: Database["public"]["Enums"]["app_role"] | null;
+          center_ids?: string[] | null;
+          created_at?: string;
+          created_by?: string | null;
+          default_range?: string;
+          description?: string | null;
+          id?: string;
+          is_default?: boolean;
+          name: string;
+          organization_id: string;
+          request_id?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          audience_role?: Database["public"]["Enums"]["app_role"] | null;
+          center_ids?: string[] | null;
+          created_at?: string;
+          created_by?: string | null;
+          default_range?: string;
+          description?: string | null;
+          id?: string;
+          is_default?: boolean;
+          name?: string;
+          organization_id?: string;
+          request_id?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_definitions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      dashboard_widgets: {
+        Row: {
+          col_span: number;
+          created_at: string;
+          dashboard_id: string;
+          id: string;
+          metric_id: string;
+          options: Json;
+          organization_id: string;
+          position: number;
+          row_span: number;
+          title: string | null;
+          updated_at: string;
+          widget_type: string;
+        };
+        Insert: {
+          col_span?: number;
+          created_at?: string;
+          dashboard_id: string;
+          id?: string;
+          metric_id: string;
+          options?: Json;
+          organization_id: string;
+          position: number;
+          row_span?: number;
+          title?: string | null;
+          updated_at?: string;
+          widget_type: string;
+        };
+        Update: {
+          col_span?: number;
+          created_at?: string;
+          dashboard_id?: string;
+          id?: string;
+          metric_id?: string;
+          options?: Json;
+          organization_id?: string;
+          position?: number;
+          row_span?: number;
+          title?: string | null;
+          updated_at?: string;
+          widget_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_widgets_organization_id_dashboard_id_fkey";
+            columns: ["organization_id", "dashboard_id"];
+            isOneToOne: false;
+            referencedRelation: "dashboard_definitions";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "dashboard_widgets_metric_id_fkey";
+            columns: ["metric_id"];
+            isOneToOne: false;
+            referencedRelation: "metric_registry";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      metric_registry: {
+        Row: {
+          active: boolean;
+          breakdowns: string[];
+          capability: string;
+          description: string;
+          drill: boolean;
+          filters: string[];
+          formula: string;
+          id: string;
+          name: string;
+          source: string;
+          source_tables: string[];
+          unit: string;
+          updated_at: string;
+          version: number;
+          widget_types: string[];
+        };
+        Insert: {
+          active?: boolean;
+          breakdowns?: string[];
+          capability: string;
+          description: string;
+          drill?: boolean;
+          filters?: string[];
+          formula: string;
+          id: string;
+          name: string;
+          source: string;
+          source_tables: string[];
+          unit: string;
+          updated_at?: string;
+          version: number;
+          widget_types: string[];
+        };
+        Update: {
+          active?: boolean;
+          breakdowns?: string[];
+          capability?: string;
+          description?: string;
+          drill?: boolean;
+          filters?: string[];
+          formula?: string;
+          id?: string;
+          name?: string;
+          source?: string;
+          source_tables?: string[];
+          unit?: string;
+          updated_at?: string;
+          version?: number;
+          widget_types?: string[];
+        };
+        Relationships: [];
+      };
+      user_dashboard_preferences: {
+        Row: {
+          dashboard_id: string;
+          filters: Json;
+          hidden_widget_ids: string[];
+          is_favorite: boolean;
+          updated_at: string;
+          user_id: string;
+          widget_order: string[];
+        };
+        Insert: {
+          dashboard_id: string;
+          filters?: Json;
+          hidden_widget_ids?: string[];
+          is_favorite?: boolean;
+          updated_at?: string;
+          user_id: string;
+          widget_order?: string[];
+        };
+        Update: {
+          dashboard_id?: string;
+          filters?: Json;
+          hidden_widget_ids?: string[];
+          is_favorite?: boolean;
+          updated_at?: string;
+          user_id?: string;
+          widget_order?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_dashboard_preferences_dashboard_id_fkey";
+            columns: ["dashboard_id"];
+            isOneToOne: false;
+            referencedRelation: "dashboard_definitions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       appointment_services: {
         Row: {
           appointment_id: string;
@@ -4155,6 +4366,48 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      save_dashboard: {
+        Args: {
+          p_audience_role: Database["public"]["Enums"]["app_role"] | null;
+          p_center_ids: string[] | null;
+          p_default_range: string;
+          p_description: string | null;
+          p_id: string | null;
+          p_is_default: boolean;
+          p_name: string;
+          p_organization_id: string;
+          p_reason: string | null;
+          p_request_id: string | null;
+          p_version: number | null;
+          p_widgets: Json;
+        };
+        Returns: Database["public"]["Tables"]["dashboard_definitions"]["Row"];
+        SetofOptions: { from: "*"; to: "dashboard_definitions"; isOneToOne: true; isSetofReturn: false };
+      };
+      archive_dashboard: {
+        Args: { p_id: string; p_reason: string; p_version: number };
+        Returns: Database["public"]["Tables"]["dashboard_definitions"]["Row"];
+        SetofOptions: { from: "*"; to: "dashboard_definitions"; isOneToOne: true; isSetofReturn: false };
+      };
+      save_dashboard_preferences: {
+        Args: {
+          p_dashboard_id: string;
+          p_filters: Json;
+          p_hidden_widget_ids: string[];
+          p_is_favorite: boolean;
+          p_widget_order: string[];
+        };
+        Returns: Database["public"]["Tables"]["user_dashboard_preferences"]["Row"];
+        SetofOptions: { from: "*"; to: "user_dashboard_preferences"; isOneToOne: true; isSetofReturn: false };
+      };
+      reset_dashboard_preferences: {
+        Args: { p_dashboard_id: string };
+        Returns: undefined;
+      };
+      dashboard_facts: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_grain: string; p_sources: string[]; p_to: string };
+        Returns: Json;
+      };
       approve_expense: {
         Args: { p_expense_id: string; p_note?: string | null; p_version: number };
         Returns: Database["public"]["Tables"]["expenses"]["Row"];
