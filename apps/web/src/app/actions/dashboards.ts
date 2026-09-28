@@ -4,20 +4,22 @@ import {
   dashboardsCopy,
   dashboardsErrorMessage,
   guardScreen,
+  kpisCopy,
   type DashboardInput,
   type SavedDashboardFilters,
 } from "@meguiars/domain";
 import { createDashboardRepository } from "@meguiars/supabase";
+import { fieldErrors, kpiSettingsSchema } from "@meguiars/validation";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthState } from "@/lib/auth/dal";
-import { stamp, text, type ActionFormState } from "@/lib/form-data";
+import { stamp, text, validationState, values, type ActionFormState } from "@/lib/form-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type DashboardsFormState = ActionFormState;
 
 /** Sesión con acceso a la pantalla; la base vuelve a autorizar cada escritura. */
-async function context(screen: "dashboards" | "dashboardEdit") {
+async function context(screen: "dashboards" | "dashboardEdit" | "kpis") {
   const state = await getAuthState();
   if (!guardScreen(state, screen).allow) return null;
   const supabase = await createSupabaseServerClient();
@@ -105,4 +107,28 @@ export async function resetDashboardViewAction(
   if (!result.ok) return stamp({ error: dashboardsErrorMessage(result.error) });
   revalidatePath(`/direccion/tableros/${dashboardId}`);
   redirect(`/direccion/tableros/${dashboardId}`);
+}
+
+/** Parámetros de los KPIs (admin corporativo; la base lo vuelve a validar). */
+export async function saveKpiSettingsAction(
+  _prev: DashboardsFormState,
+  form: FormData,
+): Promise<DashboardsFormState> {
+  const ctx = await context("kpis");
+  if (!ctx) return stamp({ error: dashboardsCopy.forbiddenDashboard });
+  const input = {
+    organizationId: text(form, "organizationId"),
+    version: Number(text(form, "version")),
+    ltvLifetimeYears: text(form, "ltvLifetimeYears"),
+    operatingHoursPerDay: text(form, "operatingHoursPerDay"),
+    operatingDaysPerWeek: text(form, "operatingDaysPerWeek"),
+    reason: text(form, "reason"),
+  };
+  const parsed = kpiSettingsSchema.safeParse(input);
+  if (!parsed.success)
+    return stamp(validationState(fieldErrors(parsed.error), ["organizationId", "version"], form));
+  const result = await ctx.repo.setKpiSettings(parsed.data);
+  if (!result.ok) return stamp({ error: dashboardsErrorMessage(result.error), values: values(form) });
+  revalidatePath("/direccion/kpis");
+  return stamp({ message: kpisCopy.settingsSaved });
 }

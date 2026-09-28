@@ -28,6 +28,7 @@ import { DesignSystemScreen } from "@/screens/DesignSystemScreen";
 import { DashboardScreen } from "@/screens/DashboardScreen";
 import { DashboardsScreen } from "@/screens/DashboardsScreen";
 import { DireccionScreen } from "@/screens/DireccionScreen";
+import { KpisScreen } from "@/screens/KpisScreen";
 import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
@@ -462,6 +463,9 @@ export function Router() {
         break;
       case "dashboards":
         content = <DashboardsScreen {...props} onOpen={openDashboard} />;
+        break;
+      case "kpis":
+        content = <KpisScreen {...props} onDrill={drillFromDashboard} />;
         break;
       case "dashboardDetail":
         content = dashboardId ? (

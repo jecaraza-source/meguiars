@@ -21,7 +21,7 @@ function declaration(src, name) {
 }
 
 describe("paridad web/móvil de los tableros", () => {
-  it.each(["widgetConfig", "centersWith", "canManageDashboards", "loadDashboardView"])(
+  it.each(["widgetConfig", "centersWith", "canManageDashboards", "loadDashboardView", "kpiDefinition"])(
     "%s es idéntico en web y móvil",
     (name) => {
       expect(declaration(web, name)).not.toBeNull();

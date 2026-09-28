@@ -56,6 +56,9 @@ export const METRIC_SOURCE_LABELS: Record<string, string> = {
   payments: "Cobranza",
   pipeline: "Pipeline comercial",
   memberships: "Membresías",
+  orders: "Órdenes de servicio",
+  upsell: "Recomendaciones de venta",
+  customers: "Clientes",
 };
 
 /** Textos de los tableros ejecutivos, idénticos en web y móvil. */

@@ -2,6 +2,7 @@ import "server-only";
 import {
   METRIC_CATALOG,
   factsGrain,
+  KPI_CATALOG,
   requiredSources,
   resolveDashboard,
   type DashboardFacts,
@@ -13,6 +14,7 @@ import {
   can,
   dashboardCenters,
   dashboardsErrorMessage,
+  kpisCopy,
   METRIC_SOURCE_LABELS,
   presentWidget,
   resolveDashboardFilters,
@@ -107,6 +109,35 @@ export async function loadDashboardView(
   const widgets = facts ? visible.map((w, i) => presentWidget(w, results[i]!, filters)) : [];
   const centerName = (id: string) => centers.find((c) => c.id === id)?.name ?? id;
   return { centers, filters, error, visible, hidden, widgets, centerName };
+}
+
+/** Tablero virtual de Dirección → KPIs: un widget por KPI del registro (una sola lectura de hechos). */
+export function kpiDefinition(organizationId: string): DashboardDefinition {
+  return {
+    id: "kpis",
+    organizationId,
+    name: kpisCopy.title,
+    description: null,
+    audienceRole: null,
+    centerIds: null,
+    defaultRange: "mes",
+    isDefault: false,
+    version: 1,
+    archivedAt: null,
+    widgets: KPI_CATALOG.map((k, i) => ({
+      id: k.id,
+      metricId: k.metricId,
+      type: k.view,
+      title: k.name,
+      position: i + 1,
+      colSpan: k.view === "kpi" ? 1 : 2,
+      rowSpan: 1,
+      options: {
+        ...(k.channel ? { channel: k.channel } : {}),
+        ...(k.breakdown ? { breakdown: k.breakdown } : {}),
+      },
+    })),
+  };
 }
 
 /**
