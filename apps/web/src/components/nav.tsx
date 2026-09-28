@@ -34,7 +34,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
                 key={item.href}
                 href={item.href}
                 aria-current={current ? "page" : undefined}
-                className="flex min-h-(--mg-touch-target) items-center rounded-md px-sm text-sm font-bold text-accent hover:bg-surface aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
+                className="flex min-h-(--mg-touch-target) items-center rounded-md px-sm text-sm font-bold text-foreground hover:bg-surface aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
               >
                 {item.label}
               </Link>
@@ -59,7 +59,7 @@ export function BottomNav({ sections }: { sections: NavSection[] }) {
           key={section.id}
           href={section.items[0]!.href}
           aria-current={section.id === active ? "page" : undefined}
-          className="flex min-h-(--mg-touch-target) flex-1 items-center justify-center px-xs py-sm text-xs font-bold text-accent aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
+          className="flex min-h-(--mg-touch-target) flex-1 items-center justify-center px-xs py-sm text-xs font-bold text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
         >
           {section.shortLabel}
         </Link>
