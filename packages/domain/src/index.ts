@@ -26,3 +26,4 @@ export * from "./expenses";
 export * from "./cash";
 export * from "./pnl";
 export * from "./receivables";
+export * from "./dashboards";

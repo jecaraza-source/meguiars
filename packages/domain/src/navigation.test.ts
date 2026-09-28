@@ -44,16 +44,17 @@ describe("navegación por rol", () => {
 
   it.each<[AppRole, string[]]>([
     ["admin_socio", ["inicio", "operacion", "comercial", "finanzas", "direccion"]],
-    ["encargado", ["inicio", "operacion", "comercial", "finanzas"]],
+    // Dirección → Tableros (dirigidos a su rol); la vista consolidada es sólo del admin.
+    ["encargado", ["inicio", "operacion", "comercial", "finanzas", "direccion"]],
     // Vende y renueva membresías en recepción (Comercial → Membresías) y hace el
     // corte de caja (Administración y Finanzas → Cobranza).
     ["operador_recepcion", ["inicio", "operacion", "comercial", "finanzas"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).
-    ["contador", ["inicio", "operacion", "comercial", "finanzas"]],
+    ["contador", ["inicio", "operacion", "comercial", "finanzas", "direccion"]],
     // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día;
     // en Finanzas sólo ve Cuentas por cobrar B2B (factura y cobra a las cuentas).
-    ["comercial_b2b", ["inicio", "operacion", "comercial", "finanzas"]],
+    ["comercial_b2b", ["inicio", "operacion", "comercial", "finanzas", "direccion"]],
   ])("%s ve %j", (role, expected) => {
     expect(sectionsOf([role])).toEqual(expected);
   });
@@ -140,7 +141,16 @@ describe("navegación por rol", () => {
       "operacion",
       "comercial",
       "finanzas",
+      "direccion",
     ]);
+  });
+
+  it("Tableros: todos salvo recepción; la vista consolidada y el constructor, sólo el admin", () => {
+    for (const role of ["admin_socio", "encargado", "contador", "comercial_b2b"] as const)
+      expect(itemsOf([role])).toContain("dashboards");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("dashboards");
+    expect(itemsOf(["encargado"])).not.toContain("direccion");
+    expect(sectionOfScreen("dashboardEdit")).toBe("direccion");
   });
 
   it("Egresos y estado de resultados: admin, encargado y contador; recepción y comercial no", () => {
