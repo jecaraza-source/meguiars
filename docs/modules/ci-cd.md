@@ -96,12 +96,14 @@ Con esto, **un PR con algún job en rojo no se puede mergear**: `CI ok` queda en
   - el mismo commit produce el mismo resultado en CI (`npm run build:web`) y en Vercel.
 - **Variables por ambiente** (Vercel → Settings → Environment Variables):
 
-| Variable                        | Production                        | Preview                      | Development (local) |
-| ------------------------------- | --------------------------------- | ---------------------------- | ------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | URL de `meguiars`                 | URL de `meguiars-staging`    | `.env.local`        |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | llave publishable de `meguiars`   | llave publishable de staging | `.env.local`        |
-| `NEXT_PUBLIC_SITE_URL`          | `https://meguiars-web.vercel.app` | (vacío: usa el origen)       | —                   |
-| `NEXT_PUBLIC_APP_ENV`           | (vacío: usa `VERCEL_ENV`)         | (vacío)                      | `local` (opcional)  |
+| Variable                        | Production                                 | Preview                      | Development (local) |
+| ------------------------------- | ------------------------------------------ | ---------------------------- | ------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | URL de `meguiars`                          | URL de `meguiars-staging`    | `.env.local`        |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | llave publishable de `meguiars`            | llave publishable de staging | `.env.local`        |
+| `NEXT_PUBLIC_SITE_URL`          | `https://meguiars-web.vercel.app`          | (vacío: usa el origen)       | —                   |
+| `NEXT_PUBLIC_APP_ENV`           | (vacío: usa `VERCEL_ENV`)                  | (vacío)                      | `local` (opcional)  |
+| `SUPABASE_SERVICE_ROLE_KEY`     | llave de servicio (sólo servidor, alertas) | —                            | —                   |
+| `CRON_SECRET`                   | secreto aleatorio (Vercel Cron)            | —                            | —                   |
 
 ## Migraciones versionadas
 

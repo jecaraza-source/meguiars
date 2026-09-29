@@ -73,6 +73,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó los umbrales de alerta de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select name || ':' || base_price || ':' || standard_direct_cost || ':' || operator_commission_pct from public.services where code = 'LAV-MAN'")" == "Lavado manual detallado:450.00:60.00:30.00" ]] \
   || { echo "El seed no cargó el lavado manual detallado con pago al operador" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select count(*) || ':' || (select count(*) from public.alert_instances where status = 'nueva') from public.alert_rules r join public.organizations o on o.id = r.organization_id where o.slug = 'meguiars-demo'")" == "3:1" ]] \
+  || { echo "El seed no cargó las reglas y la alerta de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

@@ -11,3 +11,4 @@ export * from "./services";
 export * from "./dashboards";
 export * from "./kpis";
 export * from "./corporate";
+export * from "./alerts";

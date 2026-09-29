@@ -46,6 +46,300 @@ export type Database = {
           },
         ];
       };
+      alert_rules: {
+        Row: {
+          active: boolean;
+          center_ids: string[] | null;
+          channel: string | null;
+          condition: string;
+          cooldown_minutes: number;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          metric_id: string;
+          name: string;
+          organization_id: string;
+          period: string;
+          scope_kind: string;
+          severity: string;
+          threshold: number | null;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          center_ids?: string[] | null;
+          channel?: string | null;
+          condition: string;
+          cooldown_minutes?: number;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          metric_id: string;
+          name: string;
+          organization_id: string;
+          period: string;
+          scope_kind: string;
+          severity: string;
+          threshold?: number | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          center_ids?: string[] | null;
+          channel?: string | null;
+          condition?: string;
+          cooldown_minutes?: number;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          metric_id?: string;
+          name?: string;
+          organization_id?: string;
+          period?: string;
+          scope_kind?: string;
+          severity?: string;
+          threshold?: number | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "alert_rules_metric_id_fkey";
+            columns: ["metric_id"];
+            isOneToOne: false;
+            referencedRelation: "metric_registry";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alert_rules_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      alert_instances: {
+        Row: {
+          change_pct: number | null;
+          channel: string | null;
+          condition: string;
+          condition_cleared_at: string | null;
+          created_at: string;
+          detail_center_ids: string[];
+          first_detected_at: string;
+          id: string;
+          last_detected_at: string;
+          last_period_from: string;
+          last_period_to: string;
+          last_value: number | null;
+          metric_id: string;
+          notified_at: string | null;
+          occurrences: number;
+          organization_id: string;
+          period_from: string;
+          period_to: string;
+          previous_from: string | null;
+          previous_to: string | null;
+          previous_value: number | null;
+          resolution_note: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          rule_id: string;
+          rule_name: string;
+          scope_key: string;
+          severity: string;
+          status: string;
+          threshold: number | null;
+          updated_at: string;
+          value: number | null;
+        };
+        Insert: {
+          change_pct?: number | null;
+          channel?: string | null;
+          condition: string;
+          condition_cleared_at?: string | null;
+          created_at?: string;
+          detail_center_ids: string[];
+          first_detected_at?: string;
+          id?: string;
+          last_detected_at?: string;
+          last_period_from: string;
+          last_period_to: string;
+          last_value?: number | null;
+          metric_id: string;
+          notified_at?: string | null;
+          occurrences?: number;
+          organization_id: string;
+          period_from: string;
+          period_to: string;
+          previous_from?: string | null;
+          previous_to?: string | null;
+          previous_value?: number | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          rule_id: string;
+          rule_name: string;
+          scope_key: string;
+          severity: string;
+          status?: string;
+          threshold?: number | null;
+          updated_at?: string;
+          value?: number | null;
+        };
+        Update: {
+          change_pct?: number | null;
+          channel?: string | null;
+          condition?: string;
+          condition_cleared_at?: string | null;
+          created_at?: string;
+          detail_center_ids?: string[];
+          first_detected_at?: string;
+          id?: string;
+          last_detected_at?: string;
+          last_period_from?: string;
+          last_period_to?: string;
+          last_value?: number | null;
+          metric_id?: string;
+          notified_at?: string | null;
+          occurrences?: number;
+          organization_id?: string;
+          period_from?: string;
+          period_to?: string;
+          previous_from?: string | null;
+          previous_to?: string | null;
+          previous_value?: number | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          rule_id?: string;
+          rule_name?: string;
+          scope_key?: string;
+          severity?: string;
+          status?: string;
+          threshold?: number | null;
+          updated_at?: string;
+          value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "alert_instances_metric_id_fkey";
+            columns: ["metric_id"];
+            isOneToOne: false;
+            referencedRelation: "metric_registry";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      alert_events: {
+        Row: {
+          actor_id: string | null;
+          created_at: string;
+          id: number;
+          instance_id: string;
+          kind: string;
+          note: string | null;
+          period_from: string | null;
+          period_to: string | null;
+          value: number | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          created_at?: string;
+          id?: number;
+          instance_id: string;
+          kind: string;
+          note?: string | null;
+          period_from?: string | null;
+          period_to?: string | null;
+          value?: number | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          created_at?: string;
+          id?: number;
+          instance_id?: string;
+          kind?: string;
+          note?: string | null;
+          period_from?: string | null;
+          period_to?: string | null;
+          value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "alert_events_instance_id_fkey";
+            columns: ["instance_id"];
+            isOneToOne: false;
+            referencedRelation: "alert_instances";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      alert_evaluation_runs: {
+        Row: {
+          actor_id: string | null;
+          cleared: number;
+          created: number;
+          error: string | null;
+          finished_at: string | null;
+          id: string;
+          organization_id: string;
+          rules_evaluated: number;
+          source: string;
+          started_at: string;
+          suppressed: number;
+          updated: number;
+        };
+        Insert: {
+          actor_id?: string | null;
+          cleared?: number;
+          created?: number;
+          error?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          organization_id: string;
+          rules_evaluated?: number;
+          source: string;
+          started_at?: string;
+          suppressed?: number;
+          updated?: number;
+        };
+        Update: {
+          actor_id?: string | null;
+          cleared?: number;
+          created?: number;
+          error?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          organization_id?: string;
+          rules_evaluated?: number;
+          source?: string;
+          started_at?: string;
+          suppressed?: number;
+          updated?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "alert_evaluation_runs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       kpi_thresholds: {
         Row: {
           channel: string | null;
@@ -4503,6 +4797,61 @@ export type Database = {
       delete_kpi_threshold: {
         Args: { p_id: string; p_reason: string };
         Returns: undefined;
+      };
+      save_alert_rule: {
+        Args: {
+          p_active: boolean;
+          p_center_ids: string[] | null;
+          p_channel: string | null;
+          p_condition: string;
+          p_cooldown_minutes: number;
+          p_description: string | null;
+          p_id: string | null;
+          p_metric_id: string;
+          p_name: string;
+          p_organization_id: string;
+          p_period: string;
+          p_reason: string;
+          p_scope_kind: string;
+          p_severity: string;
+          p_threshold: number | null;
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["alert_rules"]["Row"];
+        SetofOptions: { from: "*"; to: "alert_rules"; isOneToOne: true; isSetofReturn: false };
+      };
+      review_alert: {
+        Args: { p_id: string; p_note?: string | null };
+        Returns: Database["public"]["Tables"]["alert_instances"]["Row"];
+        SetofOptions: { from: "*"; to: "alert_instances"; isOneToOne: true; isSetofReturn: false };
+      };
+      resolve_alert: {
+        Args: { p_id: string; p_note: string };
+        Returns: Database["public"]["Tables"]["alert_instances"]["Row"];
+        SetofOptions: { from: "*"; to: "alert_instances"; isOneToOne: true; isSetofReturn: false };
+      };
+      start_alert_run: {
+        Args: { p_organization_id: string; p_source: string };
+        Returns: string;
+      };
+      finish_alert_run: {
+        Args: { p_error?: string | null; p_rules_evaluated: number; p_run_id: string };
+        Returns: Database["public"]["Tables"]["alert_evaluation_runs"]["Row"];
+        SetofOptions: { from: "*"; to: "alert_evaluation_runs"; isOneToOne: true; isSetofReturn: false };
+      };
+      record_alert_results: {
+        Args: { p_results: Json; p_rule_id: string; p_run_id: string };
+        Returns: Json;
+      };
+      alert_rule_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_rule_id: string;
+          p_sources: string[];
+          p_to: string;
+        };
+        Returns: Json;
       };
       set_kpi_threshold: {
         Args: {

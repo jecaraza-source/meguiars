@@ -74,6 +74,9 @@ export const SCREEN_GUARDS = {
   dashboardDetail: { center: true, capability: "dashboards.read" },
   dashboardNew: { center: true, capability: "dashboards.manage" },
   dashboardEdit: { center: true, capability: "dashboards.manage" },
+  alerts: { center: true, capability: "alerts.read" },
+  alertDetail: { center: true, capability: "alerts.read" },
+  alertRules: { center: true, capability: "alerts.rules" },
   designSystem: {},
   account: {},
 } as const satisfies Record<string, GuardRequirement>;

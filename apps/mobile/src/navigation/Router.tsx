@@ -21,6 +21,7 @@ import { AppointmentDetailScreen } from "@/screens/AppointmentDetailScreen";
 import { AppointmentNewScreen } from "@/screens/AppointmentNewScreen";
 import { CatalogDetailScreen } from "@/screens/CatalogDetailScreen";
 import { CatalogNewScreen } from "@/screens/CatalogNewScreen";
+import { AlertDetailScreen, AlertRulesScreen, AlertsScreen } from "@/screens/AlertsScreen";
 import { CorporateDrillScreen } from "@/screens/CorporateDrillScreen";
 import { CatalogScreen } from "@/screens/CatalogScreen";
 import { ClientDetailScreen } from "@/screens/ClientDetailScreen";
@@ -200,6 +201,22 @@ export function Router() {
     setCorporateDrill(params);
     setScreen("direccionDetalle");
   };
+  // Alertas (D4): detalle y enlaces al KPI (equivalen a /direccion/alertas/[id] y /direccion/kpis?…).
+  const [alertId, setAlertId] = useState<string | null>(null);
+  const openAlert = (id: string) => {
+    setAlertId(id);
+    setScreen("alertDetail");
+  };
+  const [kpiParams, setKpiParams] = useState<Record<string, string> | undefined>(undefined);
+  const openKpis = (params: Record<string, string>) => {
+    setKpiParams(params);
+    setScreen("kpis");
+  };
+  /** Navegación desde el menú: pantallas sin filtros heredados de un enlace. */
+  const selectScreen = (next: Screen) => {
+    setKpiParams(undefined);
+    setScreen(next);
+  };
   const [dashboardId, setDashboardId] = useState<string | null>(null);
   const openDashboard = (id: string) => {
     setDashboardId(id);
@@ -265,7 +282,7 @@ export function Router() {
     <SubNav
       section={sections.find((s) => s.id === sectionId)}
       current={navScreenOf(screen)}
-      onSelect={setScreen}
+      onSelect={selectScreen}
     />
   );
   const props = { state, header, subnav };
@@ -505,7 +522,48 @@ export function Router() {
         content = <DashboardsScreen {...props} onOpen={openDashboard} />;
         break;
       case "kpis":
-        content = <KpisScreen {...props} onDrill={drillFromDashboard} />;
+        content = (
+          <KpisScreen
+            key={JSON.stringify(kpiParams ?? {})}
+            {...props}
+            onDrill={drillFromDashboard}
+            initialParams={kpiParams}
+          />
+        );
+        break;
+      case "alerts":
+        content = (
+          <AlertsScreen
+            {...props}
+            onOpen={openAlert}
+            onRules={() => setScreen("alertRules")}
+            onKpis={openKpis}
+            onDrill={openCorporateDrill}
+          />
+        );
+        break;
+      case "alertDetail":
+        content = alertId ? (
+          <AlertDetailScreen
+            key={alertId}
+            {...props}
+            alertId={alertId}
+            onBack={() => setScreen("alerts")}
+            onKpis={openKpis}
+            onDrill={openCorporateDrill}
+          />
+        ) : (
+          <AlertsScreen
+            {...props}
+            onOpen={openAlert}
+            onRules={() => setScreen("alertRules")}
+            onKpis={openKpis}
+            onDrill={openCorporateDrill}
+          />
+        );
+        break;
+      case "alertRules":
+        content = <AlertRulesScreen {...props} onBack={() => setScreen("alerts")} />;
         break;
       case "dashboardDetail":
         content = dashboardId ? (
@@ -801,7 +859,7 @@ export function Router() {
       <View key={state.activeCenterId ?? "none"} style={styles.fill}>
         {content}
       </View>
-      <TabBar sections={sections} active={sectionId} onSelect={setScreen} />
+      <TabBar sections={sections} active={sectionId} onSelect={selectScreen} />
     </View>
   );
 }

@@ -10,8 +10,8 @@ export const GUARD_REDIRECTS: Record<Redirect, string> = {
   forbidden: "/sin-permiso",
 };
 
-/** Rutas accesibles sin sesión. */
-export const PUBLIC_PATHS = ["/login", "/recuperar", "/auth/confirm", "/cuenta-deshabilitada"];
+/** Rutas accesibles sin sesión. /api/cron se protege con CRON_SECRET (no con sesión). */
+export const PUBLIC_PATHS = ["/login", "/recuperar", "/auth/confirm", "/cuenta-deshabilitada", "/api/cron"];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
