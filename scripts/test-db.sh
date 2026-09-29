@@ -31,6 +31,13 @@ for f in supabase/tests/*.test.sql; do
   echo "prueba: $f"
   "${PSQL[@]}" -t -f "$f" 2>&1 | show
 done
+# El diccionario de datos versionado debe coincidir con el esquema de las migraciones.
+DICT="$(mktemp)"
+DATABASE_URL="$DATABASE_URL" bash scripts/data-dictionary.sh "$DICT"
+diff -u docs/diccionario-datos.md "$DICT" >/dev/null \
+  || { echo "docs/diccionario-datos.md está desactualizado: corre DATABASE_URL=… bash scripts/data-dictionary.sh" >&2; rm -f "$DICT"; exit 1; }
+rm -f "$DICT"
+echo "  ok - diccionario de datos al día con el esquema"
 echo "seed: supabase/seed.sql"
 "${PSQL[@]}" -f supabase/seed.sql
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.detail_centers c join public.organizations o on o.id = c.organization_id where o.slug = 'meguiars-demo'")" == "2" ]] \
@@ -75,6 +82,11 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó el lavado manual detallado con pago al operador" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) || ':' || (select count(*) from public.alert_instances where status = 'nueva') from public.alert_rules r join public.organizations o on o.id = r.organization_id where o.slug = 'meguiars-demo'")" == "3:1" ]] \
   || { echo "El seed no cargó las reglas y la alerta de ejemplo" >&2; exit 1; }
+# Pruebas sobre el seed (barrido de aislamiento entre centros y organizaciones).
+for f in supabase/tests/seeded/*.test.sql; do
+  echo "prueba (seed): $f"
+  "${PSQL[@]}" -t -f "$f" 2>&1 | show
+done
 echo "demo: supabase/demo/historial.sql (dos veces: idempotente)"
 "${PSQL[@]}" -f supabase/demo/historial.sql
 "${PSQL[@]}" -f supabase/demo/historial.sql 2>&1 | grep -q "Historial demo ya cargado" \
@@ -86,6 +98,8 @@ echo "demo: supabase/demo/historial.sql (dos veces: idempotente)"
     and (select count(distinct detail_center_id) from public.service_orders
           where delivered_at > now() - interval '30 days') = 2")" == "t" ]] \
   || { echo "El historial demo no cargó clientes, OS cobradas y egresos esperados" >&2; exit 1; }
+echo "prueba (historial demo): supabase/tests/seeded/financial_integrity.test.sql"
+"${PSQL[@]}" -t -f supabase/tests/seeded/financial_integrity.test.sql 2>&1 | show
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica

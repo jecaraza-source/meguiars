@@ -7,3 +7,6 @@ package-lock.json
 packages/supabase/src/database.types.ts
 supabase/.temp
 *.sql
+
+# Generado por scripts/data-dictionary.sh (test-db compara el texto exacto).
+docs/diccionario-datos.md

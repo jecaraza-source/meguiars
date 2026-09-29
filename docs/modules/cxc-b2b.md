@@ -59,6 +59,8 @@ private.b2b_document_counters (folio CXC por organización)
 
 El **contador** consulta y exporta pero no escribe (rol de sólo lectura). Recepción no ve el módulo.
 
+La cartera es del **centro gestor** también en la base (F5.1, `private.b2b_portfolio_visible`): documentos, pagos B2B y aplicaciones sólo se leen con `b2b.read` en el centro gestor, por PostgREST y por `b2b_billing_document` / `b2b_account_payments`. Los centros que sólo operan el convenio ven la ficha de la cuenta y su estado de cuenta agregado (crédito disponible), no los documentos.
+
 ## RPC
 
 | RPC                                                                        | Uso                                                                     |

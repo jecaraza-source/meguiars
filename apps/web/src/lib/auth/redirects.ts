@@ -10,8 +10,18 @@ export const GUARD_REDIRECTS: Record<Redirect, string> = {
   forbidden: "/sin-permiso",
 };
 
-/** Rutas accesibles sin sesión. /api/cron se protege con CRON_SECRET (no con sesión). */
-export const PUBLIC_PATHS = ["/login", "/recuperar", "/auth/confirm", "/cuenta-deshabilitada", "/api/cron"];
+/**
+ * Rutas accesibles sin sesión. /api/cron se protege con CRON_SECRET (no con sesión);
+ * /api/health sólo dice si la app y Supabase responden (monitoreo externo).
+ */
+export const PUBLIC_PATHS = [
+  "/login",
+  "/recuperar",
+  "/auth/confirm",
+  "/cuenta-deshabilitada",
+  "/api/cron",
+  "/api/health",
+];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

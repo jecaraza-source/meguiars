@@ -118,6 +118,10 @@ La migración `20260923000000_multicenter_security.sql` aplica los cambios sobre
 | Casos positivos y negativos                    | 67 aserciones más la verificación de la transición                                                                                                             |
 | Seed                                           | organización demo con 2 centros, validada por `npm run test:db`                                                                                                |
 
+## Barrido automático (F5.1)
+
+Además de los casos de este módulo, `supabase/tests/seeded/cross_tenant.test.sql` recorre **todas** las tablas y funciones de `public` como usuario de otro centro y de otra organización (ADR 0029), y `supabase/tests/security_invariants.test.sql` revisa RLS, privilegios, `search_path` y buckets en el catálogo.
+
 ## Supuestos
 
 - Un usuario tiene como máximo un rol por centro y puede tener varios roles corporativos.
