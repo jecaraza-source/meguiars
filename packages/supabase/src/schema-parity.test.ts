@@ -254,6 +254,7 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "can_admin_users",
   "can_admin_user",
   "admin_set_user_disabled",
+  "center_day_summary",
   "corporate_order_lines",
   "add_vehicle",
   "apply_b2b_account",

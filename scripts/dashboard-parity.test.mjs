@@ -22,6 +22,8 @@ function declaration(src, name) {
 
 const webAlerts = readFileSync(join(root, "apps/web/src/lib/alerts.ts"), "utf8");
 const mobileAlerts = readFileSync(join(root, "apps/mobile/src/lib/alerts.ts"), "utf8");
+const webDay = readFileSync(join(root, "apps/web/src/lib/day.ts"), "utf8");
+const mobileDay = readFileSync(join(root, "apps/mobile/src/lib/day.ts"), "utf8");
 const webCorporate = readFileSync(join(root, "apps/web/src/lib/corporate.ts"), "utf8");
 const mobileCorporate = readFileSync(join(root, "apps/mobile/src/lib/corporate.ts"), "utf8");
 
@@ -53,4 +55,11 @@ describe("paridad web/móvil de alertas (D4)", () => {
       expect(declaration(mobileAlerts, name)).toBe(declaration(webAlerts, name));
     },
   );
+});
+
+describe("paridad web/móvil de Operación del día y Resumen financiero", () => {
+  it.each(["loadDayView", "loadFinanceSummary"])("%s es idéntico en web y móvil", (name) => {
+    expect(declaration(webDay, name)).not.toBeNull();
+    expect(declaration(mobileDay, name)).toBe(declaration(webDay, name));
+  });
 });
