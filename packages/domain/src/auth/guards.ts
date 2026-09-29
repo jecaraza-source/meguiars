@@ -19,6 +19,8 @@ export const SCREEN_GUARDS = {
   selectCenter: {},
   team: { center: true, capability: "members.read" },
   editCenter: { center: true, capability: "center.manage" },
+  users: { center: true, capability: "users.manage" },
+  userDetail: { center: true, capability: "users.manage" },
   operacion: { center: true, capability: "operations.read" },
   clients: { center: true, capability: "clients.read" },
   clientDetail: { center: true, capability: "clients.read" },

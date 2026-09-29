@@ -82,6 +82,8 @@ export const CAPABILITIES = [
   // Tableros ejecutivos (D1): read = ver tableros de su rol; manage = constructor (admin corporativo).
   "dashboards.read",
   "dashboards.manage",
+  // Usuarios (A1): altas con correo y contraseña, roles y acceso (admin corporativo).
+  "users.manage",
   // Alertas (D4): read = bandeja; manage = revisar y resolver; rules = reglas y evaluar (admin corporativo).
   "alerts.read",
   "alerts.manage",
@@ -118,7 +120,8 @@ export type Capability = (typeof CAPABILITIES)[number];
  * `memberships.metrics.read` = private.can_read_membership_metrics (20261002000000);
  * `customers.metrics.read` = private.can_read_customer_metrics (20261015000000).
  * `alerts.*`, en 20261018000000 (private.can_read_alerts / can_manage_alerts;
- * reglas: admin_socio corporativo).
+ * reglas: admin_socio corporativo). `users.manage`, en 20261019000000
+ * (public.can_admin_users: admin_socio corporativo).
  * `operations.*`,
  * `commercial.read`, `finance.read`, `executive.read` y `b2b.write` definen la
  * navegación por dominio y son el contrato para las tablas de negocio futuras.
@@ -175,6 +178,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "alerts.read",
     "alerts.manage",
     "alerts.rules",
+    "users.manage",
     "memberships.metrics.read",
     "customers.metrics.read",
   ],
