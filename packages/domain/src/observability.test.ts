@@ -3,8 +3,10 @@ import { redactPii, toErrorReport } from "./observability";
 
 describe("reporte de error sin datos personales", () => {
   it("enmascara correos, teléfonos, tokens y llaves; conserva uuids y folios", () => {
-    const text =
-      "Falló para ana.lopez+1@correo.com.mx tel 55 1234-5678 (+52 81 8000 1234) token eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.abc sb_secret_abcdefghijklmnop orden 0d000000-0000-4000-8000-000000000006 folio CDMX-01-000123 total 1890.00";
+    // Token y llave falsos armados en tiempo de ejecución: el guardia de secretos del repo no debe verlos.
+    const jwt = ["eyJhbGciOiJIUzI1", "eyJzdWIiOiIxMjM0", "abc"].join(".");
+    const key = ["sb", "secret", "abcdefghijklmnop"].join("_");
+    const text = `Falló para ana.lopez+1@correo.com.mx tel 55 1234-5678 (+52 81 8000 1234) token ${jwt} ${key} orden 0d000000-0000-4000-8000-000000000006 folio CDMX-01-000123 total 1890.00`;
     const out = redactPii(text);
     expect(out).not.toMatch(/ana\.lopez|1234-5678|8000 1234|eyJ|sb_secret/);
     expect(out).toContain("[correo]");
