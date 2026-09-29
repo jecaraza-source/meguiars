@@ -84,6 +84,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "direccion", label: "Tablero corporativo", href: "/direccion" },
       { screen: "dashboards", label: "Tableros", href: "/direccion/tableros" },
       { screen: "kpis", label: "KPIs", href: "/direccion/kpis" },
+      { screen: "alerts", label: "Alertas", href: "/direccion/alertas" },
     ],
   },
 ];
@@ -128,6 +129,8 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   dashboardDetail: "dashboards",
   dashboardNew: "dashboards",
   dashboardEdit: "dashboards",
+  alertDetail: "alerts",
+  alertRules: "alerts",
 };
 
 /** Ítem de menú que representa a la pantalla. */

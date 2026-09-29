@@ -28,3 +28,4 @@ export * from "./pnl";
 export * from "./receivables";
 export * from "./dashboards";
 export * from "./corporate";
+export * from "./alerts";

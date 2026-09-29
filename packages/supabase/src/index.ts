@@ -18,6 +18,7 @@ export * from "./repositories/cash";
 export * from "./repositories/pnl";
 export * from "./repositories/receivables";
 export * from "./repositories/dashboards";
+export * from "./repositories/alerts";
 export * from "./auth";
 export * from "./storage";
 export type { Database, Json, Tables } from "./database.types";

@@ -20,6 +20,8 @@ function declaration(src, name) {
   return src.slice(start, name === "widgetConfig" || name === "canManageDashboards" ? semi : end);
 }
 
+const webAlerts = readFileSync(join(root, "apps/web/src/lib/alerts.ts"), "utf8");
+const mobileAlerts = readFileSync(join(root, "apps/mobile/src/lib/alerts.ts"), "utf8");
 const webCorporate = readFileSync(join(root, "apps/web/src/lib/corporate.ts"), "utf8");
 const mobileCorporate = readFileSync(join(root, "apps/mobile/src/lib/corporate.ts"), "utf8");
 
@@ -39,6 +41,16 @@ describe("paridad web/móvil del tablero corporativo (D3)", () => {
     (name) => {
       expect(declaration(webCorporate, name)).not.toBeNull();
       expect(declaration(mobileCorporate, name)).toBe(declaration(webCorporate, name));
+    },
+  );
+});
+
+describe("paridad web/móvil de alertas (D4)", () => {
+  it.each(["alertsScope", "loadAlertsInbox", "loadAlertDetail", "loadAlertRules", "evaluateAlertsNow"])(
+    "%s es idéntico en web y móvil",
+    (name) => {
+      expect(declaration(webAlerts, name)).not.toBeNull();
+      expect(declaration(mobileAlerts, name)).toBe(declaration(webAlerts, name));
     },
   );
 });
