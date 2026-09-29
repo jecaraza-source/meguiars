@@ -9,15 +9,21 @@ import {
   type DashboardFilters,
 } from "@meguiars/domain";
 
-/** Filtros globales (centros, periodo, canal y motor) por GET: la URL es compartible. */
+/**
+ * Filtros globales (centros, periodo, canal y motor) por GET: la URL es
+ * compartible. El tablero corporativo oculta canal y motor (se eligen en el
+ * drill-down) para que todas sus tarjetas usen los mismos filtros.
+ */
 export function DashboardFiltersForm({
   action,
   filters,
   centers,
+  channelAndEngine = true,
 }: {
   action: string;
   filters: DashboardFilters;
   centers: readonly { id: string; name: string }[];
+  channelAndEngine?: boolean;
 }) {
   return (
     <form
@@ -45,28 +51,32 @@ export function DashboardFiltersForm({
           <span className="mg-label">{dashboardsCopy.to}</span>
           <input type="date" name="hasta" defaultValue={filters.to} className="mg-input" />
         </label>
-        <label className="mg-field">
-          <span className="mg-label">{dashboardsCopy.channel}</span>
-          <select name="canal" defaultValue={filters.channel ?? ""} className="mg-input">
-            <option value="">{dashboardsCopy.all}</option>
-            {DASHBOARD_CHANNEL_KEYS.map((c) => (
-              <option key={c} value={c}>
-                {DASHBOARD_CHANNEL_LABELS[c]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="mg-field">
-          <span className="mg-label">{dashboardsCopy.engine}</span>
-          <select name="motor" defaultValue={filters.engine ?? ""} className="mg-input">
-            <option value="">{dashboardsCopy.all}</option>
-            {DASHBOARD_ENGINE_KEYS.map((e) => (
-              <option key={e} value={e}>
-                {DASHBOARD_ENGINE_LABELS[e]}
-              </option>
-            ))}
-          </select>
-        </label>
+        {channelAndEngine ? (
+          <>
+            <label className="mg-field">
+              <span className="mg-label">{dashboardsCopy.channel}</span>
+              <select name="canal" defaultValue={filters.channel ?? ""} className="mg-input">
+                <option value="">{dashboardsCopy.all}</option>
+                {DASHBOARD_CHANNEL_KEYS.map((c) => (
+                  <option key={c} value={c}>
+                    {DASHBOARD_CHANNEL_LABELS[c]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="mg-field">
+              <span className="mg-label">{dashboardsCopy.engine}</span>
+              <select name="motor" defaultValue={filters.engine ?? ""} className="mg-input">
+                <option value="">{dashboardsCopy.all}</option>
+                {DASHBOARD_ENGINE_KEYS.map((e) => (
+                  <option key={e} value={e}>
+                    {DASHBOARD_ENGINE_LABELS[e]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        ) : null}
         <fieldset className="flex flex-col gap-xs lg:col-span-3">
           <legend className="mg-label">{dashboardsCopy.centers}</legend>
           <div className="flex flex-wrap gap-md">

@@ -20,12 +20,25 @@ function declaration(src, name) {
   return src.slice(start, name === "widgetConfig" || name === "canManageDashboards" ? semi : end);
 }
 
+const webCorporate = readFileSync(join(root, "apps/web/src/lib/corporate.ts"), "utf8");
+const mobileCorporate = readFileSync(join(root, "apps/mobile/src/lib/corporate.ts"), "utf8");
+
 describe("paridad web/móvil de los tableros", () => {
   it.each(["widgetConfig", "centersWith", "canManageDashboards", "loadDashboardView", "kpiDefinition"])(
     "%s es idéntico en web y móvil",
     (name) => {
       expect(declaration(web, name)).not.toBeNull();
       expect(declaration(mobile, name)).toBe(declaration(web, name));
+    },
+  );
+});
+
+describe("paridad web/móvil del tablero corporativo (D3)", () => {
+  it.each(["CORPORATE_SOURCES", "corporateScope", "loadCorporateView", "loadCorporateDrill"])(
+    "%s es idéntico en web y móvil",
+    (name) => {
+      expect(declaration(webCorporate, name)).not.toBeNull();
+      expect(declaration(mobileCorporate, name)).toBe(declaration(webCorporate, name));
     },
   );
 });

@@ -33,6 +33,8 @@ export interface CenterResourceFact {
   operatingHoursPerDay: number;
   operatingDaysPerWeek: number;
   ltvLifetimeYears: number;
+  /** Primer día con actividad del centro (null = sin actividad; opcional en hechos previos a D3). */
+  firstActivityOn?: string | null | undefined;
 }
 
 export interface OrdersKpiInput {

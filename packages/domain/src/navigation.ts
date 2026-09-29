@@ -81,7 +81,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     label: "Dirección",
     shortLabel: "Dirección",
     items: [
-      { screen: "direccion", label: "Vista consolidada", href: "/direccion" },
+      { screen: "direccion", label: "Tablero corporativo", href: "/direccion" },
       { screen: "dashboards", label: "Tableros", href: "/direccion/tableros" },
       { screen: "kpis", label: "KPIs", href: "/direccion/kpis" },
     ],
@@ -124,6 +124,7 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   pnlDrilldown: "pnl",
   receivableAccount: "receivables",
   receivableDocument: "receivables",
+  direccionDetalle: "direccion",
   dashboardDetail: "dashboards",
   dashboardNew: "dashboards",
   dashboardEdit: "dashboards",

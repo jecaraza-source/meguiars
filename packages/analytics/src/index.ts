@@ -7,5 +7,7 @@ export * from "./payments";
 export * from "./pnl";
 export * from "./orders";
 export * from "./customers";
+export * from "./services";
 export * from "./dashboards";
 export * from "./kpis";
+export * from "./corporate";

@@ -9,7 +9,9 @@ import {
   type DashboardRepository,
   type DashboardWidget,
   type DashboardWidgetType,
+  type CorporateOrderLine,
   type KpiSettings,
+  type KpiThreshold,
   type MetricRegistryEntry,
   type Result,
   type SavedDashboardFilters,
@@ -21,7 +23,9 @@ import {
   dashboardFactsSchema,
   dashboardPreferencesSchema,
   dashboardSchema,
+  corporateOrderLinesSchema,
   kpiSettingsSchema,
+  kpiThresholdSchema,
 } from "@meguiars/validation";
 import type { MeguiarsSupabaseClient } from "../client";
 import type { Json, Tables } from "../database.types";
@@ -179,6 +183,22 @@ export function toDashboardFacts(raw: J): DashboardFactsRow {
       operatingHoursPerDay: num(r.operating_hours_per_day),
       operatingDaysPerWeek: num(r.operating_days_per_week),
       ltvLifetimeYears: num(r.ltv_lifetime_years),
+      firstActivityOn: (r.first_activity_on as string | null | undefined) ?? null,
+    }));
+  const services = list("services");
+  if (services)
+    out.services = services.map((r) => ({
+      detailCenterId: String(r.detail_center_id),
+      bucket: String(r.bucket),
+      channel: r.channel as "b2c",
+      engine: String(r.engine),
+      serviceId: (r.service_id as string | null) ?? null,
+      serviceName: String(r.service_name),
+      kind: r.kind as "servicio",
+      quantity: num(r.quantity),
+      orders: num(r.orders),
+      revenue: num(r.revenue),
+      standardCost: num(r.standard_cost),
     }));
   const upsell = list("upsell");
   if (upsell)
@@ -213,6 +233,17 @@ const toKpiSettings = (r: Tables<"kpi_settings">): KpiSettings => ({
   ltvLifetimeYears: Number(r.ltv_lifetime_years),
   operatingHoursPerDay: Number(r.operating_hours_per_day),
   operatingDaysPerWeek: r.operating_days_per_week,
+  version: r.version,
+});
+
+const toKpiThreshold = (r: Tables<"kpi_thresholds">): KpiThreshold => ({
+  id: r.id,
+  organizationId: r.organization_id,
+  metricId: r.metric_id,
+  channel: (r.channel as KpiThreshold["channel"]) ?? null,
+  detailCenterId: r.detail_center_id,
+  minValue: r.min_value === null ? null : Number(r.min_value),
+  maxValue: r.max_value === null ? null : Number(r.max_value),
   version: r.version,
 });
 
@@ -369,6 +400,78 @@ export function createDashboardRepository(client: MeguiarsSupabaseClient): Dashb
             p_reason: v.reason,
           }),
         toKpiSettings,
+      );
+    },
+
+    kpiThresholds(organizationId) {
+      return run(
+        () =>
+          client
+            .from("kpi_thresholds")
+            .select("*")
+            .eq("organization_id", organizationId)
+            .order("metric_id")
+            .order("created_at"),
+        (rows) => rows.map(toKpiThreshold),
+      );
+    },
+
+    setKpiThreshold(input) {
+      const parsed = kpiThresholdSchema.safeParse(input);
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      const v = parsed.data;
+      return run(
+        () =>
+          client.rpc("set_kpi_threshold", {
+            p_organization_id: v.organizationId,
+            p_id: v.id ?? null,
+            p_version: v.version ?? null,
+            p_metric_id: v.metricId,
+            p_channel: v.channel,
+            p_detail_center_id: v.detailCenterId,
+            p_min_value: v.minValue,
+            p_max_value: v.maxValue,
+            p_reason: v.reason,
+          }),
+        toKpiThreshold,
+      );
+    },
+
+    deleteKpiThreshold(id, reason) {
+      const parsed = archiveDashboardSchema.pick({ id: true, reason: true }).safeParse({ id, reason });
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      return runVoid(() => client.rpc("delete_kpi_threshold", { p_id: id, p_reason: parsed.data.reason }));
+    },
+
+    orderLines(query) {
+      const parsed = corporateOrderLinesSchema.safeParse(query);
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      const q = parsed.data;
+      return run(
+        () =>
+          client.rpc("corporate_order_lines", {
+            p_detail_center_ids: q.detailCenterIds,
+            p_from: q.from,
+            p_to: q.to,
+            p_channel: q.channel,
+            p_engine: q.engine,
+            p_service_id: q.serviceId,
+          }),
+        (rows): CorporateOrderLine[] =>
+          rows.map((r) => ({
+            detailCenterId: r.detail_center_id,
+            serviceOrderId: r.service_order_id,
+            folio: r.folio,
+            deliveredOn: r.delivered_on,
+            channel: r.channel,
+            engine: r.engine,
+            serviceId: r.service_id,
+            serviceName: r.service_name,
+            kind: r.kind as CorporateOrderLine["kind"],
+            quantity: r.quantity,
+            revenue: Number(r.revenue),
+            standardCost: Number(r.standard_cost),
+          })),
       );
     },
   };
