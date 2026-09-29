@@ -96,14 +96,14 @@ Con esto, **un PR con algún job en rojo no se puede mergear**: `CI ok` queda en
   - el mismo commit produce el mismo resultado en CI (`npm run build:web`) y en Vercel.
 - **Variables por ambiente** (Vercel → Settings → Environment Variables):
 
-| Variable                        | Production                                 | Preview                      | Development (local) |
-| ------------------------------- | ------------------------------------------ | ---------------------------- | ------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | URL de `meguiars`                          | URL de `meguiars-staging`    | `.env.local`        |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | llave publishable de `meguiars`            | llave publishable de staging | `.env.local`        |
-| `NEXT_PUBLIC_SITE_URL`          | `https://meguiars-web.vercel.app`          | (vacío: usa el origen)       | —                   |
-| `NEXT_PUBLIC_APP_ENV`           | (vacío: usa `VERCEL_ENV`)                  | (vacío)                      | `local` (opcional)  |
-| `SUPABASE_SERVICE_ROLE_KEY`     | llave de servicio (sólo servidor, alertas) | —                            | —                   |
-| `CRON_SECRET`                   | secreto aleatorio (Vercel Cron)            | —                            | —                   |
+| Variable                        | Production                                            | Preview                      | Development (local) |
+| ------------------------------- | ----------------------------------------------------- | ---------------------------- | ------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | URL de `meguiars`                                     | URL de `meguiars-staging`    | `.env.local`        |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | llave publishable de `meguiars`                       | llave publishable de staging | `.env.local`        |
+| `NEXT_PUBLIC_SITE_URL`          | `https://meguiars-web.vercel.app`                     | (vacío: usa el origen)       | —                   |
+| `NEXT_PUBLIC_APP_ENV`           | (vacío: usa `VERCEL_ENV`)                             | (vacío)                      | `local` (opcional)  |
+| `SUPABASE_SERVICE_ROLE_KEY`     | llave de servicio (sólo servidor: alertas y usuarios) | —                            | —                   |
+| `CRON_SECRET`                   | secreto aleatorio (Vercel Cron)                       | —                            | —                   |
 
 ## Migraciones versionadas
 
@@ -164,14 +164,14 @@ Publicar en tiendas: `npx eas-cli@24.8.0 submit --profile production --platform 
 
 ## Secretos
 
-| Secreto                     | Dónde vive                                                                        | Quién lo usa                 |
-| --------------------------- | --------------------------------------------------------------------------------- | ---------------------------- |
-| `SUPABASE_ACCESS_TOKEN`     | GitHub → Settings → Environments → `staging` / `production` → Secrets             | `supabase link` en deploy-db |
-| `SUPABASE_DB_PASSWORD`      | ídem, **una por ambiente** (la de la base de ese proyecto)                        | `supabase db push`           |
-| `SUPABASE_PROJECT_REF`      | ídem, como **Variable** (no es secreta)                                           | deploy-db                    |
-| `EXPO_TOKEN`                | ídem, en los dos environments                                                     | mobile-build                 |
-| llave `service_role`/secret | **sólo** en el dashboard de Supabase; ningún pipeline ni app la usa               | nadie                        |
-| llaves publishable (anon)   | Vercel (por ambiente), EAS (por ambiente) y `.env.local`; son públicas por diseño | apps                         |
+| Secreto                     | Dónde vive                                                                                                  | Quién lo usa                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `SUPABASE_ACCESS_TOKEN`     | GitHub → Settings → Environments → `staging` / `production` → Secrets                                       | `supabase link` en deploy-db                                 |
+| `SUPABASE_DB_PASSWORD`      | ídem, **una por ambiente** (la de la base de ese proyecto)                                                  | `supabase db push`                                           |
+| `SUPABASE_PROJECT_REF`      | ídem, como **Variable** (no es secreta)                                                                     | deploy-db                                                    |
+| `EXPO_TOKEN`                | ídem, en los dos environments                                                                               | mobile-build                                                 |
+| llave `service_role`/secret | dashboard de Supabase y Vercel (Production, `SUPABASE_SERVICE_ROLE_KEY`); nunca en móvil ni en el navegador | servidor web: cron de alertas y alta/contraseñas de usuarios |
+| llaves publishable (anon)   | Vercel (por ambiente), EAS (por ambiente) y `.env.local`; son públicas por diseño                           | apps                                                         |
 
 Configura en GitHub **Environments**:
 

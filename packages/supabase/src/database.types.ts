@@ -4853,6 +4853,32 @@ export type Database = {
         };
         Returns: Json;
       };
+      org_users: {
+        Args: { p_organization_id: string };
+        Returns: {
+          center_roles: Json;
+          corporate_roles: Database["public"]["Enums"]["app_role"][];
+          created_at: string | null;
+          email: string | null;
+          full_name: string | null;
+          active: boolean;
+          last_sign_in_at: string | null;
+          other_org: boolean;
+          user_id: string;
+        }[];
+      };
+      can_admin_users: {
+        Args: { p_organization_id: string };
+        Returns: boolean;
+      };
+      can_admin_user: {
+        Args: { p_organization_id: string; p_user_id: string | null };
+        Returns: boolean;
+      };
+      admin_set_user_disabled: {
+        Args: { p_disabled: boolean; p_organization_id: string; p_reason: string; p_user_id: string };
+        Returns: undefined;
+      };
       set_kpi_threshold: {
         Args: {
           p_channel: string | null;

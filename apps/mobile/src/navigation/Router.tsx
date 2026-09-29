@@ -76,6 +76,7 @@ import { SectionScreen } from "@/screens/SectionScreen";
 import { SelectCenterScreen } from "@/screens/SelectCenterScreen";
 import { SuppliesScreen } from "@/screens/SuppliesScreen";
 import { TeamScreen } from "@/screens/TeamScreen";
+import { UsersScreen } from "@/screens/UsersScreen";
 import { AppHeader, SubNav, TabBar } from "@/ui/layout";
 
 /**
@@ -844,6 +845,10 @@ export function Router() {
         break;
       case "team":
         content = <TeamScreen {...props} />;
+        break;
+      case "users":
+      case "userDetail":
+        content = <UsersScreen {...props} />;
         break;
       case "designSystem":
         content = <DesignSystemScreen {...props} />;

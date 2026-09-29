@@ -74,6 +74,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "pnl", label: "Estado de resultados", href: "/finanzas/resultados" },
       { screen: "receivables", label: "Cuentas por cobrar B2B", href: "/finanzas/cxc" },
       { screen: "team", label: "Equipo del centro", href: "/equipo" },
+      { screen: "users", label: "Usuarios", href: "/equipo/usuarios" },
     ],
   },
   {
@@ -129,6 +130,7 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   dashboardDetail: "dashboards",
   dashboardNew: "dashboards",
   dashboardEdit: "dashboards",
+  userDetail: "users",
   alertDetail: "alerts",
   alertRules: "alerts",
 };
