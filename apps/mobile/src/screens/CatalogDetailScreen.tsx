@@ -5,6 +5,8 @@ import {
   catalogCopy,
   centerName,
   presentCatalogItem,
+  presentCostBreakdown,
+  serviceCostBreakdown,
   presentPriceHistory,
   type CatalogItem,
   type PriceHistoryEntry,
@@ -15,7 +17,7 @@ import { createCatalogRepository, type MeguiarsSupabaseClient } from "@meguiars/
 import { space } from "@meguiars/ui-tokens";
 import { centerConfigSchema, fieldErrors, updateServiceSchema } from "@meguiars/validation";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
 import { ServiceFields } from "@/components/ServiceFields";
@@ -23,6 +25,7 @@ import { SupplyStandardsCard } from "@/components/SupplyStandardsCard";
 import { Button, Checkbox, Field, LinkButton } from "@/ui/controls";
 import { Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
 import { Screen } from "@/ui/layout";
+import { textStyle } from "@/ui/theme";
 import { Notice } from "@/ui/notice";
 import { useToast } from "@/ui/overlay";
 import type { PrivateScreenProps } from "./types";
@@ -104,8 +107,18 @@ export function CatalogDetailScreen({
           value={view.price}
           caption={`Costo ${view.cost}`}
         />
-        <KpiCard label="Margen estándar" value={view.margin} caption={center.name} />
+        <KpiCard label={catalogCopy.contributionMargin} value={view.margin} caption={center.name} />
       </View>
+      <Card title={catalogCopy.breakdownTitle} subtitle={catalogCopy.marginNote}>
+        {presentCostBreakdown(
+          serviceCostBreakdown(item.price, item.operatorCommissionPct, item.directCost),
+        ).map((r) => (
+          <View key={r.key} style={styles.row}>
+            <Text style={textStyle("bodySmall", "muted")}>{r.label}</Text>
+            <Text style={textStyle("label")}>{r.value}</Text>
+          </View>
+        ))}
+      </Card>
       <Card title={catalogCopy.historyTitle}>
         {typeof history === "string" ? (
           <Notice tone="danger" text={history} />
@@ -122,6 +135,7 @@ export function CatalogDetailScreen({
               { key: "scope", header: "Aplica a", value: (r) => r.scope },
               { key: "price", header: "Precio", value: (r) => r.price },
               { key: "cost", header: "Costo", value: (r) => r.cost },
+              { key: "pct", header: catalogCopy.operatorPct, value: (r) => r.operatorPct },
               { key: "reason", header: "Motivo", value: (r) => r.reason },
             ]}
           />
@@ -155,6 +169,10 @@ function CenterConfig({
   const [values, setValues] = useState<FormValues>({
     priceOverride: item.price !== item.basePrice ? String(item.price) : "",
     directCostOverride: item.directCost !== item.standardDirectCost ? String(item.directCost) : "",
+    operatorCommissionPctOverride:
+      item.operatorCommissionPct !== item.baseOperatorCommissionPct && item.operatorCommissionPct !== null
+        ? String(item.operatorCommissionPct)
+        : "",
     reason: "",
   });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -198,6 +216,13 @@ function CenterConfig({
         error={errors.directCostOverride}
       />
       <Field
+        label={catalogCopy.operatorPctOverrideLabel}
+        keyboardType="decimal-pad"
+        value={values.operatorCommissionPctOverride ?? ""}
+        onChangeText={(v) => set("operatorCommissionPctOverride", v)}
+        error={errors.operatorCommissionPctOverride}
+      />
+      <Field
         label={catalogCopy.reasonLabel}
         required
         value={values.reason ?? ""}
@@ -226,6 +251,8 @@ function EditService({ service, onDone }: { service: Service; onDone: () => Prom
     standardDurationMinutes: String(service.standardDurationMinutes),
     basePrice: String(service.basePrice),
     standardDirectCost: String(service.standardDirectCost),
+    operatorCommissionPct:
+      service.operatorCommissionPct === null ? "" : String(service.operatorCommissionPct),
     reason: "",
   });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -266,4 +293,5 @@ function EditService({ service, onDone }: { service: Service; onDone: () => Prom
 
 const styles = StyleSheet.create({
   kpis: { flexDirection: "row", flexWrap: "wrap", gap: space.md },
+  row: { flexDirection: "row", justifyContent: "space-between", gap: space.sm },
 });

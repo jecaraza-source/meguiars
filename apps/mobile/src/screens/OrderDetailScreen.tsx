@@ -3,6 +3,7 @@ import {
   activeRoles,
   canInActiveCenter,
   computeOrderTotals,
+  operatorPayText,
   DISCOUNT_LEVEL_LABELS,
   executionCopy,
   formatMoney,
@@ -379,6 +380,9 @@ function LinesCard({
             {i.quantity} × {formatMoney(i.unitPrice)} = {formatMoney(i.lineSubtotal)}
             {i.lineDiscount > 0 ? ` − ${formatMoney(i.lineDiscount)}` : ""}
           </Text>
+          {operatorPayText(i) ? (
+            <Text style={textStyle("caption", "muted")}>{operatorPayText(i)}</Text>
+          ) : null}
           {editable ? (
             <View style={styles.row}>
               <View style={styles.qty}>

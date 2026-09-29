@@ -124,6 +124,10 @@ export interface ServiceOrderItem {
   quantity: number;
   lineSubtotal: number;
   lineDiscount: number;
+  /** % del operador congelado al venderse (null = el servicio no paga porcentaje). */
+  operatorCommissionPct: number | null;
+  /** Pago al operador: (subtotal − descuento de la línea) × % ÷ 100, redondeado. */
+  operatorCommissionAmount: number;
 }
 
 export interface ServiceOrderDiscount {

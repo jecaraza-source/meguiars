@@ -50,8 +50,17 @@ export function ServiceFields({
         required
         keyboardType="decimal-pad"
         value={values.standardDirectCost ?? ""}
+        hint={catalogCopy.costHint}
         onChangeText={(v) => set("standardDirectCost", v)}
         error={errors.standardDirectCost}
+      />
+      <Field
+        label={catalogCopy.operatorPctLabel}
+        hint={catalogCopy.operatorPctHint}
+        keyboardType="decimal-pad"
+        value={values.operatorCommissionPct ?? ""}
+        onChangeText={(v) => set("operatorCommissionPct", v)}
+        error={errors.operatorCommissionPct}
       />
       <Field
         label={catalogCopy.descriptionLabel}

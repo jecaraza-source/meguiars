@@ -101,7 +101,7 @@ export const KPI_CATALOG: readonly KpiEntry[] = [
     name: "Margen de contribución",
     metricId: "pnl.contribution_margin",
     definition: "Lo que aporta cada venta de OS después de sus costos variables, antes de gastos fijos.",
-    numerator: "Ventas − costo estándar de las OS − variación real de insumos",
+    numerator: "Ventas − costo estándar de las OS − pago a operadores − variación real de insumos",
     denominator: null,
     period: "rango",
     notes:

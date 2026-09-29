@@ -85,6 +85,23 @@ Toda escritura queda en `audit_log` con actor, fecha, valores anteriores y nuevo
 
 Web y móvil usan esa misma función. El KPI de margen real se calculará con las OS en su módulo.
 
+## Pago al operador como % del precio (CR1, `20261017000000_operator_commission.sql`)
+
+Servicios como **Lavado manual detallado** pagan al operador un porcentaje del precio de venta. Decisiones en [ADR 0026](../adr/0026-pago-al-operador-porcentaje-del-precio.md).
+
+- **Configuración:** `services.operator_commission_pct` (0 a 100, dos decimales; vacío = el servicio no paga porcentaje) y, por centro, `service_center_config.operator_commission_pct_override` (vacío = usa el del servicio). No hay valor por defecto: lo define el usuario. Cada cambio queda en `service_price_history` con su motivo.
+- **Otros costos directos:** el costo directo estándar del servicio son los productos y consumibles. Si el servicio paga % al operador, **no** debe incluir mano de obra (así no se duplica).
+- **Cálculo** (`serviceCostBreakdown` en `@meguiars/domain`, espejo de la base):
+  - pago al operador = precio × % ÷ 100 (redondeo a centavos);
+  - costo total = pago al operador + otros costos directos;
+  - margen de contribución = precio − costo total;
+  - margen % = margen ÷ precio × 100 (sin valor con precio 0).
+  - Ejemplo de prueba: precio 200, 30 %, otros costos 20 → pago 60, costo 80, margen 120 (60 %).
+- **Registro de cada lavado:** cada línea de OS congela el % vigente (`operator_commission_pct`) y calcula su pago (`operator_commission_amount`). Cambiar después el precio o el % del catálogo no altera lo vendido. El operador es el técnico de la línea (`service_order_items.technician_id`) o, si no tiene, el de la OS.
+- **Base del porcentaje:** precio aplicado de la línea = cantidad × precio unitario congelado − descuentos de esa línea (incluido el de membresía), **con IVA incluido** como todos los importes del proyecto. El descuento general de la OS no reduce la base. Precio 0 → pago 0.
+- **Costo y reportes:** el costo de la OS (`cost_total`) suma el pago; el P&L muestra el renglón **Pago a operadores** dentro del costo directo (entra en utilidad bruta y margen de contribución); el ranking por servicio del tablero corporativo resta el pago; el detalle a OS muestra %, pago y operador. El margen de contribución **no** es utilidad neta: faltan personal fijo, renta y demás gastos generales.
+- **Pantallas:** el catálogo (web y móvil) muestra precio, % del operador, pago, otros costos directos, costo total y margen; la línea de la OS muestra "Pago al operador: 30.00 % de $200.00 = $60.00".
+
 ## Pantallas
 
 | Web               | Móvil                 | Contenido                                                                                                                                |

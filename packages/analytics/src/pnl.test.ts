@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { kpiRegistry } from "./kpi";
 import {
+  contributionMargin,
   expensesCashOut,
   pnlByCenter,
   pnlEbitda,
@@ -135,5 +136,45 @@ describe("estado de resultados gerencial (dataset conocido)", () => {
       expect.arrayContaining(["pnl.revenue", "pnl.direct_cost", "pnl.ebitda", "pnl.ebitda_margin"]),
     );
     expect(ids).not.toContain("pnl.operating_profit");
+  });
+});
+
+describe("pago a operadores (CR1)", () => {
+  const f = (
+    section: PnlLineFact["section"],
+    line: string,
+    dimension: string | null,
+    amount: number,
+  ): PnlLineFact => ({
+    detailCenterId: "a",
+    section,
+    line,
+    dimension,
+    amount,
+    movements: 1,
+  });
+  // Ejemplo: lavado manual detallado a $200, 30 % al operador y $20 de otros costos directos.
+  const facts = [
+    f("ingreso", "b2c", "recurrente", 200),
+    f("costo_directo", "estandar", "recurrente", 20),
+    f("costo_directo", "pago_operador", "recurrente", 60),
+  ];
+
+  it("renglón propio dentro del costo directo; utilidad bruta y margen de contribución lo restan", () => {
+    const st = pnlStatement({ facts });
+    expect(st.directCost).toBe(80);
+    expect(st.grossProfit).toBe(120);
+    expect(st.lines.find((l) => l.key === "direct_cost.pago_operador")).toMatchObject({
+      label: "Pago a operadores (% del precio)",
+      amount: 60,
+      drill: { section: "costo_directo", line: "pago_operador" },
+    });
+    expect(contributionMargin(facts)).toBe(120);
+  });
+
+  it("sin pago a operadores el estado de resultados no cambia (sin renglón en 0)", () => {
+    expect(
+      pnlStatement({ facts: facts.slice(0, 2) }).lines.some((l) => l.key === "direct_cost.pago_operador"),
+    ).toBe(false);
   });
 });

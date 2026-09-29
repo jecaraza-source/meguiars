@@ -596,3 +596,19 @@ describe("drill-down: KPI → centro → canal/motor → servicio → OS", () =>
     expect(foreign.path).toEqual({ cardId: "ventas" });
   });
 });
+
+describe("pago al operador en el ranking por servicio (CR1)", () => {
+  it("el margen por servicio resta el pago al operador y la conciliación sigue en 0", () => {
+    const withPay: DashboardFacts = {
+      ...facts,
+      pnl: [...facts.pnl!, pnl(A, from, "costo_directo", "pago_operador", "recurrente", 60)],
+      services: facts.services!.map((s) =>
+        s.serviceId === "lav" && s.channel === "b2b" ? { ...s, operatorPay: 60 } : s,
+      ),
+    };
+    const mix = corporateMix(withPay, ctx());
+    expect(mix.byService.find((r) => r.key === "lav")).toMatchObject({ revenue: 1000, margin: 620 });
+    expect(mix.byEngine.find((r) => r.key === "recurrente")).toMatchObject({ margin: 620 });
+    expect([mix.revenueDifference, mix.marginDifference]).toEqual([0, 0]);
+  });
+});

@@ -23,6 +23,7 @@ export const PNL_ITEM_LABELS: Record<string, string> = {
   membresias: "Venta de membresías",
   cuotas_b2b: "Cuotas B2B",
   estandar: "Costo estándar de las OS",
+  pago_operador: "Pago a operadores (% del precio)",
   variacion_insumos: "Variación real de insumos",
   egresos_costo_directo: "Costos directos no capturados en la OS",
   personal: "Personal",

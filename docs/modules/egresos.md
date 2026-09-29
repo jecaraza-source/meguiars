@@ -16,12 +16,12 @@ Decisiones en [ADR 0019](../adr/0019-egresos-costo-economico-vs-salida-de-caja.m
 
 ## Costo económico vs salida de caja (sin doble conteo)
 
-| Concepto                           | Dónde vive                                                                                 | ¿P&L?  | ¿Salida de caja? |
-| ---------------------------------- | ------------------------------------------------------------------------------------------ | ------ | ---------------- |
-| Costo directo del servicio         | La OS: costo estándar congelado por línea (`cost_total`) + variación real de insumos (O5). | Sí     | No (ya se pagó)  |
-| Compra de insumos                  | Egreso del grupo `insumos`.                                                                | **No** | Sí               |
-| Costo directo que la OS no captura | Egreso del grupo `costo_directo` (p. ej. subcontratos, fletes).                            | Sí     | Sí               |
-| Nómina, renta, servicios, etc.     | Egresos de personal, operativo, administrativo, marketing, financiero u otros.             | Sí     | Sí               |
+| Concepto                           | Dónde vive                                                                                                         | ¿P&L?  | ¿Salida de caja? |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------ | ---------------- |
+| Costo directo del servicio         | La OS: costo estándar congelado por línea + pago al operador (`cost_total`, CR1) + variación real de insumos (O5). | Sí     | No (ya se pagó)  |
+| Compra de insumos                  | Egreso del grupo `insumos`.                                                                                        | **No** | Sí               |
+| Costo directo que la OS no captura | Egreso del grupo `costo_directo` (p. ej. subcontratos, fletes).                                                    | Sí     | Sí               |
+| Nómina, renta, servicios, etc.     | Egresos de personal, operativo, administrativo, marketing, financiero u otros.                                     | Sí     | Sí               |
 
 Comprar un galón de cera es una salida de caja. Su costo, en cambio, se reconoce cuando la OS consume la cera (costo estándar de la línea más la variación real registrada en la ejecución). Si la compra también se contara como gasto, el P&L la contaría dos veces. Por eso el grupo `insumos` sale del P&L y se reporta en "Salidas de caja".
 

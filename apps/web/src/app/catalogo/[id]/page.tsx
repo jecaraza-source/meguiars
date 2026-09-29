@@ -6,7 +6,9 @@ import {
   centerName,
   executionCopy,
   presentCatalogItem,
+  presentCostBreakdown,
   presentPriceHistory,
+  serviceCostBreakdown,
 } from "@meguiars/domain";
 import { createCatalogRepository, createExecutionRepository } from "@meguiars/supabase";
 import { AppShell } from "@/components/app-shell";
@@ -67,8 +69,24 @@ export default async function ServicePage({ params, searchParams }: PageProps<"/
           value={view.price}
           caption={`Costo ${view.cost}`}
         />
-        <KpiCard label="Margen estándar" value={view.margin} caption={center.name} />
+        <KpiCard label={catalogCopy.contributionMargin} value={view.margin} caption={center.name} />
       </div>
+
+      <Card title={catalogCopy.breakdownTitle} subtitle={catalogCopy.marginNote}>
+        <dl className="grid gap-sm text-sm md:grid-cols-4" data-testid="cost-breakdown">
+          {presentCostBreakdown(
+            serviceCostBreakdown(item.price, item.operatorCommissionPct, item.directCost),
+          ).map((r) => (
+            <div key={r.key} className="flex flex-col gap-xxs">
+              <dt className="text-muted">{r.label}</dt>
+              <dd className="font-bold">{r.value}</dd>
+            </div>
+          ))}
+        </dl>
+        {item.operatorCommissionPct !== null ? (
+          <p className="text-xs text-muted">{catalogCopy.operatorPctHint}</p>
+        ) : null}
+      </Card>
 
       <Card title={catalogCopy.historyTitle}>
         {!history.ok ? (
@@ -88,6 +106,7 @@ export default async function ServicePage({ params, searchParams }: PageProps<"/
               { key: "scope", header: "Aplica a", value: (r) => r.scope },
               { key: "price", header: "Precio", value: (r) => r.price, align: "end" },
               { key: "cost", header: "Costo", value: (r) => r.cost, align: "end" },
+              { key: "pct", header: catalogCopy.operatorPct, value: (r) => r.operatorPct, align: "end" },
               { key: "reason", header: "Motivo", value: (r) => r.reason },
             ]}
           />

@@ -38,6 +38,7 @@ const serviceFields = (form: FormData) => ({
   standardDurationMinutes: text(form, "standardDurationMinutes"),
   basePrice: text(form, "basePrice"),
   standardDirectCost: text(form, "standardDirectCost"),
+  operatorCommissionPct: text(form, "operatorCommissionPct"),
 });
 
 export async function createServiceAction(_prev: ActionFormState, form: FormData): Promise<ActionFormState> {
@@ -83,6 +84,7 @@ export async function configureCenterAction(
     available: text(form, "available") === "1",
     priceOverride: text(form, "priceOverride"),
     directCostOverride: text(form, "directCostOverride"),
+    operatorCommissionPctOverride: text(form, "operatorCommissionPctOverride"),
     reason: text(form, "centerReason"),
   });
   if (!parsed.success) {

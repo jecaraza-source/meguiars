@@ -88,8 +88,21 @@ function ServiceFields({ state, service }: { state: ActionFormState; service?: S
         label={catalogCopy.costLabel}
         required
         inputMode="decimal"
+        hint={catalogCopy.costHint}
         defaultValue={valueOf(state, "standardDirectCost", service ? String(service.standardDirectCost) : "")}
         error={f.standardDirectCost}
+      />
+      <Input
+        name="operatorCommissionPct"
+        label={catalogCopy.operatorPctLabel}
+        hint={catalogCopy.operatorPctHint}
+        inputMode="decimal"
+        defaultValue={valueOf(
+          state,
+          "operatorCommissionPct",
+          service?.operatorCommissionPct != null ? String(service.operatorCommissionPct) : "",
+        )}
+        error={f.operatorCommissionPct}
       />
       <Input
         name="description"
@@ -181,6 +194,20 @@ export function CenterConfigForm({ item }: { item: CatalogItem }) {
             item.directCost !== item.standardDirectCost ? String(item.directCost) : "",
           )}
           error={f.directCostOverride}
+        />
+        <Input
+          name="operatorCommissionPctOverride"
+          label={catalogCopy.operatorPctOverrideLabel}
+          inputMode="decimal"
+          defaultValue={valueOf(
+            state,
+            "operatorCommissionPctOverride",
+            item.operatorCommissionPct !== item.baseOperatorCommissionPct &&
+              item.operatorCommissionPct !== null
+              ? String(item.operatorCommissionPct)
+              : "",
+          )}
+          error={f.operatorCommissionPctOverride}
         />
       </div>
       <Input

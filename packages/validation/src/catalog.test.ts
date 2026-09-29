@@ -93,3 +93,53 @@ describe("catálogo: validación compartida", () => {
     expect(catalogFilterSchema.safeParse({ revenueEngine: "otro" }).success).toBe(false);
   });
 });
+
+describe("% de pago al operador (CR1)", () => {
+  const base = {
+    organizationId: "00000000-0000-4000-8000-00000000d3e0",
+    code: "LAV-MAN",
+    name: "Lavado manual detallado",
+    revenueEngine: "recurrente",
+    standardDurationMinutes: "90",
+    basePrice: "200",
+    standardDirectCost: "20",
+  };
+  it("editable: vacío = sin porcentaje; acepta 0, 30 %, 12.5 y 100", () => {
+    expect(
+      createServiceSchema.parse({ ...base, operatorCommissionPct: "" }).operatorCommissionPct,
+    ).toBeNull();
+    expect(createServiceSchema.parse(base).operatorCommissionPct).toBeNull();
+    for (const [v, n] of [
+      ["0", 0],
+      ["30 %", 30],
+      ["12.5", 12.5],
+      ["100", 100],
+    ] as const)
+      expect(createServiceSchema.parse({ ...base, operatorCommissionPct: v }).operatorCommissionPct).toBe(n);
+  });
+  it("va de 0 a 100 con máximo 2 decimales; importes no negativos", () => {
+    for (const v of ["-1", "100.5", "abc", "10.123"])
+      expect(createServiceSchema.safeParse({ ...base, operatorCommissionPct: v }).success).toBe(false);
+    expect(createServiceSchema.safeParse({ ...base, basePrice: "-200" }).success).toBe(false);
+    expect(
+      createServiceSchema.safeParse({ ...base, basePrice: "0", operatorCommissionPct: "30" }).success,
+    ).toBe(true);
+  });
+  it("% propio del centro: vacío = usa el del servicio", () => {
+    const cfg = {
+      detailCenterId: "11111111-1111-4111-8111-111111111111",
+      serviceId: "5e000000-0000-4000-8000-000000000009",
+      available: true,
+      reason: "Porcentaje del centro",
+    };
+    expect(
+      centerConfigSchema.parse({ ...cfg, operatorCommissionPctOverride: "" }).operatorCommissionPctOverride,
+    ).toBeUndefined();
+    expect(
+      centerConfigSchema.parse({ ...cfg, operatorCommissionPctOverride: "25" }).operatorCommissionPctOverride,
+    ).toBe(25);
+    expect(centerConfigSchema.safeParse({ ...cfg, operatorCommissionPctOverride: "101" }).success).toBe(
+      false,
+    );
+  });
+});

@@ -101,7 +101,8 @@ export function CatalogScreen({
             { key: "duration", header: "Duración", value: (r) => r.duration },
             { key: "price", header: "Precio", value: (r) => r.price },
             { key: "cost", header: "Costo directo", value: (r) => r.cost },
-            { key: "margin", header: "Margen estándar", value: (r) => r.margin },
+            { key: "operator", header: "Pago al operador", value: (r) => r.operatorPay },
+            { key: "margin", header: "Margen de contribución", value: (r) => r.margin },
             { key: "status", header: "Estado", value: (r) => r.status },
           ]}
         />

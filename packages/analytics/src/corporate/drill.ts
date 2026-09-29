@@ -445,6 +445,11 @@ export interface OrderLineFact {
   quantity: number;
   revenue: number;
   standardCost: number;
+  /** % y pago al operador de la línea (CR1). */
+  operatorPct?: number | null | undefined;
+  operatorPay?: number | undefined;
+  /** Operador que la realizó (técnico de la línea o de la OS). */
+  technicianName?: string | null | undefined;
 }
 
 /** Último nivel: cada OS que forma la cifra del servicio (Σ = cifra del servicio). */
@@ -457,7 +462,18 @@ export function orderLinesLevel(
     .filter((l) => !query.productsOnly || l.kind === "producto")
     .map((l) =>
       row(`${l.serviceOrderId}:${l.serviceId ?? "descuento"}`, l.folio, l.revenue, {
-        detail: `${l.deliveredOn} · ${centerName(l.detailCenterId)}${l.quantity > 0 ? ` · ${l.quantity} u.` : ""}`,
+        detail: [
+          l.deliveredOn,
+          centerName(l.detailCenterId),
+          l.quantity > 0 ? `${l.quantity} u.` : null,
+          l.operatorPct != null
+            ? `operador ${l.operatorPct} % = $${(l.operatorPay ?? 0).toFixed(2)}${l.technicianName ? ` (${l.technicianName})` : ""}`
+            : l.technicianName
+              ? l.technicianName
+              : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
       }),
     );
   return level("os", "Órdenes de servicio", "currency", query.parent, rows, true);

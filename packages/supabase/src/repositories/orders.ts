@@ -112,6 +112,8 @@ export const toServiceOrder = (row: DetailRow): ServiceOrder => ({
       quantity: i.quantity,
       lineSubtotal: Number(i.line_subtotal),
       lineDiscount: Number(i.line_discount),
+      operatorCommissionPct: num(i.operator_commission_pct),
+      operatorCommissionAmount: Number(i.operator_commission_amount ?? 0),
     })),
   discounts: [...row.service_order_discounts]
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
