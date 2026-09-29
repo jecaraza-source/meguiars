@@ -3,10 +3,13 @@ import { createMeguiarsClient, type MeguiarsSupabaseClient } from "@meguiars/sup
 import { supabaseEnv } from "./env";
 
 /**
- * Cliente con la llave de servicio, SÓLO para la evaluación programada de
- * alertas (/api/cron/alertas). Nunca se importa en componentes de cliente
- * ("server-only") ni en móvil. La base limita lo que puede hacer: registrar
- * corridas y leer hechos con los permisos del autor de cada regla.
+ * Cliente con la llave de servicio. SÓLO en el servidor web ("server-only";
+ * nunca en componentes de cliente ni en móvil) y para dos usos:
+ * - la evaluación programada de alertas (/api/cron/alertas): registra corridas
+ *   y lee hechos con los permisos del autor de cada regla;
+ * - Usuarios (app/actions/users.ts): crear cuentas y cambiar contraseñas (Auth
+ *   Admin API), siempre después de comprobar con la sesión del admin
+ *   corporativo (public.can_admin_user).
  */
 export function createSupabaseServiceClient(): MeguiarsSupabaseClient | null {
   const env = supabaseEnv();
