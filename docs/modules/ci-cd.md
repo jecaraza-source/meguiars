@@ -194,6 +194,13 @@ Reglas:
 | **Base de datos (datos)**   | Supabase → Database → **Backups**: diarios en el plan Pro; PITR es un add-on. Restaurar reemplaza **toda** la base, así que es último recurso. Para errores acotados, corrige con una migración o RPC auditada.                                     | horas      |
 | **Móvil**                   | Distribución interna: instala el build anterior desde expo.dev. Tiendas: detén el _staged/phased rollout_ y publica un build con la versión corregida. (EAS Update para revertir JS por OTA queda pendiente; requiere `expo-updates`.)              | horas–días |
 
+## Observabilidad
+
+- **Errores del servidor:** `apps/web/src/instrumentation.ts` (`onRequestError`) escribe una línea JSON por error en los logs de Vercel: nombre, mensaje recortado **sin datos personales** (correos, teléfonos, tokens y llaves enmascarados; la ruta sin query), ruta, tipo (render, action, route), `digest` y `requestId` (`x-vercel-id`). Ver `@meguiars/domain/observability`.
+- **Referencia para soporte:** la pantalla de error muestra el `digest`; en Vercel → Logs busca ese valor.
+- **Móvil:** `ErrorBoundary` muestra "Algo salió mal" con "Reintentar" y deja el mismo reporte en el log del dispositivo.
+- **Health check:** `GET /api/health` (pública, sin datos): `200 {"status":"ok","supabase":"ok","commit":"abc1234"}` o `503` si falta configuración o Supabase Auth no responde. Úsala en un monitor externo cada 5 minutos.
+
 ## Variables de entorno
 
 | Variable                                                                              | Dónde               | Nota                                                                                     |
@@ -210,3 +217,4 @@ Reglas:
 - `scripts/check-migrations.test.mjs`: formato, versiones únicas, migraciones inmutables y orden respecto de la base, y que las migraciones del repo cumplen las reglas.
 - `scripts/repo-guards.test.mjs`: que `ci-ok` cubra todos los jobs, permisos mínimos y secretos sólo por `secrets.*`, que no haya secretos versionados y que el build de Vercel sea reproducible.
 - Los workflows se revisan con `actionlint`.
+- `supabase/tests/security_invariants.test.sql` y `supabase/tests/seeded/*.test.sql` (barrido de aislamiento e integridad financiera, ADR 0029) corren en `npm run test:db`, igual que la verificación de `docs/diccionario-datos.md`.

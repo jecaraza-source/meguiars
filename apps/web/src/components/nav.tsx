@@ -1,7 +1,7 @@
 "use client";
 
 import { sectionOfPath, type NavSection } from "@meguiars/domain";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
@@ -16,6 +16,22 @@ function currentItemHref(sections: NavSection[], pathname: string): string | nul
     if (match && (best === null || item.href.length > best.length)) best = item.href;
   }
   return best;
+}
+
+/**
+ * Indicador de navegación en curso dentro del enlace pulsado: las pantallas son
+ * dinámicas (datos del centro) y sin él el clic parece no responder. Tamaño fijo
+ * y sólo cambia la opacidad (sin saltos de layout).
+ */
+function PendingHint({ className = "" }: { className?: string }) {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden="true"
+      data-pending={pending}
+      className={`${className} size-xs shrink-0 rounded-full bg-current opacity-0 transition-opacity data-[pending=true]:opacity-100 motion-safe:data-[pending=true]:animate-pulse`}
+    />
+  );
 }
 
 /** Navegación lateral (tablet y escritorio): secciones con sus pantallas. */
@@ -37,6 +53,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
                 className="flex min-h-(--mg-touch-target) items-center rounded-md px-sm text-sm font-bold text-foreground hover:bg-surface aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
               >
                 {item.label}
+                <PendingHint className="ml-auto" />
               </Link>
             );
           })}
@@ -62,6 +79,7 @@ export function BottomNav({ sections }: { sections: NavSection[] }) {
           className="flex min-h-(--mg-touch-target) flex-1 items-center justify-center px-xs py-sm text-xs font-bold text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
         >
           {section.shortLabel}
+          <PendingHint className="ml-xxs" />
         </Link>
       ))}
     </nav>
