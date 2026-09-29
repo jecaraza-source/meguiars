@@ -2,6 +2,12 @@ import type { AppRole } from "../roles";
 import type { Result } from "../result";
 import { pnlPeriod, pnlPeriodError, type PnlDrillQuery, type PnlPeriodKey } from "../pnl/pnl";
 import { pnlDrillParams } from "../pnl/presenter";
+import type {
+  CorporateOrderLine,
+  CorporateOrderLinesQuery,
+  KpiThreshold,
+  KpiThresholdInput,
+} from "../corporate/corporate";
 
 /**
  * Dirección / Generador de tableros (D1). Espejo de la migración
@@ -425,6 +431,21 @@ export interface DashboardFactsRow {
     operatingHoursPerDay: number;
     operatingDaysPerWeek: number;
     ltvLifetimeYears: number;
+    /** Primer día con actividad (null = sin actividad). */
+    firstActivityOn: string | null;
+  }[];
+  services?: {
+    detailCenterId: string;
+    bucket: string;
+    channel: DashboardChannelKey;
+    engine: string;
+    serviceId: string | null;
+    serviceName: string;
+    kind: "servicio" | "producto" | "descuento";
+    quantity: number;
+    orders: number;
+    revenue: number;
+    standardCost: number;
   }[];
   upsell?: {
     ruleId: string;
@@ -481,4 +502,10 @@ export interface DashboardRepository {
   /** Parámetros de KPIs de la organización (valores por defecto si no tiene fila). */
   kpiSettings(organizationId: string): Promise<Result<KpiSettings>>;
   setKpiSettings(input: KpiSettings & { reason: string }): Promise<Result<KpiSettings>>;
+  /** Umbrales de alerta de la organización (tablero corporativo). */
+  kpiThresholds(organizationId: string): Promise<Result<KpiThreshold[]>>;
+  setKpiThreshold(input: KpiThresholdInput): Promise<Result<KpiThreshold>>;
+  deleteKpiThreshold(id: string, reason: string): Promise<Result<void>>;
+  /** Último nivel del drill-down: líneas de OS (public.corporate_order_lines). */
+  orderLines(query: CorporateOrderLinesQuery): Promise<Result<CorporateOrderLine[]>>;
 }

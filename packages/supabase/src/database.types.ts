@@ -46,6 +46,63 @@ export type Database = {
           },
         ];
       };
+      kpi_thresholds: {
+        Row: {
+          channel: string | null;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string | null;
+          id: string;
+          max_value: number | null;
+          metric_id: string;
+          min_value: number | null;
+          organization_id: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          channel?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          id?: string;
+          max_value?: number | null;
+          metric_id: string;
+          min_value?: number | null;
+          organization_id: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          channel?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          id?: string;
+          max_value?: number | null;
+          metric_id?: string;
+          min_value?: number | null;
+          organization_id?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kpi_thresholds_metric_id_fkey";
+            columns: ["metric_id"];
+            isOneToOne: false;
+            referencedRelation: "metric_registry";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "kpi_thresholds_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       dashboard_definitions: {
         Row: {
           archived_at: string | null;
@@ -4401,6 +4458,49 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      corporate_order_lines: {
+        Args: {
+          p_channel?: string | null;
+          p_detail_center_ids: string[];
+          p_engine?: string | null;
+          p_from: string;
+          p_service_id?: string | null;
+          p_to: string;
+        };
+        Returns: {
+          channel: string;
+          delivered_on: string;
+          detail_center_id: string;
+          engine: string;
+          folio: string;
+          kind: string;
+          quantity: number;
+          revenue: number;
+          service_id: string | null;
+          service_name: string;
+          service_order_id: string;
+          standard_cost: number;
+        }[];
+      };
+      delete_kpi_threshold: {
+        Args: { p_id: string; p_reason: string };
+        Returns: undefined;
+      };
+      set_kpi_threshold: {
+        Args: {
+          p_channel: string | null;
+          p_detail_center_id: string | null;
+          p_id: string | null;
+          p_max_value: number | null;
+          p_metric_id: string;
+          p_min_value: number | null;
+          p_organization_id: string;
+          p_reason: string;
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["kpi_thresholds"]["Row"];
+        SetofOptions: { from: "*"; to: "kpi_thresholds"; isOneToOne: true; isSetofReturn: false };
+      };
       set_kpi_settings: {
         Args: {
           p_ltv_lifetime_years: number;

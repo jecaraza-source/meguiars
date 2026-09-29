@@ -119,7 +119,9 @@ export const dashboardPreferencesSchema = z.object({
 export const dashboardFactsSchema = z
   .object({
     sources: z
-      .array(z.enum(["pnl", "payments", "pipeline", "memberships", "orders", "upsell", "customers"]))
+      .array(
+        z.enum(["pnl", "payments", "pipeline", "memberships", "orders", "upsell", "customers", "services"]),
+      )
       .min(1),
     detailCenterIds: z.array(z.uuid()).min(1, "Elige al menos un centro").max(50),
     from: z.string(),
@@ -157,3 +159,48 @@ export const kpiSettingsSchema = z.object({
     .max(7, "De 1 a 7 días por semana"),
   reason: changeReasonSchema,
 });
+
+/** Monto opcional de un umbral: vacío = sin límite. */
+const optionalLimit = z.preprocess(
+  (v) => (v === "" || v === undefined ? null : v),
+  z.coerce.number({ message: "Escribe un número" }).min(-1e12).max(1e12).nullable(),
+);
+
+/** Umbral de alerta visual (D3); la base valida permisos, métrica registrada y canal admitido. */
+export const kpiThresholdSchema = z
+  .object({
+    organizationId: z.uuid(),
+    id: z.preprocess(blankToUndefined, z.uuid().optional()),
+    version: z.preprocess(blankToUndefined, z.coerce.number().int().min(1).optional()),
+    metricId: z.string().regex(METRIC_ID, "Métrica inválida"),
+    channel: z.preprocess((v) => (v === "" ? null : v), z.enum(DASHBOARD_CHANNEL_KEYS).nullable()),
+    detailCenterId: z.preprocess((v) => (v === "" ? null : v), z.uuid().nullable()),
+    minValue: optionalLimit,
+    maxValue: optionalLimit,
+    reason: changeReasonSchema,
+  })
+  .superRefine((v, ctx) => {
+    if (v.minValue === null && v.maxValue === null)
+      ctx.addIssue({ code: "custom", path: ["minValue"], message: "Indica un mínimo, un máximo o ambos" });
+    if (v.minValue !== null && v.maxValue !== null && v.minValue >= v.maxValue)
+      ctx.addIssue({ code: "custom", path: ["maxValue"], message: "El máximo debe ser mayor que el mínimo" });
+    if (v.id && v.version === undefined)
+      ctx.addIssue({ code: "custom", path: ["version"], message: "Falta la versión del umbral" });
+  });
+
+export const corporateOrderLinesSchema = z
+  .object({
+    detailCenterIds: z.array(z.uuid()).min(1, "Elige al menos un centro").max(50),
+    from: z.string(),
+    to: z.string(),
+    channel: z.enum(DASHBOARD_CHANNEL_KEYS).nullable(),
+    engine: z
+      .string()
+      .regex(/^[a-z_]{1,40}$/)
+      .nullable(),
+    serviceId: z.uuid().nullable(),
+  })
+  .superRefine((v, ctx) => {
+    const error = pnlPeriodError(v.from, v.to);
+    if (error) ctx.addIssue({ code: "custom", path: ["to"], message: error });
+  });

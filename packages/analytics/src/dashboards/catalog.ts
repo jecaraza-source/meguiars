@@ -48,6 +48,7 @@ import {
   pnlStatement,
   type PnlLineFact,
 } from "../pnl";
+import type { ServiceFact } from "../services";
 import { upsellAcceptanceRate, type UpsellFact } from "../upsell";
 
 /**
@@ -150,6 +151,8 @@ export interface DashboardFacts {
   centers?: readonly CenterResourceFact[];
   upsell?: readonly UpsellFact[];
   customers?: readonly CustomerFact[];
+  /** Ventas por servicio (tablero corporativo; no es fuente de métricas registradas). */
+  services?: readonly ServiceFact[];
 }
 
 /** Filtros globales ya resueltos. */
