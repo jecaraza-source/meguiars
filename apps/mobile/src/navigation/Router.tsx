@@ -1,6 +1,7 @@
 import {
   authCopy,
   centersCopy,
+  corporatePathParams,
   dashboardsCopy,
   guardScreen,
   navScreenOf,
@@ -20,6 +21,7 @@ import { AppointmentDetailScreen } from "@/screens/AppointmentDetailScreen";
 import { AppointmentNewScreen } from "@/screens/AppointmentNewScreen";
 import { CatalogDetailScreen } from "@/screens/CatalogDetailScreen";
 import { CatalogNewScreen } from "@/screens/CatalogNewScreen";
+import { CorporateDrillScreen } from "@/screens/CorporateDrillScreen";
 import { CatalogScreen } from "@/screens/CatalogScreen";
 import { ClientDetailScreen } from "@/screens/ClientDetailScreen";
 import { ClientNewScreen } from "@/screens/ClientNewScreen";
@@ -190,6 +192,14 @@ export function Router() {
     setScreen("receivableDocument");
   };
   // Tablero (equivale a /direccion/tableros/[id] en web) y su drill-down.
+  // Tablero corporativo (D3): filtros del tablero y posición del drill-down
+  // (mismos parámetros que /direccion y /direccion/detalle en web).
+  const [corporateParams, setCorporateParams] = useState<Record<string, string | undefined>>({});
+  const [corporateDrill, setCorporateDrill] = useState<Record<string, string> | null>(null);
+  const openCorporateDrill = (params: Record<string, string>) => {
+    setCorporateDrill(params);
+    setScreen("direccionDetalle");
+  };
   const [dashboardId, setDashboardId] = useState<string | null>(null);
   const openDashboard = (id: string) => {
     setDashboardId(id);
@@ -459,7 +469,37 @@ export function Router() {
         content = <SectionScreen {...props} section={screen} />;
         break;
       case "direccion":
-        content = <DireccionScreen {...props} />;
+        content = (
+          <DireccionScreen
+            {...props}
+            params={corporateParams}
+            onParams={setCorporateParams}
+            onDrill={(path, filterParams) =>
+              openCorporateDrill({ ...filterParams, ...corporatePathParams(path) })
+            }
+          />
+        );
+        break;
+      case "direccionDetalle":
+        content = corporateDrill ? (
+          <CorporateDrillScreen
+            key={JSON.stringify(corporateDrill)}
+            {...props}
+            params={corporateDrill}
+            onNavigate={openCorporateDrill}
+            onBack={() => setScreen("direccion")}
+            onPnl={drillFromDashboard}
+          />
+        ) : (
+          <DireccionScreen
+            {...props}
+            params={corporateParams}
+            onParams={setCorporateParams}
+            onDrill={(path, filterParams) =>
+              openCorporateDrill({ ...filterParams, ...corporatePathParams(path) })
+            }
+          />
+        );
         break;
       case "dashboards":
         content = <DashboardsScreen {...props} onOpen={openDashboard} />;

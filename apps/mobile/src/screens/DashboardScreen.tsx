@@ -210,10 +210,13 @@ export function FiltersCard({
   initial,
   centers,
   onApply,
+  channelAndEngine = true,
 }: {
   initial: Record<string, string>;
   centers: { id: string; name: string }[];
   onApply: (p: Params) => void;
+  /** El tablero corporativo no filtra canal ni motor (se eligen en el drill-down). */
+  channelAndEngine?: boolean;
 }) {
   const [draft, setDraft] = useState<Params>(initial);
   const [open, setOpen] = useState(false);
@@ -248,24 +251,28 @@ export function FiltersCard({
           />
         </View>
       ) : null}
-      <Select
-        label={dashboardsCopy.channel}
-        value={draft.canal ?? ""}
-        onChange={(canal) => setDraft((p) => ({ ...p, canal: canal || undefined }))}
-        options={[
-          { value: "", label: dashboardsCopy.all },
-          ...DASHBOARD_CHANNEL_KEYS.map((c) => ({ value: c, label: DASHBOARD_CHANNEL_LABELS[c] })),
-        ]}
-      />
-      <Select
-        label={dashboardsCopy.engine}
-        value={draft.motor ?? ""}
-        onChange={(motor) => setDraft((p) => ({ ...p, motor: motor || undefined }))}
-        options={[
-          { value: "", label: dashboardsCopy.all },
-          ...DASHBOARD_ENGINE_KEYS.map((e) => ({ value: e, label: DASHBOARD_ENGINE_LABELS[e] })),
-        ]}
-      />
+      {channelAndEngine ? (
+        <>
+          <Select
+            label={dashboardsCopy.channel}
+            value={draft.canal ?? ""}
+            onChange={(canal) => setDraft((p) => ({ ...p, canal: canal || undefined }))}
+            options={[
+              { value: "", label: dashboardsCopy.all },
+              ...DASHBOARD_CHANNEL_KEYS.map((c) => ({ value: c, label: DASHBOARD_CHANNEL_LABELS[c] })),
+            ]}
+          />
+          <Select
+            label={dashboardsCopy.engine}
+            value={draft.motor ?? ""}
+            onChange={(motor) => setDraft((p) => ({ ...p, motor: motor || undefined }))}
+            options={[
+              { value: "", label: dashboardsCopy.all },
+              ...DASHBOARD_ENGINE_KEYS.map((e) => ({ value: e, label: DASHBOARD_ENGINE_LABELS[e] })),
+            ]}
+          />
+        </>
+      ) : null}
       <Text style={textStyle("label")}>{dashboardsCopy.centers}</Text>
       {centers.map((c) => (
         <Checkbox
