@@ -140,7 +140,7 @@ describe("totales (espejo de private.recalc_service_order)", () => {
         { itemId: "x", kind: "amount", value: 500 },
       ],
     );
-    expect(t.lines.x).toEqual({ subtotal: 99.99, discount: 99.99 });
+    expect(t.lines.x).toEqual({ subtotal: 99.99, discount: 99.99, operatorPay: 0 });
     expect(t.total).toBe(0);
     expect(
       computeOrderTotals(
@@ -256,5 +256,38 @@ describe("presentadores", () => {
       "America/Mexico_City",
     );
     expect(row).toMatchObject({ status: "Terminada", balance: "$1,850.00", resources: "Bahía 1" });
+  });
+});
+
+describe("pago al operador en los totales (CR1)", () => {
+  it("el costo de la OS suma el % del operador sobre el precio aplicado de la línea", () => {
+    const t = computeOrderTotals(
+      [
+        {
+          id: "m",
+          quantity: 2,
+          unitPrice: 300,
+          unitDirectCost: 20,
+          durationMinutes: 90,
+          operatorCommissionPct: 40,
+        },
+        {
+          id: "g",
+          quantity: 1,
+          unitPrice: 0,
+          unitDirectCost: 5,
+          durationMinutes: 20,
+          operatorCommissionPct: 30,
+        },
+      ],
+      [
+        { itemId: "m", kind: "amount", value: 100 },
+        { itemId: null, kind: "amount", value: 50 },
+      ],
+    );
+    expect(t.lines.m).toEqual({ subtotal: 600, discount: 100, operatorPay: 200 });
+    expect(t.lines.g!.operatorPay).toBe(0);
+    expect(t.costTotal).toBe(40 + 5 + 200);
+    expect(t.total).toBe(450);
   });
 });

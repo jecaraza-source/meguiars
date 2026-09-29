@@ -86,8 +86,9 @@ export default async function CatalogPage({ searchParams }: PageProps<"/catalogo
             { key: "engine", header: "Motor", value: (r) => r.engine },
             { key: "duration", header: "Duración", value: (r) => r.duration },
             { key: "price", header: "Precio", value: (r) => r.price, align: "end" },
-            { key: "cost", header: "Costo directo", value: (r) => r.cost, align: "end" },
-            { key: "margin", header: "Margen estándar", value: (r) => r.margin, align: "end" },
+            { key: "cost", header: "Otros costos directos", value: (r) => r.cost, align: "end" },
+            { key: "operator", header: "Pago al operador", value: (r) => r.operatorPay, align: "end" },
+            { key: "margin", header: "Margen de contribución", value: (r) => r.margin, align: "end" },
             { key: "status", header: "Estado", value: (r) => r.status },
           ]}
         />

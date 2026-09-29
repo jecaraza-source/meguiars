@@ -19,8 +19,10 @@ export interface ServiceFact {
   orders: number;
   /** Σ (subtotal − descuento de línea); el descuento general viene negativo. */
   revenue: number;
-  /** Σ costo estándar congelado de las líneas. */
+  /** Σ costo estándar congelado de las líneas (otros costos directos). */
   standardCost: number;
+  /** Σ pago al operador congelado de las líneas (CR1; 0 si el servicio no paga %). */
+  operatorPay?: number | undefined;
 }
 
 /** Llave de un servicio en rankings y drill-down (el descuento general no tiene servicio). */

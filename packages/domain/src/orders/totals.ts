@@ -1,4 +1,4 @@
-import { standardMargin } from "../catalog/presenter";
+import { formatMoney, standardMargin } from "../catalog/presenter";
 import type { DiscountKind, DiscountLevel } from "./order";
 import { requiredDiscountLevel } from "./order";
 
@@ -16,6 +16,8 @@ export interface TotalsItem {
   unitPrice: number;
   unitDirectCost: number;
   durationMinutes: number;
+  /** % del operador congelado (CR1); null/undefined = sin pago. */
+  operatorCommissionPct?: number | null | undefined;
 }
 
 export interface TotalsDiscount {
@@ -27,7 +29,7 @@ export interface TotalsDiscount {
 }
 
 export interface OrderTotals {
-  lines: Record<string, { subtotal: number; discount: number }>;
+  lines: Record<string, { subtotal: number; discount: number; operatorPay: number }>;
   subtotal: number;
   lineDiscount: number;
   orderDiscount: number;
@@ -61,10 +63,14 @@ export function computeOrderTotals(
       .filter((d) => d.itemId === item.id)
       .reduce((sum, d) => sum + discountCents(d, lineSubtotal), 0);
     const discount = Math.min(lineSubtotal, requested);
-    lines[item.id] = { subtotal: money(lineSubtotal), discount: money(discount) };
+    // Pago al operador: % del precio aplicado de la línea (espejo de operator_commission_amount).
+    const pay = item.operatorCommissionPct
+      ? percentOf(lineSubtotal - discount, item.operatorCommissionPct)
+      : 0;
+    lines[item.id] = { subtotal: money(lineSubtotal), discount: money(discount), operatorPay: money(pay) };
     subtotal += lineSubtotal;
     lineDiscount += discount;
-    cost += item.quantity * cents(item.unitDirectCost);
+    cost += item.quantity * cents(item.unitDirectCost) + pay;
     minutes += item.quantity * item.durationMinutes;
   }
   const base = subtotal - lineDiscount;
@@ -124,10 +130,25 @@ export function previewDiscount(
   };
 }
 
-/** Margen de la OS: misma definición que el margen estándar del catálogo (total − costo congelado). */
+/** Margen de la OS: misma definición que el margen estándar del catálogo (total − costo congelado, con el pago al operador). */
 export const orderMargin = (order: { total: number; costTotal: number }) =>
   standardMargin(order.total, order.costTotal);
 
 /** Saldo pendiente de cobro (nunca negativo). */
 export const orderBalance = (order: { total: number; paidAmount: number }) =>
   Math.max(0, money(cents(order.total) - cents(order.paidAmount)));
+
+/**
+ * Pago al operador de una línea (CR1), listo para mostrar igual en web y móvil:
+ * "Pago al operador: 30.00 % de $200.00 = $60.00". null si el servicio no paga %.
+ */
+export function operatorPayText(item: {
+  lineSubtotal: number;
+  lineDiscount: number;
+  operatorCommissionPct: number | null;
+  operatorCommissionAmount: number;
+}): string | null {
+  if (item.operatorCommissionPct === null) return null;
+  const base = money(cents(item.lineSubtotal) - cents(item.lineDiscount));
+  return `Pago al operador: ${item.operatorCommissionPct.toFixed(2)} % de ${formatMoney(base)} = ${formatMoney(item.operatorCommissionAmount)}`;
+}

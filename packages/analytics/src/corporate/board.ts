@@ -203,7 +203,7 @@ export interface MixRow {
   key: string;
   label: string;
   revenue: number;
-  /** Margen de contribución: ingreso − costo estándar (− variación de insumos, sin motor). */
+  /** Margen de contribución: ingreso − costo estándar − pago al operador (− variación de insumos, sin motor). */
   margin: number;
   /** Margen ÷ ingreso × 100 (null sin ingreso). */
   marginPct: number | null;
@@ -307,7 +307,7 @@ export function corporateMix(
       cost: 0,
     };
     row.revenue = round2(row.revenue + f.revenue);
-    row.cost = round2(row.cost + f.standardCost);
+    row.cost = round2(row.cost + f.standardCost + (f.operatorPay ?? 0));
     row.quantity = (row.quantity ?? 0) + f.quantity;
     services.set(key, row);
   }
@@ -347,7 +347,7 @@ export function corporateMix(
       { label: "Ventas (estado de resultados)", amount: totalRevenue, total: true },
     ],
     marginReconciliation: [
-      { label: "Margen de servicios (venta − costo estándar)", amount: servicesMargin },
+      { label: "Margen de servicios (venta − costo estándar − pago a operadores)", amount: servicesMargin },
       { label: "Venta de membresías y cuotas B2B", amount: round2(memberships + fees) },
       { label: "Variación real de insumos", amount: round2(0 - variance) },
       { label: "Margen de contribución", amount: contribution, total: true },

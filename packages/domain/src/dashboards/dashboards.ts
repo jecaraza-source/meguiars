@@ -446,6 +446,8 @@ export interface DashboardFactsRow {
     orders: number;
     revenue: number;
     standardCost: number;
+    /** Pago al operador de las líneas (CR1). */
+    operatorPay: number;
   }[];
   upsell?: {
     ruleId: string;

@@ -63,16 +63,16 @@ Lo que queda de las ventas después de todo el costo directo del servicio.
 
 Lo que aporta cada venta de OS después de sus costos variables, antes de gastos fijos.
 
-|                 |                                                                                                                        |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Métrica         | `pnl.contribution_margin`                                                                                              |
-| Numerador       | Ventas − costo estándar de las OS − variación real de insumos                                                          |
-| Denominador     | —                                                                                                                      |
-| Fórmula         | Ventas − costo estándar de las OS entregadas − variación real de insumos (sin egresos de costo directo fuera de la OS) |
-| Filtros válidos | centros, periodo, motor                                                                                                |
-| Periodo         | suma del periodo                                                                                                       |
-| Unidad          | MXN                                                                                                                    |
-| Permiso         | `pnl.read`                                                                                                             |
+|                 |                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Métrica         | `pnl.contribution_margin`                                                                                                                  |
+| Numerador       | Ventas − costo estándar de las OS − pago a operadores − variación real de insumos                                                          |
+| Denominador     | —                                                                                                                                          |
+| Fórmula         | Ventas − costo estándar de las OS entregadas − pago a operadores − variación real de insumos (sin egresos de costo directo fuera de la OS) |
+| Filtros válidos | centros, periodo, motor                                                                                                                    |
+| Periodo         | suma del periodo                                                                                                                           |
+| Unidad          | MXN                                                                                                                                        |
+| Permiso         | `pnl.read`                                                                                                                                 |
 
 **Interpretación:** No resta egresos de costo directo que no pasan por una OS (esos sí están en la utilidad bruta). Admite filtro por motor para comparar su aporte.
 

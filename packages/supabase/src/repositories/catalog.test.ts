@@ -44,7 +44,15 @@ describe("CatalogRepository (Supabase)", () => {
     });
     expect(result).toMatchObject({
       ok: true,
-      data: [{ price: 220, standardDirectCost: 80, priceSource: "center", revenueEngine: "recurrente" }],
+      data: [
+        {
+          price: 220,
+          standardDirectCost: 80,
+          operatorCommissionPct: null,
+          priceSource: "center",
+          revenueEngine: "recurrente",
+        },
+      ],
     });
   });
 
@@ -59,6 +67,7 @@ describe("CatalogRepository (Supabase)", () => {
       standardDurationMinutes: 40,
       basePrice: 250,
       standardDirectCost: 80,
+      operatorCommissionPct: null,
     });
     expect(bad).toMatchObject({ ok: false, error: { kind: "validation" } });
     expect(rpc).not.toHaveBeenCalled();
@@ -70,6 +79,7 @@ describe("CatalogRepository (Supabase)", () => {
       standardDurationMinutes: 40,
       basePrice: 250,
       standardDirectCost: 80,
+      operatorCommissionPct: null,
     });
     expect(rpc).toHaveBeenCalledWith(
       "create_service",
@@ -93,6 +103,7 @@ describe("CatalogRepository (Supabase)", () => {
       p_price_override: null,
       p_direct_cost_override: null,
       p_reason: "Sin cabina",
+      p_operator_commission_pct_override: null,
     });
     expect(result).toEqual({ ok: true, data: undefined });
   });

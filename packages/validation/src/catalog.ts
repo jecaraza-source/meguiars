@@ -32,6 +32,29 @@ export const optionalMoneySchema = z
   .transform((v) => (v === undefined || (typeof v === "string" && v.trim() === "") ? undefined : v))
   .pipe(moneySchema.optional());
 
+/** Porcentaje (0 a 100, máximo 2 decimales). Acepta "30", "30 %" o "12.5". */
+export const percentSchema = z
+  .union([z.number(), z.string()])
+  .transform((v) =>
+    typeof v === "number" ? v : v.trim() === "" ? Number.NaN : Number(v.replace(/[%\s]/g, "")),
+  )
+  .pipe(
+    z
+      .number({ message: "Porcentaje inválido" })
+      .refine((n) => Number.isFinite(n), "Porcentaje inválido")
+      .refine((n) => n >= 0 && n <= 100, "El porcentaje va de 0 a 100")
+      .refine((n) => Math.round(n * 100) === Math.round(n * 100 * 1e6) / 1e6, "Usa máximo 2 decimales"),
+  );
+
+/** Porcentaje opcional: "" o ausente = sin valor (sin pago o usa el base). */
+export const optionalPercentSchema = z
+  .union([z.number(), z.string(), z.null()])
+  .optional()
+  .transform((v) =>
+    v === undefined || v === null || (typeof v === "string" && v.trim() === "") ? undefined : v,
+  )
+  .pipe(percentSchema.optional());
+
 export const serviceCodeSchema = z
   .string()
   .transform((v) => v.trim().toUpperCase())
@@ -61,7 +84,10 @@ const serviceFields = {
   revenueEngine: revenueEngineSchema,
   standardDurationMinutes: durationMinutesSchema,
   basePrice: moneySchema,
+  /** Otros costos directos (productos y consumibles), sin mano de obra si hay % al operador. */
   standardDirectCost: moneySchema,
+  /** Pago al operador como % del precio aplicado; vacío = el servicio no paga porcentaje. */
+  operatorCommissionPct: optionalPercentSchema.transform((v) => v ?? null),
 };
 
 export const createServiceSchema = z.object({
@@ -83,6 +109,7 @@ export const centerConfigSchema = z.object({
   available: z.boolean(),
   priceOverride: optionalMoneySchema,
   directCostOverride: optionalMoneySchema,
+  operatorCommissionPctOverride: optionalPercentSchema,
   reason: changeReasonSchema,
 });
 

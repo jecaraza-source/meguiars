@@ -19,7 +19,7 @@ Tablero predeterminado de Dirección (`/direccion` en web; **Dirección → Tabl
 
 - **Comparativo**: una fila por KPI, una columna por centro elegido (1..N, sin código por centro) y el consolidado.
 - **Tendencia** contra el periodo anterior equivalente: Hoy → ayer; Semana → semana anterior al mismo día; Mes → mes anterior al mismo día; Año → año anterior a la misma fecha; Rango → los mismos días inmediatamente antes. Moneda y conteos en %; porcentajes y razones en puntos. Se muestra "Sin comparativo" si algún centro no operaba desde el inicio del periodo anterior o si el anterior fue 0.
-- **Ranking** de motores y de servicios/productos por ingreso o por margen, con la conciliación contra el P&L (ventas y margen de contribución; diferencia 0).
+- **Ranking** de motores y de servicios/productos por ingreso o por margen (venta − costo estándar − pago al operador, CR1), con la conciliación contra el P&L (ventas y margen de contribución; diferencia 0).
 - **Alertas visuales** cuando un KPI queda por debajo del mínimo o por encima del máximo configurado (sin notificaciones externas).
 - **Móvil**: primero el resumen ejecutivo (Ventas, EBITDA, Margen, Vehículos) y la lista de alertas; luego el resto, el comparativo por KPI y el ranking. Cada cifra abre el drill-down navegable (migas para volver a cualquier nivel).
 

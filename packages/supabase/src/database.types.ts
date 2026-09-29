@@ -3098,6 +3098,7 @@ export type Database = {
           price_override: number | null;
           service_id: string;
           updated_at: string;
+          operator_commission_pct_override: number | null;
         };
         Insert: {
           available?: boolean;
@@ -3109,6 +3110,7 @@ export type Database = {
           price_override?: number | null;
           service_id: string;
           updated_at?: string;
+          operator_commission_pct_override?: number | null;
         };
         Update: {
           available?: boolean;
@@ -3120,6 +3122,7 @@ export type Database = {
           price_override?: number | null;
           service_id?: string;
           updated_at?: string;
+          operator_commission_pct_override?: number | null;
         };
         Relationships: [
           {
@@ -3515,6 +3518,8 @@ export type Database = {
           work_started_at: string | null;
           work_status: Database["public"]["Enums"]["item_work_status"];
           worked_minutes: number;
+          operator_commission_amount: number | null;
+          operator_commission_pct: number | null;
         };
         Insert: {
           b2b_price_rule_id?: string | null;
@@ -3543,6 +3548,8 @@ export type Database = {
           work_started_at?: string | null;
           work_status?: Database["public"]["Enums"]["item_work_status"];
           worked_minutes?: number;
+          operator_commission_amount?: never;
+          operator_commission_pct?: number | null;
         };
         Update: {
           b2b_price_rule_id?: string | null;
@@ -3571,6 +3578,8 @@ export type Database = {
           work_started_at?: string | null;
           work_status?: Database["public"]["Enums"]["item_work_status"];
           worked_minutes?: number;
+          operator_commission_amount?: never;
+          operator_commission_pct?: number | null;
         };
         Relationships: [
           {
@@ -3929,6 +3938,7 @@ export type Database = {
           reason: string | null;
           service_id: string;
           valid_from: string;
+          operator_commission_pct: number | null;
         };
         Insert: {
           changed_by?: string | null;
@@ -3940,6 +3950,7 @@ export type Database = {
           reason?: string | null;
           service_id: string;
           valid_from?: string;
+          operator_commission_pct?: number | null;
         };
         Update: {
           changed_by?: string | null;
@@ -3951,6 +3962,7 @@ export type Database = {
           reason?: string | null;
           service_id?: string;
           valid_from?: string;
+          operator_commission_pct?: number | null;
         };
         Relationships: [
           {
@@ -4026,6 +4038,7 @@ export type Database = {
           standard_direct_cost: number;
           standard_duration_minutes: number;
           updated_at: string;
+          operator_commission_pct: number | null;
         };
         Insert: {
           active?: boolean;
@@ -4041,6 +4054,7 @@ export type Database = {
           standard_direct_cost: number;
           standard_duration_minutes: number;
           updated_at?: string;
+          operator_commission_pct?: number | null;
         };
         Update: {
           active?: boolean;
@@ -4056,6 +4070,7 @@ export type Database = {
           standard_direct_cost?: number;
           standard_duration_minutes?: number;
           updated_at?: string;
+          operator_commission_pct?: number | null;
         };
         Relationships: [
           {
@@ -4480,6 +4495,9 @@ export type Database = {
           service_name: string;
           service_order_id: string;
           standard_cost: number;
+          operator_pay: number;
+          operator_pct: number | null;
+          technician_name: string | null;
         }[];
       };
       delete_kpi_threshold: {
@@ -5668,6 +5686,8 @@ export type Database = {
           revenue_engine: Database["public"]["Enums"]["revenue_engine"];
           standard_direct_cost: number;
           standard_duration_minutes: number;
+          base_operator_commission_pct: number | null;
+          operator_commission_pct: number | null;
         }[];
       };
       client_history: {
@@ -5837,6 +5857,7 @@ export type Database = {
           p_revenue_engine: Database["public"]["Enums"]["revenue_engine"];
           p_standard_direct_cost: number;
           p_standard_duration_minutes: number;
+          p_operator_commission_pct?: number | null;
         };
         Returns: {
           active: boolean;
@@ -5852,6 +5873,7 @@ export type Database = {
           standard_direct_cost: number;
           standard_duration_minutes: number;
           updated_at: string;
+          operator_commission_pct: number | null;
         };
         SetofOptions: {
           from: "*";
@@ -6630,6 +6652,7 @@ export type Database = {
           p_price_override: number | null;
           p_reason: string;
           p_service_id: string;
+          p_operator_commission_pct_override?: number | null;
         };
         Returns: {
           available: boolean;
@@ -6641,6 +6664,7 @@ export type Database = {
           price_override: number | null;
           service_id: string;
           updated_at: string;
+          operator_commission_pct_override: number | null;
         };
         SetofOptions: {
           from: "*";
@@ -6982,6 +7006,7 @@ export type Database = {
           p_revenue_engine: Database["public"]["Enums"]["revenue_engine"];
           p_standard_direct_cost: number;
           p_standard_duration_minutes: number;
+          p_operator_commission_pct?: number | null;
         };
         Returns: {
           active: boolean;
@@ -6997,6 +7022,7 @@ export type Database = {
           standard_direct_cost: number;
           standard_duration_minutes: number;
           updated_at: string;
+          operator_commission_pct: number | null;
         };
         SetofOptions: {
           from: "*";

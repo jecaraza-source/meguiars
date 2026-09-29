@@ -272,7 +272,8 @@ const pnlContributionSource: SourceSpec<PnlBucketFact> = {
   matches: (f, filters, declared) => {
     if (!declared.includes("motor") || !filters.engine) return true;
     if (f.section === "ingreso") return f.dimension === filters.engine;
-    if (f.section === "costo_directo" && f.line === "estandar") return f.dimension === filters.engine;
+    if (f.section === "costo_directo" && (f.line === "estandar" || f.line === "pago_operador"))
+      return f.dimension === filters.engine;
     return f.section !== "costo_directo" || f.line !== "variacion_insumos";
   },
 };
@@ -439,10 +440,10 @@ export const METRIC_CATALOG: readonly MetricDefinition[] = [
   }),
   pnl({
     id: "pnl.direct_cost",
-    version: 1,
+    version: 2,
     kpi: pnlDirectCost,
     description:
-      "Costo de lo vendido: costo estándar de las OS, variación de insumos y egresos de costo directo.",
+      "Costo de lo vendido: costo estándar de las OS, pago a operadores, variación de insumos y egresos de costo directo.",
     widgets: ["kpi", "timeseries", "bars", "ranking"],
     drill: { kind: "pnl", section: "costo_directo" },
     value: pnlValue(pnlDirectCost),
@@ -596,9 +597,10 @@ export const METRIC_CATALOG: readonly MetricDefinition[] = [
   }),
   defineMetric("pnl", pnlContributionSource, {
     id: "pnl.contribution_margin",
-    version: 1,
+    version: 2,
     kpi: pnlContributionMargin,
-    description: "Lo que aportan las OS después de sus costos variables (costo estándar e insumos reales).",
+    description:
+      "Lo que aportan las OS después de sus costos variables (costo estándar, pago a operadores e insumos reales).",
     capability: "pnl.read",
     widgets: ["kpi", "timeseries", "bars", "ranking", "distribution"],
     filters: ["motor"],

@@ -64,6 +64,10 @@ export interface CorporateOrderLine {
   quantity: number;
   revenue: number;
   standardCost: number;
+  /** % y pago al operador de la línea (CR1) y quién la realizó. */
+  operatorPct: number | null;
+  operatorPay: number;
+  technicianName: string | null;
 }
 
 // ---------------------------------------------------------------------------

@@ -20,7 +20,10 @@ export interface Service {
   revenueEngine: RevenueEngine;
   standardDurationMinutes: number;
   basePrice: number;
+  /** Otros costos directos (productos y consumibles), sin mano de obra si el servicio paga % al operador. */
   standardDirectCost: number;
+  /** Pago al operador como % del precio aplicado (null = no paga porcentaje). */
+  operatorCommissionPct: number | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -38,8 +41,12 @@ export interface CatalogItem {
   standardDirectCost: number;
   /** Precio vigente en el centro. */
   price: number;
-  /** Costo directo estándar vigente en el centro. */
+  /** Costo directo estándar vigente en el centro (otros costos directos). */
   directCost: number;
+  /** % del operador del servicio (base). */
+  baseOperatorCommissionPct: number | null;
+  /** % del operador vigente en el centro (el del centro pisa al base). */
+  operatorCommissionPct: number | null;
   priceSource: "base" | "center";
   available: boolean;
   active: boolean;
@@ -51,6 +58,7 @@ export interface PriceHistoryEntry {
   detailCenterId: string | null;
   price: number | null;
   directCost: number | null;
+  operatorCommissionPct: number | null;
   validFrom: string;
   reason: string | null;
 }
@@ -62,6 +70,8 @@ export interface ServiceInput {
   standardDurationMinutes: number;
   basePrice: number;
   standardDirectCost: number;
+  /** null = el servicio no paga porcentaje al operador. */
+  operatorCommissionPct: number | null;
 }
 
 export interface CreateServiceCommand extends ServiceInput {
@@ -82,6 +92,7 @@ export interface CenterConfigCommand {
   /** undefined = usa el valor base. */
   priceOverride?: number | undefined;
   directCostOverride?: number | undefined;
+  operatorCommissionPctOverride?: number | undefined;
   reason: string;
 }
 

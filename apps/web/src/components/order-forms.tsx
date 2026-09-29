@@ -3,6 +3,7 @@
 import {
   CHANNEL_REFERENCE_LABELS,
   computeOrderTotals,
+  operatorPayText,
   DISCOUNT_LEVEL_LABELS,
   formatDuration,
   formatMoney,
@@ -312,6 +313,11 @@ export function OrderLines({
                 {i.lineDiscount > 0 ? ` − ${formatMoney(i.lineDiscount)}` : ""}
               </span>
             </div>
+            {operatorPayText(i) ? (
+              <p className="text-xs text-muted" data-testid="operator-pay">
+                {operatorPayText(i)}
+              </p>
+            ) : null}
             {editable ? (
               <form action={action} className="flex flex-wrap items-end gap-sm" noValidate>
                 <Versioned order={order} />

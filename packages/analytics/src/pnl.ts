@@ -103,6 +103,7 @@ const LABELS: Record<string, string> = {
   "revenue.cuotas_b2b": "Cuotas B2B",
   direct_cost: "Costo directo",
   "direct_cost.estandar": "Costo estándar de las OS",
+  "direct_cost.pago_operador": "Pago a operadores (% del precio)",
   "direct_cost.variacion_insumos": "Variación real de insumos",
   "direct_cost.egresos_costo_directo": "Costos directos no capturados en la OS",
   gross_profit: "Utilidad bruta",
@@ -130,9 +131,10 @@ export function pnlStatement({ facts }: PnlKpiInput): PnlStatement {
   const revenue = sumOf(facts, is("ingreso"));
   const byRevenueLine = REVENUE_LINES.map((l) => [l, sumOf(facts, is("ingreso", l))] as const);
   const standard = sumOf(facts, is("costo_directo", "estandar"));
+  const operatorPay = sumOf(facts, is("costo_directo", "pago_operador"));
   const variance = sumOf(facts, is("costo_directo", "variacion_insumos"));
   const directExpenses = sumOf(facts, is("costo_directo", "egresos_costo_directo"));
-  const directCost = round2(standard + variance + directExpenses);
+  const directCost = round2(standard + operatorPay + variance + directExpenses);
   const grossProfit = round2(revenue - directCost);
   const personnel = sumOf(facts, is("gasto", "personal"));
   const operating = OPERATING_GROUPS.map((g) => [g, sumOf(facts, is("gasto", g))] as const);
@@ -179,6 +181,14 @@ export function pnlStatement({ facts }: PnlKpiInput): PnlStatement {
         .map(([l, v]) => line(`revenue.${l}`, v, 1, { section: "ingreso", line: l })),
       line("direct_cost", directCost, 0, { section: "costo_directo" }),
       line("direct_cost.estandar", standard, 1, { section: "costo_directo", line: "estandar" }),
+      ...(operatorPay !== 0
+        ? [
+            line("direct_cost.pago_operador", operatorPay, 1, {
+              section: "costo_directo",
+              line: "pago_operador",
+            }),
+          ]
+        : []),
       line("direct_cost.variacion_insumos", variance, 1, {
         section: "costo_directo",
         line: "variacion_insumos",
@@ -259,7 +269,7 @@ export const pnlRevenue = kpi(
 export const pnlDirectCost = kpi(
   "pnl.direct_cost",
   "Costo directo",
-  "Costo estándar congelado de las OS entregadas + variación real de insumos + egresos aprobados de costo directo",
+  "Costo estándar congelado de las OS entregadas + pago a operadores (% del precio de la línea) + variación real de insumos + egresos aprobados de costo directo",
   "currency",
   (s) => s.directCost,
 );
@@ -300,12 +310,14 @@ export const pnlNetBeforeTax = kpi(
 );
 /**
  * Margen de contribución: ventas menos los costos variables de la OS (costo
- * estándar congelado y variación real de insumos). A diferencia de la utilidad
- * bruta, no resta los egresos de costo directo que no pasan por una OS.
+ * estándar congelado, pago a operadores y variación real de insumos). A
+ * diferencia de la utilidad bruta, no resta los egresos de costo directo que no
+ * pasan por una OS. No es utilidad neta: faltan los gastos generales.
  */
+export const VARIABLE_COST_LINES = ["estandar", "pago_operador", "variacion_insumos"] as const;
 export function contributionMargin(facts: readonly PnlLineFact[]): number {
   const variableCost = (f: PnlLineFact) =>
-    f.section === "costo_directo" && (f.line === "estandar" || f.line === "variacion_insumos");
+    f.section === "costo_directo" && (VARIABLE_COST_LINES as readonly string[]).includes(f.line);
   return round2(sumOf(facts, (f) => f.section === "ingreso") - sumOf(facts, variableCost));
 }
 
@@ -314,7 +326,7 @@ export const pnlContributionMargin = kpiRegistry.register(
     id: "pnl.contribution_margin",
     name: "Margen de contribución",
     formula:
-      "Ventas − costo estándar de las OS entregadas − variación real de insumos (sin egresos de costo directo fuera de la OS)",
+      "Ventas − costo estándar de las OS entregadas − pago a operadores − variación real de insumos (sin egresos de costo directo fuera de la OS)",
     sources: SOURCES,
     unit: "currency",
     scopes: ["center", "corporate"],

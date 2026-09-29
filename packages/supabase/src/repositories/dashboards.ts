@@ -199,6 +199,7 @@ export function toDashboardFacts(raw: J): DashboardFactsRow {
       orders: num(r.orders),
       revenue: num(r.revenue),
       standardCost: num(r.standard_cost),
+      operatorPay: num(r.operator_pay),
     }));
   const upsell = list("upsell");
   if (upsell)
@@ -471,6 +472,9 @@ export function createDashboardRepository(client: MeguiarsSupabaseClient): Dashb
             quantity: r.quantity,
             revenue: Number(r.revenue),
             standardCost: Number(r.standard_cost),
+            operatorPct: r.operator_pct === null ? null : Number(r.operator_pct),
+            operatorPay: Number(r.operator_pay ?? 0),
+            technicianName: r.technician_name ?? null,
           })),
       );
     },

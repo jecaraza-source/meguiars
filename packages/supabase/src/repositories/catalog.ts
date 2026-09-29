@@ -11,7 +11,8 @@ import { invalid, run } from "./shared";
 
 // numeric llega de PostgREST como número (o texto en algunos clientes): se normaliza.
 const num = (v: number | string) => Number(v);
-const numOrNull = (v: number | string | null) => (v === null ? null : Number(v));
+const numOrNull = (v: number | string | null | undefined) =>
+  v === null || v === undefined ? null : Number(v);
 
 export const toService = (row: Tables<"services">): Service => ({
   id: row.id,
@@ -23,6 +24,7 @@ export const toService = (row: Tables<"services">): Service => ({
   standardDurationMinutes: row.standard_duration_minutes,
   basePrice: num(row.base_price),
   standardDirectCost: num(row.standard_direct_cost),
+  operatorCommissionPct: numOrNull(row.operator_commission_pct),
   active: row.active,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -41,6 +43,8 @@ const toCatalogItem = (
   standardDirectCost: num(row.standard_direct_cost),
   price: num(row.price),
   directCost: num(row.direct_cost),
+  baseOperatorCommissionPct: numOrNull(row.base_operator_commission_pct),
+  operatorCommissionPct: numOrNull(row.operator_commission_pct),
   priceSource: row.price_source === "center" ? "center" : "base",
   available: row.available,
   active: row.active,
@@ -51,6 +55,7 @@ const toHistory = (row: Tables<"service_price_history">): PriceHistoryEntry => (
   detailCenterId: row.detail_center_id,
   price: numOrNull(row.price),
   directCost: numOrNull(row.direct_cost),
+  operatorCommissionPct: numOrNull(row.operator_commission_pct),
   validFrom: row.valid_from,
   reason: row.reason,
 });
@@ -108,6 +113,7 @@ export function createCatalogRepository(client: MeguiarsSupabaseClient): Catalog
             p_standard_duration_minutes: c.standardDurationMinutes,
             p_base_price: c.basePrice,
             p_standard_direct_cost: c.standardDirectCost,
+            p_operator_commission_pct: c.operatorCommissionPct,
           }),
         toService,
       );
@@ -129,6 +135,7 @@ export function createCatalogRepository(client: MeguiarsSupabaseClient): Catalog
             p_standard_direct_cost: c.standardDirectCost,
             p_active: c.active,
             p_reason: c.reason,
+            p_operator_commission_pct: c.operatorCommissionPct,
           }),
         toService,
       );
@@ -147,6 +154,7 @@ export function createCatalogRepository(client: MeguiarsSupabaseClient): Catalog
             p_price_override: c.priceOverride ?? null,
             p_direct_cost_override: c.directCostOverride ?? null,
             p_reason: c.reason,
+            p_operator_commission_pct_override: c.operatorCommissionPctOverride ?? null,
           }),
         () => undefined,
       );
