@@ -52,10 +52,10 @@ No se envían correos ni WhatsApp. La interfaz queda lista: `AlertNotifier.notif
 
 ## Variables de entorno (sólo servidor, Vercel → Production)
 
-| Variable                    | Uso                                                            |
-| --------------------------- | -------------------------------------------------------------- |
-| `SUPABASE_SERVICE_ROLE_KEY` | llave de servicio, sólo en `/api/cron/alertas` (`server-only`) |
-| `CRON_SECRET`               | secreto que Vercel Cron envía como `Authorization: Bearer …`   |
+| Variable                    | Uso                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| `SUPABASE_SERVICE_ROLE_KEY` | llave de servicio, sólo servidor (`server-only`): este cron y [Usuarios](usuarios.md) |
+| `CRON_SECRET`               | secreto que Vercel Cron envía como `Authorization: Bearer …`                          |
 
 Sin ellas, la ruta responde 401/503 y no evalúa; "Evaluar ahora" sigue funcionando. Nunca con prefijo `NEXT_PUBLIC_` ni en móvil. Vercel Cron sólo corre en el despliegue de producción; en el plan Hobby, una vez al día.
 
