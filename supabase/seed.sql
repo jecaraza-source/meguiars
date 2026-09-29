@@ -655,3 +655,14 @@ insert into public.kpi_thresholds (organization_id, metric_id, channel, detail_c
   ('00000000-0000-4000-8000-00000000d3e0', 'pnl.revenue', 'b2b', '11111111-1111-4111-8111-111111111111', 1000, null)
 on conflict on constraint kpi_thresholds_scope_key do nothing;
 select set_config('app.change_reason', '', false);
+
+-- CR1: servicio con pago al operador como % del precio. Valores de ejemplo
+-- (el precio y el % los define cada organización en el catálogo). El costo
+-- estándar son los otros costos directos (productos y consumibles), sin mano de obra.
+select set_config('app.change_reason', 'Servicio de ejemplo con pago al operador', false);
+insert into public.services (id, organization_id, code, name, description, revenue_engine,
+                             standard_duration_minutes, base_price, standard_direct_cost, operator_commission_pct)
+values ('5e000000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-00000000d3e0', 'LAV-MAN', 'Lavado manual detallado',
+        'Lavado a mano con detallado exterior e interior; al operador se le paga un % del precio.', 'recurrente', 120, 450, 60, 30)
+on conflict (id) do nothing;
+select set_config('app.change_reason', '', false);
