@@ -645,3 +645,13 @@ select set_config('app.change_reason', 'Parámetros de KPIs de ejemplo', false);
 insert into public.kpi_settings (organization_id) values ('00000000-0000-4000-8000-00000000d3e0')
 on conflict (organization_id) do nothing;
 select set_config('app.change_reason', '', false);
+
+-- Tablero corporativo (D3): umbrales de alerta visual de ejemplo. Venta mínima
+-- del periodo y EBITDA no negativo para cada centro; venta B2B mínima en CDMX.
+select set_config('app.change_reason', 'Umbrales de alerta de ejemplo', false);
+insert into public.kpi_thresholds (organization_id, metric_id, channel, detail_center_id, min_value, max_value) values
+  ('00000000-0000-4000-8000-00000000d3e0', 'pnl.revenue', null, null, 3000, null),
+  ('00000000-0000-4000-8000-00000000d3e0', 'pnl.ebitda', null, null, 0, null),
+  ('00000000-0000-4000-8000-00000000d3e0', 'pnl.revenue', 'b2b', '11111111-1111-4111-8111-111111111111', 1000, null)
+on conflict on constraint kpi_thresholds_scope_key do nothing;
+select set_config('app.change_reason', '', false);

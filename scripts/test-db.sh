@@ -69,6 +69,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó los tableros ejecutivos de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select ltv_lifetime_years || ':' || operating_hours_per_day || ':' || operating_days_per_week from public.kpi_settings s join public.organizations o on o.id = s.organization_id where o.slug = 'meguiars-demo'")" == "3.00:10.00:6" ]] \
   || { echo "El seed no cargó los parámetros de KPIs" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select string_agg(metric_id || ':' || coalesce(channel, '-') || ':' || (detail_center_id is null) || ':' || coalesce(min_value::text, '-'), ',' order by metric_id, channel nulls first) from public.kpi_thresholds t join public.organizations o on o.id = t.organization_id where o.slug = 'meguiars-demo'")" == "pnl.ebitda:-:true:0.00,pnl.revenue:-:true:3000.00,pnl.revenue:b2b:false:1000.00" ]] \
+  || { echo "El seed no cargó los umbrales de alerta de ejemplo" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
