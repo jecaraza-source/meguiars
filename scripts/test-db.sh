@@ -31,6 +31,13 @@ for f in supabase/tests/*.test.sql; do
   echo "prueba: $f"
   "${PSQL[@]}" -t -f "$f" 2>&1 | show
 done
+# El diccionario de datos versionado debe coincidir con el esquema de las migraciones.
+DICT="$(mktemp)"
+DATABASE_URL="$DATABASE_URL" bash scripts/data-dictionary.sh "$DICT"
+diff -u docs/diccionario-datos.md "$DICT" >/dev/null \
+  || { echo "docs/diccionario-datos.md está desactualizado: corre DATABASE_URL=… bash scripts/data-dictionary.sh" >&2; rm -f "$DICT"; exit 1; }
+rm -f "$DICT"
+echo "  ok - diccionario de datos al día con el esquema"
 echo "seed: supabase/seed.sql"
 "${PSQL[@]}" -f supabase/seed.sql
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.detail_centers c join public.organizations o on o.id = c.organization_id where o.slug = 'meguiars-demo'")" == "2" ]] \
