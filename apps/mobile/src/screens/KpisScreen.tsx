@@ -35,10 +35,15 @@ export function KpisScreen({
   header,
   subnav,
   onDrill,
-}: PrivateScreenProps & { onDrill: (target: DashboardDrillTarget) => void }) {
+  initialParams,
+}: PrivateScreenProps & {
+  onDrill: (target: DashboardDrillTarget) => void;
+  /** Filtros iniciales (p. ej. al abrir el KPI desde una alerta, con su periodo y centros). */
+  initialParams?: Params | undefined;
+}) {
   const { client } = useAuth();
   const organizationId = activeCenterAccess(state)!.center.organizationId;
-  const [params, setParams] = useState<Params>({});
+  const [params, setParams] = useState<Params>(initialParams ?? {});
   const [view, setView] = useState<{ key: string; data: View_ } | null>(null);
   const [settings, setSettings] = useState<KpiSettings | null>(null);
   const viewKey = JSON.stringify(params);
