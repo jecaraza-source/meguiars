@@ -91,6 +91,9 @@ echo "demo: supabase/demo/historial.sql (dos veces: idempotente)"
     and (select count(distinct detail_center_id) from public.service_orders
           where delivered_at > now() - interval '30 days') = 2")" == "t" ]] \
   || { echo "El historial demo no cargó clientes, OS cobradas y egresos esperados" >&2; exit 1; }
+echo "prueba (historial demo): supabase/tests/seeded/financial_integrity.test.sql"
+"${PSQL[@]}" -t -f supabase/tests/seeded/financial_integrity.test.sql 2>&1 | show
+
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
 # tests/upgrade/<migración>.after.sql justo después (datos del esquema anterior).
