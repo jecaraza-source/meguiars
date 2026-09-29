@@ -27,6 +27,7 @@ import { CatalogScreen } from "@/screens/CatalogScreen";
 import { ClientDetailScreen } from "@/screens/ClientDetailScreen";
 import { ClientNewScreen } from "@/screens/ClientNewScreen";
 import { ClientsScreen } from "@/screens/ClientsScreen";
+import { DayScreen, FinanceSummaryScreen } from "@/screens/DayScreen";
 import { DesignSystemScreen } from "@/screens/DesignSystemScreen";
 import { DashboardScreen } from "@/screens/DashboardScreen";
 import { DashboardsScreen } from "@/screens/DashboardsScreen";
@@ -72,7 +73,6 @@ import { OrderExecutionScreen } from "@/screens/OrderExecutionScreen";
 import { OrderNewScreen } from "@/screens/OrderNewScreen";
 import { OrdersScreen } from "@/screens/OrdersScreen";
 import { ResetPasswordScreen } from "@/screens/ResetPasswordScreen";
-import { SectionScreen } from "@/screens/SectionScreen";
 import { SelectCenterScreen } from "@/screens/SelectCenterScreen";
 import { SuppliesScreen } from "@/screens/SuppliesScreen";
 import { TeamScreen } from "@/screens/TeamScreen";
@@ -483,8 +483,21 @@ export function Router() {
         );
         break;
       case "operacion":
+        content = (
+          <DayScreen
+            {...props}
+            onOrder={openOrder}
+            onAppointment={openAppointment}
+            onNewOrder={() => setScreen("orderNew")}
+            onNewAppointment={() => {
+              setNewAppointment({ walkIn: false, day: "" });
+              setScreen("appointmentNew");
+            }}
+          />
+        );
+        break;
       case "finanzas":
-        content = <SectionScreen {...props} section={screen} />;
+        content = <FinanceSummaryScreen {...props} onNavigate={setScreen} />;
         break;
       case "direccion":
         content = (

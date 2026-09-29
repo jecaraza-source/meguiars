@@ -4879,6 +4879,10 @@ export type Database = {
         Args: { p_disabled: boolean; p_organization_id: string; p_reason: string; p_user_id: string };
         Returns: undefined;
       };
+      center_day_summary: {
+        Args: { p_detail_center_id: string };
+        Returns: Json;
+      };
       set_kpi_threshold: {
         Args: {
           p_channel: string | null;
