@@ -75,6 +75,17 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó el lavado manual detallado con pago al operador" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) || ':' || (select count(*) from public.alert_instances where status = 'nueva') from public.alert_rules r join public.organizations o on o.id = r.organization_id where o.slug = 'meguiars-demo'")" == "3:1" ]] \
   || { echo "El seed no cargó las reglas y la alerta de ejemplo" >&2; exit 1; }
+echo "demo: supabase/demo/historial.sql (dos veces: idempotente)"
+"${PSQL[@]}" -f supabase/demo/historial.sql
+"${PSQL[@]}" -f supabase/demo/historial.sql 2>&1 | grep -q "Historial demo ya cargado" \
+  || { echo "El historial demo no es idempotente" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select (select count(*) from public.clients) = 27
+    and (select count(*) from public.service_orders where status = 'entregada') between 700 and 1200
+    and not exists (select 1 from public.service_orders where paid_amount > total)
+    and (select count(*) from public.expenses where status = 'aprobado') >= 30
+    and (select count(distinct detail_center_id) from public.service_orders
+          where delivered_at > now() - interval '30 days') = 2")" == "t" ]] \
+  || { echo "El historial demo no cargó clientes, OS cobradas y egresos esperados" >&2; exit 1; }
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
