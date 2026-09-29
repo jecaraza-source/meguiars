@@ -666,3 +666,31 @@ values ('5e000000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-0000000
         'Lavado a mano con detallado exterior e interior; al operador se le paga un % del precio.', 'recurrente', 120, 450, 60, 30)
 on conflict (id) do nothing;
 select set_config('app.change_reason', '', false);
+
+-- D4: reglas de alerta de ejemplo. Sin usuarios en el seed quedan sin autor: el
+-- cron las omite hasta que un admin corporativo las guarde (y las adopte). Una
+-- alerta de ejemplo en la bandeja.
+select set_config('app.change_reason', 'Reglas de alerta de ejemplo', false);
+insert into public.alert_rules (id, organization_id, name, description, metric_id, channel, condition, threshold, period,
+                                scope_kind, center_ids, severity, cooldown_minutes) values
+  ('a1e70000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'Venta diaria baja',
+   'Ventas del día anterior por debajo de $3,000 en un centro.', 'pnl.revenue', null, 'below', 3000, 'dia', 'centro',
+   array['11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222']::uuid[], 'atencion', 1440),
+  ('a1e70000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', 'Caída de ventas del mes',
+   'Ventas del mes en curso 15 % o más por debajo del mismo tramo del mes anterior.', 'pnl.revenue', null, 'drop_pct', 15,
+   'mes_en_curso', 'corporativo', null, 'critica', 1440),
+  ('a1e70000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', 'Sin vehículos atendidos',
+   'Un centro no entregó ninguna OS el día anterior.', 'orders.vehicles_served', null, 'no_data', null, 'dia', 'centro',
+   array['11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222']::uuid[], 'critica', 1440)
+on conflict (id) do nothing;
+select set_config('app.change_reason', '', false);
+insert into public.alert_instances (id, organization_id, rule_id, rule_name, metric_id, condition, threshold, severity,
+  scope_key, detail_center_ids, period_from, period_to, value, last_period_from, last_period_to, last_value)
+values ('a1e71000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0',
+  'a1e70000-0000-4000-8000-000000000001', 'Venta diaria baja', 'pnl.revenue', 'below', 3000, 'atencion',
+  '22222222-2222-4222-8222-222222222222', array['22222222-2222-4222-8222-222222222222']::uuid[],
+  current_date - 1, current_date - 1, 660, current_date - 1, current_date - 1, 660)
+on conflict (id) do nothing;
+insert into public.alert_events (instance_id, kind, value, period_from, period_to)
+select 'a1e71000-0000-4000-8000-000000000001', 'creada', 660, current_date - 1, current_date - 1
+where not exists (select 1 from public.alert_events where instance_id = 'a1e71000-0000-4000-8000-000000000001');
