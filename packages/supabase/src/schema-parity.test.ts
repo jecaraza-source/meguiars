@@ -14,6 +14,12 @@ import {
   QUOTE_STATUSES,
   INBOX_CHANNELS,
   CAMPAIGN_CHANNELS,
+  AUTOMATION_LIMITS,
+  AUTOMATION_OUTCOMES,
+  AUTOMATION_RUN_MODES,
+  AUTOMATION_TRIGGERS,
+  LATER_TASK_SOURCES,
+  MESSAGE_PLACEHOLDERS,
   CAMPAIGN_OBJECTIVES,
   CAMPAIGN_STATUSES,
   CONTENT_FORMATS,
@@ -150,6 +156,9 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "campaigns",
   "campaign_spend",
   "content_posts",
+  "automations",
+  "automation_runs",
+  "automation_executions",
   "promotions",
   "client_centers",
   "clients",
@@ -276,6 +285,14 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "apply_promotion_to_order",
   "list_promotions",
   "campaign_facts",
+  "upsert_automation",
+  "set_automation_active",
+  "run_automation_now",
+  "list_automations",
+  "automation_runs_list",
+  "automation_executions_list",
+  "commercial_sales_facts",
+  "campaign_spend_facts",
   "accept_upsell",
   "reject_upsell",
   "upsell_metric_facts",
@@ -858,6 +875,40 @@ describe("paridad SQL ↔ TypeScript", () => {
       ...CONTENT_STATUSES,
     ]);
     expect(listOf(/kind text not null check \(kind in \(('percent'[^)]+)\)\)/)).toEqual([...PROMOTION_KINDS]);
+  });
+
+  it("Automatizaciones CR2 (fase 4): disparadores, modos, resultados, marcadores, límites y orígenes de tarea coinciden", () => {
+    const sql = allSql.slice(allSql.indexOf("-- CR2 fase 4"));
+    const listOf = (re: RegExp) =>
+      re
+        .exec(sql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listOf(/trigger text not null check \(trigger in \(\s*([^)]+)\)\)/)).toEqual([
+      ...AUTOMATION_TRIGGERS,
+    ]);
+    expect(listOf(/mode text not null check \(mode in \(([^)]+)\)\)/)).toEqual([...AUTOMATION_RUN_MODES]);
+    expect(listOf(/outcome text not null check \(outcome in \(([^)]+)\)\)/)).toEqual([
+      ...AUTOMATION_OUTCOMES,
+    ]);
+    expect(/\{\(\?!\(([^)]+)\)\\\}\)/.exec(sql)?.[1]?.split("|")).toEqual([...MESSAGE_PLACEHOLDERS]);
+    expect(sql).toContain(
+      `delay_days integer not null check (delay_days between ${AUTOMATION_LIMITS.delayDays.min} and ${AUTOMATION_LIMITS.delayDays.max})`,
+    );
+    expect(sql).toContain(
+      `check (due_in_days between ${AUTOMATION_LIMITS.dueInDays.min} and ${AUTOMATION_LIMITS.dueInDays.max})`,
+    );
+    expect(sql).toContain(
+      `check (cooldown_days between ${AUTOMATION_LIMITS.cooldownDays.min} and ${AUTOMATION_LIMITS.cooldownDays.max})`,
+    );
+    expect(sql).toContain(
+      `check (max_per_run between ${AUTOMATION_LIMITS.maxPerRun.min} and ${AUTOMATION_LIMITS.maxPerRun.max})`,
+    );
+    expect(sql).toContain("when trigger in ('mantenimiento', 'cliente_inactivo') then 'promocional'");
+    expect(listOf(/add constraint crm_tasks_source_check\s+check \(source in \(([^)]+)\)\)/)).toEqual([
+      ...TASK_SOURCES,
+      ...LATER_TASK_SOURCES,
+    ]);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

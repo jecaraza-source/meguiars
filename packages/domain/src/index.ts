@@ -36,3 +36,4 @@ export * from "./pilot";
 export * from "./commercial";
 export * from "./inbox";
 export * from "./marketing";
+export * from "./automations";

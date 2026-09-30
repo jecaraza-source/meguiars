@@ -23,7 +23,9 @@ export const TASK_STATUSES = ["pendiente", "hecha", "cancelada"] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export const TASK_SOURCES = ["manual", "os_terminada", "proxima_visita", "membresia"] as const;
-export type TaskSource = (typeof TASK_SOURCES)[number];
+/** Orígenes agregados después: pipeline (C5), prospectos (CR2 f1) y automatizaciones (CR2 f4). */
+export const LATER_TASK_SOURCES = ["oportunidad", "prospecto", "automatizacion"] as const;
+export type TaskSource = (typeof TASK_SOURCES)[number] | (typeof LATER_TASK_SOURCES)[number];
 
 export const TASK_OUTCOMES = [
   "contactado",

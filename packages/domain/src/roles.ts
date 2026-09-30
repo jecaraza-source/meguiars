@@ -113,6 +113,11 @@ export const CAPABILITIES = [
   "marketing.read",
   "marketing.manage",
   "promotions.manage",
+  // CR2 (fase 4): ver automatizaciones y su historial (private.can_read_automations;
+  // trae nombres de clientes, así que el contador no) y configurarlas
+  // (private.can_manage_automations). El panel comercial usa commercial.metrics.read.
+  "automations.read",
+  "automations.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -211,6 +216,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "marketing.read",
     "marketing.manage",
     "promotions.manage",
+    "automations.read",
+    "automations.manage",
   ],
   encargado: [
     "center.read",
@@ -255,6 +262,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "clients.merge",
     "marketing.read",
     "marketing.manage",
+    "automations.read",
+    "automations.manage",
   ],
   operador_recepcion: [
     "center.read",
@@ -321,6 +330,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "commercial.metrics.read",
     "marketing.read",
     "marketing.manage",
+    "automations.read",
   ],
 };
 

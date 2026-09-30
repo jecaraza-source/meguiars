@@ -463,6 +463,28 @@ export interface FunnelFact {
   saleCost: number | null;
   saleMargin: number | null;
   interestServiceIds: string[];
+  /** CR2 fase 4: campaña atribuida y etapa actual. */
+  campaignId: string | null;
+  stageName: string;
+  stagePosition: number;
+}
+
+/** Hecho por OS entregada no B2B (public.commercial_sales_facts). */
+export interface SaleFact {
+  orderId: string;
+  detailCenterId: string;
+  deliveredOn: string;
+  total: number;
+  cost: number;
+  margin: number;
+  discountTotal: number;
+  clientId: string;
+  firstPurchase: boolean;
+  leadId: string | null;
+  source: LeadSource | null;
+  ownerId: string | null;
+  campaignId: string | null;
+  serviceIds: string[];
 }
 
 /** Hecho por cotización (public.commercial_quote_facts). */
@@ -665,4 +687,5 @@ export interface CommercialRepository {
   segment(detailCenterIds: string[], filter: SegmentFilter): Promise<Result<SegmentRow[]>>;
   funnelFacts(detailCenterIds: string[], from: string, to: string): Promise<Result<FunnelFact[]>>;
   quoteFacts(detailCenterIds: string[], from: string, to: string): Promise<Result<QuoteFact[]>>;
+  salesFacts(detailCenterIds: string[], from: string, to: string): Promise<Result<SaleFact[]>>;
 }

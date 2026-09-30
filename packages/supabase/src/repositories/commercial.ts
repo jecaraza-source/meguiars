@@ -4,6 +4,7 @@ import {
   type DiscountLevel,
   type DuplicatePair,
   type FunnelFact,
+  type SaleFact,
   type Lead,
   type LeadConsentChannel,
   type LeadContactChannel,
@@ -738,6 +739,37 @@ export function createCommercialRepository(client: MeguiarsSupabaseClient): Comm
             saleCost: num(r.sale_cost),
             saleMargin: num(r.sale_margin),
             interestServiceIds: r.interest_service_ids ?? [],
+            campaignId: r.campaign_id,
+            stageName: r.stage_name,
+            stagePosition: r.stage_position,
+          })),
+      );
+    },
+
+    salesFacts(detailCenterIds, from, to) {
+      return run(
+        () =>
+          client.rpc("commercial_sales_facts", {
+            p_detail_center_ids: detailCenterIds,
+            p_from: from,
+            p_to: to,
+          }),
+        (rows): SaleFact[] =>
+          rows.map((r) => ({
+            orderId: r.service_order_id,
+            detailCenterId: r.detail_center_id,
+            deliveredOn: r.delivered_on,
+            total: Number(r.total),
+            cost: Number(r.cost_total),
+            margin: Number(r.margin),
+            discountTotal: Number(r.discount_total),
+            clientId: r.client_id,
+            firstPurchase: r.first_purchase,
+            leadId: r.lead_id,
+            source: r.source_channel as LeadSource | null,
+            ownerId: r.owner_id,
+            campaignId: r.campaign_id,
+            serviceIds: r.service_ids ?? [],
           })),
       );
     },

@@ -25,6 +25,7 @@ export * from "./repositories/pilot";
 export * from "./repositories/commercial";
 export * from "./repositories/inbox";
 export * from "./repositories/marketing";
+export * from "./repositories/automations";
 export * from "./auth";
 export * from "./storage";
 export type { Database, Json, Tables } from "./database.types";

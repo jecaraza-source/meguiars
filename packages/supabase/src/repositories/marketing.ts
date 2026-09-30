@@ -12,6 +12,7 @@ import {
   type Promotion,
   type PromotionKind,
   type Result,
+  type SpendFact,
 } from "@meguiars/domain";
 import {
   applyPromotionSchema,
@@ -387,6 +388,28 @@ export function createMarketingRepository(client: MeguiarsSupabaseClient): Marke
             salesMargin: Number(f.sales_margin),
             promoUses: f.promo_uses,
             promoDiscount: Number(f.promo_discount),
+          })),
+      );
+    },
+
+    spendFacts(organizationId, detailCenterIds, from, to) {
+      return run(
+        () =>
+          client.rpc("campaign_spend_facts", {
+            p_organization_id: organizationId,
+            p_detail_center_ids: detailCenterIds,
+            p_from: from,
+            p_to: to,
+          }),
+        (rows): SpendFact[] =>
+          rows.map((r) => ({
+            spendId: r.spend_id,
+            campaignId: r.campaign_id,
+            campaignCenterId: r.campaign_detail_center_id,
+            channel: r.channel as CampaignChannel,
+            spentOn: r.spent_on,
+            amount: Number(r.amount),
+            origin: r.origin === "egreso" ? "egreso" : "manual",
           })),
       );
     },

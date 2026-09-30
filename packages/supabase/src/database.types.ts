@@ -11,6 +11,225 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      automation_executions: {
+        Row: {
+          appointment_id: string | null;
+          automation_id: string;
+          client_id: string | null;
+          created_at: string;
+          detail: string | null;
+          detail_center_id: string;
+          id: string;
+          lead_id: string | null;
+          organization_id: string;
+          outcome: string;
+          quote_id: string | null;
+          run_id: string | null;
+          service_order_id: string | null;
+          subject_key: string;
+          task_id: string | null;
+        };
+        Insert: {
+          appointment_id?: string | null;
+          automation_id: string;
+          client_id?: string | null;
+          created_at?: string;
+          detail?: string | null;
+          detail_center_id: string;
+          id?: string;
+          lead_id?: string | null;
+          organization_id: string;
+          outcome: string;
+          quote_id?: string | null;
+          run_id?: string | null;
+          service_order_id?: string | null;
+          subject_key: string;
+          task_id?: string | null;
+        };
+        Update: {
+          appointment_id?: string | null;
+          automation_id?: string;
+          client_id?: string | null;
+          created_at?: string;
+          detail?: string | null;
+          detail_center_id?: string;
+          id?: string;
+          lead_id?: string | null;
+          organization_id?: string;
+          outcome?: string;
+          quote_id?: string | null;
+          run_id?: string | null;
+          service_order_id?: string | null;
+          subject_key?: string;
+          task_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "automation_executions_organization_id_automation_id_fkey";
+            columns: ["organization_id", "automation_id"];
+            isOneToOne: false;
+            referencedRelation: "automations";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "automation_executions_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "automation_executions_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "automation_runs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "automation_executions_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "crm_tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      automation_runs: {
+        Row: {
+          automation_id: string;
+          created: number;
+          error: string | null;
+          evaluated: number;
+          finished_at: string | null;
+          id: string;
+          mode: string;
+          organization_id: string;
+          run_by: string | null;
+          skipped: Json;
+          started_at: string;
+          stopped: number;
+        };
+        Insert: {
+          automation_id: string;
+          created?: number;
+          error?: string | null;
+          evaluated?: number;
+          finished_at?: string | null;
+          id?: string;
+          mode: string;
+          organization_id: string;
+          run_by?: string | null;
+          skipped?: Json;
+          started_at?: string;
+          stopped?: number;
+        };
+        Update: {
+          automation_id?: string;
+          created?: number;
+          error?: string | null;
+          evaluated?: number;
+          finished_at?: string | null;
+          id?: string;
+          mode?: string;
+          organization_id?: string;
+          run_by?: string | null;
+          skipped?: Json;
+          started_at?: string;
+          stopped?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_organization_id_automation_id_fkey";
+            columns: ["organization_id", "automation_id"];
+            isOneToOne: false;
+            referencedRelation: "automations";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      automations: {
+        Row: {
+          activated_at: string | null;
+          active: boolean;
+          assign_to: string | null;
+          contact_from: string;
+          contact_to: string;
+          cooldown_days: number;
+          created_at: string;
+          created_by: string | null;
+          delay_days: number;
+          detail_center_id: string | null;
+          due_in_days: number;
+          id: string;
+          lead_sources: string[];
+          max_per_run: number;
+          message_template: string | null;
+          name: string;
+          organization_id: string;
+          purpose: string;
+          service_ids: string[];
+          trigger: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          activated_at?: string | null;
+          active?: boolean;
+          assign_to?: string | null;
+          contact_from?: string;
+          contact_to?: string;
+          cooldown_days?: number;
+          created_at?: string;
+          created_by?: string | null;
+          delay_days: number;
+          detail_center_id?: string | null;
+          due_in_days?: number;
+          id?: string;
+          lead_sources?: string[];
+          max_per_run?: number;
+          message_template?: string | null;
+          name: string;
+          organization_id: string;
+          purpose: string;
+          service_ids?: string[];
+          trigger: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          activated_at?: string | null;
+          active?: boolean;
+          assign_to?: string | null;
+          contact_from?: string;
+          contact_to?: string;
+          cooldown_days?: number;
+          created_at?: string;
+          created_by?: string | null;
+          delay_days?: number;
+          detail_center_id?: string | null;
+          due_in_days?: number;
+          id?: string;
+          lead_sources?: string[];
+          max_per_run?: number;
+          message_template?: string | null;
+          name?: string;
+          organization_id?: string;
+          purpose?: string;
+          service_ids?: string[];
+          trigger?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "automations_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       campaign_spend: {
         Row: {
           amount: number;
@@ -3084,6 +3303,7 @@ export type Database = {
       crm_tasks: {
         Row: {
           assigned_to: string | null;
+          automation_id: string | null;
           cancel_reason: string | null;
           channel: string;
           client_id: string | null;
@@ -3113,6 +3333,7 @@ export type Database = {
         };
         Insert: {
           assigned_to?: string | null;
+          automation_id?: string | null;
           cancel_reason?: string | null;
           channel: string;
           client_id?: string | null;
@@ -3142,6 +3363,7 @@ export type Database = {
         };
         Update: {
           assigned_to?: string | null;
+          automation_id?: string | null;
           cancel_reason?: string | null;
           channel?: string;
           client_id?: string | null;
@@ -3170,6 +3392,13 @@ export type Database = {
           vehicle_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "crm_tasks_automation_fk";
+            columns: ["organization_id", "automation_id"];
+            isOneToOne: false;
+            referencedRelation: "automations";
+            referencedColumns: ["organization_id", "id"];
+          },
           {
             foreignKeyName: "crm_tasks_lead_fk";
             columns: ["organization_id", "lead_id"];
@@ -6074,6 +6303,37 @@ export type Database = {
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
       };
+      automation_executions_list: {
+        Args: {
+          p_automation_id: string;
+          p_limit?: number | null;
+        };
+        Returns: {
+          assigned_to_name: string | null;
+          client_id: string | null;
+          contact_name: string | null;
+          created_at: string;
+          detail: string | null;
+          detail_center_name: string;
+          id: string;
+          lead_id: string | null;
+          outcome: string;
+          subject_key: string;
+          task_channel: string | null;
+          task_due_on: string | null;
+          task_id: string | null;
+          task_outcome: string | null;
+          task_status: string | null;
+        }[];
+      };
+      automation_runs_list: {
+        Args: {
+          p_automation_id: string;
+          p_limit?: number | null;
+        };
+        Returns: Database["public"]["Tables"]["automation_runs"]["Row"][];
+        SetofOptions: { from: "*"; to: "automation_runs"; isOneToOne: false; isSetofReturn: true };
+      };
       campaign_facts: {
         Args: {
           p_detail_center_ids: string[];
@@ -6117,6 +6377,46 @@ export type Database = {
           spent_on: string;
           void_reason: string | null;
           voided_at: string | null;
+        }[];
+      };
+      campaign_spend_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_organization_id: string;
+          p_to: string;
+        };
+        Returns: {
+          amount: number;
+          campaign_detail_center_id: string | null;
+          campaign_id: string;
+          channel: string;
+          origin: string;
+          spend_id: string;
+          spent_on: string;
+        }[];
+      };
+      commercial_sales_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_to: string;
+        };
+        Returns: {
+          campaign_id: string | null;
+          client_id: string;
+          cost_total: number;
+          delivered_on: string;
+          detail_center_id: string;
+          discount_total: number;
+          first_purchase: boolean;
+          lead_id: string | null;
+          margin: number;
+          owner_id: string | null;
+          service_ids: string[];
+          service_order_id: string;
+          source_channel: string | null;
+          total: number;
         }[];
       };
       conversation_messages: {
@@ -6181,6 +6481,43 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      list_automations: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          activated_at: string | null;
+          active: boolean;
+          assign_to: string | null;
+          assign_to_name: string | null;
+          can_manage: boolean;
+          contact_from: string;
+          contact_to: string;
+          cooldown_days: number;
+          delay_days: number;
+          detail_center_id: string | null;
+          detail_center_name: string | null;
+          due_in_days: number;
+          id: string;
+          last_run_at: string | null;
+          last_run_created: number | null;
+          last_run_error: string | null;
+          last_run_mode: string | null;
+          lead_sources: string[];
+          max_per_run: number;
+          message_template: string | null;
+          name: string;
+          purpose: string;
+          service_ids: string[];
+          service_names: string[];
+          tasks_created: number;
+          tasks_done: number;
+          tasks_pending: number;
+          tasks_stopped: number;
+          trigger: string;
+          version: number;
+        }[];
       };
       list_campaigns: {
         Args: {
@@ -6536,6 +6873,7 @@ export type Database = {
         };
         Returns: {
           booked_at: string | null;
+          campaign_id: string | null;
           created_at: string;
           detail_center_id: string;
           first_contact_minutes: number | null;
@@ -6549,6 +6887,8 @@ export type Database = {
           sale_margin: number | null;
           sale_total: number | null;
           source_channel: string;
+          stage_name: string;
+          stage_position: number;
           status: string;
           won_at: string | null;
         }[];
@@ -6626,6 +6966,24 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["channel_accounts"]["Row"];
         SetofOptions: { from: "*"; to: "channel_accounts"; isOneToOne: true; isSetofReturn: false };
+      };
+      run_automation_now: {
+        Args: {
+          p_id: string;
+          p_preview: boolean;
+        };
+        Returns: Database["public"]["Tables"]["automation_runs"]["Row"];
+        SetofOptions: { from: "*"; to: "automation_runs"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_automation_active: {
+        Args: {
+          p_active: boolean;
+          p_id: string;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["automations"]["Row"];
+        SetofOptions: { from: "*"; to: "automations"; isOneToOne: true; isSetofReturn: false };
       };
       set_content_post_status: {
         Args: {
@@ -6725,6 +7083,29 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_automation: {
+        Args: {
+          p_assign_to: string | null;
+          p_contact_from: string | null;
+          p_contact_to: string | null;
+          p_cooldown_days: number | null;
+          p_delay_days: number;
+          p_detail_center_id: string | null;
+          p_due_in_days: number | null;
+          p_id: string | null;
+          p_lead_sources: string[];
+          p_max_per_run: number | null;
+          p_message_template: string | null;
+          p_name: string;
+          p_organization_id: string;
+          p_reason: string;
+          p_service_ids: string[];
+          p_trigger: string;
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["automations"]["Row"];
+        SetofOptions: { from: "*"; to: "automations"; isOneToOne: true; isSetofReturn: false };
       };
       upsert_campaign: {
         Args: {

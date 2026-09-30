@@ -14,3 +14,4 @@ export * from "./corporate";
 export * from "./alerts";
 export * from "./commercial";
 export * from "./marketing";
+export * from "./commercial-panel";
