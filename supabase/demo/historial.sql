@@ -79,7 +79,10 @@ begin
   for c in select * from (values (cdmx, 'CDMX-01', 'America/Mexico_City', 2, 1.0), (mty, 'MTY-01', 'America/Monterrey', 1, 0.8))
              as t(id, code, tz, last_age, factor) loop
     select coalesce(max(folio_number), 0) into folio_n from public.service_orders where detail_center_id = c.id;
-    for d in select generate_series(current_date - 90, current_date - c.last_age, interval '1 day')::date loop
+    -- Fechas del centro (no current_date en UTC: de noche en México ya es "mañana" en UTC
+    -- y "anteayer" caería en el día con corte cerrado).
+    for d in select generate_series((now() at time zone c.tz)::date - 90, (now() at time zone c.tz)::date - c.last_age,
+                                    interval '1 day')::date loop
       -- Más volumen en fin de semana, menos en lunes; tendencia al alza en el último mes.
       n := greatest(1, round((case extract(isodow from d) when 6 then 8 when 7 then 6 when 1 then 3 else 5 end)
                              * c.factor * (0.8 + random() * 0.5) * (case when d > current_date - 30 then 1.15 else 1 end)));
