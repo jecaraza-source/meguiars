@@ -19,6 +19,7 @@ import {
 } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { ApplyPromotionForm } from "@/components/marketing-forms";
 import {
   AddServiceToQuoteForm,
   BookQuoteForm,
@@ -241,6 +242,7 @@ export default async function QuotePage({ params, searchParams }: PageProps<"/co
           <div className="flex flex-col gap-md">
             <AddServiceToQuoteForm quote={q} options={missing} />
             <QuoteDiscountForm quote={q} />
+            <ApplyPromotionForm target="quote" documentId={q.id} version={q.version} />
             <UpdateQuoteForm quote={q} vehicles={vehicles} />
           </div>
         </Card>

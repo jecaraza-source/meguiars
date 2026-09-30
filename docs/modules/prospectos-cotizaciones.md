@@ -96,7 +96,7 @@ Reglas de presentación:
 
 - Un denominador en cero se muestra como «sin datos», nunca como 0 %.
 - Hay desglose por canal, responsable y centro, además de los motivos de pérdida.
-- No se muestra ROAS. Cuando existan campañas con gasto (fase 3), el retorno sobre gasto se reportará aparte y nunca como utilidad.
+- No se muestra ROAS. Las ventas por peso invertido de cada campaña se reportan en [Campañas](marketing.md), nunca como utilidad.
 
 ## Permisos
 
@@ -157,8 +157,8 @@ Desde la fase 2, WhatsApp Business, Messenger e Instagram tienen conexión ofici
 
 Ninguna nueva.
 
-## Pendientes (fases 3–4)
+## Pendientes (fase 4)
 
-- Calendario de contenido, campañas con UTM y promociones.
-- Automatizaciones (recordatorios, seguimiento de cotizaciones) y tablero con atribución por campaña.
+- Calendario, campañas con UTM y promociones: hechos en la fase 3 ([marketing](marketing.md)).
+- Automatizaciones (recordatorios, seguimiento de cotizaciones) y tablero de analítica por campaña.
 - Fusión desde móvil. Hoy en móvil se consulta y la fusión se hace en web.

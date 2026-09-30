@@ -415,6 +415,57 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `campaign_spend`
+
+- **Módulo:** [marketing](modules/marketing.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `campaign_id` | uuid | no |  |
+| `spent_on` | date | no |  |
+| `amount` | numeric(12,2) | no |  |
+| `channel` | text | no |  |
+| `expense_id` | uuid | sí |  |
+| `note` | text | sí |  |
+| `voided_at` | timestamp with time zone | sí |  |
+| `voided_by` | uuid | sí |  |
+| `void_reason` | text | sí |  |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `campaigns`
+
+- **Módulo:** [marketing](modules/marketing.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | sí |  |
+| `name` | text | no |  |
+| `objective` | text | no |  |
+| `channels` | text[] | no | '{}'::text[] |
+| `starts_on` | date | no |  |
+| `ends_on` | date | no |  |
+| `budget` | numeric(12,2) | sí |  |
+| `status` | text | no | 'planeada'::text |
+| `utm_source` | text | no |  |
+| `utm_medium` | text | no |  |
+| `utm_campaign` | text | no |  |
+| `landing_url` | text | sí |  |
+| `notes` | text | sí |  |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `cash_closings`
 
 - **Módulo:** [corte-caja](modules/corte-caja.md)
@@ -622,6 +673,33 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `opted_in` | boolean | no |  |
 | `source` | text | no |  |
 | `updated_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `content_posts`
+
+- **Módulo:** [marketing](modules/marketing.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | sí |  |
+| `campaign_id` | uuid | sí |  |
+| `channel` | text | no |  |
+| `format` | text | no |  |
+| `title` | text | no |  |
+| `copy` | text | sí |  |
+| `planned_at` | timestamp with time zone | no |  |
+| `status` | text | no | 'idea'::text |
+| `owner_id` | uuid | sí |  |
+| `link_url` | text | sí |  |
+| `published_url` | text | sí |  |
+| `published_at` | timestamp with time zone | sí |  |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
@@ -993,6 +1071,7 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_by` | uuid | sí | auth.uid() |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+| `campaign_id` | uuid | sí |  |
 
 ### `membership_benefits`
 
@@ -1346,6 +1425,34 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `active` | boolean | no | true |
 | `last_detail_center_id` | uuid | sí |  |
 
+### `promotions`
+
+- **Módulo:** [marketing](modules/marketing.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `campaign_id` | uuid | sí |  |
+| `code` | text | no |  |
+| `name` | text | no |  |
+| `kind` | text | no |  |
+| `value` | numeric(12,2) | no |  |
+| `service_ids` | uuid[] | no | '{}'::uuid[] |
+| `detail_center_ids` | uuid[] | no | '{}'::uuid[] |
+| `starts_on` | date | no |  |
+| `ends_on` | date | no |  |
+| `max_uses` | integer | sí |  |
+| `active` | boolean | no | true |
+| `authorization_level` | discount_level | no | 'admin'::discount_level |
+| `terms` | text | sí |  |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `quote_discounts`
 
 - **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
@@ -1369,6 +1476,8 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `void_reason` | text | sí |  |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+| `source` | text | no | 'manual'::text |
+| `promotion_id` | uuid | sí |  |
 
 ### `quote_items`
 
@@ -1568,6 +1677,7 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 | `source` | text | no | 'manual'::text |
+| `promotion_id` | uuid | sí |  |
 
 ### `service_order_events`
 

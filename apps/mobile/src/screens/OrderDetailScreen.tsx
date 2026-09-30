@@ -57,6 +57,7 @@ import { Screen } from "@/ui/layout";
 import { Notice } from "@/ui/notice";
 import { useToast } from "@/ui/overlay";
 import { textStyle } from "@/ui/theme";
+import { ApplyPromotionCard } from "./MarketingScreens";
 import type { PrivateScreenProps } from "./types";
 
 interface Loaded {
@@ -216,6 +217,9 @@ export function OrderDetailScreen({
         mutate={mutate}
         repo={repo}
       />
+      {canWrite && view.canDiscount && order.channel !== "b2b" ? (
+        <ApplyPromotionCard target="order" documentId={order.id} version={order.version} onApplied={reload} />
+      ) : null}
       {order.status !== "abierta" ? (
         <OrderPaymentsCard
           key={`p-${k}`}

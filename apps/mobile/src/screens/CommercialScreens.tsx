@@ -63,6 +63,7 @@ import { Screen } from "@/ui/layout";
 import { Notice } from "@/ui/notice";
 import { useToast } from "@/ui/overlay";
 import { textStyle } from "@/ui/theme";
+import { ApplyPromotionCard } from "./MarketingScreens";
 import type { PrivateScreenProps } from "./types";
 
 type Board = Awaited<ReturnType<typeof loadLeadsBoard>>;
@@ -889,6 +890,14 @@ export function QuoteScreen({
           ) : null}
         </View>
       </Card>
+      {canWrite && q.editable ? (
+        <ApplyPromotionCard
+          target="quote"
+          documentId={q.id}
+          version={q.version}
+          onApplied={() => setTick((x) => x + 1)}
+        />
+      ) : null}
       {canWrite && q.editable ? (
         <Card title="Descuento">
           <View style={styles.stack}>

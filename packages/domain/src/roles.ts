@@ -107,6 +107,12 @@ export const CAPABILITIES = [
   // CR2 (fase 2): registrar las cuentas oficiales de Meta de la organización
   // (private.can_manage_channels). La bandeja usa leads.use.
   "channels.manage",
+  // CR2 (fase 3): ver calendario, campañas y promociones (private.can_read_marketing),
+  // gestionar campañas y calendario (private.can_manage_marketing) y crear
+  // promociones, que son descuentos preautorizados (private.can_manage_promotions).
+  "marketing.read",
+  "marketing.manage",
+  "promotions.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -202,6 +208,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "commercial.metrics.read",
     "clients.merge",
     "channels.manage",
+    "marketing.read",
+    "marketing.manage",
+    "promotions.manage",
   ],
   encargado: [
     "center.read",
@@ -244,6 +253,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "leads.use",
     "commercial.metrics.read",
     "clients.merge",
+    "marketing.read",
+    "marketing.manage",
   ],
   operador_recepcion: [
     "center.read",
@@ -264,6 +275,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.write",
     "cash.read",
     "leads.use",
+    "marketing.read",
   ],
   // El contador no ve datos personales de clientes.
   contador: [
@@ -284,6 +296,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.metrics.read",
     "customers.metrics.read",
     "commercial.metrics.read",
+    "marketing.read",
   ],
   comercial_b2b: [
     "center.read",
@@ -306,6 +319,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "customers.metrics.read",
     "leads.use",
     "commercial.metrics.read",
+    "marketing.read",
+    "marketing.manage",
   ],
 };
 

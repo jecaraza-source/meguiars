@@ -123,7 +123,7 @@ Además:
   - ventana cerrada;
   - permisos.
 
-## Pendientes (fases 3 y 4)
+## Pendientes (fase 4)
 
 - Plantillas aprobadas de WhatsApp (utilidad o marketing con consentimiento) para escribir fuera de las 24 h.
 - Adjuntos (ver y enviar imágenes).
