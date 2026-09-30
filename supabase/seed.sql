@@ -773,4 +773,27 @@ values ('7a500000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-0000000
         '1ead0000-0000-4000-8000-000000000002', 'whatsapp', 'whatsapp', current_date, 'Enviar precio de pulido', 'prospecto',
         '7a500000-0000-4000-8000-000000000001')
 on conflict (id) do nothing;
+
+-- CR2 (fase 2): bandeja demo. La cuenta queda «pendiente» (no conectada): sólo el
+-- servidor la marca verificada tras consultar a Meta con credenciales reales.
+insert into public.channel_accounts (id, organization_id, detail_center_id, channel, external_account_id, label)
+values ('c4a00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'whatsapp', '100000000000001', 'WhatsApp demo (no conectado)')
+on conflict (id) do nothing;
+insert into public.conversations (id, organization_id, detail_center_id, channel_account_id, channel, contact_external_id,
+                                  contact_phone, contact_name, lead_id, status, unread_count, last_inbound_at, last_message_at,
+                                  last_message_preview)
+values ('c4b00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'c4a00000-0000-4000-8000-000000000001', 'whatsapp', '5215544332211', '+5215544332211', 'Luis Gómez',
+        '1ead0000-0000-4000-8000-000000000002', 'abierta', 1, now() - interval '3 hours', now() - interval '3 hours',
+        '¿Cuánto cuesta el pulido?')
+on conflict (id) do nothing;
+insert into public.messages (id, organization_id, detail_center_id, conversation_id, direction, external_id, body, status, occurred_at)
+values ('c4c00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'c4b00000-0000-4000-8000-000000000001', 'entrante', 'wamid.demo.1', 'Hola, ¿cuánto cuesta el pulido?', 'recibido',
+        now() - interval '3 hours 5 minutes'),
+       ('c4c00000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'c4b00000-0000-4000-8000-000000000001', 'entrante', 'wamid.demo.2', '¿Cuánto cuesta el pulido?', 'recibido',
+        now() - interval '3 hours')
+on conflict (id) do nothing;
 select set_config('app.change_reason', '', false);

@@ -176,6 +176,8 @@ create function pg_temp.param_table(fn text, arg text) returns text language sql
     when arg in ('p_client_id', 'p_keep_client_id', 'p_merge_client_id', 'p_referred_by_client_id') then 'clients'
     when arg in ('p_lead_id', 'p_exclude_lead_id') then 'leads'
     when arg = 'p_quote_id' then 'quotes'
+    when arg = 'p_conversation_id' then 'conversations'
+    when arg = 'p_channel_account_id' then 'channel_accounts'
     when arg in ('p_account_id', 'p_b2b_account_id') then 'b2b_accounts'
     when arg in ('p_technician_id', 'p_technician_ids') then 'technicians'
     when arg = 'p_expense_id' then 'expenses'
