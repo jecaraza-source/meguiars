@@ -23,3 +23,4 @@ export * from "./pilot";
 export * from "./import";
 export * from "./commercial";
 export * from "./inbox";
+export * from "./marketing";

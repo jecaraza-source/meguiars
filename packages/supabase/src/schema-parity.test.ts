@@ -13,6 +13,12 @@ import {
   QUOTE_RULES,
   QUOTE_STATUSES,
   INBOX_CHANNELS,
+  CAMPAIGN_CHANNELS,
+  CAMPAIGN_OBJECTIVES,
+  CAMPAIGN_STATUSES,
+  CONTENT_FORMATS,
+  CONTENT_STATUSES,
+  PROMOTION_KINDS,
   CHANNEL_ACCOUNT_STATUSES,
   CONVERSATION_STATUSES,
   MESSAGE_STATUSES,
@@ -141,6 +147,10 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "channel_accounts",
   "conversations",
   "messages",
+  "campaigns",
+  "campaign_spend",
+  "content_posts",
+  "promotions",
   "client_centers",
   "clients",
   "contact_preferences",
@@ -252,6 +262,20 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "create_lead_from_conversation",
   "prepare_outbound_message",
   "finish_outbound_message",
+  "upsert_campaign",
+  "add_campaign_spend",
+  "void_campaign_spend",
+  "list_campaigns",
+  "campaign_spend_entries",
+  "set_lead_campaign",
+  "upsert_content_post",
+  "set_content_post_status",
+  "list_content_posts",
+  "upsert_promotion",
+  "apply_promotion_to_quote",
+  "apply_promotion_to_order",
+  "list_promotions",
+  "campaign_facts",
   "accept_upsell",
   "reject_upsell",
   "upsell_metric_facts",
@@ -813,6 +837,27 @@ describe("paridad SQL ↔ TypeScript", () => {
     ]);
     expect(sql).toContain(`c.last_inbound_at > now() - interval '${SERVICE_WINDOW_HOURS} hours'`);
     expect(sql).toContain(`length(body) <= ${MAX_MESSAGE_LENGTH}`);
+  });
+
+  it("Marketing CR2 (fase 3): canales, objetivos, estados, formatos y tipos de promoción coinciden", () => {
+    const sql = allSql.slice(allSql.indexOf("-- CR2 (fase 3)"));
+    const listOf = (re: RegExp) =>
+      re
+        .exec(sql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listOf(/channels <@ array\[([^\]]+)\]/)).toEqual([...CAMPAIGN_CHANNELS]);
+    expect(listOf(/objective text not null check \(objective in \(([^)]+)\)\)/)).toEqual([
+      ...CAMPAIGN_OBJECTIVES,
+    ]);
+    expect(listOf(/status text not null default 'planeada' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...CAMPAIGN_STATUSES,
+    ]);
+    expect(listOf(/format text not null check \(format in \(([^)]+)\)\)/)).toEqual([...CONTENT_FORMATS]);
+    expect(listOf(/status text not null default 'idea' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...CONTENT_STATUSES,
+    ]);
+    expect(listOf(/kind text not null check \(kind in \(('percent'[^)]+)\)\)/)).toEqual([...PROMOTION_KINDS]);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

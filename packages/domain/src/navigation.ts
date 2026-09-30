@@ -65,6 +65,9 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       },
       { screen: "segments", label: "Segmentos", href: "/comercial/segmentos" },
       { screen: "duplicates", label: "Duplicados", href: "/comercial/duplicados" },
+      { screen: "contentCalendar", label: "Calendario", href: "/comercial/calendario" },
+      { screen: "campaigns", label: "Campañas", href: "/comercial/campanas" },
+      { screen: "promotions", label: "Promociones", href: "/comercial/promociones" },
       { screen: "commercialReports", label: "Reportes comerciales", href: "/comercial/reportes" },
       { screen: "integrations", label: "Integraciones", href: "/comercial/integraciones" },
     ],
@@ -149,6 +152,7 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   quoteNew: "quotes",
   quoteDetail: "quotes",
   conversation: "inbox",
+  campaignDetail: "campaigns",
 };
 
 /** Ítem de menú que representa a la pantalla. */

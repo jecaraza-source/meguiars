@@ -11,6 +11,146 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      campaign_spend: {
+        Row: {
+          amount: number;
+          campaign_id: string;
+          channel: string;
+          created_at: string;
+          created_by: string | null;
+          expense_id: string | null;
+          id: string;
+          note: string | null;
+          organization_id: string;
+          spent_on: string;
+          updated_at: string;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          campaign_id: string;
+          channel: string;
+          created_at?: string;
+          created_by?: string | null;
+          expense_id?: string | null;
+          id?: string;
+          note?: string | null;
+          organization_id: string;
+          spent_on: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          campaign_id?: string;
+          channel?: string;
+          created_at?: string;
+          created_by?: string | null;
+          expense_id?: string | null;
+          id?: string;
+          note?: string | null;
+          organization_id?: string;
+          spent_on?: string;
+          updated_at?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "campaign_spend_organization_id_campaign_id_fkey";
+            columns: ["organization_id", "campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "campaigns";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "campaign_spend_organization_id_expense_id_fkey";
+            columns: ["organization_id", "expense_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      campaigns: {
+        Row: {
+          budget: number | null;
+          channels: string[];
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string | null;
+          ends_on: string;
+          id: string;
+          landing_url: string | null;
+          name: string;
+          notes: string | null;
+          objective: string;
+          organization_id: string;
+          starts_on: string;
+          status: string;
+          updated_at: string;
+          utm_campaign: string;
+          utm_medium: string;
+          utm_source: string;
+          version: number;
+        };
+        Insert: {
+          budget?: number | null;
+          channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          ends_on: string;
+          id?: string;
+          landing_url?: string | null;
+          name: string;
+          notes?: string | null;
+          objective: string;
+          organization_id: string;
+          starts_on: string;
+          status?: string;
+          updated_at?: string;
+          utm_campaign: string;
+          utm_medium: string;
+          utm_source: string;
+          version?: number;
+        };
+        Update: {
+          budget?: number | null;
+          channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          ends_on?: string;
+          id?: string;
+          landing_url?: string | null;
+          name?: string;
+          notes?: string | null;
+          objective?: string;
+          organization_id?: string;
+          starts_on?: string;
+          status?: string;
+          updated_at?: string;
+          utm_campaign?: string;
+          utm_medium?: string;
+          utm_source?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       channel_accounts: {
         Row: {
           active: boolean;
@@ -69,6 +209,84 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "channel_accounts_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      content_posts: {
+        Row: {
+          campaign_id: string | null;
+          channel: string;
+          copy: string | null;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string | null;
+          format: string;
+          id: string;
+          link_url: string | null;
+          organization_id: string;
+          owner_id: string | null;
+          planned_at: string;
+          published_at: string | null;
+          published_url: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          campaign_id?: string | null;
+          channel: string;
+          copy?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          format: string;
+          id?: string;
+          link_url?: string | null;
+          organization_id: string;
+          owner_id?: string | null;
+          planned_at: string;
+          published_at?: string | null;
+          published_url?: string | null;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          campaign_id?: string | null;
+          channel?: string;
+          copy?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          format?: string;
+          id?: string;
+          link_url?: string | null;
+          organization_id?: string;
+          owner_id?: string | null;
+          planned_at?: string;
+          published_at?: string | null;
+          published_url?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_posts_organization_id_campaign_id_fkey";
+            columns: ["organization_id", "campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "campaigns";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "content_posts_organization_id_detail_center_id_fkey";
             columns: ["organization_id", "detail_center_id"];
             isOneToOne: false;
             referencedRelation: "detail_centers";
@@ -341,6 +559,7 @@ export type Database = {
       };
       leads: {
         Row: {
+          campaign_id: string | null;
           client_id: string | null;
           closed_at: string | null;
           consent_at: string | null;
@@ -376,6 +595,7 @@ export type Database = {
           won_value: number | null;
         };
         Insert: {
+          campaign_id?: string | null;
           client_id?: string | null;
           closed_at?: string | null;
           consent_at?: string | null;
@@ -411,6 +631,7 @@ export type Database = {
           won_value?: number | null;
         };
         Update: {
+          campaign_id?: string | null;
           client_id?: string | null;
           closed_at?: string | null;
           consent_at?: string | null;
@@ -446,6 +667,13 @@ export type Database = {
           won_value?: number | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "leads_campaign_fk";
+            columns: ["organization_id", "campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "campaigns";
+            referencedColumns: ["organization_id", "id"];
+          },
           {
             foreignKeyName: "leads_organization_id_client_id_fkey";
             columns: ["organization_id", "client_id"];
@@ -552,6 +780,80 @@ export type Database = {
           },
         ];
       };
+      promotions: {
+        Row: {
+          active: boolean;
+          authorization_level: Database["public"]["Enums"]["discount_level"];
+          campaign_id: string | null;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          detail_center_ids: string[];
+          ends_on: string;
+          id: string;
+          kind: string;
+          max_uses: number | null;
+          name: string;
+          organization_id: string;
+          service_ids: string[];
+          starts_on: string;
+          terms: string | null;
+          updated_at: string;
+          value: number;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          authorization_level?: Database["public"]["Enums"]["discount_level"];
+          campaign_id?: string | null;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_ids?: string[];
+          ends_on: string;
+          id?: string;
+          kind: string;
+          max_uses?: number | null;
+          name: string;
+          organization_id: string;
+          service_ids?: string[];
+          starts_on: string;
+          terms?: string | null;
+          updated_at?: string;
+          value: number;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          authorization_level?: Database["public"]["Enums"]["discount_level"];
+          campaign_id?: string | null;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_ids?: string[];
+          ends_on?: string;
+          id?: string;
+          kind?: string;
+          max_uses?: number | null;
+          name?: string;
+          organization_id?: string;
+          service_ids?: string[];
+          starts_on?: string;
+          terms?: string | null;
+          updated_at?: string;
+          value?: number;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "promotions_organization_id_campaign_id_fkey";
+            columns: ["organization_id", "campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "campaigns";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       quote_discounts: {
         Row: {
           amount: number;
@@ -562,8 +864,10 @@ export type Database = {
           item_id: string | null;
           kind: string;
           organization_id: string;
+          promotion_id: string | null;
           quote_id: string;
           reason: string;
+          source: string;
           updated_at: string;
           value: number;
           void_reason: string | null;
@@ -579,8 +883,10 @@ export type Database = {
           item_id?: string | null;
           kind: string;
           organization_id: string;
+          promotion_id?: string | null;
           quote_id: string;
           reason: string;
+          source?: string;
           updated_at?: string;
           value: number;
           void_reason?: string | null;
@@ -596,8 +902,10 @@ export type Database = {
           item_id?: string | null;
           kind?: string;
           organization_id?: string;
+          promotion_id?: string | null;
           quote_id?: string;
           reason?: string;
+          source?: string;
           updated_at?: string;
           value?: number;
           void_reason?: string | null;
@@ -610,6 +918,13 @@ export type Database = {
             columns: ["organization_id", "quote_id"];
             isOneToOne: false;
             referencedRelation: "quotes";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "quote_discounts_promotion_fk";
+            columns: ["organization_id", "promotion_id"];
+            isOneToOne: false;
+            referencedRelation: "promotions";
             referencedColumns: ["organization_id", "id"];
           },
           {
@@ -4461,6 +4776,7 @@ export type Database = {
           item_id: string | null;
           kind: string;
           organization_id: string;
+          promotion_id: string | null;
           reason: string;
           service_order_id: string;
           source: string;
@@ -4479,6 +4795,7 @@ export type Database = {
           item_id?: string | null;
           kind: string;
           organization_id: string;
+          promotion_id?: string | null;
           reason: string;
           service_order_id: string;
           source?: string;
@@ -4497,6 +4814,7 @@ export type Database = {
           item_id?: string | null;
           kind?: string;
           organization_id?: string;
+          promotion_id?: string | null;
           reason?: string;
           service_order_id?: string;
           source?: string;
@@ -4512,6 +4830,13 @@ export type Database = {
             columns: ["organization_id", "service_order_id"];
             isOneToOne: false;
             referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "service_order_discounts_promotion_fk";
+            columns: ["organization_id", "promotion_id"];
+            isOneToOne: false;
+            referencedRelation: "promotions";
             referencedColumns: ["organization_id", "id"];
           },
           {
@@ -5710,6 +6035,36 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_campaign_spend: {
+        Args: {
+          p_amount: number | null;
+          p_campaign_id: string;
+          p_channel: string;
+          p_expense_id: string | null;
+          p_note: string | null;
+          p_spent_on: string | null;
+        };
+        Returns: Database["public"]["Tables"]["campaign_spend"]["Row"];
+        SetofOptions: { from: "*"; to: "campaign_spend"; isOneToOne: true; isSetofReturn: false };
+      };
+      apply_promotion_to_order: {
+        Args: {
+          p_code: string;
+          p_order_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["service_orders"]["Row"];
+        SetofOptions: { from: "*"; to: "service_orders"; isOneToOne: true; isSetofReturn: false };
+      };
+      apply_promotion_to_quote: {
+        Args: {
+          p_code: string;
+          p_quote_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["quotes"]["Row"];
+        SetofOptions: { from: "*"; to: "quotes"; isOneToOne: true; isSetofReturn: false };
+      };
       assign_conversation: {
         Args: {
           p_conversation_id: string;
@@ -5718,6 +6073,51 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      campaign_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_organization_id: string;
+          p_to: string;
+        };
+        Returns: {
+          booked: number;
+          budget: number | null;
+          campaign_id: string;
+          contacted: number;
+          ends_on: string;
+          leads: number;
+          name: string;
+          objective: string;
+          promo_discount: number;
+          promo_uses: number;
+          quoted: number;
+          sales: number;
+          sales_cost: number;
+          sales_margin: number;
+          spend: number;
+          starts_on: string;
+          status: string;
+          won: number;
+        }[];
+      };
+      campaign_spend_entries: {
+        Args: {
+          p_campaign_id: string;
+        };
+        Returns: {
+          amount: number;
+          channel: string;
+          created_by_name: string | null;
+          expense_folio: string | null;
+          expense_id: string | null;
+          id: string;
+          note: string | null;
+          spent_on: string;
+          void_reason: string | null;
+          voided_at: string | null;
+        }[];
       };
       conversation_messages: {
         Args: {
@@ -5782,6 +6182,35 @@ export type Database = {
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
       };
+      list_campaigns: {
+        Args: {
+          p_id?: string | null;
+          p_organization_id: string;
+        };
+        Returns: {
+          budget: number | null;
+          can_manage: boolean;
+          channels: string[];
+          detail_center_id: string | null;
+          detail_center_name: string | null;
+          ends_on: string;
+          id: string;
+          landing_url: string | null;
+          leads: number;
+          name: string;
+          notes: string | null;
+          objective: string;
+          posts: number;
+          promotions: number;
+          spend: number;
+          starts_on: string;
+          status: string;
+          utm_campaign: string;
+          utm_medium: string;
+          utm_source: string;
+          version: number;
+        }[];
+      };
       list_channel_accounts: {
         Args: {
           p_organization_id: string;
@@ -5800,6 +6229,36 @@ export type Database = {
           open_conversations: number;
           status: string;
           verified_name: string | null;
+          version: number;
+        }[];
+      };
+      list_content_posts: {
+        Args: {
+          p_campaign_id?: string | null;
+          p_detail_center_id?: string | null;
+          p_from: string;
+          p_organization_id: string;
+          p_to: string;
+        };
+        Returns: {
+          campaign_id: string | null;
+          campaign_name: string | null;
+          can_manage: boolean;
+          channel: string;
+          copy: string | null;
+          detail_center_id: string | null;
+          detail_center_name: string | null;
+          format: string;
+          id: string;
+          link_url: string | null;
+          overdue: boolean;
+          owner_id: string | null;
+          owner_name: string | null;
+          planned_at: string;
+          published_at: string | null;
+          published_url: string | null;
+          status: string;
+          title: string;
           version: number;
         }[];
       };
@@ -5938,6 +6397,32 @@ export type Database = {
           id: string;
           kind: string;
           matched_on: string[];
+        }[];
+      };
+      list_promotions: {
+        Args: {
+          p_id?: string | null;
+          p_organization_id: string;
+        };
+        Returns: {
+          active: boolean;
+          campaign_id: string | null;
+          campaign_name: string | null;
+          code: string;
+          detail_center_ids: string[];
+          discount_granted: number;
+          ends_on: string;
+          id: string;
+          kind: string;
+          max_uses: number | null;
+          name: string;
+          service_ids: string[];
+          service_names: string[];
+          starts_on: string;
+          terms: string | null;
+          uses: number;
+          value: number;
+          version: number;
         }[];
       };
       list_quotes: {
@@ -6142,6 +6627,17 @@ export type Database = {
         Returns: Database["public"]["Tables"]["channel_accounts"]["Row"];
         SetofOptions: { from: "*"; to: "channel_accounts"; isOneToOne: true; isSetofReturn: false };
       };
+      set_content_post_status: {
+        Args: {
+          p_id: string;
+          p_published_url: string | null;
+          p_reason: string | null;
+          p_status: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["content_posts"]["Row"];
+        SetofOptions: { from: "*"; to: "content_posts"; isOneToOne: true; isSetofReturn: false };
+      };
       set_conversation_status: {
         Args: {
           p_conversation_id: string;
@@ -6150,6 +6646,15 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_lead_campaign: {
+        Args: {
+          p_campaign_id: string | null;
+          p_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
       };
       update_lead: {
         Args: {
@@ -6221,6 +6726,29 @@ export type Database = {
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
       };
+      upsert_campaign: {
+        Args: {
+          p_budget: number | null;
+          p_channels: string[];
+          p_detail_center_id: string | null;
+          p_ends_on: string;
+          p_id: string | null;
+          p_landing_url: string | null;
+          p_name: string;
+          p_notes: string | null;
+          p_objective: string;
+          p_organization_id: string;
+          p_reason: string;
+          p_starts_on: string;
+          p_status: string | null;
+          p_utm_campaign: string;
+          p_utm_medium: string;
+          p_utm_source: string;
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["campaigns"]["Row"];
+        SetofOptions: { from: "*"; to: "campaigns"; isOneToOne: true; isSetofReturn: false };
+      };
       upsert_channel_account: {
         Args: {
           p_active: boolean;
@@ -6234,6 +6762,55 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["channel_accounts"]["Row"];
         SetofOptions: { from: "*"; to: "channel_accounts"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_content_post: {
+        Args: {
+          p_campaign_id: string | null;
+          p_channel: string;
+          p_copy: string | null;
+          p_detail_center_id: string | null;
+          p_format: string;
+          p_id: string | null;
+          p_link_url: string | null;
+          p_organization_id: string;
+          p_owner_id: string | null;
+          p_planned_at: string;
+          p_reason: string;
+          p_title: string;
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["content_posts"]["Row"];
+        SetofOptions: { from: "*"; to: "content_posts"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_promotion: {
+        Args: {
+          p_active: boolean;
+          p_campaign_id: string | null;
+          p_code: string;
+          p_detail_center_ids: string[];
+          p_ends_on: string;
+          p_id: string | null;
+          p_kind: string;
+          p_max_uses: number | null;
+          p_name: string;
+          p_organization_id: string;
+          p_reason: string;
+          p_service_ids: string[];
+          p_starts_on: string;
+          p_terms: string | null;
+          p_value: number;
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["promotions"]["Row"];
+        SetofOptions: { from: "*"; to: "promotions"; isOneToOne: true; isSetofReturn: false };
+      };
+      void_campaign_spend: {
+        Args: {
+          p_reason: string;
+          p_spend_id: string;
+        };
+        Returns: Database["public"]["Tables"]["campaign_spend"]["Row"];
+        SetofOptions: { from: "*"; to: "campaign_spend"; isOneToOne: true; isSetofReturn: false };
       };
       win_lead: {
         Args: {
