@@ -796,4 +796,31 @@ values ('c4c00000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-0000000
         'c4b00000-0000-4000-8000-000000000001', 'entrante', 'wamid.demo.2', '¿Cuánto cuesta el pulido?', 'recibido',
         now() - interval '3 hours')
 on conflict (id) do nothing;
+
+-- CR2 (fase 3): campaña del centro CDMX con UTM, inversión, calendario y promoción.
+insert into public.campaigns (id, organization_id, detail_center_id, name, objective, channels, starts_on, ends_on, budget,
+                              status, utm_source, utm_medium, utm_campaign, landing_url)
+values ('ca000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'Lavado manual del mes', 'prospectos', array['facebook', 'instagram'], current_date - 10, current_date + 20, 5000,
+        'activa', 'instagram', 'paid_social', 'lavado_manual_mes', 'https://meguiars-web.vercel.app')
+on conflict (id) do nothing;
+insert into public.campaign_spend (id, organization_id, campaign_id, spent_on, amount, channel, note)
+values ('ca100000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'ca000000-0000-4000-8000-000000000001',
+        current_date - 3, 1200, 'instagram', 'Anuncios en Instagram (demo)')
+on conflict (id) do nothing;
+insert into public.content_posts (id, organization_id, detail_center_id, campaign_id, channel, format, title, copy, planned_at,
+                                  status, link_url)
+values ('ca200000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'ca000000-0000-4000-8000-000000000001', 'instagram', 'reel', 'Antes y después: lavado manual detallado',
+        'Agenda por WhatsApp y menciona LAVA15.', now() + interval '2 days', 'programada',
+        'https://meguiars-web.vercel.app?utm_source=instagram&utm_medium=paid_social&utm_campaign=lavado_manual_mes&utm_content=reel')
+on conflict (id) do nothing;
+insert into public.promotions (id, organization_id, campaign_id, code, name, kind, value, service_ids, starts_on, ends_on, max_uses)
+select 'ca300000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', 'ca000000-0000-4000-8000-000000000001',
+       'LAVA15', 'Lavado manual 15 %', 'percent', 15, array['5e000000-0000-4000-8000-000000000009']::uuid[],
+       current_date - 10, current_date + 20, 100
+ where exists (select 1 from public.services where id = '5e000000-0000-4000-8000-000000000009')
+on conflict (id) do nothing;
+update public.leads set campaign_id = 'ca000000-0000-4000-8000-000000000001'
+ where id = '1ead0000-0000-4000-8000-000000000001' and campaign_id is null;
 select set_config('app.change_reason', '', false);

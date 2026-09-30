@@ -31,6 +31,7 @@ declare -A OWNER=(
   [piloto-rollout.md]="center_baselines client_error_reports"
   [prospectos-cotizaciones.md]="lead_events lead_services lead_stages leads quote_discounts quote_items quotes"
   [bandeja.md]="channel_accounts conversations messages"
+  [marketing.md]="campaign_spend campaigns content_posts promotions"
 )
 modules="$(for doc in "${!OWNER[@]}"; do for t in ${OWNER[$doc]}; do printf '%s=%s,' "$t" "$doc"; done; done)"
 {
