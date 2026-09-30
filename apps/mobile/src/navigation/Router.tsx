@@ -50,6 +50,7 @@ import {
   QuotesScreen,
   SegmentsScreen,
 } from "@/screens/CommercialScreens";
+import { ConversationScreen, InboxScreen } from "@/screens/InboxScreens";
 import { B2bAccountNewScreen } from "@/screens/B2bAccountNewScreen";
 import { B2bAccountScreen } from "@/screens/B2bAccountScreen";
 import { B2bAccountsScreen } from "@/screens/B2bAccountsScreen";
@@ -155,6 +156,12 @@ export function Router() {
   };
   // Parámetros de prospectos y cotizaciones (equivalen a /comercial/prospectos/[id],
   // /comercial/cotizaciones/[id] y /comercial/cotizaciones/nueva?prospecto=&cliente= en web).
+  // Parámetro de la conversación (equivale a /comercial/bandeja/[id] en web).
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const openConversation = (id: string) => {
+    setConversationId(id);
+    setScreen("conversation");
+  };
   const [leadId, setLeadId] = useState<string | null>(null);
   const openLead = (id: string) => {
     setLeadId(id);
@@ -456,6 +463,22 @@ export function Router() {
         break;
       case "commercialReports":
         content = <CommercialReportsScreen {...props} />;
+        break;
+      case "inbox":
+        content = <InboxScreen {...props} onOpen={openConversation} />;
+        break;
+      case "conversation":
+        content = conversationId ? (
+          <ConversationScreen
+            key={conversationId}
+            {...props}
+            conversationId={conversationId}
+            onBack={() => setScreen("inbox")}
+            onLead={openLead}
+          />
+        ) : (
+          <InboxScreen {...props} onOpen={openConversation} />
+        );
         break;
       case "integrations":
         content = <IntegrationsScreen {...props} />;
