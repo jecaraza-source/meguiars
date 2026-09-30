@@ -217,6 +217,11 @@ describe("permisos y navegación", () => {
   });
   it("ninguna integración se presenta como conectada sin comprobarla", () => {
     expect(INTEGRATIONS.every((i) => i.status !== "conectada")).toBe(true);
+    expect(INTEGRATIONS.filter((i) => i.inboxChannel).map((i) => i.inboxChannel)).toEqual([
+      "instagram",
+      "messenger",
+      "whatsapp",
+    ]);
     expect(INTEGRATIONS.filter((i) => i.priority).map((i) => i.channel)).toEqual([
       "instagram",
       "facebook",

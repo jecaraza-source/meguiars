@@ -23,6 +23,7 @@ export * from "./repositories/users";
 export * from "./repositories/day";
 export * from "./repositories/pilot";
 export * from "./repositories/commercial";
+export * from "./repositories/inbox";
 export * from "./auth";
 export * from "./storage";
 export type { Database, Json, Tables } from "./database.types";

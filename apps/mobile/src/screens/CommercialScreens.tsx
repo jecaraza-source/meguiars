@@ -9,6 +9,7 @@ import {
   formatMoney,
   INTEGRATION_STATUS_LABELS,
   INTEGRATIONS,
+  integrationState,
   LEAD_CONSENT_CHANNELS,
   LEAD_CONSENT_LABELS,
   LEAD_CONTACT_CHANNEL_LABELS,
@@ -30,6 +31,7 @@ import {
   usableCenters,
   zonedToUtc,
   type CatalogItem,
+  type ChannelAccount,
   type DuplicatePair,
   type Lead,
   type LeadConsentChannel,
@@ -48,6 +50,7 @@ import {
   createCatalogRepository,
   createClientRepository,
   createCommercialRepository,
+  createInboxRepository,
 } from "@meguiars/supabase";
 import { space } from "@meguiars/ui-tokens";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -1167,20 +1170,43 @@ export function DuplicatesScreen({ state, header, subnav }: PrivateScreenProps) 
   );
 }
 
-/** Estado real de las integraciones (equivale a /comercial/integraciones). */
-export function IntegrationsScreen({ header, subnav }: PrivateScreenProps) {
+/** Estado real de las integraciones (equivale a /comercial/integraciones). La configuración de cuentas es en web. */
+export function IntegrationsScreen({ state, header, subnav }: PrivateScreenProps) {
+  const { client } = useAuth();
+  const center = activeCenterAccess(state)!.center;
+  const [accounts, setAccounts] = useState<ChannelAccount[] | null>(null);
+  useEffect(() => {
+    if (!client) return;
+    let active = true;
+    void createInboxRepository(client)
+      .accounts(center.organizationId)
+      .then((r) => active && setAccounts(r.ok ? r.data : []));
+    return () => {
+      active = false;
+    };
+  }, [client, center.organizationId]);
   return (
     <Screen title={COMMERCIAL_COPY.integrationsTitle} header={header}>
       {subnav}
       <Text style={textStyle("bodySmall", "muted")}>
-        La plataforma todavía no se conecta con redes ni WhatsApp; cada conexión será con la API oficial y
-        nunca pedirá contraseñas de redes sociales.
+        Conexiones oficiales de Meta. «Conectada» sólo cuando el servidor verificó la cuenta con Meta; los
+        tokens nunca están en la app y nunca se piden contraseñas de redes sociales. Las cuentas se registran
+        en la web.
       </Text>
-      {INTEGRATIONS.map((i) => (
-        <Card key={i.channel} title={i.label} subtitle={INTEGRATION_STATUS_LABELS[i.status]}>
-          <Text style={textStyle("bodySmall", "muted")}>Mientras tanto: {i.manualFlow}</Text>
-        </Card>
-      ))}
+      {accounts === null ? <Skeleton lines={4} /> : null}
+      {accounts !== null
+        ? INTEGRATIONS.map((i) => {
+            const s = integrationState(i, accounts);
+            return (
+              <Card key={i.channel} title={i.label} subtitle={INTEGRATION_STATUS_LABELS[s.status]}>
+                <Text style={textStyle("bodySmall")}>{s.detail}</Text>
+                {s.status !== "conectada" ? (
+                  <Text style={textStyle("bodySmall", "muted")}>Mientras tanto: {i.manualFlow}</Text>
+                ) : null}
+              </Card>
+            );
+          })
+        : null}
     </Screen>
   );
 }

@@ -34,3 +34,4 @@ export * from "./users";
 export * from "./day";
 export * from "./pilot";
 export * from "./commercial";
+export * from "./inbox";

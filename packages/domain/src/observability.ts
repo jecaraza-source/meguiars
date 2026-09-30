@@ -21,13 +21,17 @@ export type ErrorReport = {
 const MAX_MESSAGE = 300;
 
 export function redactPii(text: string): string {
-  return text
-    .replace(/eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]*/g, "[token]")
-    .replace(/\b(?:sb_(?:secret|publishable)|sbp|gh[pousr])_[\w-]{10,}/g, "[llave]")
-    .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, "[correo]")
-    .replace(/(?<![\w-])\+?\d[\d\s().-]{5,}\d(?![\w-])/g, (m) =>
-      m.replace(/\D/g, "").length >= 7 ? "[teléfono]" : m,
-    );
+  return (
+    text
+      .replace(/eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]*/g, "[token]")
+      .replace(/\b(?:sb_(?:secret|publishable)|sbp|gh[pousr])_[\w-]{10,}/g, "[llave]")
+      // Tokens de acceso de Meta (WhatsApp/Messenger: EAA…, Instagram: IGAA…).
+      .replace(/\b(?:EAA|IGAA)[A-Za-z0-9]{20,}/g, "[token]")
+      .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, "[correo]")
+      .replace(/(?<![\w-])\+?\d[\d\s().-]{5,}\d(?![\w-])/g, (m) =>
+        m.replace(/\D/g, "").length >= 7 ? "[teléfono]" : m,
+      )
+  );
 }
 
 export function toErrorReport(

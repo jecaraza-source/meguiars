@@ -514,6 +514,31 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `channel_accounts`
+
+- **Módulo:** [bandeja](modules/bandeja.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `channel` | text | no |  |
+| `external_account_id` | text | no |  |
+| `label` | text | no |  |
+| `verified_name` | text | sí |  |
+| `status` | text | no | 'pendiente'::text |
+| `last_verified_at` | timestamp with time zone | sí |  |
+| `last_verify_error` | text | sí |  |
+| `last_webhook_at` | timestamp with time zone | sí |  |
+| `active` | boolean | no | true |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `client_centers`
 
 - **Módulo:** [clientes-vehiculos](modules/clientes-vehiculos.md)
@@ -597,6 +622,34 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `opted_in` | boolean | no |  |
 | `source` | text | no |  |
 | `updated_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `conversations`
+
+- **Módulo:** [bandeja](modules/bandeja.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `channel_account_id` | uuid | no |  |
+| `channel` | text | no |  |
+| `contact_external_id` | text | no |  |
+| `contact_phone` | text | sí |  |
+| `contact_name` | text | sí |  |
+| `lead_id` | uuid | sí |  |
+| `client_id` | uuid | sí |  |
+| `assigned_to` | uuid | sí |  |
+| `status` | text | no | 'abierta'::text |
+| `unread_count` | integer | no | 0 |
+| `last_inbound_at` | timestamp with time zone | sí |  |
+| `last_message_at` | timestamp with time zone | no | now() |
+| `last_message_preview` | text | sí |  |
+| `version` | integer | no | 1 |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
@@ -1080,6 +1133,30 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_by` | uuid | sí | auth.uid() |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+
+### `messages`
+
+- **Módulo:** [bandeja](modules/bandeja.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `conversation_id` | uuid | no |  |
+| `direction` | text | no |  |
+| `external_id` | text | sí |  |
+| `message_type` | text | no | 'text'::text |
+| `body` | text | sí |  |
+| `status` | text | no |  |
+| `error` | text | sí |  |
+| `sent_by` | uuid | sí |  |
+| `request_id` | uuid | sí |  |
+| `occurred_at` | timestamp with time zone | no | now() |
+| `status_at` | timestamp with time zone | no | now() |
+| `created_at` | timestamp with time zone | no | now() |
 
 ### `metric_registry`
 

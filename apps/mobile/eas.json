@@ -8,13 +8,16 @@
       "distribution": "internal",
       "environment": "preview",
       "channel": "preview",
-      "env": { "EXPO_PUBLIC_APP_ENV": "preview" },
+      "env": { "EXPO_PUBLIC_APP_ENV": "preview", "EXPO_PUBLIC_WEB_URL": "https://meguiars-web.vercel.app" },
       "android": { "buildType": "apk" }
     },
     "production": {
       "environment": "production",
       "channel": "production",
-      "env": { "EXPO_PUBLIC_APP_ENV": "production" },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_WEB_URL": "https://meguiars-web.vercel.app"
+      },
       "autoIncrement": true
     }
   },

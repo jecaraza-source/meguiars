@@ -11,6 +11,166 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      channel_accounts: {
+        Row: {
+          active: boolean;
+          channel: string;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string;
+          external_account_id: string;
+          id: string;
+          label: string;
+          last_verified_at: string | null;
+          last_verify_error: string | null;
+          last_webhook_at: string | null;
+          organization_id: string;
+          status: string;
+          updated_at: string;
+          verified_name: string | null;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          channel: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id: string;
+          external_account_id: string;
+          id?: string;
+          label: string;
+          last_verified_at?: string | null;
+          last_verify_error?: string | null;
+          last_webhook_at?: string | null;
+          organization_id: string;
+          status?: string;
+          updated_at?: string;
+          verified_name?: string | null;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          channel?: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string;
+          external_account_id?: string;
+          id?: string;
+          label?: string;
+          last_verified_at?: string | null;
+          last_verify_error?: string | null;
+          last_webhook_at?: string | null;
+          organization_id?: string;
+          status?: string;
+          updated_at?: string;
+          verified_name?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "channel_accounts_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      conversations: {
+        Row: {
+          assigned_to: string | null;
+          channel: string;
+          channel_account_id: string;
+          client_id: string | null;
+          contact_external_id: string;
+          contact_name: string | null;
+          contact_phone: string | null;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          last_inbound_at: string | null;
+          last_message_at: string;
+          last_message_preview: string | null;
+          lead_id: string | null;
+          organization_id: string;
+          status: string;
+          unread_count: number;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          assigned_to?: string | null;
+          channel: string;
+          channel_account_id: string;
+          client_id?: string | null;
+          contact_external_id: string;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          detail_center_id: string;
+          id?: string;
+          last_inbound_at?: string | null;
+          last_message_at?: string;
+          last_message_preview?: string | null;
+          lead_id?: string | null;
+          organization_id: string;
+          status?: string;
+          unread_count?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          assigned_to?: string | null;
+          channel?: string;
+          channel_account_id?: string;
+          client_id?: string | null;
+          contact_external_id?: string;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          detail_center_id?: string;
+          id?: string;
+          last_inbound_at?: string | null;
+          last_message_at?: string;
+          last_message_preview?: string | null;
+          lead_id?: string | null;
+          organization_id?: string;
+          status?: string;
+          unread_count?: number;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversations_organization_id_channel_account_id_fkey";
+            columns: ["organization_id", "channel_account_id"];
+            isOneToOne: false;
+            referencedRelation: "channel_accounts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "conversations_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "conversations_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "conversations_organization_id_lead_id_fkey";
+            columns: ["organization_id", "lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       lead_events: {
         Row: {
           actor_id: string | null;
@@ -319,6 +479,75 @@ export type Database = {
             columns: ["organization_id", "stage_id"];
             isOneToOne: false;
             referencedRelation: "lead_stages";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          body: string | null;
+          conversation_id: string;
+          created_at: string;
+          detail_center_id: string;
+          direction: string;
+          error: string | null;
+          external_id: string | null;
+          id: string;
+          message_type: string;
+          occurred_at: string;
+          organization_id: string;
+          request_id: string | null;
+          sent_by: string | null;
+          status: string;
+          status_at: string;
+        };
+        Insert: {
+          body?: string | null;
+          conversation_id: string;
+          created_at?: string;
+          detail_center_id: string;
+          direction: string;
+          error?: string | null;
+          external_id?: string | null;
+          id?: string;
+          message_type?: string;
+          occurred_at?: string;
+          organization_id: string;
+          request_id?: string | null;
+          sent_by?: string | null;
+          status: string;
+          status_at?: string;
+        };
+        Update: {
+          body?: string | null;
+          conversation_id?: string;
+          created_at?: string;
+          detail_center_id?: string;
+          direction?: string;
+          error?: string | null;
+          external_id?: string | null;
+          id?: string;
+          message_type?: string;
+          occurred_at?: string;
+          organization_id?: string;
+          request_id?: string | null;
+          sent_by?: string | null;
+          status?: string;
+          status_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messages_organization_id_conversation_id_fkey";
+            columns: ["organization_id", "conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "messages_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
             referencedColumns: ["organization_id", "id"];
           },
         ];
@@ -5481,6 +5710,137 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      assign_conversation: {
+        Args: {
+          p_conversation_id: string;
+          p_user_id: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["conversations"]["Row"];
+        SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      conversation_messages: {
+        Args: {
+          p_conversation_id: string;
+          p_limit?: number | null;
+        };
+        Returns: {
+          body: string | null;
+          direction: string;
+          error: string | null;
+          id: string;
+          message_type: string;
+          occurred_at: string;
+          sent_by_name: string | null;
+          status: string;
+          status_at: string;
+        }[];
+      };
+      create_lead_from_conversation: {
+        Args: {
+          p_conversation_id: string;
+          p_full_name: string;
+          p_interest_service_ids?: string[] | null;
+          p_notes?: string | null;
+          p_request_id: string;
+          p_social_handle?: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      finish_outbound_message: {
+        Args: {
+          p_error: string | null;
+          p_external_id: string | null;
+          p_message_id: string;
+        };
+        Returns: Database["public"]["Tables"]["messages"]["Row"];
+        SetofOptions: { from: "*"; to: "messages"; isOneToOne: true; isSetofReturn: false };
+      };
+      ingest_inbound_messages: {
+        Args: {
+          p_channel: string;
+          p_external_account_id: string;
+          p_items: Json;
+        };
+        Returns: Json;
+      };
+      ingest_message_statuses: {
+        Args: {
+          p_channel: string;
+          p_items: Json;
+        };
+        Returns: number;
+      };
+      link_conversation_lead: {
+        Args: {
+          p_conversation_id: string;
+          p_lead_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["conversations"]["Row"];
+        SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      list_channel_accounts: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          active: boolean;
+          channel: string;
+          detail_center_id: string;
+          detail_center_name: string;
+          external_account_id: string;
+          id: string;
+          label: string;
+          last_verified_at: string | null;
+          last_verify_error: string | null;
+          last_webhook_at: string | null;
+          open_conversations: number;
+          status: string;
+          verified_name: string | null;
+          version: number;
+        }[];
+      };
+      list_conversations: {
+        Args: {
+          p_assigned_to?: string | null;
+          p_channel?: string | null;
+          p_conversation_id?: string | null;
+          p_detail_center_ids: string[];
+          p_limit?: number | null;
+          p_status?: string | null;
+          p_unassigned?: boolean | null;
+        };
+        Returns: {
+          account_label: string;
+          account_status: string;
+          assigned_name: string | null;
+          assigned_to: string | null;
+          channel: string;
+          channel_account_id: string;
+          client_id: string | null;
+          client_name: string | null;
+          contact_external_id: string;
+          contact_name: string | null;
+          contact_phone: string | null;
+          detail_center_id: string;
+          detail_center_name: string;
+          id: string;
+          last_inbound_at: string | null;
+          last_message_at: string;
+          last_message_preview: string | null;
+          lead_id: string | null;
+          lead_name: string | null;
+          lead_status: string | null;
+          status: string;
+          unread_count: number;
+          version: number;
+          window_closes_at: string | null;
+          window_open: boolean;
+        }[];
+      };
       list_leads: {
         Args: {
           p_detail_center_ids: string[];
@@ -5756,6 +6116,41 @@ export type Database = {
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
       };
+      prepare_outbound_message: {
+        Args: {
+          p_body: string;
+          p_conversation_id: string;
+          p_request_id: string;
+        };
+        Returns: {
+          already_sent: boolean;
+          body: string;
+          channel: string;
+          contact_external_id: string;
+          contact_phone: string | null;
+          external_account_id: string;
+          message_id: string;
+        }[];
+      };
+      record_channel_verification: {
+        Args: {
+          p_channel_account_id: string;
+          p_error: string | null;
+          p_ok: boolean;
+          p_verified_name: string | null;
+        };
+        Returns: Database["public"]["Tables"]["channel_accounts"]["Row"];
+        SetofOptions: { from: "*"; to: "channel_accounts"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_conversation_status: {
+        Args: {
+          p_conversation_id: string;
+          p_status: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["conversations"]["Row"];
+        SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
       update_lead: {
         Args: {
           p_consent_channels: string[];
@@ -5825,6 +6220,20 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_channel_account: {
+        Args: {
+          p_active: boolean;
+          p_channel: string;
+          p_channel_account_id: string | null;
+          p_detail_center_id: string;
+          p_external_account_id: string;
+          p_label: string;
+          p_organization_id: string;
+          p_reason: string;
+        };
+        Returns: Database["public"]["Tables"]["channel_accounts"]["Row"];
+        SetofOptions: { from: "*"; to: "channel_accounts"; isOneToOne: true; isSetofReturn: false };
       };
       win_lead: {
         Args: {

@@ -104,6 +104,9 @@ export const CAPABILITIES = [
   "leads.manage",
   "commercial.metrics.read",
   "clients.merge",
+  // CR2 (fase 2): registrar las cuentas oficiales de Meta de la organización
+  // (private.can_manage_channels). La bandeja usa leads.use.
+  "channels.manage",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -198,6 +201,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "leads.manage",
     "commercial.metrics.read",
     "clients.merge",
+    "channels.manage",
   ],
   encargado: [
     "center.read",

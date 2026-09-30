@@ -46,4 +46,10 @@ describe("reporte de error sin datos personales", () => {
     });
     expect(toErrorReport(null, { source: "mobile" }).message).toBe("Error sin mensaje");
   });
+  it("enmascara tokens de Meta (WhatsApp, Messenger e Instagram)", () => {
+    const out = redactPii(
+      "Graph falló con EAAGm0PX4ZCpsBAKZCZBqwerty1234567890 e IGAAJx0987654321abcdefghijklm",
+    );
+    expect(out).toBe("Graph falló con [token] e [token]");
+  });
 });

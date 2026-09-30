@@ -39,6 +39,8 @@ jobs:
       # El env del perfil de eas.json sólo aplica a builds; la actualización
       # debe declarar el mismo ambiente para que el aviso y las reglas coincidan.
       EXPO_PUBLIC_APP_ENV: ${{ inputs.profile }}
+      # Igual que en eas.json: la Bandeja responde a través de la web (tokens de Meta sólo en el servidor).
+      EXPO_PUBLIC_WEB_URL: https://meguiars-web.vercel.app
     steps:
       - name: Verificar EXPO_TOKEN
         run: |
