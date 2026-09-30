@@ -340,6 +340,90 @@ export type Database = {
           },
         ];
       };
+      center_baselines: {
+        Row: {
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          metric: string;
+          organization_id: string;
+          period_from: string | null;
+          period_to: string | null;
+          source: string;
+          updated_at: string;
+          updated_by: string | null;
+          value: number;
+          version: number;
+        };
+        Insert: {
+          created_at?: string;
+          detail_center_id: string;
+          id?: string;
+          metric: string;
+          organization_id: string;
+          period_from?: string | null;
+          period_to?: string | null;
+          source: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value: number;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          detail_center_id?: string;
+          id?: string;
+          metric?: string;
+          organization_id?: string;
+          period_from?: string | null;
+          period_to?: string | null;
+          source?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value?: number;
+          version?: number;
+        };
+        Relationships: [];
+      };
+      client_error_reports: {
+        Row: {
+          detail_center_id: string | null;
+          digest: string | null;
+          id: number;
+          message: string;
+          name: string;
+          occurred_at: string;
+          organization_id: string | null;
+          route: string | null;
+          source: string;
+          user_id: string | null;
+        };
+        Insert: {
+          detail_center_id?: string | null;
+          digest?: string | null;
+          id?: never;
+          message: string;
+          name: string;
+          occurred_at?: string;
+          organization_id?: string | null;
+          route?: string | null;
+          source: string;
+          user_id?: string | null;
+        };
+        Update: {
+          detail_center_id?: string | null;
+          digest?: string | null;
+          id?: never;
+          message?: string;
+          name?: string;
+          occurred_at?: string;
+          organization_id?: string | null;
+          route?: string | null;
+          source?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       kpi_thresholds: {
         Row: {
           channel: string | null;
@@ -4882,6 +4966,61 @@ export type Database = {
       center_day_summary: {
         Args: { p_detail_center_id: string };
         Returns: Json;
+      };
+      center_readiness: {
+        Args: { p_detail_center_id: string };
+        Returns: Json;
+      };
+      create_detail_center: {
+        Args: { p_code: string; p_name: string; p_organization_id: string; p_reason: string; p_timezone: string };
+        Returns: Database["public"]["Tables"]["detail_centers"]["Row"];
+        SetofOptions: { from: "*"; to: "detail_centers"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_center_baseline: {
+        Args: {
+          p_detail_center_id: string;
+          p_metric: string;
+          p_period_from: string | null;
+          p_period_to: string | null;
+          p_reason: string;
+          p_source: string | null;
+          p_value: number | null;
+        };
+        Returns: Database["public"]["Tables"]["center_baselines"]["Row"];
+        SetofOptions: { from: "*"; to: "center_baselines"; isOneToOne: true; isSetofReturn: false };
+      };
+      report_client_error: {
+        Args: {
+          p_detail_center_id: string | null;
+          p_digest: string | null;
+          p_message: string;
+          p_name: string;
+          p_route: string | null;
+          p_source: string;
+        };
+        Returns: undefined;
+      };
+      pilot_metrics: {
+        Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
+        Returns: {
+          active_users: number;
+          appointments: number;
+          cash_closings: number;
+          cash_difference: number;
+          cash_difference_abs: number;
+          cycle_minutes_avg: number | null;
+          day: string;
+          detail_center_id: string;
+          errors: number;
+          membership_revenue: number;
+          memberships_sold: number;
+          on_time_delivered: number;
+          orders_cancelled: number;
+          orders_created: number;
+          orders_delivered: number;
+          promised_delivered: number;
+          revenue: number;
+        }[];
       };
       set_kpi_threshold: {
         Args: {

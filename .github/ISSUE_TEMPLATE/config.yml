@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Runbook del piloto (severidades y escalamiento)
+    url: https://github.com/jecaraza-source/meguiars/blob/main/docs/piloto/runbook.md
+    about: Antes de reportar, revisa severidades, tiempos y a quién avisar.

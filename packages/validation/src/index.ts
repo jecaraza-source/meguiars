@@ -19,3 +19,5 @@ export * from "./receivables";
 export * from "./dashboards";
 export * from "./alerts";
 export * from "./users";
+export * from "./pilot";
+export * from "./import";

@@ -63,3 +63,16 @@ describe("paridad web/móvil de Operación del día y Resumen financiero", () =>
     expect(declaration(mobileDay, name)).toBe(declaration(webDay, name));
   });
 });
+
+const webPilot = readFileSync(join(root, "apps/web/src/lib/pilot.ts"), "utf8");
+const mobilePilot = readFileSync(join(root, "apps/mobile/src/lib/pilot.ts"), "utf8");
+
+describe("paridad web/móvil del piloto y la activación de centros (F5.2)", () => {
+  it.each(["centersScope", "loadCenters", "loadCenterSetup", "loadPilot"])(
+    "%s es idéntico en web y móvil",
+    (name) => {
+      expect(declaration(webPilot, name)).not.toBeNull();
+      expect(declaration(mobilePilot, name)).toBe(declaration(webPilot, name));
+    },
+  );
+});

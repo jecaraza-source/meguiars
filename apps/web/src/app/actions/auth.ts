@@ -100,7 +100,9 @@ export async function selectCenterAction(form: FormData): Promise<void> {
   if (!result.ok) redirect(GUARD_REDIRECTS.select_center);
   // Todo el layout depende del centro activo: se recalcula sin datos del anterior.
   revalidatePath("/", "layout");
-  redirect("/");
+  // Regreso opcional a una ruta interna (p. ej. la activación del centro); nunca a otro sitio.
+  const next = form.get("next");
+  redirect(typeof next === "string" && /^\/(?!\/)[\w\-/]*$/.test(next) ? next : "/");
 }
 
 export async function editCenterAction(_prev: FormState, form: FormData): Promise<FormState> {

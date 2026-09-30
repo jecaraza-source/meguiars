@@ -32,3 +32,4 @@ export * from "./corporate";
 export * from "./alerts";
 export * from "./users";
 export * from "./day";
+export * from "./pilot";

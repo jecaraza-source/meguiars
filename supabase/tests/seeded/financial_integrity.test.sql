@@ -198,11 +198,13 @@ reset role;
 -- B2B en MTY: documento de la OS pendiente y pago parcial.
 select pg_temp.login('0f510000-0000-4000-8000-0000000000e2');
 set local role authenticated;
+-- Fechas del centro gestor (no current_date: en UTC puede ser "mañana" para el centro).
+select private.center_today('22222222-2222-4222-8222-222222222222') as mty_today \gset
 select (public.create_b2b_billing_batch('b2000000-0000-4000-8000-000000000001', gen_random_uuid(),
-  current_date - 30, current_date, array['0d000000-0000-4000-8000-000000000007']::uuid[], 0, current_date + 15,
-  'F-2026-001', current_date, null)).id as inv \gset
+  :'mty_today'::date - 30, :'mty_today'::date, array['0d000000-0000-4000-8000-000000000007']::uuid[], 0, :'mty_today'::date + 15,
+  'F-2026-001', :'mty_today'::date, null)).id as inv \gset
 select from public.register_b2b_payment('b2000000-0000-4000-8000-000000000001', gen_random_uuid(), 100, 'transferencia',
-  'SPEI 77', current_date, jsonb_build_array(jsonb_build_object('invoice_id', :'inv', 'amount', 100)));
+  'SPEI 77', :'mty_today'::date, jsonb_build_array(jsonb_build_object('invoice_id', :'inv', 'amount', 100)));
 reset role;
 
 select pg_temp.assert(
