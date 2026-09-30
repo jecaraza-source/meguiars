@@ -14,9 +14,14 @@ import {
   presentQuote,
   usableCenters,
 } from "@meguiars/domain";
-import { createCatalogRepository, createCommercialRepository } from "@meguiars/supabase";
+import {
+  createCatalogRepository,
+  createCommercialRepository,
+  createMarketingRepository,
+} from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { LeadCampaignForm } from "@/components/marketing-forms";
 import {
   CompleteLeadTaskButton,
   EditLeadForm,
@@ -60,6 +65,17 @@ export default async function LeadPage({ params, searchParams }: PageProps<"/com
   const view = presentLead(lead);
   const center = centers.find((c) => c.id === lead.detailCenterId)!;
   const organizationId = center.organizationId;
+  const marketing = createMarketingRepository(supabase);
+  const [campaignId, campaignList] = await Promise.all([
+    marketing.leadCampaignId(lead.id),
+    marketing.campaigns(organizationId),
+  ]);
+  const campaignOptions = (campaignList.ok ? campaignList.data : [])
+    .filter(
+      (c) =>
+        (c.detailCenterId === null || c.detailCenterId === lead.detailCenterId) && c.status !== "cancelada",
+    )
+    .map((c) => ({ value: c.id, label: c.name }));
   const [timeline, tasks, stages, owners, quotes, catalog, matches, orders] = await Promise.all([
     repo.leadTimeline(lead.id),
     repo.leadTasks(lead.id),
@@ -211,6 +227,14 @@ export default async function LeadPage({ params, searchParams }: PageProps<"/com
           <div className="flex flex-col gap-md">
             <LeadContactForm lead={lead} />
             <MoveLeadForm lead={lead} stages={stageList} />
+            {campaignOptions.length ? (
+              <LeadCampaignForm
+                leadId={lead.id}
+                version={lead.version}
+                campaignId={campaignId.ok ? campaignId.data : null}
+                campaigns={campaignOptions}
+              />
+            ) : null}
             <div className="flex flex-wrap gap-sm">
               <ButtonLink
                 href={`/comercial/cotizaciones/nueva?prospecto=${lead.id}`}

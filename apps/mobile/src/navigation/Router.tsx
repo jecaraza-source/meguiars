@@ -51,6 +51,12 @@ import {
   SegmentsScreen,
 } from "@/screens/CommercialScreens";
 import { ConversationScreen, InboxScreen } from "@/screens/InboxScreens";
+import {
+  CalendarScreen,
+  CampaignScreen,
+  CampaignsScreen,
+  PromotionsScreen,
+} from "@/screens/MarketingScreens";
 import { B2bAccountNewScreen } from "@/screens/B2bAccountNewScreen";
 import { B2bAccountScreen } from "@/screens/B2bAccountScreen";
 import { B2bAccountsScreen } from "@/screens/B2bAccountsScreen";
@@ -161,6 +167,12 @@ export function Router() {
   const openConversation = (id: string) => {
     setConversationId(id);
     setScreen("conversation");
+  };
+  // Parámetro de la campaña (equivale a /comercial/campanas/[id] en web).
+  const [campaignId, setCampaignId] = useState<string | null>(null);
+  const openCampaign = (id: string) => {
+    setCampaignId(id);
+    setScreen("campaignDetail");
   };
   const [leadId, setLeadId] = useState<string | null>(null);
   const openLead = (id: string) => {
@@ -479,6 +491,27 @@ export function Router() {
         ) : (
           <InboxScreen {...props} onOpen={openConversation} />
         );
+        break;
+      case "contentCalendar":
+        content = <CalendarScreen {...props} />;
+        break;
+      case "campaigns":
+        content = <CampaignsScreen {...props} onOpen={openCampaign} />;
+        break;
+      case "campaignDetail":
+        content = campaignId ? (
+          <CampaignScreen
+            key={campaignId}
+            {...props}
+            campaignId={campaignId}
+            onBack={() => setScreen("campaigns")}
+          />
+        ) : (
+          <CampaignsScreen {...props} onOpen={openCampaign} />
+        );
+        break;
+      case "promotions":
+        content = <PromotionsScreen {...props} />;
         break;
       case "integrations":
         content = <IntegrationsScreen {...props} />;

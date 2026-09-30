@@ -89,3 +89,13 @@ describe("paridad web/móvil del módulo comercial (CR2)", () => {
     },
   );
 });
+
+const webMarketing = readFileSync(join(root, "apps/web/src/lib/marketing.ts"), "utf8");
+const mobileMarketing = readFileSync(join(root, "apps/mobile/src/lib/marketing.ts"), "utf8");
+
+describe("paridad web/móvil de campañas (CR2 fase 3)", () => {
+  it.each(["loadCampaignReport", "calendarWeek"])("%s es idéntico en web y móvil", (name) => {
+    expect(declaration(webMarketing, name)).not.toBeNull();
+    expect(declaration(mobileMarketing, name)).toBe(declaration(webMarketing, name));
+  });
+});

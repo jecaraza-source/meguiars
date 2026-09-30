@@ -42,6 +42,7 @@ import {
 } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { ApplyPromotionForm } from "@/components/marketing-forms";
 import { OrderDetailsForm, OrderDiscounts, OrderLines, OrderStatusPanel } from "@/components/order-forms";
 import { OrderPaymentsCard } from "@/components/order-payments";
 import { ApplyB2bForm } from "@/components/b2b-forms";
@@ -248,6 +249,11 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           rows={order.discounts.map((d) => presentDiscount(d, lineName))}
           editable={canWrite && view.canDiscount}
         />
+        {canWrite && view.canDiscount && order.channel !== "b2b" ? (
+          <div className="mt-md">
+            <ApplyPromotionForm target="order" documentId={order.id} version={order.version} />
+          </div>
+        ) : null}
       </Card>
 
       {order.status !== "abierta" ? (
