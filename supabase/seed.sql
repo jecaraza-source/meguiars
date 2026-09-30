@@ -694,3 +694,83 @@ on conflict (id) do nothing;
 insert into public.alert_events (instance_id, kind, value, period_from, period_to)
 select 'a1e71000-0000-4000-8000-000000000001', 'creada', 660, current_date - 1, current_date - 1
 where not exists (select 1 from public.alert_events where instance_id = 'a1e71000-0000-4000-8000-000000000001');
+
+-- CR2 (fase 1): prospectos por canal, cotizaciones y una tarea. El embudo
+-- (etapas) se crea con la organización. Las cotizaciones toman precio, costo y
+-- % del operador del catálogo y se recalculan como en la RPC.
+select set_config('app.change_reason', 'Prospectos y cotizaciones de ejemplo', false);
+insert into public.leads (id, organization_id, detail_center_id, full_name, phone, email, social_handle, source_channel,
+                          source_detail, vehicle_description, consent_channels, consent_at, estimated_value, stage_id,
+                          next_action, next_action_on, first_contact_at, request_id, created_at)
+select x.id, '00000000-0000-4000-8000-00000000d3e0', x.center, x.name, x.phone, null, x.handle, x.channel, x.detail,
+       x.vehicle, x.consent, case when cardinality(x.consent) > 0 then now() - interval '2 days' end, x.value, s.id,
+       x.next_action, current_date + x.next_in, x.contacted, x.id, now() - interval '2 days'
+  from (values
+    ('1ead0000-0000-4000-8000-000000000001'::uuid, '11111111-1111-4111-8111-111111111111'::uuid, 'Mariana Soto',
+     '+525587654321', '@marianasoto', 'instagram', 'Anuncio: Lavado manual detallado', 'Honda CR-V 2020',
+     array['whatsapp'], 450::numeric, 'cotizado', 'Confirmar fecha de reserva', 1, now() - interval '47 hours'),
+    ('1ead0000-0000-4000-8000-000000000002'::uuid, '11111111-1111-4111-8111-111111111111'::uuid, 'Luis Gómez',
+     '+525544332211', null, 'whatsapp', null, 'Mazda CX-5', '{}'::text[], null::numeric, 'nuevo',
+     'Responder precio de pulido', 0, null::timestamptz),
+    ('1ead0000-0000-4000-8000-000000000003'::uuid, '22222222-2222-4222-8222-222222222222'::uuid, 'Carla Méndez',
+     '+528112345670', null, 'facebook', 'Comentario en publicación', 'Toyota Hilux', array['whatsapp', 'email'],
+     null::numeric, 'contactado', 'Enviar cotización', 1, now() - interval '46 hours')
+  ) x(id, center, name, phone, handle, channel, detail, vehicle, consent, value, stage, next_action, next_in, contacted)
+  join public.lead_stages s on s.organization_id = '00000000-0000-4000-8000-00000000d3e0' and s.code = x.stage
+on conflict (id) do nothing;
+insert into public.lead_services (lead_id, service_id, organization_id) values
+  ('1ead0000-0000-4000-8000-000000000001', '5e000000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-00000000d3e0'),
+  ('1ead0000-0000-4000-8000-000000000002', '5e000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0'),
+  ('1ead0000-0000-4000-8000-000000000003', '5e000000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-00000000d3e0')
+on conflict do nothing;
+
+insert into private.quote_counters (detail_center_id, last_number) values
+  ('11111111-1111-4111-8111-111111111111', 1), ('22222222-2222-4222-8222-222222222222', 1)
+on conflict (detail_center_id) do nothing;
+insert into public.quotes (id, organization_id, detail_center_id, folio, folio_number, lead_id, client_id, vehicle_id,
+                           contact_name, status, valid_until, sent_at, request_id, created_at)
+values
+  ('c0700000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+   'CDMX-01-COT-00001', 1, '1ead0000-0000-4000-8000-000000000001', null, null, 'Mariana Soto', 'enviada',
+   current_date + 13, now() - interval '1 day', 'c0700000-0000-4000-8000-000000000001', now() - interval '1 day'),
+  ('c0700000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', '22222222-2222-4222-8222-222222222222',
+   'MTY-01-COT-00001', 1, null, 'c1000000-0000-4000-8000-000000000002', 'c2000000-0000-4000-8000-000000000002',
+   'Transportes del Norte', 'borrador', current_date + 15, null, 'c0700000-0000-4000-8000-000000000002', now())
+on conflict (id) do nothing;
+insert into public.quote_items (organization_id, quote_id, position, service_id, service_code, service_name, revenue_engine,
+                                unit_price, price_source, unit_direct_cost, operator_commission_pct, duration_minutes, quantity)
+select s.organization_id, x.quote_id, 0, s.id, s.code, s.name, s.revenue_engine, s.base_price, 'base',
+       s.standard_direct_cost, s.operator_commission_pct, s.standard_duration_minutes, x.qty
+  from (values ('c0700000-0000-4000-8000-000000000001'::uuid, 1),
+               ('c0700000-0000-4000-8000-000000000002'::uuid, 2)) x(quote_id, qty)
+  join public.services s on s.id = '5e000000-0000-4000-8000-000000000009'
+on conflict (quote_id, service_id) do nothing;
+select private.recalc_quote(id) from public.quotes where id in
+  ('c0700000-0000-4000-8000-000000000001', 'c0700000-0000-4000-8000-000000000002');
+
+insert into public.lead_events (organization_id, detail_center_id, lead_id, kind, source_channel, from_stage_id, to_stage_id,
+                                value, channel, quote_id, note, occurred_at)
+select l.organization_id, l.detail_center_id, l.id, e.kind, l.source_channel, fs.id, ts.id, e.value, e.channel, e.quote_id,
+       e.note, now() - e.ago
+  from (values
+    ('1ead0000-0000-4000-8000-000000000001'::uuid, 'creado', null, 'nuevo', 450::numeric, null, null::uuid, null, interval '48 hours'),
+    ('1ead0000-0000-4000-8000-000000000001'::uuid, 'contacto', null, null, null, 'redes', null, 'Respondió el DM', interval '47 hours'),
+    ('1ead0000-0000-4000-8000-000000000001'::uuid, 'etapa', 'nuevo', 'contactado', null, null, null, 'Primer contacto', interval '47 hours'),
+    ('1ead0000-0000-4000-8000-000000000001'::uuid, 'cotizacion', null, null, 450, null, 'c0700000-0000-4000-8000-000000000001'::uuid, 'CDMX-01-COT-00001', interval '24 hours'),
+    ('1ead0000-0000-4000-8000-000000000001'::uuid, 'etapa', 'contactado', 'cotizado', null, null, null, 'Cotización CDMX-01-COT-00001', interval '24 hours'),
+    ('1ead0000-0000-4000-8000-000000000002'::uuid, 'creado', null, 'nuevo', null, null, null, null, interval '48 hours'),
+    ('1ead0000-0000-4000-8000-000000000003'::uuid, 'creado', null, 'nuevo', null, null, null, null, interval '48 hours'),
+    ('1ead0000-0000-4000-8000-000000000003'::uuid, 'contacto', null, null, null, 'redes', null, 'Respondí el comentario', interval '46 hours'),
+    ('1ead0000-0000-4000-8000-000000000003'::uuid, 'etapa', 'nuevo', 'contactado', null, null, null, 'Primer contacto', interval '46 hours')
+  ) e(lead_id, kind, from_stage, to_stage, value, channel, quote_id, note, ago)
+  join public.leads l on l.id = e.lead_id
+  left join public.lead_stages fs on fs.organization_id = l.organization_id and fs.code = e.from_stage
+  left join public.lead_stages ts on ts.organization_id = l.organization_id and ts.code = e.to_stage
+ where not exists (select 1 from public.lead_events x where x.lead_id = e.lead_id);
+
+insert into public.crm_tasks (id, organization_id, detail_center_id, lead_id, kind, channel, due_on, notes, source, request_id)
+values ('7a500000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        '1ead0000-0000-4000-8000-000000000002', 'whatsapp', 'whatsapp', current_date, 'Enviar precio de pulido', 'prospecto',
+        '7a500000-0000-4000-8000-000000000001')
+on conflict (id) do nothing;
+select set_config('app.change_reason', '', false);
