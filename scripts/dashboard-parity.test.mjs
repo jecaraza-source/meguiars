@@ -76,3 +76,16 @@ describe("paridad web/móvil del piloto y la activación de centros (F5.2)", () 
     },
   );
 });
+
+const webCommercial = readFileSync(join(root, "apps/web/src/lib/commercial.ts"), "utf8");
+const mobileCommercial = readFileSync(join(root, "apps/mobile/src/lib/commercial.ts"), "utf8");
+
+describe("paridad web/móvil del módulo comercial (CR2)", () => {
+  it.each(["commercialCenters", "loadLeadsBoard", "loadCommercialReport"])(
+    "%s es idéntico en web y móvil",
+    (name) => {
+      expect(declaration(webCommercial, name)).not.toBeNull();
+      expect(declaration(mobileCommercial, name)).toBe(declaration(webCommercial, name));
+    },
+  );
+});

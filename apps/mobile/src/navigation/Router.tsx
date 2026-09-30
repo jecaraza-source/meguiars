@@ -38,6 +38,18 @@ import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
 import { ComercialScreen } from "@/screens/ComercialScreen";
+import {
+  CommercialReportsScreen,
+  DuplicatesScreen,
+  IntegrationsScreen,
+  LeadNewScreen,
+  LeadScreen,
+  LeadsScreen,
+  QuoteNewScreen,
+  QuoteScreen,
+  QuotesScreen,
+  SegmentsScreen,
+} from "@/screens/CommercialScreens";
 import { B2bAccountNewScreen } from "@/screens/B2bAccountNewScreen";
 import { B2bAccountScreen } from "@/screens/B2bAccountScreen";
 import { B2bAccountsScreen } from "@/screens/B2bAccountsScreen";
@@ -140,6 +152,23 @@ export function Router() {
   const openB2bAgreement = (id: string) => {
     setB2bAgreementId(id);
     setScreen("b2bAgreementDetail");
+  };
+  // Parámetros de prospectos y cotizaciones (equivalen a /comercial/prospectos/[id],
+  // /comercial/cotizaciones/[id] y /comercial/cotizaciones/nueva?prospecto=&cliente= en web).
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const openLead = (id: string) => {
+    setLeadId(id);
+    setScreen("leadDetail");
+  };
+  const [quoteId, setQuoteId] = useState<string | null>(null);
+  const openQuote = (id: string) => {
+    setQuoteId(id);
+    setScreen("quoteDetail");
+  };
+  const [newQuote, setNewQuote] = useState<{ leadId?: string; clientId?: string }>({});
+  const startQuote = (defaults: { leadId?: string; clientId?: string }) => {
+    setNewQuote(defaults);
+    setScreen("quoteNew");
   };
   // Parámetros del pipeline (equivalen a /comercial/pipeline/[id] y /nueva?tipo=&cliente=&cuenta= en web).
   const [opportunityId, setOpportunityId] = useState<string | null>(null);
@@ -369,6 +398,67 @@ export function Router() {
         break;
       case "upsell":
         content = <UpsellScreen {...props} />;
+        break;
+      case "leads":
+        content = (
+          <LeadsScreen
+            {...props}
+            onOpen={openLead}
+            onNew={() => setScreen("leadNew")}
+            onQuotes={() => setScreen("quotes")}
+            onReports={() => setScreen("commercialReports")}
+          />
+        );
+        break;
+      case "leadNew":
+        content = <LeadNewScreen {...props} onCreated={openLead} onCancel={() => setScreen("leads")} />;
+        break;
+      case "leadDetail":
+        content = leadId ? (
+          <LeadScreen
+            key={leadId}
+            {...props}
+            leadId={leadId}
+            onBack={() => setScreen("leads")}
+            onQuote={openQuote}
+            onNewQuote={(id) => startQuote({ leadId: id })}
+          />
+        ) : (
+          <LeadNewScreen {...props} onCreated={openLead} onCancel={() => setScreen("leads")} />
+        );
+        break;
+      case "quotes":
+        content = <QuotesScreen {...props} onOpen={openQuote} />;
+        break;
+      case "quoteNew":
+        content = (
+          <QuoteNewScreen
+            {...props}
+            leadId={newQuote.leadId}
+            clientId={newQuote.clientId}
+            onCreated={openQuote}
+            onCancel={() => (newQuote.leadId ? openLead(newQuote.leadId) : setScreen("quotes"))}
+          />
+        );
+        break;
+      case "quoteDetail":
+        content = quoteId ? (
+          <QuoteScreen key={quoteId} {...props} quoteId={quoteId} onBack={() => setScreen("quotes")} />
+        ) : (
+          <QuotesScreen {...props} onOpen={openQuote} />
+        );
+        break;
+      case "segments":
+        content = <SegmentsScreen {...props} />;
+        break;
+      case "duplicates":
+        content = <DuplicatesScreen {...props} />;
+        break;
+      case "commercialReports":
+        content = <CommercialReportsScreen {...props} />;
+        break;
+      case "integrations":
+        content = <IntegrationsScreen {...props} />;
         break;
       case "pipeline":
         content = (
