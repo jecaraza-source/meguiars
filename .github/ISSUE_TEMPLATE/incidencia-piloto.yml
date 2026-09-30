@@ -1,0 +1,94 @@
+name: Incidencia del piloto
+description: Reporta una falla o problema durante el piloto o el rollout de un centro.
+title: "[Piloto][S?] "
+labels: ["piloto"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No escribas datos personales de clientes (teléfonos, correos, nombres completos) ni contraseñas.
+        Severidades y tiempos: docs/piloto/runbook.md. Una sospecha de datos de otro centro o de descuadre financiero es **S1**.
+  - type: dropdown
+    id: severidad
+    attributes:
+      label: Severidad
+      options:
+        - S1 Crítica (no se puede operar, datos de otro centro o descuadre)
+        - S2 Alta (flujo importante falla, hay alternativa manual)
+        - S3 Media (molestia con alternativa)
+        - S4 Baja (mejora)
+    validations:
+      required: true
+  - type: input
+    id: centro
+    attributes:
+      label: Centro
+      placeholder: "CDMX-01"
+    validations:
+      required: true
+  - type: dropdown
+    id: rol
+    attributes:
+      label: Rol de quien lo encontró
+      options:
+        - Admin / socio
+        - Encargado
+        - Operador de recepción
+        - Contador
+        - Comercial B2B
+    validations:
+      required: true
+  - type: dropdown
+    id: plataforma
+    attributes:
+      label: Plataforma
+      multiple: true
+      options:
+        - Web (computadora)
+        - Web (celular)
+        - App Android
+        - App iOS
+    validations:
+      required: true
+  - type: input
+    id: pantalla
+    attributes:
+      label: Pantalla o ruta
+      placeholder: "/ordenes/nueva, Corte de caja…"
+  - type: input
+    id: referencia
+    attributes:
+      label: Referencia del error (si apareció "Algo salió mal")
+      placeholder: "Referencia: 1234567890"
+  - type: input
+    id: folio
+    attributes:
+      label: Folio relacionado (OS, recibo, corte, documento)
+      placeholder: "CDMX-01-000123"
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué esperabas y qué pasó
+    validations:
+      required: true
+  - type: input
+    id: cuando
+    attributes:
+      label: Fecha y hora (hora del centro)
+      placeholder: "2026-10-05 12:40"
+  - type: dropdown
+    id: alternativa
+    attributes:
+      label: ¿Hay alternativa para seguir operando?
+      options:
+        - Sí
+        - No
