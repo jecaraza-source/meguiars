@@ -55,7 +55,6 @@ Qué funcionó, qué no y por qué (con referencias a incidencias).
 Candidatos conocidos al iniciar el piloto (revisar con los datos reales):
 
 - Staging propio y e2e dentro de la CI (F5.1 H12–H13).
-- OTA para la app móvil (F5.1 H17).
 - Enmascarar datos personales en la auditoría (F5.1 H14).
 - Importador de cuentas B2B y de clientes, si el volumen lo justifica.
 

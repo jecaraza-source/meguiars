@@ -40,7 +40,8 @@ Cualquier sospecha de **fuga de datos entre centros** o de **descuadre financier
 | Web            | Vercel → Deployments → despliegue anterior → **Instant Rollback**; después, `git revert` del PR para que `main` refleje lo publicado | segundos |
 | Base (esquema) | Hacia adelante: migración que compense (recrear la función anterior). Nunca editar ni borrar una migración aplicada                  | minutos  |
 | Base (datos)   | Corrección con RPC auditada; restaurar respaldo sólo si no hay otra salida                                                           | horas    |
-| Móvil          | Reinstalar el build anterior desde expo.dev; tiendas: detener el rollout y publicar la corrección                                    | horas    |
+| Móvil (JS)     | Republicar la actualización anterior con EAS Update (expo.dev → Updates → Republish); llega al abrir la app                          | minutos  |
+| Móvil (nativo) | Reinstalar el build anterior desde expo.dev; tiendas: detener el rollout y publicar la corrección                                    | horas    |
 
 Detalle técnico en [CI/CD → Rollback](../modules/ci-cd.md#rollback).
 
