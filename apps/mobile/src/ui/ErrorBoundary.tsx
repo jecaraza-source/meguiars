@@ -1,5 +1,7 @@
 import { errorCopy, toErrorReport } from "@meguiars/domain";
+import { createPilotRepository } from "@meguiars/supabase";
 import { Component, type ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
 import { Button } from "./controls";
 import { EmptyState } from "./display";
 import { Screen } from "./layout";
@@ -7,8 +9,9 @@ import { Screen } from "./layout";
 /**
  * Error inesperado al dibujar una pantalla: en lugar de cerrar la app muestra
  * un aviso en español con "Reintentar" (vuelve a montar la navegación; la
- * sesión sigue en SecureStore) y deja en el log del dispositivo un reporte
- * sin datos personales.
+ * sesión sigue en SecureStore), deja en el log del dispositivo un reporte
+ * sin datos personales y, con sesión, lo registra en client_error_reports
+ * (métricas del piloto; la base ignora el centro si no es del usuario).
  */
 export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean; attempt: number }> {
   state = { failed: false, attempt: 0 };
@@ -18,7 +21,12 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
   }
 
   componentDidCatch(error: unknown) {
-    console.error(JSON.stringify(toErrorReport(error, { source: "mobile" })));
+    const report = toErrorReport(error, { source: "mobile" });
+    console.error(JSON.stringify(report));
+    if (supabase)
+      void createPilotRepository(supabase)
+        .reportError({ source: "mobile", name: report.name, message: report.message }, null)
+        .catch(() => undefined);
   }
 
   render() {

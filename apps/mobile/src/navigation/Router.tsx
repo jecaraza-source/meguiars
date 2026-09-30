@@ -77,6 +77,7 @@ import { SelectCenterScreen } from "@/screens/SelectCenterScreen";
 import { SuppliesScreen } from "@/screens/SuppliesScreen";
 import { TeamScreen } from "@/screens/TeamScreen";
 import { UsersScreen } from "@/screens/UsersScreen";
+import { CenterSetupScreen, CentersScreen, PilotScreen } from "@/screens/PilotScreens";
 import { AppHeader, SubNav, TabBar } from "@/ui/layout";
 
 /**
@@ -88,6 +89,7 @@ export function Router() {
   const [screen, setScreen] = useState<Screen>("home");
   // Parámetro de la pantalla de detalle (equivale a /clientes/[id] en web).
   const [clientId, setClientId] = useState<string | null>(null);
+  const [setupCenterId, setSetupCenterId] = useState<string | null>(null);
   const openClient = (id: string) => {
     setClientId(id);
     setScreen("clientDetail");
@@ -862,6 +864,39 @@ export function Router() {
       case "users":
       case "userDetail":
         content = <UsersScreen {...props} />;
+        break;
+      case "centers":
+      case "centerImport":
+        content = (
+          <CentersScreen
+            {...props}
+            onOpen={(id) => {
+              setSetupCenterId(id);
+              setScreen("centerSetup");
+            }}
+          />
+        );
+        break;
+      case "centerSetup":
+        content = setupCenterId ? (
+          <CenterSetupScreen
+            key={setupCenterId}
+            {...props}
+            centerId={setupCenterId}
+            onBack={() => setScreen("centers")}
+          />
+        ) : (
+          <CentersScreen
+            {...props}
+            onOpen={(id) => {
+              setSetupCenterId(id);
+              setScreen("centerSetup");
+            }}
+          />
+        );
+        break;
+      case "pilot":
+        content = <PilotScreen {...props} />;
         break;
       case "designSystem":
         content = <DesignSystemScreen {...props} />;
