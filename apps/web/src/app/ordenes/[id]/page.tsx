@@ -208,6 +208,27 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
         </Card>
       ) : null}
 
+      {order.items.some((i) => i.priceSource === "cotizacion") ? (
+        <Card title="Precio cotizado">
+          <div className="flex flex-col gap-xs text-sm" data-testid="order-quoted-prices">
+            <p className="text-muted">
+              Esta OS viene de una reserva cotizada: se respeta el precio y los descuentos autorizados de la
+              cotización.
+            </p>
+            {order.items
+              .filter((i) => i.priceSource === "cotizacion")
+              .map((i) => (
+                <span key={i.id}>
+                  {i.serviceName}: {formatMoney(i.unitPrice)} cotizado
+                  {i.listUnitPrice != null && i.listUnitPrice !== i.unitPrice
+                    ? ` (lista hoy ${formatMoney(i.listUnitPrice)})`
+                    : ""}
+                </span>
+              ))}
+          </div>
+        </Card>
+      ) : null}
+
       {canMemberships ? (
         <Card title={membershipsCopy.orderCardTitle}>
           <OrderMembershipCard
