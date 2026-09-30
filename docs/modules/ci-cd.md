@@ -135,17 +135,29 @@ Después de cada migración en producción, revisa los asesores de Supabase (_Ad
 
 ## Móvil (EAS)
 
-Vercel no distribuye la app móvil. Los binarios se construyen con **EAS Build**, sin dependencias npm nuevas: `eas-cli` se ejecuta con `npx` y en una versión fija en el workflow.
+Vercel no distribuye la app móvil. Los binarios se construyen con **EAS Build** y las correcciones de JavaScript se publican con **EAS Update** (ver abajo). `eas-cli` se ejecuta con `npx` y en una versión fija en los workflows.
 
 - **`apps/mobile/eas.json`:**
-  - `preview`: distribución interna, APK en Android, ambiente EAS `preview` y `EXPO_PUBLIC_APP_ENV=preview`;
-  - `production`: tiendas, `autoIncrement` de la versión de build y `EXPO_PUBLIC_APP_ENV=production`;
+  - `preview`: distribución interna, APK en Android, ambiente EAS `preview`, canal `preview` y `EXPO_PUBLIC_APP_ENV=preview`;
+  - `production`: tiendas, `autoIncrement` de la versión de build, canal `production` y `EXPO_PUBLIC_APP_ENV=production`;
   - `appVersionSource: remote`: EAS lleva el contador de builds.
 - **Identificadores:** `com.meguiars.detailcenter` para iOS (`bundleIdentifier`) y Android (`package`). No se pueden cambiar después de publicar en las tiendas.
 - **Variables de Supabase:** en **EAS Environment Variables** (`expo.dev` → proyecto → Environment variables), con visibilidad _Plain text_ porque son públicas:
   - `preview`: `EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_ANON_KEY` de staging;
   - `production`: las de `meguiars`.
 - **En CI:** el job `mobile` compila el bundle en cada PR. Los builds firmados se piden a mano: _Actions → Build móvil (EAS) → Run workflow_ con perfil y plataforma. `production` sólo se permite desde `main` y usa el environment `production`, que requiere aprobación.
+
+### Actualizaciones sin reinstalar (EAS Update)
+
+La app trae `expo-updates`: al abrirse consulta si hay una actualización en su canal, la descarga en segundo plano y la aplica la **siguiente vez** que se abre. No hay que reinstalar el APK.
+
+- **Qué viaja por actualización:** sólo JavaScript y recursos (pantallas, textos, reglas, correcciones). Una dependencia nativa nueva, un permiso o un cambio en `app.json` que afecte lo nativo requiere un **build nuevo**.
+- **Runtime (`runtimeVersion.policy: fingerprint`):** cada build lleva la huella de su parte nativa, y una actualización sólo llega a los builds con la misma huella. Si la huella cambió, la actualización no se aplica a los teléfonos viejos (no se rompen): hace falta compilar e instalar.
+- **Publicar:** _Actions → Actualización móvil (EAS Update) → Run workflow_, con canal y un mensaje de qué cambia. `production` sólo desde `main` y con la aprobación del environment `production`. El workflow fija `EXPO_PUBLIC_APP_ENV` al canal (el `env` de `eas.json` sólo aplica a builds) y carga las variables de Supabase del ambiente EAS con `--environment`.
+- **Terminal:** `cd apps/mobile && EXPO_PUBLIC_APP_ENV=preview npx eas-cli@24.8.0 update --channel preview --environment preview --message "…"`.
+- **Probar en el teléfono:** después de publicar, cierra la app por completo y ábrela dos veces (la primera descarga, la segunda aplica).
+- **Revertir:** en expo.dev → proyecto → Updates, vuelve a publicar el grupo anterior (_Republish_), o `npx eas-cli@24.8.0 update:republish --group <id del grupo anterior>`. También sirve publicar de nuevo desde el commit anterior.
+- **Primer uso:** los APK compilados antes de este cambio no tienen `expo-updates`; hay que compilar e instalar un build nuevo una vez.
 
 Configuración inicial (una vez):
 
@@ -187,12 +199,12 @@ Reglas:
 
 ## Rollback
 
-| Qué                         | Cómo                                                                                                                                                                                                                                                | Tiempo     |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| **Web**                     | Vercel → Deployments → el deploy de producción anterior → **Instant Rollback** (o `vercel rollback`). Después, un PR que revierta el commit (`git revert`) para que `main` refleje lo publicado.                                                    | segundos   |
-| **Base de datos (esquema)** | **Hacia adelante:** una migración nueva que compense (p. ej. recrear la función anterior). Nunca se borra ni edita una migración aplicada ni se toca `schema_migrations` a mano. Gracias a expand/contract, casi siempre basta con revertir la web. | minutos    |
-| **Base de datos (datos)**   | Supabase → Database → **Backups**: diarios en el plan Pro; PITR es un add-on. Restaurar reemplaza **toda** la base, así que es último recurso. Para errores acotados, corrige con una migración o RPC auditada.                                     | horas      |
-| **Móvil**                   | Distribución interna: instala el build anterior desde expo.dev. Tiendas: detén el _staged/phased rollout_ y publica un build con la versión corregida. (EAS Update para revertir JS por OTA queda pendiente; requiere `expo-updates`.)              | horas–días |
+| Qué                         | Cómo                                                                                                                                                                                                                                                                    | Tiempo       |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| **Web**                     | Vercel → Deployments → el deploy de producción anterior → **Instant Rollback** (o `vercel rollback`). Después, un PR que revierta el commit (`git revert`) para que `main` refleje lo publicado.                                                                        | segundos     |
+| **Base de datos (esquema)** | **Hacia adelante:** una migración nueva que compense (p. ej. recrear la función anterior). Nunca se borra ni edita una migración aplicada ni se toca `schema_migrations` a mano. Gracias a expand/contract, casi siempre basta con revertir la web.                     | minutos      |
+| **Base de datos (datos)**   | Supabase → Database → **Backups**: diarios en el plan Pro; PITR es un add-on. Restaurar reemplaza **toda** la base, así que es último recurso. Para errores acotados, corrige con una migración o RPC auditada.                                                         | horas        |
+| **Móvil**                   | JavaScript: vuelve a publicar la actualización anterior con EAS Update (_Republish_ en expo.dev o `eas update:republish`); llega al abrir la app. Nativo: instala el build anterior desde expo.dev; en tiendas, detén el _staged rollout_ y publica un build corregido. | minutos–días |
 
 ## Observabilidad
 

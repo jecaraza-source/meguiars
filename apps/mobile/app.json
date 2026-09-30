@@ -3,6 +3,9 @@
     "name": "Meguiar's Detail Center",
     "slug": "meguiars-detail-center",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -39,6 +42,11 @@
         "projectId": "c2f9d08f-8ccc-4a5c-b275-c6bf13a30ed0"
       }
     },
-    "owner": "javierec"
+    "owner": "javierec",
+    "updates": {
+      "url": "https://u.expo.dev/c2f9d08f-8ccc-4a5c-b275-c6bf13a30ed0",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    }
   }
 }

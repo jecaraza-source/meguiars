@@ -1,0 +1,54 @@
+# Actualizaciones OTA de la app (EAS Update): publica el JavaScript de este
+# commit al canal del perfil, sin compilar ni reinstalar. Sólo llega a los
+# builds con el mismo runtime (fingerprint de la parte nativa); si cambió algo
+# nativo hace falta un build nuevo (mobile-build.yml). Manual: Actions →
+# Actualización móvil (EAS Update) → Run workflow. Requiere EXPO_TOKEN.
+name: Actualización móvil (EAS Update)
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Canal (perfil de eas.json)
+        type: choice
+        options: [preview, production]
+        default: preview
+      message:
+        description: Qué cambia (se ve en expo.dev)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-update-${{ inputs.profile }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: eas update (${{ inputs.profile }})
+    if: github.ref == 'refs/heads/main' || inputs.profile == 'preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.profile == 'production' && 'production' || 'staging' }}
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      PROFILE: ${{ inputs.profile }}
+      MESSAGE: ${{ inputs.message }}
+      # El env del perfil de eas.json sólo aplica a builds; la actualización
+      # debe declarar el mismo ambiente para que el aviso y las reglas coincidan.
+      EXPO_PUBLIC_APP_ENV: ${{ inputs.profile }}
+    steps:
+      - name: Verificar EXPO_TOKEN
+        run: |
+          [[ -n "$EXPO_TOKEN" ]] || { echo "::error::Falta el secret EXPO_TOKEN (docs/modules/ci-cd.md)."; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # --environment carga EXPO_PUBLIC_SUPABASE_* del ambiente EAS del perfil.
+      - run: npx --yes eas-cli@24.8.0 update --channel "$PROFILE" --environment "$PROFILE" --message "$MESSAGE" --non-interactive
+        working-directory: apps/mobile
