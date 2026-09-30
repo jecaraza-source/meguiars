@@ -145,20 +145,7 @@ Accesos: «Crear cotización» desde la ficha CRM del cliente, «Precio cotizado
 
 ## Integraciones por canal
 
-| Canal                   | Estado            | Fase | Mientras tanto                                                                       |
-| ----------------------- | ----------------- | ---- | ------------------------------------------------------------------------------------ |
-| Instagram               | Aún no disponible | 2    | Registrar la consulta con canal Instagram y el @usuario.                             |
-| Facebook                | Aún no disponible | 2    | Registrar el mensaje o comentario con canal Facebook.                                |
-| WhatsApp Business       | Aún no disponible | 2    | Registrar la consulta; compartir la cotización desde el teléfono y marcarla enviada. |
-| Google Business Profile | Aún no disponible | —    | Registrar con canal Google.                                                          |
-| TikTok                  | Aún no disponible | —    | Registrar con canal «Otro» y detalle «TikTok».                                       |
-
-La plataforma nunca pide contraseñas de redes sociales. Cada conexión de la fase 2 cumplirá lo siguiente:
-
-- usará la API oficial vigente, revisada en su documentación al implementarla;
-- guardará las credenciales sólo en el servidor;
-- verificará la firma de los webhooks;
-- se marcará «Conectada» sólo después de probarla con una cuenta real del negocio.
+Desde la fase 2, WhatsApp Business, Messenger e Instagram tienen conexión oficial con la bandeja. El estado real, la configuración y los límites por canal están en [bandeja.md](bandeja.md). Google Business Profile y TikTok siguen «Aún no disponible»: sus consultas se registran a mano con canal Google u «Otro».
 
 ## Datos seed
 
@@ -170,9 +157,8 @@ La plataforma nunca pide contraseñas de redes sociales. Cada conexión de la fa
 
 Ninguna nueva.
 
-## Pendientes (fases 2–4)
+## Pendientes (fases 3–4)
 
-- Conexiones oficiales (Instagram, Facebook, WhatsApp Business) y bandeja unificada.
 - Calendario de contenido, campañas con UTM y promociones.
 - Automatizaciones (recordatorios, seguimiento de cotizaciones) y tablero con atribución por campaña.
 - Fusión desde móvil. Hoy en móvil se consulta y la fusión se hace en web.

@@ -176,14 +176,15 @@ Publicar en tiendas: `npx eas-cli@24.8.0 submit --profile production --platform 
 
 ## Secretos
 
-| Secreto                     | Dónde vive                                                                                                  | Quién lo usa                                                 |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `SUPABASE_ACCESS_TOKEN`     | GitHub → Settings → Environments → `staging` / `production` → Secrets                                       | `supabase link` en deploy-db                                 |
-| `SUPABASE_DB_PASSWORD`      | ídem, **una por ambiente** (la de la base de ese proyecto)                                                  | `supabase db push`                                           |
-| `SUPABASE_PROJECT_REF`      | ídem, como **Variable** (no es secreta)                                                                     | deploy-db                                                    |
-| `EXPO_TOKEN`                | ídem, en los dos environments                                                                               | mobile-build                                                 |
-| llave `service_role`/secret | dashboard de Supabase y Vercel (Production, `SUPABASE_SERVICE_ROLE_KEY`); nunca en móvil ni en el navegador | servidor web: cron de alertas y alta/contraseñas de usuarios |
-| llaves publishable (anon)   | Vercel (por ambiente), EAS (por ambiente) y `.env.local`; son públicas por diseño                           | apps                                                         |
+| Secreto                     | Dónde vive                                                                                                                                                                                                | Quién lo usa                                                                                    |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN`     | GitHub → Settings → Environments → `staging` / `production` → Secrets                                                                                                                                     | `supabase link` en deploy-db                                                                    |
+| `SUPABASE_DB_PASSWORD`      | ídem, **una por ambiente** (la de la base de ese proyecto)                                                                                                                                                | `supabase db push`                                                                              |
+| `SUPABASE_PROJECT_REF`      | ídem, como **Variable** (no es secreta)                                                                                                                                                                   | deploy-db                                                                                       |
+| `EXPO_TOKEN`                | ídem, en los dos environments                                                                                                                                                                             | mobile-build                                                                                    |
+| llave `service_role`/secret | dashboard de Supabase y Vercel (Production, `SUPABASE_SERVICE_ROLE_KEY`); nunca en móvil ni en el navegador                                                                                               | servidor web: cron de alertas y alta/contraseñas de usuarios                                    |
+| tokens y App Secret de Meta | Vercel (Production y Preview): `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `MESSENGER_PAGE_ACCESS_TOKEN`, `INSTAGRAM_ACCESS_TOKEN`; nunca en la base, el navegador ni la app | servidor web: webhook `/api/webhooks/meta` y envío de la Bandeja (ver [bandeja.md](bandeja.md)) |
+| llaves publishable (anon)   | Vercel (por ambiente), EAS (por ambiente) y `.env.local`; son públicas por diseño                                                                                                                         | apps                                                                                            |
 
 Configura en GitHub **Environments**:
 
@@ -194,7 +195,7 @@ Reglas:
 
 - Nunca se versiona un `.env` salvo los `.env.example`. Lo impiden `.gitignore` y la guarda de secretos.
 - Los workflows no imprimen secretos: GitHub los enmascara y ningún paso hace `echo` de ellos.
-- **Rotación:** si un secreto se expone, revócalo en el origen (Supabase → Access Tokens o _Database password_, expo.dev → tokens), crea uno nuevo, actualízalo en GitHub y vuelve a correr el workflow. Si la llave `service_role` se filtra, rótala en _Project Settings → API Keys_.
+- **Rotación:** si un token de Meta se expone, revócalo en Meta Business Suite (usuario del sistema / página / cuenta de Instagram), genera otro, actualízalo en Vercel y vuelve a desplegar; después usa «Probar conexión» en Integraciones. Si un secreto se expone, revócalo en el origen (Supabase → Access Tokens o _Database password_, expo.dev → tokens), crea uno nuevo, actualízalo en GitHub y vuelve a correr el workflow. Si la llave `service_role` se filtra, rótala en _Project Settings → API Keys_.
 - Los PRs desde forks no reciben secretos (comportamiento de GitHub), y CI no los necesita.
 
 ## Rollback
@@ -215,13 +216,15 @@ Reglas:
 
 ## Variables de entorno
 
-| Variable                                                                              | Dónde               | Nota                                                                                     |
-| ------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_APP_ENV`                                                                 | web                 | **nueva**, opcional: `local` \| `preview` \| `production`. En Vercel se usa `VERCEL_ENV` |
-| `EXPO_PUBLIC_APP_ENV`                                                                 | móvil               | **nueva**; la fija `eas.json` por perfil (en Expo Go queda `local`)                      |
-| `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_SITE_URL`                                      | web                 | sin cambios; ahora un valor por ambiente                                                 |
-| `EXPO_PUBLIC_SUPABASE_*`                                                              | móvil               | sin cambios; en EAS Environment Variables por ambiente                                   |
-| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`, `EXPO_TOKEN` | GitHub Environments | sólo para los pipelines; nunca en el repo                                                |
+| Variable                                                                                                                                               | Dónde                       | Nota                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- | ---------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_ENV`                                                                                                                                  | web                         | **nueva**, opcional: `local` \| `preview` \| `production`. En Vercel se usa `VERCEL_ENV` |
+| `EXPO_PUBLIC_APP_ENV`                                                                                                                                  | móvil                       | **nueva**; la fija `eas.json` por perfil (en Expo Go queda `local`)                      |
+| `NEXT_PUBLIC_SUPABASE_*`, `NEXT_PUBLIC_SITE_URL`                                                                                                       | web                         | sin cambios; ahora un valor por ambiente                                                 |
+| `EXPO_PUBLIC_SUPABASE_*`                                                                                                                               | móvil                       | sin cambios; en EAS Environment Variables por ambiente                                   |
+| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`, `EXPO_TOKEN`                                                                  | GitHub Environments         | sólo para los pipelines; nunca en el repo                                                |
+| `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `MESSENGER_PAGE_ACCESS_TOKEN`, `INSTAGRAM_ACCESS_TOKEN`, `META_GRAPH_VERSION` | web (Vercel, sólo servidor) | **nuevas** (CR2 fase 2); ver [bandeja.md](bandeja.md)                                    |
+| `EXPO_PUBLIC_WEB_URL`                                                                                                                                  | móvil                       | **nueva**; la fija `eas.json` (y `mobile-update.yml`): la Bandeja responde vía la web    |
 
 ## Pruebas
 
