@@ -113,6 +113,8 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "b2b_price_rules",
   "b2b_vehicles",
   "bays",
+  "center_baselines",
+  "client_error_reports",
   "client_centers",
   "clients",
   "contact_preferences",
@@ -178,6 +180,11 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_service_order_discount",
+  "center_readiness",
+  "create_detail_center",
+  "set_center_baseline",
+  "report_client_error",
+  "pilot_metrics",
   "accept_upsell",
   "reject_upsell",
   "upsell_metric_facts",

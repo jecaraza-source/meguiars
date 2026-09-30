@@ -492,6 +492,27 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `center_baselines`
+
+- **Módulo:** [piloto-rollout](modules/piloto-rollout.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `metric` | text | no |  |
+| `value` | numeric(14,2) | no |  |
+| `period_from` | date | sí |  |
+| `period_to` | date | sí |  |
+| `source` | text | no |  |
+| `version` | integer | no | 1 |
+| `updated_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `client_centers`
 
 - **Módulo:** [clientes-vehiculos](modules/clientes-vehiculos.md)
@@ -507,6 +528,25 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `last_visit_at` | timestamp with time zone | sí |  |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+
+### `client_error_reports`
+
+- **Módulo:** [piloto-rollout](modules/piloto-rollout.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | bigint | no |  |
+| `organization_id` | uuid | sí |  |
+| `detail_center_id` | uuid | sí |  |
+| `user_id` | uuid | sí | auth.uid() |
+| `source` | text | no |  |
+| `name` | text | no |  |
+| `message` | text | no |  |
+| `digest` | text | sí |  |
+| `route` | text | sí |  |
+| `occurred_at` | timestamp with time zone | no | now() |
 
 ### `clients`
 
