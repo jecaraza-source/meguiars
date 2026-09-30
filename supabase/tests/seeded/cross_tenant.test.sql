@@ -178,6 +178,7 @@ create function pg_temp.param_table(fn text, arg text) returns text language sql
     when arg = 'p_quote_id' then 'quotes'
     when arg = 'p_conversation_id' then 'conversations'
     when arg = 'p_campaign_id' then 'campaigns'
+    when arg = 'p_automation_id' then 'automations'
     when arg = 'p_spend_id' then 'campaign_spend'
     when arg = 'p_channel_account_id' then 'channel_accounts'
     when arg in ('p_account_id', 'p_b2b_account_id') then 'b2b_accounts'
@@ -211,6 +212,7 @@ create function pg_temp.param_table(fn text, arg text) returns text language sql
     when arg = 'p_attachment_id' then 'expense_attachments'
     when arg = 'p_id' then case
       when fn like '%opportunit%' then 'sales_opportunities'
+      when fn like '%automation%' then 'automations'
       when fn like '%lead_stage%' then 'lead_stages'
       when fn like '%lead%' then 'leads'
       when fn like '%content_post%' then 'content_posts'

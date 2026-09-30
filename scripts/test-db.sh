@@ -62,6 +62,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó la bandeja de ejemplo (CR2 fase 2)" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.campaigns c join public.promotions p on p.campaign_id = c.id join public.leads l on l.campaign_id = c.id")" == "1" ]] \
   || { echo "El seed no cargó la campaña de ejemplo (CR2 fase 3)" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select count(*) filter (where active) || ':' || count(*) || ':' || (select count(*) from public.crm_tasks where source = 'automatizacion' and lead_id = '1ead0000-0000-4000-8000-000000000001') from public.automations")" == "3:4:1" ]] \
+  || { echo "El seed no cargó las automatizaciones de ejemplo (CR2 fase 4)" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.b2b_price_rules r join public.b2b_agreements g on g.id = r.agreement_id where g.status = 'activo'")" == "2" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_orders where b2b_account_id is not null")" == "3" ]] \
   || { echo "El seed no cargó la cuenta B2B de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.upsell_rules where active")" == "6" ]] \

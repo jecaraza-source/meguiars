@@ -824,3 +824,28 @@ on conflict (id) do nothing;
 update public.leads set campaign_id = 'ca000000-0000-4000-8000-000000000001'
  where id = '1ead0000-0000-4000-8000-000000000001' and campaign_id is null;
 select set_config('app.change_reason', '', false);
+
+-- CR2 (fase 4): automatizaciones comerciales del centro CDMX (tres activas y
+-- una promocional en pausa) y su primera corrida.
+select set_config('app.change_reason', 'Datos demo', false);
+insert into public.automations (id, organization_id, detail_center_id, name, trigger, purpose, delay_days, due_in_days,
+                                message_template, cooldown_days, active, activated_at)
+values ('a7000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'Nuevo prospecto: contactar hoy', 'prospecto_nuevo', 'operativa', 0, 0,
+        'Hola {nombre}, gracias por escribir a {centro}. ¿Te ayudo con tu cotización?', 30, true, now() - interval '3 days'),
+       ('a7000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'Recordar cotización sin respuesta', 'cotizacion_pendiente', 'operativa', 2, 0,
+        'Hola {nombre}, ¿pudiste revisar la cotización {folio}? Vence el {fecha}.', 30, true, now() - interval '3 days'),
+       ('a7000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'Confirmar cita de mañana', 'reserva_proxima', 'operativa', 1, 0,
+        'Hola {nombre}, te esperamos el {fecha} en {centro}.', 7, true, now() - interval '3 days'),
+       ('a7000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'Recompra de lavado (promocional)', 'mantenimiento', 'promocional', 30, 1,
+        'Hola {nombre}, ya toca tu {servicio} en {centro}. ¿Te agendo?', 30, false, null)
+on conflict (id) do nothing;
+select private.run_automation(a.id, 'programada', null)
+  from public.automations a
+ where a.id in ('a7000000-0000-4000-8000-000000000001', 'a7000000-0000-4000-8000-000000000002',
+                'a7000000-0000-4000-8000-000000000003')
+   and not exists (select 1 from public.automation_runs r where r.automation_id = a.id);
+select set_config('app.change_reason', '', false);
