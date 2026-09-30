@@ -11,6 +11,600 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      lead_events: {
+        Row: {
+          actor_id: string | null;
+          appointment_id: string | null;
+          channel: string | null;
+          detail_center_id: string;
+          from_stage_id: string | null;
+          id: string;
+          kind: string;
+          lead_id: string;
+          note: string | null;
+          occurred_at: string;
+          organization_id: string;
+          owner_id: string | null;
+          quote_id: string | null;
+          seq: number;
+          service_order_id: string | null;
+          source_channel: string;
+          to_stage_id: string | null;
+          value: number | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          appointment_id?: string | null;
+          channel?: string | null;
+          detail_center_id: string;
+          from_stage_id?: string | null;
+          id?: string;
+          kind: string;
+          lead_id: string;
+          note?: string | null;
+          occurred_at?: string;
+          organization_id: string;
+          owner_id?: string | null;
+          quote_id?: string | null;
+          seq?: never;
+          service_order_id?: string | null;
+          source_channel: string;
+          to_stage_id?: string | null;
+          value?: number | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          appointment_id?: string | null;
+          channel?: string | null;
+          detail_center_id?: string;
+          from_stage_id?: string | null;
+          id?: string;
+          kind?: string;
+          lead_id?: string;
+          note?: string | null;
+          occurred_at?: string;
+          organization_id?: string;
+          owner_id?: string | null;
+          quote_id?: string | null;
+          seq?: never;
+          service_order_id?: string | null;
+          source_channel?: string;
+          to_stage_id?: string | null;
+          value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_events_organization_id_from_stage_id_fkey";
+            columns: ["organization_id", "from_stage_id"];
+            isOneToOne: false;
+            referencedRelation: "lead_stages";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "lead_events_organization_id_lead_id_fkey";
+            columns: ["organization_id", "lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "lead_events_organization_id_to_stage_id_fkey";
+            columns: ["organization_id", "to_stage_id"];
+            isOneToOne: false;
+            referencedRelation: "lead_stages";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      lead_services: {
+        Row: {
+          created_at: string;
+          lead_id: string;
+          organization_id: string;
+          service_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          lead_id: string;
+          organization_id: string;
+          service_id: string;
+        };
+        Update: {
+          created_at?: string;
+          lead_id?: string;
+          organization_id?: string;
+          service_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_services_organization_id_lead_id_fkey";
+            columns: ["organization_id", "lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "lead_services_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      lead_stages: {
+        Row: {
+          active: boolean;
+          code: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          milestone: string | null;
+          name: string;
+          organization_id: string;
+          position: number;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          milestone?: string | null;
+          name: string;
+          organization_id: string;
+          position: number;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          milestone?: string | null;
+          name?: string;
+          organization_id?: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_stages_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      leads: {
+        Row: {
+          client_id: string | null;
+          closed_at: string | null;
+          consent_at: string | null;
+          consent_channels: string[];
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string;
+          email: string | null;
+          estimated_value: number | null;
+          first_contact_at: string | null;
+          full_name: string;
+          id: string;
+          loss_notes: string | null;
+          loss_reason: string | null;
+          next_action: string | null;
+          next_action_on: string | null;
+          notes: string | null;
+          organization_id: string;
+          owner_id: string | null;
+          phone: string | null;
+          phone_key: string | null;
+          referred_by_client_id: string | null;
+          request_id: string;
+          service_order_id: string | null;
+          social_handle: string | null;
+          source_channel: string;
+          source_detail: string | null;
+          stage_id: string;
+          status: string;
+          updated_at: string;
+          vehicle_description: string | null;
+          version: number;
+          won_value: number | null;
+        };
+        Insert: {
+          client_id?: string | null;
+          closed_at?: string | null;
+          consent_at?: string | null;
+          consent_channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id: string;
+          email?: string | null;
+          estimated_value?: number | null;
+          first_contact_at?: string | null;
+          full_name: string;
+          id?: string;
+          loss_notes?: string | null;
+          loss_reason?: string | null;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          owner_id?: string | null;
+          phone?: string | null;
+          phone_key?: never;
+          referred_by_client_id?: string | null;
+          request_id: string;
+          service_order_id?: string | null;
+          social_handle?: string | null;
+          source_channel: string;
+          source_detail?: string | null;
+          stage_id: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_description?: string | null;
+          version?: number;
+          won_value?: number | null;
+        };
+        Update: {
+          client_id?: string | null;
+          closed_at?: string | null;
+          consent_at?: string | null;
+          consent_channels?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string;
+          email?: string | null;
+          estimated_value?: number | null;
+          first_contact_at?: string | null;
+          full_name?: string;
+          id?: string;
+          loss_notes?: string | null;
+          loss_reason?: string | null;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          owner_id?: string | null;
+          phone?: string | null;
+          phone_key?: never;
+          referred_by_client_id?: string | null;
+          request_id?: string;
+          service_order_id?: string | null;
+          social_handle?: string | null;
+          source_channel?: string;
+          source_detail?: string | null;
+          stage_id?: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_description?: string | null;
+          version?: number;
+          won_value?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leads_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "leads_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "leads_organization_id_referred_by_client_id_fkey";
+            columns: ["organization_id", "referred_by_client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "leads_organization_id_service_order_id_fkey";
+            columns: ["organization_id", "service_order_id"];
+            isOneToOne: false;
+            referencedRelation: "service_orders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "leads_organization_id_stage_id_fkey";
+            columns: ["organization_id", "stage_id"];
+            isOneToOne: false;
+            referencedRelation: "lead_stages";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      quote_discounts: {
+        Row: {
+          amount: number;
+          authorization_level: Database["public"]["Enums"]["discount_level"];
+          authorized_by: string | null;
+          created_at: string;
+          id: string;
+          item_id: string | null;
+          kind: string;
+          organization_id: string;
+          quote_id: string;
+          reason: string;
+          updated_at: string;
+          value: number;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        Insert: {
+          amount?: number;
+          authorization_level: Database["public"]["Enums"]["discount_level"];
+          authorized_by?: string | null;
+          created_at?: string;
+          id?: string;
+          item_id?: string | null;
+          kind: string;
+          organization_id: string;
+          quote_id: string;
+          reason: string;
+          updated_at?: string;
+          value: number;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          authorization_level?: Database["public"]["Enums"]["discount_level"];
+          authorized_by?: string | null;
+          created_at?: string;
+          id?: string;
+          item_id?: string | null;
+          kind?: string;
+          organization_id?: string;
+          quote_id?: string;
+          reason?: string;
+          updated_at?: string;
+          value?: number;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_discounts_organization_id_quote_id_fkey";
+            columns: ["organization_id", "quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "quote_discounts_quote_id_item_id_fkey";
+            columns: ["quote_id", "item_id"];
+            isOneToOne: false;
+            referencedRelation: "quote_items";
+            referencedColumns: ["quote_id", "id"];
+          },
+        ];
+      };
+      quote_items: {
+        Row: {
+          created_at: string;
+          duration_minutes: number;
+          id: string;
+          line_discount: number;
+          line_subtotal: number | null;
+          operator_commission_pct: number | null;
+          operator_pay: number | null;
+          organization_id: string;
+          position: number;
+          price_source: string;
+          quantity: number;
+          quote_id: string;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          service_code: string;
+          service_id: string;
+          service_name: string;
+          unit_direct_cost: number;
+          unit_price: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          duration_minutes: number;
+          id?: string;
+          line_discount?: number;
+          line_subtotal?: never;
+          operator_commission_pct?: number | null;
+          operator_pay?: never;
+          organization_id: string;
+          position?: number;
+          price_source: string;
+          quantity: number;
+          quote_id: string;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          service_code: string;
+          service_id: string;
+          service_name: string;
+          unit_direct_cost: number;
+          unit_price: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          duration_minutes?: number;
+          id?: string;
+          line_discount?: number;
+          line_subtotal?: never;
+          operator_commission_pct?: number | null;
+          operator_pay?: never;
+          organization_id?: string;
+          position?: number;
+          price_source?: string;
+          quantity?: number;
+          quote_id?: string;
+          revenue_engine?: Database["public"]["Enums"]["revenue_engine"];
+          service_code?: string;
+          service_id?: string;
+          service_name?: string;
+          unit_direct_cost?: number;
+          unit_price?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_organization_id_quote_id_fkey";
+            columns: ["organization_id", "quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "quote_items_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      quotes: {
+        Row: {
+          appointment_id: string | null;
+          client_id: string | null;
+          contact_name: string;
+          contribution_margin: number | null;
+          converted_at: string | null;
+          cost_total: number | null;
+          created_at: string;
+          created_by: string | null;
+          decided_at: string | null;
+          decision_reason: string | null;
+          detail_center_id: string;
+          discount_total: number;
+          folio: string;
+          folio_number: number;
+          id: string;
+          lead_id: string | null;
+          notes: string | null;
+          operator_pay_total: number;
+          organization_id: string;
+          request_id: string;
+          sent_at: string | null;
+          standard_cost_total: number;
+          status: string;
+          subtotal: number;
+          total: number;
+          updated_at: string;
+          valid_until: string;
+          vehicle_id: string | null;
+          version: number;
+        };
+        Insert: {
+          appointment_id?: string | null;
+          client_id?: string | null;
+          contact_name: string;
+          contribution_margin?: never;
+          converted_at?: string | null;
+          cost_total?: never;
+          created_at?: string;
+          created_by?: string | null;
+          decided_at?: string | null;
+          decision_reason?: string | null;
+          detail_center_id: string;
+          discount_total?: number;
+          folio: string;
+          folio_number: number;
+          id?: string;
+          lead_id?: string | null;
+          notes?: string | null;
+          operator_pay_total?: number;
+          organization_id: string;
+          request_id: string;
+          sent_at?: string | null;
+          standard_cost_total?: number;
+          status?: string;
+          subtotal?: number;
+          total?: number;
+          updated_at?: string;
+          valid_until: string;
+          vehicle_id?: string | null;
+          version?: number;
+        };
+        Update: {
+          appointment_id?: string | null;
+          client_id?: string | null;
+          contact_name?: string;
+          contribution_margin?: never;
+          converted_at?: string | null;
+          cost_total?: never;
+          created_at?: string;
+          created_by?: string | null;
+          decided_at?: string | null;
+          decision_reason?: string | null;
+          detail_center_id?: string;
+          discount_total?: number;
+          folio?: string;
+          folio_number?: number;
+          id?: string;
+          lead_id?: string | null;
+          notes?: string | null;
+          operator_pay_total?: number;
+          organization_id?: string;
+          request_id?: string;
+          sent_at?: string | null;
+          standard_cost_total?: number;
+          status?: string;
+          subtotal?: number;
+          total?: number;
+          updated_at?: string;
+          valid_until?: string;
+          vehicle_id?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quotes_organization_id_appointment_id_fkey";
+            columns: ["organization_id", "appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "quotes_organization_id_client_id_fkey";
+            columns: ["organization_id", "client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "quotes_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "quotes_organization_id_lead_id_fkey";
+            columns: ["organization_id", "lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "quotes_organization_id_vehicle_id_fkey";
+            columns: ["organization_id", "vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       kpi_settings: {
         Row: {
           ltv_lifetime_years: number;
@@ -751,6 +1345,7 @@ export type Database = {
           is_walk_in: boolean;
           notes: string | null;
           organization_id: string;
+          quote_id: string | null;
           received_at: string | null;
           request_id: string;
           service_order_id: string | null;
@@ -777,6 +1372,7 @@ export type Database = {
           is_walk_in?: boolean;
           notes?: string | null;
           organization_id: string;
+          quote_id?: string | null;
           received_at?: string | null;
           request_id: string;
           service_order_id?: string | null;
@@ -803,6 +1399,7 @@ export type Database = {
           is_walk_in?: boolean;
           notes?: string | null;
           organization_id?: string;
+          quote_id?: string | null;
           received_at?: string | null;
           request_id?: string;
           service_order_id?: string | null;
@@ -847,6 +1444,13 @@ export type Database = {
             columns: ["organization_id", "vehicle_id"];
             isOneToOne: false;
             referencedRelation: "vehicles";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "appointments_quote_fk";
+            columns: ["organization_id", "quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
             referencedColumns: ["organization_id", "id"];
           },
           {
@@ -1789,6 +2393,9 @@ export type Database = {
           marketing_opt_in: boolean;
           marketing_opt_in_at: string | null;
           marketing_opt_in_source: string | null;
+          merged_at: string | null;
+          merged_by: string | null;
+          merged_into_id: string | null;
           notes: string | null;
           organization_id: string;
           phone: string;
@@ -1813,6 +2420,9 @@ export type Database = {
           marketing_opt_in?: boolean;
           marketing_opt_in_at?: string | null;
           marketing_opt_in_source?: string | null;
+          merged_at?: string | null;
+          merged_by?: string | null;
+          merged_into_id?: string | null;
           notes?: string | null;
           organization_id: string;
           phone: string;
@@ -1837,6 +2447,9 @@ export type Database = {
           marketing_opt_in?: boolean;
           marketing_opt_in_at?: string | null;
           marketing_opt_in_source?: string | null;
+          merged_at?: string | null;
+          merged_by?: string | null;
+          merged_into_id?: string | null;
           notes?: string | null;
           organization_id?: string;
           phone?: string;
@@ -1852,6 +2465,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "detail_centers";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "clients_merged_into_fk";
+            columns: ["organization_id", "merged_into_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["organization_id", "id"];
           },
           {
             foreignKeyName: "clients_organization_id_created_in_detail_center_id_fkey";
@@ -1932,6 +2552,7 @@ export type Database = {
           due_on: string;
           id: string;
           kind: string;
+          lead_id: string | null;
           membership_id: string | null;
           notes: string | null;
           opportunity_id: string | null;
@@ -1960,6 +2581,7 @@ export type Database = {
           due_on: string;
           id?: string;
           kind: string;
+          lead_id?: string | null;
           membership_id?: string | null;
           notes?: string | null;
           opportunity_id?: string | null;
@@ -1988,6 +2610,7 @@ export type Database = {
           due_on?: string;
           id?: string;
           kind?: string;
+          lead_id?: string | null;
           membership_id?: string | null;
           notes?: string | null;
           opportunity_id?: string | null;
@@ -2003,6 +2626,13 @@ export type Database = {
           vehicle_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "crm_tasks_lead_fk";
+            columns: ["organization_id", "lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["organization_id", "id"];
+          },
           {
             foreignKeyName: "crm_tasks_opportunity_fk";
             columns: ["organization_id", "opportunity_id"];
@@ -4851,6 +5481,487 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      list_leads: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_id?: string | null;
+          p_limit?: number | null;
+          p_owner_id?: string | null;
+          p_query?: string | null;
+          p_source_channel?: string | null;
+          p_stage_id?: string | null;
+          p_status?: string | null;
+        };
+        Returns: {
+          client_id: string | null;
+          client_name: string | null;
+          closed_at: string | null;
+          consent_channels: string[];
+          created_at: string;
+          detail_center_id: string;
+          detail_center_name: string;
+          email: string | null;
+          estimated_value: number | null;
+          first_contact_at: string | null;
+          full_name: string;
+          id: string;
+          interest_service_ids: string[];
+          interest_service_names: string[];
+          loss_notes: string | null;
+          loss_reason: string | null;
+          next_action: string | null;
+          next_action_on: string | null;
+          notes: string | null;
+          open_tasks: number;
+          owner_id: string | null;
+          owner_name: string | null;
+          phone: string | null;
+          quotes: number;
+          referred_by_client_id: string | null;
+          referred_by_name: string | null;
+          service_order_folio: string | null;
+          service_order_id: string | null;
+          social_handle: string | null;
+          source_channel: string;
+          source_detail: string | null;
+          stage_id: string;
+          stage_name: string;
+          stage_position: number;
+          status: string;
+          today: string;
+          vehicle_description: string | null;
+          version: number;
+          won_value: number | null;
+        }[];
+      };
+      lead_timeline: {
+        Args: {
+          p_id: string;
+        };
+        Returns: {
+          actor_name: string | null;
+          appointment_id: string | null;
+          channel: string | null;
+          from_stage_name: string | null;
+          kind: string;
+          note: string | null;
+          occurred_at: string;
+          owner_name: string | null;
+          quote_folio: string | null;
+          quote_id: string | null;
+          seq: number;
+          service_order_folio: string | null;
+          service_order_id: string | null;
+          to_stage_name: string | null;
+          value: number | null;
+        }[];
+      };
+      lead_owners: {
+        Args: {
+          p_detail_center_id: string;
+        };
+        Returns: {
+          full_name: string;
+          user_id: string;
+        }[];
+      };
+      lead_matches: {
+        Args: {
+          p_detail_center_id: string;
+          p_email?: string | null;
+          p_exclude_lead_id?: string | null;
+          p_phone?: string | null;
+        };
+        Returns: {
+          detail: string;
+          display_name: string;
+          id: string;
+          kind: string;
+          matched_on: string[];
+        }[];
+      };
+      list_quotes: {
+        Args: {
+          p_client_id?: string | null;
+          p_detail_center_ids: string[];
+          p_id?: string | null;
+          p_lead_id?: string | null;
+          p_limit?: number | null;
+          p_status?: string | null;
+        };
+        Returns: {
+          appointment_id: string | null;
+          appointment_starts_at: string | null;
+          client_id: string | null;
+          client_name: string | null;
+          contact_name: string;
+          contribution_margin: number;
+          cost_total: number;
+          created_at: string;
+          created_by_name: string | null;
+          decided_at: string | null;
+          decision_reason: string | null;
+          detail_center_id: string;
+          detail_center_name: string;
+          discount_total: number;
+          discounts: Json;
+          expired: boolean;
+          folio: string;
+          id: string;
+          items: Json;
+          lead_id: string | null;
+          lead_name: string | null;
+          notes: string | null;
+          operator_pay_total: number;
+          sent_at: string | null;
+          service_order_folio: string | null;
+          service_order_id: string | null;
+          standard_cost_total: number;
+          status: string;
+          subtotal: number;
+          total: number;
+          valid_until: string;
+          vehicle_id: string | null;
+          vehicle_label: string | null;
+          version: number;
+        }[];
+      };
+      client_duplicate_candidates: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_limit?: number | null;
+        };
+        Returns: {
+          client_a_active_memberships: number;
+          client_a_b2b: boolean;
+          client_a_created_at: string;
+          client_a_email: string | null;
+          client_a_id: string;
+          client_a_name: string;
+          client_a_orders: number;
+          client_a_phone: string;
+          client_b_active_memberships: number;
+          client_b_b2b: boolean;
+          client_b_created_at: string;
+          client_b_email: string | null;
+          client_b_id: string;
+          client_b_name: string;
+          client_b_orders: number;
+          client_b_phone: string;
+          matched_on: string[];
+          name_similarity: number;
+        }[];
+      };
+      commercial_segment: {
+        Args: {
+          p_consent_channel?: string | null;
+          p_detail_center_ids: string[];
+          p_interest_service_ids?: string[] | null;
+          p_limit?: number | null;
+          p_max_days_since_visit?: number | null;
+          p_max_spend?: number | null;
+          p_min_days_since_visit?: number | null;
+          p_min_spend?: number | null;
+          p_min_visits?: number | null;
+          p_service_ids?: string[] | null;
+        };
+        Returns: {
+          avg_days_between_visits: number | null;
+          avg_ticket: number | null;
+          client_id: string;
+          consent_channels: string[];
+          days_since_last_visit: number | null;
+          email: string | null;
+          first_visit_at: string | null;
+          full_name: string;
+          home_center_name: string;
+          interest_names: string[];
+          last_visit_at: string | null;
+          phone: string;
+          service_names: string[];
+          total_spend: number;
+          visits: number;
+        }[];
+      };
+      commercial_funnel_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_to: string;
+        };
+        Returns: {
+          booked_at: string | null;
+          created_at: string;
+          detail_center_id: string;
+          first_contact_minutes: number | null;
+          interest_service_ids: string[];
+          lead_id: string;
+          loss_reason: string | null;
+          lost_at: string | null;
+          owner_id: string | null;
+          quoted_at: string | null;
+          sale_cost: number | null;
+          sale_margin: number | null;
+          sale_total: number | null;
+          source_channel: string;
+          status: string;
+          won_at: string | null;
+        }[];
+      };
+      commercial_quote_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_to: string;
+        };
+        Returns: {
+          booked: boolean;
+          contribution_margin: number;
+          cost_total: number;
+          created_at: string;
+          detail_center_id: string;
+          discount_total: number;
+          expired: boolean;
+          from_lead: boolean;
+          order_margin: number | null;
+          order_status: string | null;
+          order_total: number | null;
+          quote_id: string;
+          source_channel: string | null;
+          status: string;
+          total: number;
+        }[];
+      };
+      create_lead: {
+        Args: {
+          p_client_id?: string | null;
+          p_consent_channels?: string[] | null;
+          p_detail_center_id: string;
+          p_email?: string | null;
+          p_estimated_value?: number | null;
+          p_full_name: string;
+          p_interest_service_ids?: string[] | null;
+          p_next_action?: string | null;
+          p_next_action_on?: string | null;
+          p_notes?: string | null;
+          p_owner_id?: string | null;
+          p_phone?: string | null;
+          p_referred_by_client_id?: string | null;
+          p_request_id: string;
+          p_social_handle?: string | null;
+          p_source_channel: string;
+          p_source_detail?: string | null;
+          p_vehicle_description?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      update_lead: {
+        Args: {
+          p_consent_channels: string[];
+          p_email: string | null;
+          p_estimated_value: number | null;
+          p_full_name: string;
+          p_id: string;
+          p_interest_service_ids: string[];
+          p_next_action: string | null;
+          p_next_action_on: string | null;
+          p_notes: string | null;
+          p_owner_id: string | null;
+          p_phone: string | null;
+          p_reason: string;
+          p_social_handle: string | null;
+          p_source_channel: string;
+          p_source_detail: string | null;
+          p_vehicle_description: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      log_lead_contact: {
+        Args: {
+          p_channel: string;
+          p_id: string;
+          p_note?: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      move_lead_stage: {
+        Args: {
+          p_id: string;
+          p_note?: string | null;
+          p_stage_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      add_lead_note: {
+        Args: {
+          p_id: string;
+          p_note: string;
+        };
+        Returns: undefined;
+      };
+      lose_lead: {
+        Args: {
+          p_id: string;
+          p_notes?: string | null;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      reopen_lead: {
+        Args: {
+          p_id: string;
+          p_reason: string;
+          p_stage_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      win_lead: {
+        Args: {
+          p_id: string;
+          p_service_order_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      link_lead_client: {
+        Args: {
+          p_client_id: string;
+          p_id: string;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      create_lead_task: {
+        Args: {
+          p_assigned_to?: string | null;
+          p_due_on: string;
+          p_id: string;
+          p_kind: string;
+          p_notes?: string | null;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["crm_tasks"]["Row"];
+        SetofOptions: { from: "*"; to: "crm_tasks"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_lead_stage: {
+        Args: {
+          p_active: boolean;
+          p_code: string;
+          p_id: string | null;
+          p_milestone: string | null;
+          p_name: string;
+          p_organization_id: string;
+          p_position: number;
+          p_reason: string;
+        };
+        Returns: Database["public"]["Tables"]["lead_stages"]["Row"];
+        SetofOptions: { from: "*"; to: "lead_stages"; isOneToOne: true; isSetofReturn: false };
+      };
+      create_quote: {
+        Args: {
+          p_client_id?: string | null;
+          p_detail_center_id: string;
+          p_items: Json;
+          p_lead_id?: string | null;
+          p_notes?: string | null;
+          p_request_id: string;
+          p_valid_days?: number | null;
+          p_vehicle_id?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["quotes"]["Row"];
+        SetofOptions: { from: "*"; to: "quotes"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_quote_item: {
+        Args: {
+          p_quantity: number;
+          p_quote_id: string;
+          p_service_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["quotes"]["Row"];
+        SetofOptions: { from: "*"; to: "quotes"; isOneToOne: true; isSetofReturn: false };
+      };
+      add_quote_discount: {
+        Args: {
+          p_item_id: string | null;
+          p_kind: string;
+          p_quote_id: string;
+          p_reason: string;
+          p_value: number;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["quotes"]["Row"];
+        SetofOptions: { from: "*"; to: "quotes"; isOneToOne: true; isSetofReturn: false };
+      };
+      void_quote_discount: {
+        Args: {
+          p_discount_id: string;
+          p_quote_id: string;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["quotes"]["Row"];
+        SetofOptions: { from: "*"; to: "quotes"; isOneToOne: true; isSetofReturn: false };
+      };
+      update_quote: {
+        Args: {
+          p_notes: string | null;
+          p_quote_id: string;
+          p_reason: string;
+          p_valid_until: string;
+          p_vehicle_id: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["quotes"]["Row"];
+        SetofOptions: { from: "*"; to: "quotes"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_quote_status: {
+        Args: {
+          p_quote_id: string;
+          p_reason?: string | null;
+          p_status: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["quotes"]["Row"];
+        SetofOptions: { from: "*"; to: "quotes"; isOneToOne: true; isSetofReturn: false };
+      };
+      book_quote: {
+        Args: {
+          p_bay_id?: string | null;
+          p_notes?: string | null;
+          p_quote_id: string;
+          p_request_id: string;
+          p_starts_at: string;
+          p_technician_id?: string | null;
+          p_vehicle_id?: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["appointments"]["Row"];
+        SetofOptions: { from: "*"; to: "appointments"; isOneToOne: true; isSetofReturn: false };
+      };
+      merge_clients: {
+        Args: {
+          p_keep_client_id: string;
+          p_merge_client_id: string;
+          p_reason: string;
+        };
+        Returns: Database["public"]["Tables"]["clients"]["Row"];
+        SetofOptions: { from: "*"; to: "clients"; isOneToOne: true; isSetofReturn: false };
+      };
       corporate_order_lines: {
         Args: {
           p_channel?: string | null;
@@ -6248,32 +7359,7 @@ export type Database = {
           p_vehicle_id: string;
           p_walk_in?: boolean;
         };
-        Returns: {
-          bay_id: string | null;
-          cancelled_at: string | null;
-          client_id: string;
-          conflict_override: boolean;
-          created_at: string;
-          created_by: string | null;
-          delivered_at: string | null;
-          detail_center_id: string;
-          duration_minutes: number;
-          ends_at: string;
-          finished_at: string | null;
-          id: string;
-          is_walk_in: boolean;
-          notes: string | null;
-          organization_id: string;
-          received_at: string | null;
-          request_id: string;
-          service_order_id: string | null;
-          started_at: string | null;
-          starts_at: string;
-          status: Database["public"]["Enums"]["appointment_status"];
-          technician_id: string | null;
-          updated_at: string;
-          vehicle_id: string;
-        };
+        Returns: Database["public"]["Tables"]["appointments"]["Row"];
         SetofOptions: {
           from: "*";
           to: "appointments";
@@ -6295,30 +7381,7 @@ export type Database = {
           p_source?: string;
           p_vehicles?: Json;
         };
-        Returns: {
-          active: boolean;
-          created_at: string;
-          created_by: string | null;
-          created_in_detail_center_id: string;
-          email: string | null;
-          full_name: string;
-          home_detail_center_id: string;
-          id: string;
-          kind: string;
-          last_visit_at: string | null;
-          last_visit_detail_center_id: string | null;
-          marketing_channels: string[];
-          marketing_opt_in: boolean;
-          marketing_opt_in_at: string | null;
-          marketing_opt_in_source: string | null;
-          notes: string | null;
-          organization_id: string;
-          phone: string;
-          phone_digits: string | null;
-          request_id: string;
-          search_name: string | null;
-          updated_at: string;
-        };
+        Returns: Database["public"]["Tables"]["clients"]["Row"];
         SetofOptions: {
           from: "*";
           to: "clients";
@@ -7048,32 +8111,7 @@ export type Database = {
       };
       set_appointment_status: {
         Args: { p_id: string; p_reason?: string; p_status: Database["public"]["Enums"]["appointment_status"] };
-        Returns: {
-          bay_id: string | null;
-          cancelled_at: string | null;
-          client_id: string;
-          conflict_override: boolean;
-          created_at: string;
-          created_by: string | null;
-          delivered_at: string | null;
-          detail_center_id: string;
-          duration_minutes: number;
-          ends_at: string;
-          finished_at: string | null;
-          id: string;
-          is_walk_in: boolean;
-          notes: string | null;
-          organization_id: string;
-          received_at: string | null;
-          request_id: string;
-          service_order_id: string | null;
-          started_at: string | null;
-          starts_at: string;
-          status: Database["public"]["Enums"]["appointment_status"];
-          technician_id: string | null;
-          updated_at: string;
-          vehicle_id: string;
-        };
+        Returns: Database["public"]["Tables"]["appointments"]["Row"];
         SetofOptions: {
           from: "*";
           to: "appointments";
@@ -7416,32 +8454,7 @@ export type Database = {
           p_starts_at: string;
           p_technician_id: string | null;
         };
-        Returns: {
-          bay_id: string | null;
-          cancelled_at: string | null;
-          client_id: string;
-          conflict_override: boolean;
-          created_at: string;
-          created_by: string | null;
-          delivered_at: string | null;
-          detail_center_id: string;
-          duration_minutes: number;
-          ends_at: string;
-          finished_at: string | null;
-          id: string;
-          is_walk_in: boolean;
-          notes: string | null;
-          organization_id: string;
-          received_at: string | null;
-          request_id: string;
-          service_order_id: string | null;
-          started_at: string | null;
-          starts_at: string;
-          status: Database["public"]["Enums"]["appointment_status"];
-          technician_id: string | null;
-          updated_at: string;
-          vehicle_id: string;
-        };
+        Returns: Database["public"]["Tables"]["appointments"]["Row"];
         SetofOptions: {
           from: "*";
           to: "appointments";
@@ -7463,30 +8476,7 @@ export type Database = {
           p_reason: string;
           p_source: string;
         };
-        Returns: {
-          active: boolean;
-          created_at: string;
-          created_by: string | null;
-          created_in_detail_center_id: string;
-          email: string | null;
-          full_name: string;
-          home_detail_center_id: string;
-          id: string;
-          kind: string;
-          last_visit_at: string | null;
-          last_visit_detail_center_id: string | null;
-          marketing_channels: string[];
-          marketing_opt_in: boolean;
-          marketing_opt_in_at: string | null;
-          marketing_opt_in_source: string | null;
-          notes: string | null;
-          organization_id: string;
-          phone: string;
-          phone_digits: string | null;
-          request_id: string;
-          search_name: string | null;
-          updated_at: string;
-        };
+        Returns: Database["public"]["Tables"]["clients"]["Row"];
         SetofOptions: {
           from: "*";
           to: "clients";

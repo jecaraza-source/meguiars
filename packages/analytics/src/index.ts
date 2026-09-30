@@ -12,3 +12,4 @@ export * from "./dashboards";
 export * from "./kpis";
 export * from "./corporate";
 export * from "./alerts";
+export * from "./commercial";

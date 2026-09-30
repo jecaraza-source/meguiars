@@ -48,6 +48,8 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     shortLabel: "Comercial",
     items: [
       { screen: "comercial", label: "Resumen comercial", href: "/comercial" },
+      { screen: "leads", label: "Prospectos", href: "/comercial/prospectos" },
+      { screen: "quotes", label: "Cotizaciones", href: "/comercial/cotizaciones" },
       { screen: "memberships", label: "Membresías", href: "/comercial/membresias" },
       { screen: "crmCustomers", label: "Clientes (CRM)", href: "/comercial/clientes" },
       { screen: "crmTasks", label: "Seguimientos", href: "/comercial/seguimientos" },
@@ -60,6 +62,10 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         label: "Indicadores del pipeline",
         href: "/comercial/pipeline/indicadores",
       },
+      { screen: "segments", label: "Segmentos", href: "/comercial/segmentos" },
+      { screen: "duplicates", label: "Duplicados", href: "/comercial/duplicados" },
+      { screen: "commercialReports", label: "Reportes comerciales", href: "/comercial/reportes" },
+      { screen: "integrations", label: "Integraciones", href: "/comercial/integraciones" },
     ],
   },
   {
@@ -137,6 +143,10 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   alertRules: "alerts",
   centerSetup: "centers",
   centerImport: "centers",
+  leadNew: "leads",
+  leadDetail: "leads",
+  quoteNew: "quotes",
+  quoteDetail: "quotes",
 };
 
 /** Ítem de menú que representa a la pantalla. */

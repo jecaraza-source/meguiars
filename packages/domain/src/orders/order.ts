@@ -118,7 +118,7 @@ export interface ServiceOrderItem {
   unitDirectCost: number;
   durationMinutes: number;
   /** base / center: precio de lista; convenio: tarifa de la cuenta B2B (C3). */
-  priceSource: "base" | "center" | "convenio";
+  priceSource: "base" | "center" | "convenio" | "cotizacion";
   /** Precio de lista al venderse (líneas desde C3; null en líneas anteriores). */
   listUnitPrice: number | null;
   quantity: number;
