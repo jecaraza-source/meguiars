@@ -152,7 +152,7 @@ El seed trae:
 - **Una promoción copiada de la cotización a la OS** llega a la OS como descuento manual con el mismo importe (así se copian hoy los descuentos). La atribución no se pierde porque vive en el prospecto. El uso ya se contó en la cotización.
 - Presupuesto por canal y comparativo contra periodos anteriores: fase 4 (tablero de analítica).
 
-## Pendientes (fase 4)
+## Fase 4
 
-- Automatizaciones: recordatorios de piezas atrasadas, seguimiento de cotizaciones y vencimiento de promociones.
-- Tablero de analítica comercial con tendencia por campaña y canal.
+- Automatizaciones (seguimiento de cotizaciones, confirmación, valoración, recompra, reactivación) y panel comercial con ROAS e ingresos atribuidos: ver [automatizaciones](automatizaciones.md).
+- Pendiente: recordatorio de piezas atrasadas del calendario y tendencia por campaña.

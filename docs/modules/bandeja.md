@@ -123,9 +123,9 @@ Además:
   - ventana cerrada;
   - permisos.
 
-## Pendientes (fase 4)
+## Pendientes
 
 - Plantillas aprobadas de WhatsApp (utilidad o marketing con consentimiento) para escribir fuera de las 24 h.
 - Adjuntos (ver y enviar imágenes).
 - Respuestas rápidas.
-- Asignación automática y alertas de conversaciones sin atender (automatizaciones).
+- Automatizaciones: hechas en la fase 4 como tareas ([automatizaciones](automatizaciones.md)); una respuesta del cliente en la bandeja detiene sus secuencias. Falta la asignación automática de conversaciones.

@@ -157,8 +157,8 @@ Desde la fase 2, WhatsApp Business, Messenger e Instagram tienen conexión ofici
 
 Ninguna nueva.
 
-## Pendientes (fase 4)
+## Pendientes
 
 - Calendario, campañas con UTM y promociones: hechos en la fase 3 ([marketing](marketing.md)).
-- Automatizaciones (recordatorios, seguimiento de cotizaciones) y tablero de analítica por campaña.
+- Automatizaciones y panel comercial: hechos en la fase 4 ([automatizaciones](automatizaciones.md)).
 - Fusión desde móvil. Hoy en móvil se consulta y la fusión se hace en web.
