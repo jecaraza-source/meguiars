@@ -75,6 +75,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "receivables", label: "Cuentas por cobrar B2B", href: "/finanzas/cxc" },
       { screen: "team", label: "Equipo del centro", href: "/equipo" },
       { screen: "users", label: "Usuarios", href: "/equipo/usuarios" },
+      { screen: "centers", label: "Centros", href: "/equipo/centros" },
     ],
   },
   {
@@ -86,6 +87,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "dashboards", label: "Tableros", href: "/direccion/tableros" },
       { screen: "kpis", label: "KPIs", href: "/direccion/kpis" },
       { screen: "alerts", label: "Alertas", href: "/direccion/alertas" },
+      { screen: "pilot", label: "Piloto", href: "/direccion/piloto" },
     ],
   },
 ];
@@ -133,6 +135,8 @@ const NAV_PARENT: Partial<Record<Screen, Screen>> = {
   userDetail: "users",
   alertDetail: "alerts",
   alertRules: "alerts",
+  centerSetup: "centers",
+  centerImport: "centers",
 };
 
 /** Ítem de menú que representa a la pantalla. */

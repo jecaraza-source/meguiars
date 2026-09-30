@@ -92,6 +92,10 @@ export const CAPABILITIES = [
   "memberships.metrics.read",
   // Indicadores de clientes sin datos personales (D2): recurrencia, frecuencia y LTV.
   "customers.metrics.read",
+  // Activación de centros (F5.2): checklist de datos maestros, línea base e importador
+  // (private.can_setup_center: admin_socio del centro o corporativo); el alta de un
+  // centro exige además rol corporativo (public.create_detail_center).
+  "centers.setup",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -179,6 +183,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "alerts.manage",
     "alerts.rules",
     "users.manage",
+    "centers.setup",
     "memberships.metrics.read",
     "customers.metrics.read",
   ],

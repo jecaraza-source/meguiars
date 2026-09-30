@@ -21,6 +21,9 @@ export const SCREEN_GUARDS = {
   editCenter: { center: true, capability: "center.manage" },
   users: { center: true, capability: "users.manage" },
   userDetail: { center: true, capability: "users.manage" },
+  centers: { center: true, capability: "centers.setup" },
+  centerSetup: { center: true, capability: "centers.setup" },
+  centerImport: { center: true, capability: "centers.setup" },
   operacion: { center: true, capability: "operations.read" },
   clients: { center: true, capability: "clients.read" },
   clientDetail: { center: true, capability: "clients.read" },
@@ -79,6 +82,7 @@ export const SCREEN_GUARDS = {
   alerts: { center: true, capability: "alerts.read" },
   alertDetail: { center: true, capability: "alerts.read" },
   alertRules: { center: true, capability: "alerts.rules" },
+  pilot: { center: true, capability: "pnl.read" },
   designSystem: {},
   account: {},
 } as const satisfies Record<string, GuardRequirement>;
