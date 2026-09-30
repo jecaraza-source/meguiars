@@ -9,7 +9,7 @@ import {
   type ClientMatch,
   type Screen,
 } from "@meguiars/domain";
-import { createClientRepository } from "@meguiars/supabase";
+import { createClientRepository, createCommercialRepository } from "@meguiars/supabase";
 import {
   addVehicleSchema,
   fieldErrors,
@@ -40,7 +40,7 @@ async function context(screen: Screen) {
   if (!guard.allow || state.status !== "signed_in" || !state.activeCenterId) return null;
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
-  return { centerId: state.activeCenterId, repo: createClientRepository(supabase) };
+  return { centerId: state.activeCenterId, supabase, repo: createClientRepository(supabase) };
 }
 
 export async function createClientAction(prev: ClientFormState, form: FormData): Promise<ClientFormState> {
@@ -95,6 +95,22 @@ async function createClientActionImpl(_prev: ClientFormState, form: FormData): P
     return { error: clientErrorMessage(result.error), values: submitted };
   }
   revalidatePath("/clientes");
+  const leadId = text(form, "leadId");
+  if (leadId) {
+    // Alta desde un prospecto: queda ligado al cliente nuevo (con su consentimiento).
+    const leads = createCommercialRepository(ctx.supabase);
+    const lead = await leads.lead(leadId, [ctx.centerId]);
+    if (lead.ok) {
+      await leads.linkLeadClient(
+        leadId,
+        lead.data.version,
+        result.data.id,
+        "Alta del cliente desde el prospecto",
+      );
+      revalidatePath(`/comercial/prospectos/${leadId}`);
+      redirect(`/comercial/prospectos/${leadId}?cliente=1`);
+    }
+  }
   redirect(`/clientes/${result.data.id}?nuevo=1`);
 }
 

@@ -165,6 +165,7 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_by` | uuid | sí | auth.uid() |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+| `quote_id` | uuid | sí |  |
 
 ### `approval_events`
 
@@ -578,6 +579,9 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `phone_digits` | text | sí | regexp_replace(phone, '\D'::text, ''::text, 'g'::text) |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+| `merged_into_id` | uuid | sí |  |
+| `merged_at` | timestamp with time zone | sí |  |
+| `merged_by` | uuid | sí |  |
 
 ### `contact_preferences`
 
@@ -630,6 +634,7 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 | `opportunity_id` | uuid | sí |  |
+| `lead_id` | uuid | sí |  |
 
 ### `dashboard_definitions`
 
@@ -831,6 +836,107 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `min_value` | numeric(14,2) | sí |  |
 | `max_value` | numeric(14,2) | sí |  |
 | `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `lead_events`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `seq` | bigint | no |  |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `lead_id` | uuid | no |  |
+| `kind` | text | no |  |
+| `source_channel` | text | no |  |
+| `from_stage_id` | uuid | sí |  |
+| `to_stage_id` | uuid | sí |  |
+| `value` | numeric(12,2) | sí |  |
+| `owner_id` | uuid | sí |  |
+| `channel` | text | sí |  |
+| `quote_id` | uuid | sí |  |
+| `appointment_id` | uuid | sí |  |
+| `service_order_id` | uuid | sí |  |
+| `note` | text | sí |  |
+| `actor_id` | uuid | sí | auth.uid() |
+| `occurred_at` | timestamp with time zone | no | now() |
+
+### `lead_services`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `lead_id` | uuid | no |  |
+| `service_id` | uuid | no |  |
+| `organization_id` | uuid | no |  |
+| `created_at` | timestamp with time zone | no | now() |
+
+### `lead_stages`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `code` | text | no |  |
+| `name` | text | no |  |
+| `kind` | text | no |  |
+| `milestone` | text | sí |  |
+| `position` | smallint | no |  |
+| `active` | boolean | no | true |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `leads`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `full_name` | text | no |  |
+| `phone` | text | sí |  |
+| `email` | text | sí |  |
+| `social_handle` | text | sí |  |
+| `source_channel` | text | no |  |
+| `source_detail` | text | sí |  |
+| `referred_by_client_id` | uuid | sí |  |
+| `client_id` | uuid | sí |  |
+| `vehicle_description` | text | sí |  |
+| `notes` | text | sí |  |
+| `consent_channels` | text[] | no | '{}'::text[] |
+| `consent_at` | timestamp with time zone | sí |  |
+| `estimated_value` | numeric(12,2) | sí |  |
+| `stage_id` | uuid | no |  |
+| `status` | text | no | 'abierta'::text |
+| `owner_id` | uuid | sí |  |
+| `next_action` | text | sí |  |
+| `next_action_on` | date | sí |  |
+| `first_contact_at` | timestamp with time zone | sí |  |
+| `closed_at` | timestamp with time zone | sí |  |
+| `won_value` | numeric(12,2) | sí |  |
+| `service_order_id` | uuid | sí |  |
+| `loss_reason` | text | sí |  |
+| `loss_notes` | text | sí |  |
+| `phone_key` | text | sí | "right"(regexp_replace(COALESCE(phone, ''::text), '\D'::text |
+| `version` | integer | no | 1 |
+| `request_id` | uuid | no |  |
 | `created_by` | uuid | sí | auth.uid() |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
@@ -1162,6 +1268,96 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `updated_at` | timestamp with time zone | no | now() |
 | `active` | boolean | no | true |
 | `last_detail_center_id` | uuid | sí |  |
+
+### `quote_discounts`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `quote_id` | uuid | no |  |
+| `item_id` | uuid | sí |  |
+| `kind` | text | no |  |
+| `value` | numeric(12,2) | no |  |
+| `amount` | numeric(12,2) | no | 0 |
+| `reason` | text | no |  |
+| `authorization_level` | discount_level | no |  |
+| `authorized_by` | uuid | sí | auth.uid() |
+| `voided_at` | timestamp with time zone | sí |  |
+| `voided_by` | uuid | sí |  |
+| `void_reason` | text | sí |  |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `quote_items`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `quote_id` | uuid | no |  |
+| `position` | smallint | no | 0 |
+| `service_id` | uuid | no |  |
+| `service_code` | text | no |  |
+| `service_name` | text | no |  |
+| `revenue_engine` | revenue_engine | no |  |
+| `unit_price` | numeric(12,2) | no |  |
+| `price_source` | text | no |  |
+| `unit_direct_cost` | numeric(12,2) | no |  |
+| `operator_commission_pct` | numeric(5,2) | sí |  |
+| `duration_minutes` | integer | no |  |
+| `quantity` | integer | no |  |
+| `line_subtotal` | numeric(12,2) | sí | round(((quantity)::numeric * unit_price), 2) |
+| `line_discount` | numeric(12,2) | no | 0 |
+| `operator_pay` | numeric(12,2) | sí | GREATEST(round((((((quantity)::numeric * unit_price) - line_ |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `quotes`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `folio` | text | no |  |
+| `folio_number` | integer | no |  |
+| `lead_id` | uuid | sí |  |
+| `client_id` | uuid | sí |  |
+| `vehicle_id` | uuid | sí |  |
+| `contact_name` | text | no |  |
+| `status` | text | no | 'borrador'::text |
+| `valid_until` | date | no |  |
+| `subtotal` | numeric(12,2) | no | 0 |
+| `discount_total` | numeric(12,2) | no | 0 |
+| `total` | numeric(12,2) | no | 0 |
+| `standard_cost_total` | numeric(12,2) | no | 0 |
+| `operator_pay_total` | numeric(12,2) | no | 0 |
+| `cost_total` | numeric(12,2) | sí | (standard_cost_total + operator_pay_total) |
+| `contribution_margin` | numeric(12,2) | sí | ((total - standard_cost_total) - operator_pay_total) |
+| `notes` | text | sí |  |
+| `appointment_id` | uuid | sí |  |
+| `sent_at` | timestamp with time zone | sí |  |
+| `decided_at` | timestamp with time zone | sí |  |
+| `decision_reason` | text | sí |  |
+| `converted_at` | timestamp with time zone | sí |  |
+| `version` | integer | no | 1 |
+| `request_id` | uuid | no |  |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
 
 ### `role_assignments`
 

@@ -171,7 +171,16 @@ function DuplicateNotice({ matches }: { matches: ClientMatch[] }) {
   );
 }
 
-export function NewClientForm({ requestId }: { requestId: string }) {
+export function NewClientForm({
+  requestId,
+  leadId,
+  initial,
+}: {
+  requestId: string;
+  /** Alta desde un prospecto: al registrarse, el prospecto queda ligado al cliente. */
+  leadId?: string | undefined;
+  initial?: { fullName?: string; phone?: string; email?: string } | undefined;
+}) {
   const [state, action] = useActionState(createClientAction, {});
   const f = state.fields ?? {};
   const duplicates = state.matches && state.matches.length > 0;
@@ -181,13 +190,14 @@ export function NewClientForm({ requestId }: { requestId: string }) {
       <form key={state.at ?? 0} action={action} className="flex flex-col gap-xl" noValidate>
         {/* Misma llave en reintentos: la base no crea dos veces el mismo alta. */}
         <input type="hidden" name="requestId" value={requestId} />
+        {leadId ? <input type="hidden" name="leadId" value={leadId} /> : null}
         <div className="grid gap-lg md:grid-cols-2">
           <Input
             name="fullName"
             label={clientsCopy.fullNameLabel}
             required
             autoComplete="name"
-            defaultValue={valueOf(state, "fullName")}
+            defaultValue={valueOf(state, "fullName", initial?.fullName ?? "")}
             error={f.fullName}
           />
           <Select
@@ -203,7 +213,7 @@ export function NewClientForm({ requestId }: { requestId: string }) {
             required
             type="tel"
             autoComplete="tel"
-            defaultValue={valueOf(state, "phone")}
+            defaultValue={valueOf(state, "phone", initial?.phone ?? "")}
             error={f.phone}
           />
           <Input
@@ -211,7 +221,7 @@ export function NewClientForm({ requestId }: { requestId: string }) {
             label={clientsCopy.emailLabel}
             type="email"
             autoComplete="email"
-            defaultValue={valueOf(state, "email")}
+            defaultValue={valueOf(state, "email", initial?.email ?? "")}
             error={f.email}
           />
           <div className="md:col-span-2">

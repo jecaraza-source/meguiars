@@ -1,4 +1,6 @@
 import {
+  formatMoney,
+  presentQuote,
   pipelineCopy,
   activeCenterAccess,
   canInActiveCenter,
@@ -11,7 +13,7 @@ import {
   todayIn,
   usableCenters,
 } from "@meguiars/domain";
-import { createCrmRepository } from "@meguiars/supabase";
+import { createCommercialRepository, createCrmRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ConsentForm, NewTaskForm, TaskActions } from "@/components/crm-forms";
@@ -26,12 +28,16 @@ export default async function CrmCustomerPage({ params }: PageProps<"/comercial/
   const center = activeCenterAccess(state)!.center;
   const { id } = await params;
   const centers = usableCenters(state.access).map((a) => a.center.id);
-  const repo = createCrmRepository((await createSupabaseServerClient())!);
+  const supabase = (await createSupabaseServerClient())!;
+  const repo = createCrmRepository(supabase);
   const today = todayIn(center.timezone);
-  const [customer, tasks, preferences] = await Promise.all([
+  const canLeads = canInActiveCenter(state, "leads.use");
+  const commercial = createCommercialRepository(supabase);
+  const [customer, tasks, preferences, quotes] = await Promise.all([
     repo.getCustomer(id, centers),
     repo.listTasks(centers, { clientId: id, today }),
     repo.preferences(id),
+    canLeads ? commercial.quotes(centers, { clientId: id }) : Promise.resolve(null),
   ]);
   if (!customer.ok) {
     return (
@@ -144,6 +150,33 @@ export default async function CrmCustomerPage({ params }: PageProps<"/comercial/
           </Card>
         ) : null}
       </div>
+
+      {canLeads ? (
+        <Card
+          title="Cotizaciones"
+          actions={
+            <ButtonLink
+              href={`/comercial/cotizaciones/nueva?cliente=${c.clientId}`}
+              label="Crear cotización"
+            />
+          }
+        >
+          {!quotes || !quotes.ok || quotes.data.length === 0 ? (
+            <p className="text-sm text-muted">Sin cotizaciones.</p>
+          ) : (
+            <ul className="flex flex-col gap-xs text-sm" data-testid="customer-quotes">
+              {quotes.data.map(presentQuote).map((q) => (
+                <li key={q.id} className="flex flex-wrap items-center gap-xs">
+                  <Link href={`/comercial/cotizaciones/${q.id}`} className="font-medium underline">
+                    {q.folio}
+                  </Link>
+                  · {formatMoney(q.total)} · <Badge label={q.statusLabel} tone={q.statusTone} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      ) : null}
 
       <Card title={`${crmCopy.tasksTitle} (${c.openTasks} abiertos)`}>
         {!tasks.ok ? (

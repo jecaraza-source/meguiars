@@ -96,6 +96,14 @@ export const CAPABILITIES = [
   // (private.can_setup_center: admin_socio del centro o corporativo); el alta de un
   // centro exige además rol corporativo (public.create_detail_center).
   "centers.setup",
+  // Comercial CR2 (fase 1): prospectos y cotizaciones (private.can_use_leads), embudo de
+  // la organización (private.can_manage_lead_stages, admin corporativo), indicadores del
+  // recorrido sin datos personales (private.can_read_commercial_metrics) y fusión de
+  // duplicados (private.can_merge_clients).
+  "leads.use",
+  "leads.manage",
+  "commercial.metrics.read",
+  "clients.merge",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -186,6 +194,10 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "centers.setup",
     "memberships.metrics.read",
     "customers.metrics.read",
+    "leads.use",
+    "leads.manage",
+    "commercial.metrics.read",
+    "clients.merge",
   ],
   encargado: [
     "center.read",
@@ -225,6 +237,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "alerts.manage",
     "memberships.metrics.read",
     "customers.metrics.read",
+    "leads.use",
+    "commercial.metrics.read",
+    "clients.merge",
   ],
   operador_recepcion: [
     "center.read",
@@ -244,6 +259,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.read",
     "payments.write",
     "cash.read",
+    "leads.use",
   ],
   // El contador no ve datos personales de clientes.
   contador: [
@@ -263,6 +279,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "alerts.read",
     "memberships.metrics.read",
     "customers.metrics.read",
+    "commercial.metrics.read",
   ],
   comercial_b2b: [
     "center.read",
@@ -283,6 +300,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "dashboards.read",
     "memberships.metrics.read",
     "customers.metrics.read",
+    "leads.use",
+    "commercial.metrics.read",
   ],
 };
 

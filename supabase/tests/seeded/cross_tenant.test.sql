@@ -173,7 +173,9 @@ end $$;
 create function pg_temp.param_table(fn text, arg text) returns text language sql immutable as $$
   select case
     when arg in ('p_order_id', 'p_order_ids') then 'service_orders'
-    when arg in ('p_client_id') then 'clients'
+    when arg in ('p_client_id', 'p_keep_client_id', 'p_merge_client_id', 'p_referred_by_client_id') then 'clients'
+    when arg in ('p_lead_id', 'p_exclude_lead_id') then 'leads'
+    when arg = 'p_quote_id' then 'quotes'
     when arg in ('p_account_id', 'p_b2b_account_id') then 'b2b_accounts'
     when arg in ('p_technician_id', 'p_technician_ids') then 'technicians'
     when arg = 'p_expense_id' then 'expenses'
@@ -200,11 +202,14 @@ create function pg_temp.param_table(fn text, arg text) returns text language sql
     when arg = 'p_evidence_id' then 'service_order_evidence'
     when arg = 'p_agreement_id' then 'b2b_agreements'
     when arg = 'p_redemption_id' then 'membership_redemptions'
-    when arg = 'p_discount_id' then 'service_order_discounts'
+    when arg = 'p_discount_id' then case when fn like '%quote%' then 'quote_discounts' else 'service_order_discounts' end
     when arg = 'p_opportunity_id' then 'sales_opportunities'
     when arg = 'p_attachment_id' then 'expense_attachments'
     when arg = 'p_id' then case
       when fn like '%opportunit%' then 'sales_opportunities'
+      when fn like '%lead_stage%' then 'lead_stages'
+      when fn like '%lead%' then 'leads'
+      when fn like '%quote%' then 'quotes'
       when fn like '%dashboard%' then 'dashboard_definitions'
       when fn like '%kpi_threshold%' then 'kpi_thresholds'
       when fn like '%alert_rule%' then 'alert_rules'

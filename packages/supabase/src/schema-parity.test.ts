@@ -2,6 +2,16 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   DEFAULT_PIPELINE_STAGES,
+  DEFAULT_LEAD_STAGES,
+  LEAD_CONSENT_CHANNELS,
+  LEAD_CONTACT_CHANNELS,
+  LEAD_EVENT_KINDS,
+  LEAD_LOSS_REASONS,
+  LEAD_MILESTONES,
+  LEAD_SOURCES,
+  LEAD_STATUSES,
+  QUOTE_RULES,
+  QUOTE_STATUSES,
   LOSS_REASONS,
   OPEN_STAGE_POSITIONS,
   OPPORTUNITY_EVENT_KINDS,
@@ -115,6 +125,13 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "bays",
   "center_baselines",
   "client_error_reports",
+  "lead_events",
+  "lead_services",
+  "lead_stages",
+  "leads",
+  "quote_discounts",
+  "quote_items",
+  "quotes",
   "client_centers",
   "clients",
   "contact_preferences",
@@ -185,6 +202,34 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "set_center_baseline",
   "report_client_error",
   "pilot_metrics",
+  "lead_matches",
+  "create_lead",
+  "update_lead",
+  "log_lead_contact",
+  "move_lead_stage",
+  "add_lead_note",
+  "lose_lead",
+  "reopen_lead",
+  "win_lead",
+  "link_lead_client",
+  "create_lead_task",
+  "list_leads",
+  "lead_timeline",
+  "lead_owners",
+  "upsert_lead_stage",
+  "create_quote",
+  "set_quote_item",
+  "add_quote_discount",
+  "void_quote_discount",
+  "update_quote",
+  "set_quote_status",
+  "book_quote",
+  "list_quotes",
+  "client_duplicate_candidates",
+  "merge_clients",
+  "commercial_segment",
+  "commercial_funnel_facts",
+  "commercial_quote_facts",
   "accept_upsell",
   "reject_upsell",
   "upsell_metric_facts",
@@ -683,6 +728,48 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect(pl).toContain(
       `p_position not between ${OPEN_STAGE_POSITIONS.min} and ${OPEN_STAGE_POSITIONS.max}`,
     );
+  });
+
+  it("Comercial CR2: canales, estados, hitos, motivos, eventos, consentimiento, embudo inicial y vigencia coinciden", () => {
+    const sql = allSql.slice(allSql.indexOf("-- CR2 (fase 1)"));
+    const listOf = (re: RegExp) =>
+      re
+        .exec(sql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listOf(/source_channel text not null check \(source_channel in \(\s*([^)]+)\)\)/)).toEqual([
+      ...LEAD_SOURCES,
+    ]);
+    expect(listOf(/status text not null default 'abierta' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...LEAD_STATUSES,
+    ]);
+    expect(listOf(/milestone text check \(milestone in \(([^)]+)\)\)/)).toEqual([...LEAD_MILESTONES]);
+    expect(listOf(/loss_reason text check \(loss_reason in \(\s*([^)]+)\)\)/)).toEqual([
+      ...LEAD_LOSS_REASONS,
+    ]);
+    expect(listOf(/kind text not null check \(kind in \(\s*('creado'[^)]+)\)\)/)).toEqual([
+      ...LEAD_EVENT_KINDS,
+    ]);
+    expect(listOf(/check \(consent_channels <@ array\[([^\]]+)\]/)).toEqual([...LEAD_CONSENT_CHANNELS]);
+    expect(listOf(/channel text check \(channel in \(('llamada'[^)]+)\)\)/)).toEqual([
+      ...LEAD_CONTACT_CHANNELS,
+    ]);
+    expect(listOf(/check \(status in \(('borrador'[^)]+)\)\)/)).toEqual([...QUOTE_STATUSES]);
+    expect(sql).toContain(
+      `when 'valid_days' then ${QUOTE_RULES.validDays} when 'max_valid_days' then ${QUOTE_RULES.maxValidDays}`,
+    );
+    const seed = /private\.seed_lead_stages[\s\S]*?values([\s\S]*?)on conflict/.exec(sql)?.[1] ?? "";
+    const stages = [
+      ...seed.matchAll(/\(p_organization_id, '(\w+)', '([^']+)', '(\w+)', (null|'\w+'), (\d+)\)/g),
+    ].map((m) => ({
+      code: m[1],
+      name: m[2],
+      kind: m[3],
+      milestone: m[4] === "null" ? null : m[4]!.replace(/'/g, ""),
+      position: Number(m[5]),
+    }));
+    expect(stages).toEqual(DEFAULT_LEAD_STAGES.map((s) => ({ ...s })));
+    expect(sql).toContain("check (price_source in ('base', 'center', 'convenio', 'cotizacion'))");
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

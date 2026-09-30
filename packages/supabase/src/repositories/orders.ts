@@ -107,7 +107,7 @@ export const toServiceOrder = (row: DetailRow): ServiceOrder => ({
       unitPrice: Number(i.unit_price),
       unitDirectCost: Number(i.unit_direct_cost),
       durationMinutes: i.duration_minutes,
-      priceSource: i.price_source as "base" | "center" | "convenio",
+      priceSource: i.price_source as "base" | "center" | "convenio" | "cotizacion",
       listUnitPrice: num(i.list_unit_price),
       quantity: i.quantity,
       lineSubtotal: Number(i.line_subtotal),
