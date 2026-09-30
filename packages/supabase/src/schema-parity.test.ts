@@ -12,6 +12,12 @@ import {
   LEAD_STATUSES,
   QUOTE_RULES,
   QUOTE_STATUSES,
+  INBOX_CHANNELS,
+  CHANNEL_ACCOUNT_STATUSES,
+  CONVERSATION_STATUSES,
+  MESSAGE_STATUSES,
+  SERVICE_WINDOW_HOURS,
+  MAX_MESSAGE_LENGTH,
   LOSS_REASONS,
   OPEN_STAGE_POSITIONS,
   OPPORTUNITY_EVENT_KINDS,
@@ -132,6 +138,9 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "quote_discounts",
   "quote_items",
   "quotes",
+  "channel_accounts",
+  "conversations",
+  "messages",
   "client_centers",
   "clients",
   "contact_preferences",
@@ -230,6 +239,19 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "commercial_segment",
   "commercial_funnel_facts",
   "commercial_quote_facts",
+  "upsert_channel_account",
+  "list_channel_accounts",
+  "record_channel_verification",
+  "ingest_inbound_messages",
+  "ingest_message_statuses",
+  "list_conversations",
+  "conversation_messages",
+  "assign_conversation",
+  "set_conversation_status",
+  "link_conversation_lead",
+  "create_lead_from_conversation",
+  "prepare_outbound_message",
+  "finish_outbound_message",
   "accept_upsell",
   "reject_upsell",
   "upsell_metric_facts",
@@ -770,6 +792,27 @@ describe("paridad SQL ↔ TypeScript", () => {
     }));
     expect(stages).toEqual(DEFAULT_LEAD_STAGES.map((s) => ({ ...s })));
     expect(sql).toContain("check (price_source in ('base', 'center', 'convenio', 'cotizacion'))");
+  });
+
+  it("Bandeja CR2 (fase 2): canales, estados de cuenta, conversación y mensaje, y ventana de 24 h coinciden", () => {
+    const sql = allSql.slice(allSql.indexOf("-- CR2 (fase 2)"));
+    const listOf = (re: RegExp) =>
+      re
+        .exec(sql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listOf(/channel text not null check \(channel in \(([^)]+)\)\)/)).toEqual([...INBOX_CHANNELS]);
+    expect(listOf(/status text not null default 'pendiente' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...CHANNEL_ACCOUNT_STATUSES,
+    ]);
+    expect(listOf(/status text not null default 'abierta' check \(status in \(([^)]+)\)\)/)).toEqual([
+      ...CONVERSATION_STATUSES,
+    ]);
+    expect(listOf(/status text not null check \(status in \(('recibido'[^)]+)\)\)/)).toEqual([
+      ...MESSAGE_STATUSES,
+    ]);
+    expect(sql).toContain(`c.last_inbound_at > now() - interval '${SERVICE_WINDOW_HOURS} hours'`);
+    expect(sql).toContain(`length(body) <= ${MAX_MESSAGE_LENGTH}`);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

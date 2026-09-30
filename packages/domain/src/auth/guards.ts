@@ -68,6 +68,8 @@ export const SCREEN_GUARDS = {
   duplicates: { center: true, capability: "clients.merge" },
   commercialReports: { center: true, capability: "commercial.metrics.read" },
   integrations: { center: true, capability: "leads.use" },
+  inbox: { center: true, capability: "leads.use" },
+  conversation: { center: true, capability: "leads.use" },
   finanzas: { center: true, capability: "finance.read" },
   payments: { center: true, capability: "payments.read" },
   paymentReceipt: { center: true, capability: "payments.read" },

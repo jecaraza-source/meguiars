@@ -22,3 +22,4 @@ export * from "./users";
 export * from "./pilot";
 export * from "./import";
 export * from "./commercial";
+export * from "./inbox";
