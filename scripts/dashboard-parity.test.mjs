@@ -99,3 +99,13 @@ describe("paridad web/móvil de campañas (CR2 fase 3)", () => {
     expect(declaration(mobileMarketing, name)).toBe(declaration(webMarketing, name));
   });
 });
+
+const webPanel = readFileSync(join(root, "apps/web/src/lib/commercial-panel.ts"), "utf8");
+const mobilePanel = readFileSync(join(root, "apps/mobile/src/lib/commercial-panel.ts"), "utf8");
+
+describe("paridad web/móvil del panel comercial (CR2 fase 4)", () => {
+  it.each(["loadCommercialPanel"])("%s es idéntico en web y móvil", (name) => {
+    expect(declaration(webPanel, name)).not.toBeNull();
+    expect(declaration(mobilePanel, name)).toBe(declaration(webPanel, name));
+  });
+});

@@ -57,6 +57,7 @@ import {
   CampaignsScreen,
   PromotionsScreen,
 } from "@/screens/MarketingScreens";
+import { AutomationsScreen, CommercialPanelScreen } from "@/screens/AutomationScreens";
 import { B2bAccountNewScreen } from "@/screens/B2bAccountNewScreen";
 import { B2bAccountScreen } from "@/screens/B2bAccountScreen";
 import { B2bAccountsScreen } from "@/screens/B2bAccountsScreen";
@@ -512,6 +513,12 @@ export function Router() {
         break;
       case "promotions":
         content = <PromotionsScreen {...props} />;
+        break;
+      case "automations":
+        content = <AutomationsScreen {...props} />;
+        break;
+      case "commercialPanel":
+        content = <CommercialPanelScreen {...props} />;
         break;
       case "integrations":
         content = <IntegrationsScreen {...props} />;
