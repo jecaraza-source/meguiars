@@ -12,7 +12,10 @@ export const GUARD_REDIRECTS: Record<Redirect, string> = {
 
 /**
  * Rutas accesibles sin sesión. /api/cron se protege con CRON_SECRET (no con sesión);
- * /api/health sólo dice si la app y Supabase responden (monitoreo externo).
+ * /api/health sólo dice si la app y Supabase responden (monitoreo externo);
+ * /api/webhooks/meta lo llama Meta y exige la firma X-Hub-Signature-256;
+ * /api/inbox/send lo llama la app móvil con su token de Supabase (Authorization),
+ * no con cookies, y la base valida los permisos con esa sesión.
  */
 export const PUBLIC_PATHS = [
   "/login",
@@ -21,6 +24,8 @@ export const PUBLIC_PATHS = [
   "/cuenta-deshabilitada",
   "/api/cron",
   "/api/health",
+  "/api/webhooks/meta",
+  "/api/inbox/send",
 ];
 
 export function isPublicPath(pathname: string): boolean {
