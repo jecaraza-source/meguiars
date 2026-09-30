@@ -198,6 +198,17 @@ export interface PromotionCommand {
   reason: string;
 }
 
+/** Inversión registrada (public.campaign_spend_facts). */
+export interface SpendFact {
+  spendId: string;
+  campaignId: string;
+  campaignCenterId: string | null;
+  channel: CampaignChannel;
+  spentOn: string;
+  amount: number;
+  origin: "egreso" | "manual";
+}
+
 export interface MarketingRepository {
   campaigns(organizationId: string): Promise<Result<Campaign[]>>;
   campaign(organizationId: string, id: string): Promise<Result<Campaign>>;
@@ -239,6 +250,12 @@ export interface MarketingRepository {
     from: string,
     to: string,
   ): Promise<Result<CampaignFact[]>>;
+  spendFacts(
+    organizationId: string,
+    detailCenterIds: string[],
+    from: string,
+    to: string,
+  ): Promise<Result<SpendFact[]>>;
 }
 
 // ---------------------------------------------------------------------------

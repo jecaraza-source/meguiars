@@ -206,6 +206,82 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `organization_id` | uuid | sí |  |
 | `event` | text | sí |  |
 
+### `automation_executions`
+
+- **Módulo:** [automatizaciones](modules/automatizaciones.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `automation_id` | uuid | no |  |
+| `run_id` | uuid | sí |  |
+| `subject_key` | text | no |  |
+| `client_id` | uuid | sí |  |
+| `lead_id` | uuid | sí |  |
+| `quote_id` | uuid | sí |  |
+| `appointment_id` | uuid | sí |  |
+| `service_order_id` | uuid | sí |  |
+| `task_id` | uuid | sí |  |
+| `outcome` | text | no |  |
+| `detail` | text | sí |  |
+| `created_at` | timestamp with time zone | no | now() |
+
+### `automation_runs`
+
+- **Módulo:** [automatizaciones](modules/automatizaciones.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `automation_id` | uuid | no |  |
+| `mode` | text | no |  |
+| `started_at` | timestamp with time zone | no | now() |
+| `finished_at` | timestamp with time zone | sí |  |
+| `evaluated` | integer | no | 0 |
+| `created` | integer | no | 0 |
+| `stopped` | integer | no | 0 |
+| `skipped` | jsonb | no | '{}'::jsonb |
+| `error` | text | sí |  |
+| `run_by` | uuid | sí |  |
+
+### `automations`
+
+- **Módulo:** [automatizaciones](modules/automatizaciones.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | sí |  |
+| `name` | text | no |  |
+| `trigger` | text | no |  |
+| `purpose` | text | no |  |
+| `delay_days` | integer | no |  |
+| `service_ids` | uuid[] | no | '{}'::uuid[] |
+| `lead_sources` | text[] | no | '{}'::text[] |
+| `assign_to` | uuid | sí |  |
+| `due_in_days` | integer | no | 0 |
+| `message_template` | text | sí |  |
+| `cooldown_days` | integer | no | 30 |
+| `max_per_run` | integer | no | 50 |
+| `contact_from` | time without time zone | no | '09:00:00'::time without time zone |
+| `contact_to` | time without time zone | no | '19:00:00'::time without time zone |
+| `active` | boolean | no | false |
+| `activated_at` | timestamp with time zone | sí |  |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `b2b_accounts`
 
 - **Módulo:** [b2b](modules/b2b.md)
@@ -766,6 +842,7 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `updated_at` | timestamp with time zone | no | now() |
 | `opportunity_id` | uuid | sí |  |
 | `lead_id` | uuid | sí |  |
+| `automation_id` | uuid | sí |  |
 
 ### `dashboard_definitions`
 

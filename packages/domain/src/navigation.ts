@@ -68,6 +68,8 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "contentCalendar", label: "Calendario", href: "/comercial/calendario" },
       { screen: "campaigns", label: "Campañas", href: "/comercial/campanas" },
       { screen: "promotions", label: "Promociones", href: "/comercial/promociones" },
+      { screen: "automations", label: "Automatizaciones", href: "/comercial/automatizaciones" },
+      { screen: "commercialPanel", label: "Panel comercial", href: "/comercial/panel" },
       { screen: "commercialReports", label: "Reportes comerciales", href: "/comercial/reportes" },
       { screen: "integrations", label: "Integraciones", href: "/comercial/integraciones" },
     ],

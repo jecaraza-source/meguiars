@@ -59,6 +59,9 @@ export const TASK_SOURCE_LABELS: Record<TaskSource, string> = {
   os_terminada: "OS terminada",
   proxima_visita: "Próxima visita",
   membresia: "Membresía",
+  oportunidad: "Oportunidad",
+  prospecto: "Prospecto",
+  automatizacion: "Automatización",
 };
 
 export const TASK_OUTCOME_LABELS: Record<TaskOutcome, string> = {

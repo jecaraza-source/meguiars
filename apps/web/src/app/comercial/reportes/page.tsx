@@ -117,8 +117,8 @@ export default async function CommercialReportsPage({ searchParams }: PageProps<
         )}
       </Card>
       <p className="text-xs text-muted">
-        Inversión publicitaria, costo por prospecto y ROAS se agregan con las campañas (fase 3); no se
-        muestran en cero.
+        Inversión publicitaria, costo por prospecto y por cliente, ROAS e ingresos atribuidos por campaña
+        están en el Panel comercial; nunca se muestran en cero.
       </p>
     </AppShell>
   );

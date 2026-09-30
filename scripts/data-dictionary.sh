@@ -32,6 +32,7 @@ declare -A OWNER=(
   [prospectos-cotizaciones.md]="lead_events lead_services lead_stages leads quote_discounts quote_items quotes"
   [bandeja.md]="channel_accounts conversations messages"
   [marketing.md]="campaign_spend campaigns content_posts promotions"
+  [automatizaciones.md]="automation_executions automation_runs automations"
 )
 modules="$(for doc in "${!OWNER[@]}"; do for t in ${OWNER[$doc]}; do printf '%s=%s,' "$t" "$doc"; done; done)"
 {
