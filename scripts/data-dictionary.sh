@@ -30,7 +30,7 @@ declare -A OWNER=(
   [recomendaciones.md]="upsell_offers upsell_rules"
   [piloto-rollout.md]="center_baselines client_error_reports"
   [prospectos-cotizaciones.md]="lead_events lead_services lead_stages leads quote_discounts quote_items quotes"
-  [bandeja.md]="channel_accounts conversations messages"
+  [bandeja.md]="channel_accounts conversation_notes conversations messages quick_replies whatsapp_templates"
   [marketing.md]="campaign_spend campaigns content_posts promotions"
   [automatizaciones.md]="automation_executions automation_runs automations"
 )
