@@ -31,9 +31,14 @@ Web y móvil comparten tokens, recetas, contratos, textos y navegación; cada un
 | Radios          | `none`, `sm`, `md`, `lg`, `xl`, `full`                                                                                                                                                                                 |
 | Estados         | `disabledOpacity`, `pressedOpacity`, `focusRingWidth`, `focusRingOffset`                                                                                                                                               |
 | Densidad        | `comfortable` (control 44, fila 52) y `compact` (control 36, fila 40); `touchTarget` 44                                                                                                                                |
-| Otros           | `elevation` (sm/md/lg), `breakpoints` (tablet 768, desktop 1024, wide 1280), `layout` (sidebar, content, narrow), `zIndex`, `motion`                                                                                   |
+| Otros           | `elevation` (sm/md/lg), `breakpoints` (tablet 768, desktop 1024, wide 1280), `layout` (sidebar, content, narrow, chart, axis), `zIndex`, `motion`                                                                      |
+| Gráficas        | `chart1` azul, `chart2` naranja, `chart3` aqua: series en orden fijo, validadas para daltonismo (ΔE ≥ 9 entre vecinas); nunca para estados                                                                             |
 
 **Tonos** (`neutral`, `brand`, `success`, `warning`, `danger`, `info`): el color comunica significado y siempre va con texto. En los KPI, la tendencia usa ▲▼■ además del color.
+
+## Gráficas
+
+`components/charts.tsx` (web, sin dependencias): `ColumnChart` (una o varias series, negativos bajo el cero), `LineChart` (cruz que sigue al puntero o a las flechas) y `BarList` (barras horizontales ordenadas). Reglas: un solo eje, marcas delgadas, rejilla tenue, tooltip al pasar o enfocar, leyenda con 2+ series, «Ver datos» con la tabla (el aqua no llega a 3:1 sobre blanco) y «Sin datos en el periodo» en vez de dibujar ceros. Los datos salen de `lib/charts.ts` con el mismo motor de métricas de los tableros. Se usan en Finanzas (ventas por día, resultado por mes, cobranza por forma de pago) y Dirección (tendencia por centro, ingreso por motor y por servicio). La app móvil muestra los mismos datos en tarjetas y tablas.
 
 ## Componentes base
 
