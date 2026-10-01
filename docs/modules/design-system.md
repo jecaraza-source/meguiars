@@ -63,12 +63,16 @@ Catálogo vivo: **`/sistema`** en web y **"Sistema de diseño"** en el encabezad
 | Operación                 | Clientes y vehículos (`clients.read`, módulo O1)             |      ✓      |      ✓      |         ✓          |          |       ✓       |
 | Operación                 | Catálogo (`catalog.read`, módulo O2)                         |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
 | Comercial                 | Membresías y B2B (`commercial.read`)                         |      ✓      |      ✓      |                    |          |       ✓       |
+| Marketing                 | Campañas, Calendario, Promociones (consulta)                 |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
+| Marketing                 | Segmentos, Integraciones (redes)                             |      ✓      |      ✓      |         ✓          |          |       ✓       |
+| Marketing                 | Automatizaciones                                             |      ✓      |      ✓      |                    |          |       ✓       |
 | Administración y Finanzas | Resumen financiero (`finance.read`), Equipo (`members.read`) |      ✓      | sólo Equipo |                    |    ✓     |               |
 | Dirección                 | Vista consolidada (`executive.read`)                         |      ✓      |             |                    |          |               |
 
 - Las secciones visibles dependen del **centro activo**: al cambiar de centro, cambia la navegación.
 - Si un usuario entra a una ruta sin permiso, el guard lo redirige a `/sin-permiso`, igual que en F0.3.
-- **Web:** barra lateral desde 768 px y barra inferior en móvil; las secciones con varias pantallas muestran subnavegación.
+- **Secciones:** Inicio, Operación, Comercial, Marketing, Administración y Finanzas («AyF» en pestañas) y Dirección. Marketing agrupa Campañas, Calendario, Promociones, Segmentos, Automatizaciones e Integraciones; sus rutas siguen bajo `/comercial/…`.
+- **Web:** barra lateral desde 768 px con menús desplegables: sólo se ven los títulos de sección y la sección de la página actual aparece abierta (una sección con una sola pantalla, como Inicio, es enlace directo). En móvil, barra inferior con los títulos. Las secciones con varias pantallas muestran subnavegación.
 - **Móvil:** barra de pestañas nativa con las mismas secciones y la misma subnavegación.
 - Operación, Comercial y Finanzas muestran un estado vacío y una vista previa de carga, porque su contenido llega con sus módulos. Dirección muestra KPIs reales de acceso (centros activos y deshabilitados, organizaciones, alcance corporativo).
 

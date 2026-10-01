@@ -2,11 +2,11 @@ import { guardScreen, type Screen } from "./auth/guards";
 import type { AuthState } from "./auth/session";
 
 /**
- * Navegación principal compartida por web y móvil: cuatro dominios de negocio
- * más Inicio. Una sección se muestra si el rol del centro activo puede ver al
+ * Navegación principal compartida por web y móvil: cinco dominios de negocio
+ * más Inicio (Operación, Comercial, Marketing, Administración y Finanzas, Dirección). Una sección se muestra si el rol del centro activo puede ver al
  * menos una de sus pantallas (mismos guards que protegen las rutas).
  */
-export type NavSectionId = "inicio" | "operacion" | "comercial" | "finanzas" | "direccion";
+export type NavSectionId = "inicio" | "operacion" | "comercial" | "marketing" | "finanzas" | "direccion";
 
 export interface NavItem {
   screen: Screen;
@@ -63,21 +63,29 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         label: "Indicadores del pipeline",
         href: "/comercial/pipeline/indicadores",
       },
-      { screen: "segments", label: "Segmentos", href: "/comercial/segmentos" },
       { screen: "duplicates", label: "Duplicados", href: "/comercial/duplicados" },
-      { screen: "contentCalendar", label: "Calendario", href: "/comercial/calendario" },
-      { screen: "campaigns", label: "Campañas", href: "/comercial/campanas" },
-      { screen: "promotions", label: "Promociones", href: "/comercial/promociones" },
-      { screen: "automations", label: "Automatizaciones", href: "/comercial/automatizaciones" },
       { screen: "commercialPanel", label: "Panel comercial", href: "/comercial/panel" },
       { screen: "commercialReports", label: "Reportes comerciales", href: "/comercial/reportes" },
-      { screen: "integrations", label: "Integraciones", href: "/comercial/integraciones" },
+    ],
+  },
+  {
+    // Las rutas siguen bajo /comercial (enlaces y permisos sin cambios); el menú las agrupa aquí.
+    id: "marketing",
+    label: "Marketing",
+    shortLabel: "Marketing",
+    items: [
+      { screen: "campaigns", label: "Campañas", href: "/comercial/campanas" },
+      { screen: "contentCalendar", label: "Calendario", href: "/comercial/calendario" },
+      { screen: "promotions", label: "Promociones", href: "/comercial/promociones" },
+      { screen: "segments", label: "Segmentos", href: "/comercial/segmentos" },
+      { screen: "automations", label: "Automatizaciones", href: "/comercial/automatizaciones" },
+      { screen: "integrations", label: "Integraciones (redes)", href: "/comercial/integraciones" },
     ],
   },
   {
     id: "finanzas",
     label: "Administración y Finanzas",
-    shortLabel: "Admin.",
+    shortLabel: "AyF",
     items: [
       { screen: "finanzas", label: "Resumen financiero", href: "/finanzas" },
       { screen: "payments", label: "Cobranza", href: "/finanzas/cobranza" },

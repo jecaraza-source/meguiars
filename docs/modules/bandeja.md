@@ -74,13 +74,13 @@ Lo hace el admin, con acceso a Meta Business Suite y a Vercel.
    1. Genera el token de la cuenta con `instagram_business_manage_messages`. En Vercel guárdalo como `INSTAGRAM_ACCESS_TOKEN`.
    2. Registra la cuenta con su **IG ID**. La verificación comprueba que el token sea de esa misma cuenta.
 6. **Revisión de Meta.** Mientras la app esté en modo desarrollo sólo funciona con cuentas de prueba o con roles en la app. Para clientes reales, la app necesita **verificación del negocio** y **App Review** de los permisos anteriores (acceso avanzado).
-7. **Probar conexión.** Redespliega Vercel. En Plataforma → Comercial → Integraciones, usa «Probar conexión» en cada cuenta. Si Meta la acepta, el canal queda «Conectada»; si no, se muestra la causa, por ejemplo `(#190)` para un token inválido.
+7. **Probar conexión.** Redespliega Vercel. En Plataforma → Marketing → Integraciones (redes), usa «Probar conexión» en cada cuenta. Si Meta la acepta, el canal queda «Conectada»; si no, se muestra la causa, por ejemplo `(#190)` para un token inválido.
 8. **Probar extremo a extremo.** Envía un mensaje real al número, a la página o a la cuenta y confirma que aparece en la Bandeja. Responde desde ahí. Hasta hacer esta prueba con una cuenta real no se debe declarar el canal operativo.
 
 9. **Plantillas de WhatsApp (opcional, para escribir fuera de 24 h).**
    1. Crea las plantillas en **WhatsApp Manager** y espera la aprobación de Meta. La plataforma no crea ni edita plantillas.
    2. En Vercel define `WHATSAPP_BUSINESS_ACCOUNT_ID` con el id de la cuenta de WhatsApp Business (WABA), no el phone_number_id. El token del usuario del sistema necesita también `whatsapp_business_management`.
-   3. En Integraciones usa «Sincronizar plantillas con Meta» (`GET /{WABA}/message_templates`). Vuelve a sincronizar cuando Meta apruebe, pause o rechace una plantilla.
+   3. En Marketing → Integraciones usa «Sincronizar plantillas con Meta» (`GET /{WABA}/message_templates`). Vuelve a sincronizar cuando Meta apruebe, pause o rechace una plantilla.
    4. Envía una plantilla de utilidad a un número de prueba y confirma que llega. Hasta entonces, el envío de plantillas no se declara operativo.
 
 `META_GRAPH_VERSION` es opcional (por omisión `v26.0`). Súbela cuando Meta retire la versión y vuelve a probar la conexión.

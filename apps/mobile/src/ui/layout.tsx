@@ -138,7 +138,12 @@ export function TabBar({
               onPress={() => onSelect(section.items[0]!.screen)}
               style={[styles.tab, selected ? styles.tabActive : null]}
             >
-              <Text numberOfLines={1} style={textStyle("menu", selected ? "brandForeground" : "foreground")}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                style={textStyle("menu", selected ? "brandForeground" : "foreground")}
+              >
                 {section.shortLabel}
               </Text>
             </Pressable>
