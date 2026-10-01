@@ -513,6 +513,54 @@ export type Database = {
           },
         ];
       };
+      conversation_notes: {
+        Row: {
+          author_id: string | null;
+          body: string;
+          conversation_id: string;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          organization_id: string;
+          request_id: string;
+        };
+        Insert: {
+          author_id?: string | null;
+          body: string;
+          conversation_id: string;
+          created_at?: string;
+          detail_center_id: string;
+          id?: string;
+          organization_id: string;
+          request_id: string;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string;
+          conversation_id?: string;
+          created_at?: string;
+          detail_center_id?: string;
+          id?: string;
+          organization_id?: string;
+          request_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_notes_organization_id_conversation_id_fkey";
+            columns: ["organization_id", "conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "conversation_notes_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       conversations: {
         Row: {
           assigned_to: string | null;
@@ -530,7 +578,10 @@ export type Database = {
           last_message_preview: string | null;
           lead_id: string | null;
           organization_id: string;
+          pending: boolean;
+          priority: string;
           status: string;
+          tags: string[];
           unread_count: number;
           updated_at: string;
           version: number;
@@ -551,7 +602,10 @@ export type Database = {
           last_message_preview?: string | null;
           lead_id?: string | null;
           organization_id: string;
+          pending?: boolean;
+          priority?: string;
           status?: string;
+          tags?: string[];
           unread_count?: number;
           updated_at?: string;
           version?: number;
@@ -572,7 +626,10 @@ export type Database = {
           last_message_preview?: string | null;
           lead_id?: string | null;
           organization_id?: string;
+          pending?: boolean;
+          priority?: string;
           status?: string;
+          tags?: string[];
           unread_count?: number;
           updated_at?: string;
           version?: number;
@@ -1069,6 +1126,53 @@ export type Database = {
             columns: ["organization_id", "campaign_id"];
             isOneToOne: false;
             referencedRelation: "campaigns";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      quick_replies: {
+        Row: {
+          active: boolean;
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string | null;
+          id: string;
+          organization_id: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          id?: string;
+          organization_id: string;
+          title: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string | null;
+          id?: string;
+          organization_id?: string;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quick_replies_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
             referencedColumns: ["organization_id", "id"];
           },
         ];
@@ -6259,6 +6363,53 @@ export type Database = {
           },
         ];
       };
+      whatsapp_templates: {
+        Row: {
+          body_text: string | null;
+          business_account_id: string;
+          category: string;
+          id: string;
+          language: string;
+          name: string;
+          organization_id: string;
+          param_count: number;
+          status: string;
+          synced_at: string;
+        };
+        Insert: {
+          body_text?: string | null;
+          business_account_id: string;
+          category: string;
+          id?: string;
+          language: string;
+          name: string;
+          organization_id: string;
+          param_count?: number;
+          status: string;
+          synced_at?: string;
+        };
+        Update: {
+          body_text?: string | null;
+          business_account_id?: string;
+          category?: string;
+          id?: string;
+          language?: string;
+          name?: string;
+          organization_id?: string;
+          param_count?: number;
+          status?: string;
+          synced_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_templates_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -6275,6 +6426,15 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["campaign_spend"]["Row"];
         SetofOptions: { from: "*"; to: "campaign_spend"; isOneToOne: true; isSetofReturn: false };
+      };
+      add_conversation_note: {
+        Args: {
+          p_body: string;
+          p_conversation_id: string;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["conversation_notes"]["Row"];
+        SetofOptions: { from: "*"; to: "conversation_notes"; isOneToOne: true; isSetofReturn: false };
       };
       apply_promotion_to_order: {
         Args: {
@@ -6396,6 +6556,12 @@ export type Database = {
           spent_on: string;
         }[];
       };
+      can_sync_whatsapp_templates: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: boolean;
+      };
       commercial_sales_facts: {
         Args: {
           p_detail_center_ids: string[];
@@ -6434,6 +6600,17 @@ export type Database = {
           sent_by_name: string | null;
           status: string;
           status_at: string;
+        }[];
+      };
+      conversation_notes_list: {
+        Args: {
+          p_conversation_id: string;
+        };
+        Returns: {
+          author_name: string | null;
+          body: string;
+          created_at: string;
+          id: string;
         }[];
       };
       create_lead_from_conversation: {
@@ -6606,7 +6783,9 @@ export type Database = {
           p_conversation_id?: string | null;
           p_detail_center_ids: string[];
           p_limit?: number | null;
+          p_pending?: boolean | null;
           p_status?: string | null;
+          p_tag?: string | null;
           p_unassigned?: boolean | null;
         };
         Returns: {
@@ -6630,7 +6809,11 @@ export type Database = {
           lead_id: string | null;
           lead_name: string | null;
           lead_status: string | null;
+          notes: number;
+          pending: boolean;
+          priority: string;
           status: string;
+          tags: string[];
           unread_count: number;
           version: number;
           window_closes_at: string | null;
@@ -6759,6 +6942,22 @@ export type Database = {
           terms: string | null;
           uses: number;
           value: number;
+          version: number;
+        }[];
+      };
+      list_quick_replies: {
+        Args: {
+          p_detail_center_id?: string | null;
+          p_organization_id: string;
+        };
+        Returns: {
+          active: boolean;
+          body: string;
+          can_manage: boolean;
+          detail_center_id: string | null;
+          detail_center_name: string | null;
+          id: string;
+          title: string;
           version: number;
         }[];
       };
@@ -6941,10 +7140,26 @@ export type Database = {
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
       };
+      list_whatsapp_templates: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          body_text: string | null;
+          category: string;
+          id: string;
+          language: string;
+          name: string;
+          param_count: number;
+          status: string;
+          synced_at: string;
+        }[];
+      };
       prepare_outbound_message: {
         Args: {
           p_body: string;
           p_conversation_id: string;
+          p_expected_last_message_at?: string | null;
           p_request_id: string;
         };
         Returns: {
@@ -6957,6 +7172,26 @@ export type Database = {
           message_id: string;
         }[];
       };
+      prepare_template_message: {
+        Args: {
+          p_conversation_id: string;
+          p_params: string[];
+          p_request_id: string;
+          p_template_id: string;
+        };
+        Returns: {
+          already_sent: boolean;
+          body: string;
+          channel: string;
+          contact_external_id: string;
+          contact_phone: string | null;
+          external_account_id: string;
+          message_id: string;
+          template_language: string;
+          template_name: string;
+          template_params: string[];
+        }[];
+      };
       record_channel_verification: {
         Args: {
           p_channel_account_id: string;
@@ -6966,6 +7201,14 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["channel_accounts"]["Row"];
         SetofOptions: { from: "*"; to: "channel_accounts"; isOneToOne: true; isSetofReturn: false };
+      };
+      record_whatsapp_templates: {
+        Args: {
+          p_business_account_id: string;
+          p_items: Json;
+          p_organization_id: string;
+        };
+        Returns: number;
       };
       run_automation_now: {
         Args: {
@@ -7000,6 +7243,17 @@ export type Database = {
         Args: {
           p_conversation_id: string;
           p_status: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["conversations"]["Row"];
+        SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_conversation_triage: {
+        Args: {
+          p_conversation_id: string;
+          p_pending: boolean;
+          p_priority: string;
+          p_tags: string[];
           p_version: number;
         };
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
@@ -7184,6 +7438,20 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["promotions"]["Row"];
         SetofOptions: { from: "*"; to: "promotions"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_quick_reply: {
+        Args: {
+          p_active: boolean;
+          p_body: string;
+          p_detail_center_id: string | null;
+          p_id: string | null;
+          p_organization_id: string;
+          p_reason: string;
+          p_title: string;
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["quick_replies"]["Row"];
+        SetofOptions: { from: "*"; to: "quick_replies"; isOneToOne: true; isSetofReturn: false };
       };
       void_campaign_spend: {
         Args: {

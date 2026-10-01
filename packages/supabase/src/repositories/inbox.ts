@@ -3,22 +3,32 @@ import {
   type ChannelAccount,
   type ChannelAccountStatus,
   type Conversation,
+  type ConversationNote,
+  type ConversationPriority,
   type ConversationStatus,
   type InboundItem,
   type InboxChannel,
   type InboxMessage,
   type InboxRepository,
   type MessageStatus,
+  type QuickReply,
   type Result,
   type StatusItem,
+  type TemplateCategory,
+  type TemplateItem,
+  type WhatsappTemplate,
 } from "@meguiars/domain";
 import {
   assignConversationSchema,
   channelAccountSchema,
   conversationLeadSchema,
+  conversationNoteSchema,
   conversationStatusSchema,
+  conversationTriageSchema,
   linkConversationLeadSchema,
+  quickReplySchema,
   sendMessageSchema,
+  sendTemplateSchema,
 } from "@meguiars/validation";
 import type { MeguiarsSupabaseClient } from "../client";
 import type { Database, Json } from "../database.types";
@@ -54,6 +64,10 @@ export const toConversation = (r: ConversationRow): Conversation => ({
   windowOpen: r.window_open,
   windowClosesAt: r.window_closes_at,
   version: r.version,
+  priority: r.priority as ConversationPriority,
+  tags: r.tags ?? [],
+  pending: r.pending,
+  notes: r.notes,
 });
 
 async function done(call: () => PromiseLike<{ error: unknown }>): Promise<Result<void>> {
@@ -120,6 +134,8 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
             p_channel: filter.channel ?? null,
             p_assigned_to: filter.assignedTo ?? null,
             p_unassigned: filter.unassigned ?? false,
+            p_pending: filter.pending ?? false,
+            p_tag: filter.tag ?? null,
           }),
         (rows) => rows.map(toConversation),
       );
@@ -214,8 +230,8 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
       );
     },
 
-    async prepareOutbound(conversationId, requestId, body) {
-      const parsed = sendMessageSchema.safeParse({ conversationId, requestId, body });
+    async prepareOutbound(conversationId, requestId, body, expectedLastMessageAt) {
+      const parsed = sendMessageSchema.safeParse({ conversationId, requestId, body, expectedLastMessageAt });
       if (!parsed.success) return invalid(parsed.error);
       const r = await run(
         () =>
@@ -223,6 +239,7 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
             p_conversation_id: parsed.data.conversationId,
             p_request_id: parsed.data.requestId,
             p_body: parsed.data.body,
+            p_expected_last_message_at: parsed.data.expectedLastMessageAt ?? null,
           }),
         (rows) => rows[0],
       );
@@ -238,6 +255,137 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
           contactPhone: r.data.contact_phone,
           body: r.data.body,
           alreadySent: r.data.already_sent,
+        },
+      };
+    },
+
+    async setTriage(id, version, triage) {
+      const parsed = conversationTriageSchema.safeParse({ conversationId: id, version, ...triage });
+      if (!parsed.success) return invalid(parsed.error);
+      return done(() =>
+        client.rpc("set_conversation_triage", {
+          p_conversation_id: id,
+          p_version: parsed.data.version,
+          p_priority: parsed.data.priority,
+          p_tags: parsed.data.tags,
+          p_pending: parsed.data.pending,
+        }),
+      );
+    },
+
+    notes(conversationId) {
+      return run(
+        () => client.rpc("conversation_notes_list", { p_conversation_id: conversationId }),
+        (rows): ConversationNote[] =>
+          rows.map((n) => ({ id: n.id, body: n.body, authorName: n.author_name, createdAt: n.created_at })),
+      );
+    },
+
+    async addNote(conversationId, requestId, body) {
+      const parsed = conversationNoteSchema.safeParse({ conversationId, requestId, body });
+      if (!parsed.success) return invalid(parsed.error);
+      return done(() =>
+        client.rpc("add_conversation_note", {
+          p_conversation_id: conversationId,
+          p_request_id: requestId,
+          p_body: parsed.data.body,
+        }),
+      );
+    },
+
+    quickReplies(organizationId, detailCenterId) {
+      return run(
+        () =>
+          client.rpc("list_quick_replies", {
+            p_organization_id: organizationId,
+            p_detail_center_id: detailCenterId ?? null,
+          }),
+        (rows): QuickReply[] =>
+          rows.map((q) => ({
+            id: q.id,
+            detailCenterId: q.detail_center_id,
+            centerName: q.detail_center_name,
+            title: q.title,
+            body: q.body,
+            active: q.active,
+            version: q.version,
+            canManage: q.can_manage,
+          })),
+      );
+    },
+
+    saveQuickReply(command) {
+      const parsed = quickReplySchema.safeParse(command);
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      const c = parsed.data;
+      return run(
+        () =>
+          client.rpc("upsert_quick_reply", {
+            p_organization_id: c.organizationId,
+            p_id: c.id ?? null,
+            p_version: c.version ?? null,
+            p_detail_center_id: c.detailCenterId ?? null,
+            p_title: c.title,
+            p_body: c.body,
+            p_active: c.active,
+            p_reason: c.reason,
+          }),
+        (row) => ({ id: row.id }),
+      );
+    },
+
+    templates(organizationId) {
+      return run(
+        () => client.rpc("list_whatsapp_templates", { p_organization_id: organizationId }),
+        (rows): WhatsappTemplate[] =>
+          rows.map((t) => ({
+            id: t.id,
+            name: t.name,
+            language: t.language,
+            category: t.category as TemplateCategory,
+            status: t.status,
+            bodyText: t.body_text,
+            paramCount: t.param_count,
+            syncedAt: t.synced_at,
+          })),
+      );
+    },
+
+    canSyncTemplates(organizationId) {
+      return run(
+        () => client.rpc("can_sync_whatsapp_templates", { p_organization_id: organizationId }),
+        (v) => v === true,
+      );
+    },
+
+    async prepareTemplate(conversationId, requestId, templateId, params) {
+      const parsed = sendTemplateSchema.safeParse({ conversationId, requestId, templateId, params });
+      if (!parsed.success) return invalid(parsed.error);
+      const r = await run(
+        () =>
+          client.rpc("prepare_template_message", {
+            p_conversation_id: conversationId,
+            p_request_id: requestId,
+            p_template_id: templateId,
+            p_params: parsed.data.params,
+          }),
+        (rows) => rows[0],
+      );
+      if (!r.ok) return r;
+      if (!r.data) return fail("unknown", "La base no devolvió el mensaje preparado");
+      return {
+        ok: true,
+        data: {
+          messageId: r.data.message_id,
+          channel: r.data.channel as InboxChannel,
+          externalAccountId: r.data.external_account_id,
+          contactExternalId: r.data.contact_external_id,
+          contactPhone: r.data.contact_phone,
+          body: r.data.body,
+          alreadySent: r.data.already_sent,
+          templateName: r.data.template_name,
+          templateLanguage: r.data.template_language,
+          templateParams: r.data.template_params ?? [],
         },
       };
     },
@@ -280,6 +428,17 @@ export function createInboxServiceGateway(serviceClient: MeguiarsSupabaseClient)
           p_verified_name: result.ok ? result.name : null,
           p_error: result.ok ? null : result.error,
         }),
+      );
+    },
+    recordTemplates(organizationId: string, businessAccountId: string, items: TemplateItem[]) {
+      return run(
+        () =>
+          serviceClient.rpc("record_whatsapp_templates", {
+            p_organization_id: organizationId,
+            p_business_account_id: businessAccountId,
+            p_items: items as unknown as Json,
+          }),
+        (n) => n,
       );
     },
     finishOutbound(

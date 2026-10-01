@@ -34,6 +34,7 @@ describe("repositorio de la bandeja", () => {
       p_conversation_id: U,
       p_request_id: U,
       p_body: "Hola",
+      p_expected_last_message_at: null,
     });
     expect(r).toEqual({
       ok: true,
@@ -59,6 +60,8 @@ describe("repositorio de la bandeja", () => {
       p_channel: null,
       p_assigned_to: null,
       p_unassigned: true,
+      p_pending: false,
+      p_tag: null,
     });
     const bad = await repo.saveAccount({
       organizationId: U,
@@ -87,6 +90,66 @@ describe("repositorio de la bandeja", () => {
       p_ok: true,
       p_verified_name: "+52 55 1111 2222",
       p_error: null,
+    });
+  });
+
+  it("triaje, notas, respuestas rápidas y plantillas validan antes de llegar a la base", async () => {
+    const { client, rpc } = fakeClient(null);
+    const repo = createInboxRepository(client);
+    expect((await repo.setTriage(U, 1, { priority: "alta", tags: ["<b>"], pending: true })).ok).toBe(false);
+    expect((await repo.addNote(U, U, "   ")).ok).toBe(false);
+    expect(
+      (
+        await repo.saveQuickReply({
+          organizationId: U,
+          title: "Precio",
+          body: "Hola {nombre}, cuesta {precio}",
+          active: true,
+          reason: "Alta",
+        })
+      ).ok,
+    ).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+    await repo.setTriage(U, 2, { priority: "alta", tags: [" Pulido", "pulido", "cotizar"], pending: true });
+    expect(rpc).toHaveBeenCalledWith("set_conversation_triage", {
+      p_conversation_id: U,
+      p_version: 2,
+      p_priority: "alta",
+      p_tags: ["cotizar", "pulido"],
+      p_pending: true,
+    });
+    await repo.prepareOutbound(U, U, "Hola", "2026-10-01T15:00:00.000Z");
+    expect(rpc).toHaveBeenCalledWith(
+      "prepare_outbound_message",
+      expect.objectContaining({ p_expected_last_message_at: "2026-10-01T15:00:00.000Z" }),
+    );
+  });
+
+  it("preparar una plantilla devuelve nombre, idioma y datos para la API oficial", async () => {
+    const { client, rpc } = fakeClient([
+      {
+        message_id: U,
+        channel: "whatsapp",
+        external_account_id: "1234567890",
+        contact_external_id: "5215533334444",
+        contact_phone: "+5215533334444",
+        body: "Hola Beto, te esperamos el 05/10.",
+        already_sent: false,
+        template_name: "recordatorio_cita",
+        template_language: "es_MX",
+        template_params: ["Beto", "05/10"],
+      },
+    ]);
+    const r = await createInboxRepository(client).prepareTemplate(U, U, U, [" Beto ", "05/10"]);
+    expect(rpc).toHaveBeenCalledWith("prepare_template_message", {
+      p_conversation_id: U,
+      p_request_id: U,
+      p_template_id: U,
+      p_params: ["Beto", "05/10"],
+    });
+    expect(r.ok && r.data).toMatchObject({
+      templateName: "recordatorio_cita",
+      templateParams: ["Beto", "05/10"],
     });
   });
 });

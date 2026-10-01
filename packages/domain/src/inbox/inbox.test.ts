@@ -1,9 +1,22 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { INTEGRATIONS, integrationState } from "../commercial/integrations";
-import { replyBlocker, windowOpen, windowRemaining } from "./inbox";
+import {
+  fillQuickReply,
+  normalizeTags,
+  renderTemplate,
+  replyBlocker,
+  templateBlocker,
+  unknownQuickReplyPlaceholders,
+  validTag,
+  windowOpen,
+  windowRemaining,
+} from "./inbox";
 import {
   buildSendRequest,
+  buildTemplateSendRequest,
+  buildTemplatesListRequest,
+  parseTemplatesResponse,
   buildVerifyRequest,
   parseMetaWebhook,
   parseSendResponse,
@@ -327,5 +340,104 @@ describe("ventana de atención e integraciones", () => {
     const tiktok = INTEGRATIONS.find((i) => i.channel === "tiktok")!;
     expect(integrationState(tiktok, [{ ...acc, status: "verificada" }]).status).toBe("no_disponible");
     expect(INTEGRATIONS.every((i) => i.status !== "conectada")).toBe(true);
+  });
+});
+
+describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", () => {
+  it("etiquetas normalizadas y validadas", () => {
+    expect(normalizeTags([" Pulido", "cotizar", "pulido", "", "x".repeat(31)])).toEqual([
+      "cotizar",
+      "pulido",
+    ]);
+    expect(validTag("pulido cerámico")).toBe(true);
+    expect(validTag("<script>")).toBe(false);
+  });
+
+  it("respuestas rápidas sólo con datos reales", () => {
+    expect(
+      fillQuickReply("Hola {nombre}, en {centro} abrimos a las 9", {
+        name: "Ana Ruiz",
+        center: "Centro CDMX",
+      }),
+    ).toBe("Hola Ana, en Centro CDMX abrimos a las 9");
+    expect(unknownQuickReplyPlaceholders("Hola {nombre}, cuesta {precio}")).toEqual(["precio"]);
+  });
+
+  it("plantillas: texto final y bloqueos", () => {
+    expect(renderTemplate("Hola {{1}}, te esperamos el {{2}}.", "x", ["Beto", "05/10"])).toBe(
+      "Hola Beto, te esperamos el 05/10.",
+    );
+    const c = { channel: "whatsapp" as const, accountStatus: "verificada" as const };
+    expect(templateBlocker({ status: "APPROVED", category: "UTILITY" }, c, false)).toBeNull();
+    expect(templateBlocker({ status: "PENDING", category: "UTILITY" }, c, true)).toMatch(/aprobadas/);
+    expect(templateBlocker({ status: "APPROVED", category: "MARKETING" }, c, false)).toMatch(/no autorizó/);
+    expect(templateBlocker({ status: "APPROVED", category: "MARKETING" }, c, true)).toBeNull();
+    expect(
+      templateBlocker({ status: "APPROVED", category: "UTILITY" }, { ...c, channel: "messenger" }, true),
+    ).toMatch(/WhatsApp/);
+  });
+
+  it("formato oficial: envío de plantilla y lectura del catálogo de Meta", () => {
+    const req = buildTemplateSendRequest({
+      externalAccountId: "1234567890",
+      contactExternalId: "5215511112222",
+      contactPhone: "+5215511112222",
+      templateName: "recordatorio_cita",
+      templateLanguage: "es_MX",
+      templateParams: ["Beto", "05/10"],
+    });
+    expect(req.url).toBe("https://graph.facebook.com/v26.0/1234567890/messages");
+    expect(req.body).toEqual({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: "5215511112222",
+      type: "template",
+      template: {
+        name: "recordatorio_cita",
+        language: { code: "es_MX" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: "Beto" },
+              { type: "text", text: "05/10" },
+            ],
+          },
+        ],
+      },
+    });
+    expect(buildTemplatesListRequest("1029384756").url).toContain("/1029384756/message_templates?fields=");
+    const parsed = parseTemplatesResponse(200, {
+      data: [
+        {
+          name: "recordatorio_cita",
+          language: "es_MX",
+          status: "APPROVED",
+          category: "UTILITY",
+          components: [{ type: "BODY", text: "Hola {{1}}, te esperamos el {{2}}. {{1}}" }],
+        },
+        { name: "Mal Nombre", language: "es", status: "APPROVED", category: "UTILITY", components: [] },
+        { name: "x", language: "es", status: "APPROVED", category: "OTRA", components: [] },
+      ],
+      paging: { next: "https://graph.facebook.com/next" },
+    });
+    expect(parsed).toEqual({
+      ok: true,
+      items: [
+        {
+          name: "recordatorio_cita",
+          language: "es_MX",
+          category: "UTILITY",
+          status: "APPROVED",
+          body: "Hola {{1}}, te esperamos el {{2}}. {{1}}",
+          param_count: 2,
+        },
+      ],
+      next: "https://graph.facebook.com/next",
+    });
+    expect(parseTemplatesResponse(403, { error: { code: 200, message: "Permissions error" } })).toEqual({
+      ok: false,
+      error: "(#200) Permissions error",
+    });
   });
 });
