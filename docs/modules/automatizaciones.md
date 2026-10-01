@@ -177,6 +177,8 @@ Centro CDMX:
 - «Nuevo prospecto: contactar hoy», «Recordar cotización sin respuesta» y «Confirmar cita de mañana», activas, con su primera corrida (tarea para Mariana Soto);
 - «Recompra de lavado», promocional, en pausa.
 
+`supabase/demo/marketing.sql` agrega reglas en ambos centros (contactar prospectos nuevos, recordar cotizaciones, confirmar citas, agradecer y pedir reseña) con su primera corrida, y dos promocionales en pausa.
+
 ## Limitaciones
 
 - **Sin envío automático.** Las automatizaciones crean tareas. Enviar sin intervención requiere plantillas aprobadas de WhatsApp (utilidad o marketing con consentimiento), y para Messenger e Instagram etiquetas de mensaje. Queda preparado, no conectado.

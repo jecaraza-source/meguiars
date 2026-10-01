@@ -110,6 +110,20 @@ echo "demo: supabase/demo/historial.sql (dos veces: idempotente)"
   || { echo "El historial demo no cargó clientes, OS cobradas y egresos esperados" >&2; exit 1; }
 echo "prueba (historial demo): supabase/tests/seeded/financial_integrity.test.sql"
 "${PSQL[@]}" -t -f supabase/tests/seeded/financial_integrity.test.sql 2>&1 | show
+echo "demo: supabase/demo/marketing.sql (dos veces: idempotente)"
+"${PSQL[@]}" -f supabase/demo/marketing.sql
+"${PSQL[@]}" -f supabase/demo/marketing.sql 2>&1 | grep -q "Marketing demo ya cargado" \
+  || { echo "El marketing demo no es idempotente" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select (select count(*) from public.campaigns where id::text like 'ca0de000-%') = 6
+    and (select count(*) from public.leads where id::text like '1ead0de0-%') between 60 and 100
+    and (select count(*) from public.leads where id::text like '1ead0de0-%' and status = 'ganada'
+          and service_order_id is not null) >= 5
+    and not exists (select 1 from public.campaigns c where c.budget <
+          (select sum(s.amount) from public.campaign_spend s where s.campaign_id = c.id))
+    and (select count(*) from public.automation_runs r where r.automation_id::text like 'a70de000-%') = 5")" == "t" ]] \
+  || { echo "El marketing demo no cargó campañas, prospectos atribuidos y automatizaciones esperados" >&2; exit 1; }
+echo "prueba (marketing demo): supabase/tests/seeded/financial_integrity.test.sql"
+"${PSQL[@]}" -t -f supabase/tests/seeded/financial_integrity.test.sql 2>&1 | show
 
 # Prueba de actualización: en una base aparte aplica las migraciones en orden y,
 # si existen, carga tests/upgrade/<migración>.before.sql justo antes y verifica
