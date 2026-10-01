@@ -35,7 +35,10 @@ Contenido o anuncio → consulta → prospecto → cotización → reserva → s
   - ventana de 24 h;
   - estado de entrega;
   - prospecto desde la conversación;
-  - primera respuesta medida.
+  - primera respuesta medida;
+  - prioridad, etiquetas, «pendiente» y notas internas;
+  - respuestas rápidas (sólo {nombre} y {centro}) y guarda contra respuestas duplicadas;
+  - plantillas aprobadas de WhatsApp fuera de 24 h (marketing sólo con consentimiento).
 - **Calendario, campañas y promociones:**
   - piezas por canal y formato;
   - campañas con UTM y gasto ligado al egreso;
@@ -81,14 +84,14 @@ Las migraciones y los trabajos diarios de `pg_cron` se aplican solos al hacer me
 
 ## Limitaciones por canal
 
-| Canal                              | Funciona hoy                                                                                        | Pendiente o no disponible                                                                                                           |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| WhatsApp Business                  | Recibir y responder dentro de 24 h (Cloud API), estados de entrega, prospecto desde la conversación | Plantillas aprobadas fuera de 24 h y envío automático; adjuntos; queda operativo tras configurar credenciales y verificar la cuenta |
-| Messenger                          | Recibir y responder dentro de 24 h, estado «entregado»                                              | Etiquetas de mensaje fuera de 24 h; adjuntos                                                                                        |
-| Instagram                          | Recibir y responder DM dentro de 24 h (cuenta profesional)                                          | Publicar contenido y responder comentarios; métricas                                                                                |
-| Facebook (página)                  | Mensajes vía Messenger                                                                              | Publicar contenido y responder comentarios; métricas                                                                                |
-| Meta Ads / Google Ads / TikTok Ads | Inversión registrada a mano o ligada al egreso                                                      | Lectura de gasto y resultados desde la API de anuncios (no conectada)                                                               |
-| Google Business Profile, TikTok    | Canal de origen del prospecto y de la campaña                                                       | Integración («Aún no disponible» en Integraciones)                                                                                  |
-| Sitio web                          | Canal de origen; enlaces con UTM                                                                    | Captura automática de UTM de un formulario propio                                                                                   |
+| Canal                              | Funciona hoy                                                                                                                                                                         | Pendiente o no disponible                                                                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WhatsApp Business                  | Recibir y responder dentro de 24 h (Cloud API), estados de entrega, prospecto desde la conversación; plantillas aprobadas de texto fuera de 24 h (sincronizadas de WhatsApp Manager) | Probar plantillas con la WABA real (`WHATSAPP_BUSINESS_ACCOUNT_ID`); envío automático; adjuntos; queda operativo tras configurar credenciales y verificar la cuenta |
+| Messenger                          | Recibir y responder dentro de 24 h, estado «entregado»                                                                                                                               | Etiquetas de mensaje fuera de 24 h; adjuntos                                                                                                                        |
+| Instagram                          | Recibir y responder DM dentro de 24 h (cuenta profesional)                                                                                                                           | Publicar contenido y responder comentarios; métricas                                                                                                                |
+| Facebook (página)                  | Mensajes vía Messenger                                                                                                                                                               | Publicar contenido y responder comentarios; métricas                                                                                                                |
+| Meta Ads / Google Ads / TikTok Ads | Inversión registrada a mano o ligada al egreso                                                                                                                                       | Lectura de gasto y resultados desde la API de anuncios (no conectada)                                                                                               |
+| Google Business Profile, TikTok    | Canal de origen del prospecto y de la campaña                                                                                                                                        | Integración («Aún no disponible» en Integraciones)                                                                                                                  |
+| Sitio web                          | Canal de origen; enlaces con UTM                                                                                                                                                     | Captura automática de UTM de un formulario propio                                                                                                                   |
 
 Ninguna integración se marca como conectada sin que el servidor la verifique con Meta. Hoy la cuenta demo aparece como «pendiente de configurar».
