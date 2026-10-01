@@ -114,7 +114,9 @@ select pg_temp.assert(not exists (select 1 from tenancy where org_cond is null a
 -- legible en la organización). Para ellas sólo aplica el aislamiento entre organizaciones.
 create temp table org_shared (tbl text primary key);
 insert into org_shared values ('clients'), ('vehicles'), ('client_centers'), ('b2b_accounts'), ('b2b_agreement_centers'), ('b2b_agreements'), ('b2b_contacts'), ('b2b_vehicles'), ('b2b_price_rules'),
-  ('contact_preferences'), ('detail_centers'), ('user_detail_centers'), ('kpi_thresholds');
+  ('contact_preferences'), ('detail_centers'), ('user_detail_centers'), ('kpi_thresholds'),
+  -- Plantillas de la cuenta de WhatsApp Business de la organización (las envía cualquier centro).
+  ('whatsapp_templates');
 
 -- Filas de un centro que otros centros de la organización ven por diseño:
 -- la membresía redimible en cualquier centro, con su historial y redenciones (ADR 0013).
@@ -179,6 +181,7 @@ create function pg_temp.param_table(fn text, arg text) returns text language sql
     when arg = 'p_conversation_id' then 'conversations'
     when arg = 'p_campaign_id' then 'campaigns'
     when arg = 'p_automation_id' then 'automations'
+    when arg = 'p_template_id' then 'whatsapp_templates'
     when arg = 'p_spend_id' then 'campaign_spend'
     when arg = 'p_channel_account_id' then 'channel_accounts'
     when arg in ('p_account_id', 'p_b2b_account_id') then 'b2b_accounts'
@@ -213,6 +216,7 @@ create function pg_temp.param_table(fn text, arg text) returns text language sql
     when arg = 'p_id' then case
       when fn like '%opportunit%' then 'sales_opportunities'
       when fn like '%automation%' then 'automations'
+      when fn like '%quick_repl%' then 'quick_replies'
       when fn like '%lead_stage%' then 'lead_stages'
       when fn like '%lead%' then 'leads'
       when fn like '%content_post%' then 'content_posts'

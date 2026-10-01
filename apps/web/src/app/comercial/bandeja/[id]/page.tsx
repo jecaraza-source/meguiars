@@ -1,6 +1,7 @@
 import {
   activeCenterAccess,
   canInCenter,
+  CONVERSATION_PRIORITY_LABELS,
   CONVERSATION_STATUS_LABELS,
   formatInCenterTimeZone,
   INBOX_CHANNEL_LABELS,
@@ -22,7 +23,10 @@ import {
   ConversationLeadForm,
   ConversationStatusForm,
   LinkConversationLeadForm,
+  NoteForm,
   ReplyForm,
+  TemplateForm,
+  TriageForm,
 } from "@/components/inbox-forms";
 import { Badge, Card, EmptyState } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
@@ -52,12 +56,19 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
   }
   const c = r.data;
   const commercial = createCommercialRepository(supabase);
-  const [messages, owners, leads, catalog] = await Promise.all([
+  const [messages, owners, leads, catalog, notes, quickReplies, templates, lead] = await Promise.all([
     repo.messages(c.id),
     commercial.leadOwners(c.detailCenterId),
     c.leadId ? Promise.resolve(null) : commercial.leads([c.detailCenterId], { status: "abierta" }),
     c.leadId ? Promise.resolve(null) : createCatalogRepository(supabase).listForCenter(c.detailCenterId),
+    repo.notes(c.id),
+    repo.quickReplies(center.organizationId, c.detailCenterId),
+    c.channel === "whatsapp" ? repo.templates(center.organizationId) : Promise.resolve(null),
+    c.leadId ? commercial.lead(c.leadId, [c.detailCenterId]) : Promise.resolve(null),
   ]);
+  // Consentimiento de WhatsApp para plantillas de marketing: el del prospecto ligado; con
+  // un cliente, la base lo vuelve a validar al enviar.
+  const whatsappConsent = lead?.ok ? lead.data.consentChannels.includes("whatsapp") : !!c.clientId;
   const tz =
     usableCenters(state.access).find((a) => a.center.id === c.detailCenterId)?.center.timezone ??
     center.timezone;
@@ -113,13 +124,22 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
             {!canWrite ? (
               <p className="text-sm text-muted">Sin permiso para responder.</p>
             ) : blocker ? (
-              <p
-                className="mg-tone rounded-md border p-md text-sm"
-                data-tone="warning"
-                data-testid="reply-blocked"
-              >
-                {blocker}
-              </p>
+              <div className="flex flex-col gap-md">
+                <p
+                  className="mg-tone rounded-md border p-md text-sm"
+                  data-tone="warning"
+                  data-testid="reply-blocked"
+                >
+                  {blocker}
+                </p>
+                {c.channel === "whatsapp" && c.accountStatus === "verificada" && serverReady ? (
+                  <TemplateForm
+                    conversation={c}
+                    templates={templates?.ok ? templates.data : []}
+                    whatsappConsent={whatsappConsent}
+                  />
+                ) : null}
+              </div>
             ) : !serverReady ? (
               <p className="mg-tone rounded-md border p-md text-sm" data-tone="warning">
                 {INBOX_COPY.sendUnavailable}
@@ -130,10 +150,34 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
                   Ventana abierta: quedan {remaining!.hours} h {remaining!.minutes} min para responder con
                   texto libre.
                 </p>
-                <ReplyForm conversation={c} />
+                <ReplyForm
+                  conversation={c}
+                  quickReplies={quickReplies.ok ? quickReplies.data : []}
+                  centerName={c.centerName}
+                />
               </>
             )}
             <p className="mt-sm text-xs text-muted">{INBOX_COPY.notMirrored}</p>
+          </Card>
+          <Card title="Notas internas (no se envían al cliente)">
+            <div className="mg-tone flex flex-col gap-sm rounded-md border p-sm" data-tone="warning">
+              <p className="text-xs">{INBOX_COPY.notesNote}</p>
+              {notes.ok && notes.data.length ? (
+                <ul className="flex flex-col gap-xs text-sm" data-testid="conversation-notes">
+                  {notes.data.map((n) => (
+                    <li key={n.id}>
+                      <p className="whitespace-pre-wrap">{n.body}</p>
+                      <p className="text-xs opacity-80">
+                        {n.authorName ?? "—"} · {formatInCenterTimeZone(n.createdAt, tz)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm">Sin notas.</p>
+              )}
+              {canWrite ? <NoteForm conversation={c} /> : null}
+            </div>
           </Card>
         </div>
         <div className="flex flex-col gap-md">
@@ -146,6 +190,16 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
                   tone={c.status === "abierta" ? "brand" : "neutral"}
                 />
               </dd>
+              <dt className="text-muted">Prioridad</dt>
+              <dd>
+                <Badge
+                  label={CONVERSATION_PRIORITY_LABELS[c.priority]}
+                  tone={c.priority === "alta" ? "warning" : "neutral"}
+                />
+                {c.pending ? <Badge label="Pendiente" tone="info" /> : null}
+              </dd>
+              <dt className="text-muted">Etiquetas</dt>
+              <dd>{c.tags.length ? c.tags.join(", ") : "—"}</dd>
               <dt className="text-muted">Teléfono</dt>
               <dd>{c.contactPhone ?? "No compartido por Meta"}</dd>
               <dt className="text-muted">Responsable</dt>
@@ -165,6 +219,7 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
               <div className="mt-md flex flex-col gap-sm">
                 <AssignConversationForm conversation={c} owners={owners.ok ? owners.data : []} />
                 <ConversationStatusForm conversation={c} />
+                <TriageForm conversation={c} />
               </div>
             ) : null}
           </Card>

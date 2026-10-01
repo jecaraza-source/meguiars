@@ -54,7 +54,7 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó la ejecución y los consumos de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select string_agg(m.number || '=' || private.membership_status(m.state, m.ends_on, m.renewal_notice_days, current_date), ',' order by m.number) from public.memberships m")" == "MEM-000001=activa,MEM-000002=proxima_a_vencer,MEM-000003=activa" ]] \
   || { echo "El seed no cargó las membresías de ejemplo" >&2; exit 1; }
-[[ "$("${PSQL[@]}" -tAc "select count(*) from public.crm_tasks where status = 'pendiente' and lead_id is null")" == "2" && "$("${PSQL[@]}" -tAc "select count(*) from public.contact_preferences where opted_in")" -ge "2" ]] \
+[[ "$("${PSQL[@]}" -tAc "select count(*) from public.crm_tasks where status = 'pendiente' and lead_id is null and automation_id is null")" == "2" && "$("${PSQL[@]}" -tAc "select count(*) from public.contact_preferences where opted_in")" -ge "2" ]] \
   || { echo "El seed no cargó el CRM de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.leads where status = 'abierta'")" == "3" && "$("${PSQL[@]}" -tAc "select string_agg(folio || '=' || total || '/' || operator_pay_total, ',' order by folio) from public.quotes")" == "CDMX-01-COT-00001=450.00/135.00,MTY-01-COT-00001=900.00/270.00" ]] \
   || { echo "El seed no cargó los prospectos y cotizaciones de ejemplo (CR2)" >&2; exit 1; }
@@ -64,6 +64,8 @@ echo "seed: supabase/seed.sql"
   || { echo "El seed no cargó la campaña de ejemplo (CR2 fase 3)" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) filter (where active) || ':' || count(*) || ':' || (select count(*) from public.crm_tasks where source = 'automatizacion' and lead_id = '1ead0000-0000-4000-8000-000000000001') from public.automations")" == "3:4:1" ]] \
   || { echo "El seed no cargó las automatizaciones de ejemplo (CR2 fase 4)" >&2; exit 1; }
+[[ "$("${PSQL[@]}" -tAc "select (select count(*) from public.quick_replies) || ':' || (select count(*) from public.conversation_notes) || ':' || (select count(*) from public.whatsapp_templates) || ':' || (select priority from public.conversations where pending)")" == "2:1:0:alta" ]] \
+  || { echo "El seed no cargó la bandeja con triaje y respuestas rápidas" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.b2b_price_rules r join public.b2b_agreements g on g.id = r.agreement_id where g.status = 'activo'")" == "2" && "$("${PSQL[@]}" -tAc "select count(*) from public.service_orders where b2b_account_id is not null")" == "3" ]] \
   || { echo "El seed no cargó la cuenta B2B de ejemplo" >&2; exit 1; }
 [[ "$("${PSQL[@]}" -tAc "select count(*) from public.upsell_rules where active")" == "6" ]] \

@@ -779,6 +779,23 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `conversation_notes`
+
+- **Módulo:** [bandeja](modules/bandeja.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `conversation_id` | uuid | no |  |
+| `body` | text | no |  |
+| `author_id` | uuid | sí | auth.uid() |
+| `request_id` | uuid | no |  |
+| `created_at` | timestamp with time zone | no | now() |
+
 ### `conversations`
 
 - **Módulo:** [bandeja](modules/bandeja.md)
@@ -806,6 +823,9 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `version` | integer | no | 1 |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+| `priority` | text | no | 'normal'::text |
+| `tags` | text[] | no | '{}'::text[] |
+| `pending` | boolean | no | false |
 
 ### `crm_tasks`
 
@@ -1530,6 +1550,25 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `quick_replies`
+
+- **Módulo:** [bandeja](modules/bandeja.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | sí |  |
+| `title` | text | no |  |
+| `body` | text | no |  |
+| `active` | boolean | no | true |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `quote_discounts`
 
 - **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
@@ -2163,4 +2202,23 @@ CASE
 | `active` | boolean | no | true |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+
+### `whatsapp_templates`
+
+- **Módulo:** [bandeja](modules/bandeja.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `business_account_id` | text | no |  |
+| `name` | text | no |  |
+| `language` | text | no |  |
+| `category` | text | no |  |
+| `status` | text | no |  |
+| `body_text` | text | sí |  |
+| `param_count` | integer | no | 0 |
+| `synced_at` | timestamp with time zone | no | now() |
 

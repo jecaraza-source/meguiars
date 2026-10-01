@@ -224,6 +224,7 @@ Reglas:
 | `EXPO_PUBLIC_SUPABASE_*`                                                                                                                               | móvil                       | sin cambios; en EAS Environment Variables por ambiente                                   |
 | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`, `EXPO_TOKEN`                                                                  | GitHub Environments         | sólo para los pipelines; nunca en el repo                                                |
 | `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `MESSENGER_PAGE_ACCESS_TOKEN`, `INSTAGRAM_ACCESS_TOKEN`, `META_GRAPH_VERSION` | web (Vercel, sólo servidor) | **nuevas** (CR2 fase 2); ver [bandeja.md](bandeja.md)                                    |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID`                                                                                                                         | web (Vercel, sólo servidor) | **nueva**, opcional: sincronizar plantillas de WhatsApp; ver [bandeja.md](bandeja.md)    |
 | `EXPO_PUBLIC_WEB_URL`                                                                                                                                  | móvil                       | **nueva**; la fija `eas.json` (y `mobile-update.yml`): la Bandeja responde vía la web    |
 
 ## Pruebas

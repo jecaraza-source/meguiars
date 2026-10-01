@@ -34,31 +34,67 @@ function PendingHint({ className = "" }: { className?: string }) {
   );
 }
 
-/** Navegación lateral (tablet y escritorio): secciones con sus pantallas. */
+/**
+ * Navegación lateral (tablet y escritorio): sólo los títulos de cada sección;
+ * cada uno se despliega para mostrar sus pantallas. La sección de la página
+ * actual aparece abierta. Una sección con una sola pantalla es un enlace directo.
+ */
 export function SideNav({ sections }: { sections: NavSection[] }) {
   const pathname = usePathname();
   const currentHref = currentItemHref(sections, pathname);
+  const activeSection = sectionOfPath(pathname);
+  const title =
+    "flex min-h-(--mg-touch-target) w-full items-center gap-xs rounded-md px-sm text-sm font-bold uppercase tracking-wide text-accent hover:bg-surface";
   return (
-    <nav aria-label="Principal" className="flex flex-col gap-lg">
-      {sections.map((section) => (
-        <div key={section.id} className="flex flex-col gap-xxs">
-          <p className="px-sm text-xs font-bold uppercase tracking-wide text-accent">{section.label}</p>
-          {section.items.map((item) => {
-            const current = item.href === currentHref;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={current ? "page" : undefined}
-                className="flex min-h-(--mg-touch-target) items-center rounded-md px-sm text-sm font-bold text-foreground hover:bg-surface aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
-              >
-                {item.label}
-                <PendingHint className="ml-auto" />
-              </Link>
-            );
-          })}
-        </div>
-      ))}
+    <nav aria-label="Principal" className="flex flex-col gap-xs">
+      {sections.map((section) => {
+        if (section.items.length === 1) {
+          const item = section.items[0]!;
+          return (
+            <Link
+              key={section.id}
+              href={item.href}
+              aria-current={item.href === currentHref ? "page" : undefined}
+              data-section={section.id}
+              className={`${title} aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground`}
+            >
+              {section.label}
+              <PendingHint className="ml-auto" />
+            </Link>
+          );
+        }
+        return (
+          <details
+            key={section.id}
+            open={section.id === activeSection}
+            data-section={section.id}
+            className="group flex flex-col"
+          >
+            <summary className={`${title} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+              {section.label}
+              <span aria-hidden="true" className="ml-auto text-xs transition-transform group-open:rotate-180">
+                ▾
+              </span>
+            </summary>
+            <div className="mt-xxs flex flex-col gap-xxs pl-sm">
+              {section.items.map((item) => {
+                const current = item.href === currentHref;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={current ? "page" : undefined}
+                    className="flex min-h-(--mg-touch-target) items-center rounded-md px-sm text-sm font-bold text-foreground hover:bg-surface aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
+                  >
+                    {item.label}
+                    <PendingHint className="ml-auto" />
+                  </Link>
+                );
+              })}
+            </div>
+          </details>
+        );
+      })}
     </nav>
   );
 }

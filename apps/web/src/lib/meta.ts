@@ -2,13 +2,18 @@ import "server-only";
 import { createHmac } from "node:crypto";
 import {
   buildSendRequest,
+  buildTemplateSendRequest,
+  buildTemplatesListRequest,
   buildVerifyRequest,
   parseSendResponse,
+  parseTemplatesResponse,
   parseVerifyResponse,
   type GraphBases,
   type GraphRequest,
   type InboxChannel,
   type OutboundMessage,
+  type OutboundTemplate,
+  type TemplateItem,
 } from "@meguiars/domain";
 
 /**
@@ -21,6 +26,8 @@ import {
  * - WHATSAPP_ACCESS_TOKEN: token de usuario del sistema con whatsapp_business_messaging.
  * - MESSENGER_PAGE_ACCESS_TOKEN: token de la página con pages_messaging.
  * - INSTAGRAM_ACCESS_TOKEN: token de la cuenta profesional (instagram_business_manage_messages).
+ * - WHATSAPP_BUSINESS_ACCOUNT_ID: id de la cuenta de WhatsApp Business (WABA) para
+ *   sincronizar las plantillas aprobadas (no es secreto, pero es configuración del servidor).
  * - META_GRAPH_VERSION (opcional): versión de la Graph API (por omisión la del dominio).
  */
 const TOKEN_ENV: Record<InboxChannel, string> = {
@@ -44,6 +51,7 @@ export function metaConfigStatus() {
     webhook,
     channels,
     serviceKey: present("SUPABASE_SERVICE_ROLE_KEY"),
+    businessAccount: present("WHATSAPP_BUSINESS_ACCOUNT_ID"),
     missing: [
       ...(!webhook.appSecret ? ["META_APP_SECRET"] : []),
       ...(!webhook.verifyToken ? ["META_WEBHOOK_VERIFY_TOKEN"] : []),
@@ -113,6 +121,34 @@ async function callGraph(
 export async function sendViaMeta(msg: OutboundMessage) {
   const { status, json } = await callGraph(msg.channel, buildSendRequest(msg, bases()));
   return parseSendResponse(status, json);
+}
+
+/** Envía una plantilla aprobada preparada por la base (se permite fuera de las 24 h). */
+export async function sendTemplateViaMeta(msg: OutboundTemplate) {
+  const { status, json } = await callGraph("whatsapp", buildTemplateSendRequest(msg, bases()));
+  return parseSendResponse(status, json);
+}
+
+/** WABA configurada para las plantillas (o null). */
+export function whatsappBusinessAccountId(): string | null {
+  const id = (process.env.WHATSAPP_BUSINESS_ACCOUNT_ID ?? "").trim();
+  return /^[0-9]{5,30}$/.test(id) ? id : null;
+}
+
+/** Lee de Meta todas las plantillas de la WABA (sigue la paginación, máximo 5 páginas). */
+export async function fetchWhatsappTemplates(
+  businessAccountId: string,
+): Promise<{ ok: true; items: TemplateItem[] } | { ok: false; error: string }> {
+  const items: TemplateItem[] = [];
+  let req: GraphRequest | null = buildTemplatesListRequest(businessAccountId, bases());
+  for (let page = 0; req && page < 5; page++) {
+    const { status, json } = await callGraph("whatsapp", req);
+    const parsed = parseTemplatesResponse(status, json);
+    if (!parsed.ok) return parsed;
+    items.push(...parsed.items);
+    req = parsed.next ? { url: parsed.next, method: "GET" } : null;
+  }
+  return { ok: true, items };
 }
 
 /** «Probar conexión»: consulta la cuenta en Meta con el token del servidor. */

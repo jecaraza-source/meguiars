@@ -15,6 +15,12 @@ import type { InboxChannel } from "./inbox";
  * - Instagram (API con inicio de sesión de Instagram): POST /{ig-id}/messages
  *   en graph.instagram.com con recipient.id (IGSID); webhook object "instagram".
  * Las tres limitan el texto libre a 24 h desde el último mensaje del contacto.
+ * - Plantillas de WhatsApp (revisado para los pendientes de CR2): se listan con
+ *   GET /{whatsapp-business-account-id}/message_templates (fields name,
+ *   language, status, category, components) y se envían con type "template",
+ *   template.name, template.language.code y components [{type:"body",
+ *   parameters:[{type:"text", text}]}]. Sólo las APPROVED se entregan, y sí
+ *   fuera de la ventana de 24 h.
  */
 
 export const META_GRAPH_VERSION = "v26.0";
@@ -273,6 +279,94 @@ export function buildSendRequest(
       message: { text: msg.body },
     },
   };
+}
+
+/** Solicitud para enviar una plantilla aprobada de WhatsApp (se permite fuera de las 24 h). */
+export function buildTemplateSendRequest(
+  msg: {
+    externalAccountId: string;
+    contactExternalId: string;
+    contactPhone: string | null;
+    templateName: string;
+    templateLanguage: string;
+    templateParams: readonly string[];
+  },
+  bases: GraphBases = {},
+): GraphRequest {
+  const address = msg.contactPhone
+    ? { to: msg.contactPhone.replace(/^\+/, "") }
+    : { recipient: msg.contactExternalId };
+  return {
+    url: `${base("whatsapp", bases)}/${msg.externalAccountId}/messages`,
+    method: "POST",
+    body: {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      ...address,
+      type: "template",
+      template: {
+        name: msg.templateName,
+        language: { code: msg.templateLanguage },
+        ...(msg.templateParams.length
+          ? {
+              components: [
+                { type: "body", parameters: msg.templateParams.map((text) => ({ type: "text", text })) },
+              ],
+            }
+          : {}),
+      },
+    },
+  };
+}
+
+/** Solicitud para listar las plantillas de la cuenta de WhatsApp Business (WABA). */
+export function buildTemplatesListRequest(businessAccountId: string, bases: GraphBases = {}): GraphRequest {
+  return {
+    url: `${base("whatsapp", bases)}/${businessAccountId}/message_templates?fields=name,language,status,category,components&limit=200`,
+    method: "GET",
+  };
+}
+
+export interface TemplateItem {
+  name: string;
+  language: string;
+  category: "MARKETING" | "UTILITY" | "AUTHENTICATION";
+  status: string;
+  body: string | null;
+  param_count: number;
+}
+
+/** Plantillas que devolvió Meta (sólo lo necesario; descarta las de formato desconocido). */
+export function parseTemplatesResponse(
+  status: number,
+  json: unknown,
+): { ok: true; items: TemplateItem[]; next: string | null } | { ok: false; error: string } {
+  if (status < 200 || status >= 300 || !isObj(json)) return { ok: false, error: graphError(status, json) };
+  const items: TemplateItem[] = [];
+  for (const t of arr(json.data)) {
+    if (!isObj(t)) continue;
+    const name = str(t.name);
+    const language = str(t.language);
+    const category = str(t.category)?.toUpperCase();
+    const st = str(t.status)?.toUpperCase();
+    if (!name || !/^[a-z0-9_]+$/.test(name) || !language || !/^[a-z]{2,3}(_[A-Z]{2})?$/.test(language))
+      continue;
+    if (category !== "MARKETING" && category !== "UTILITY" && category !== "AUTHENTICATION") continue;
+    if (!st || !/^[A-Z_]{3,30}$/.test(st)) continue;
+    const bodyComp = arr(t.components).find((c) => isObj(c) && str(c.type)?.toUpperCase() === "BODY");
+    const body = isObj(bodyComp) ? (str(bodyComp.text) ?? null) : null;
+    const params = body ? new Set([...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => m[1])).size : 0;
+    items.push({
+      name,
+      language,
+      category,
+      status: st,
+      body: body ? body.slice(0, 1024) : null,
+      param_count: params,
+    });
+  }
+  const paging = isObj(json.paging) ? json.paging : null;
+  return { ok: true, items, next: paging ? (str(paging.next) ?? null) : null };
 }
 
 /** Id del mensaje en Meta (wamid o mid) o el error legible. */

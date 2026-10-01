@@ -39,6 +39,17 @@ conversations ─ leads? / clients? · assigned_to
 | `conversations`    | Una por cuenta y contacto (wa_id o BSUID, PSID, IGSID). Tiene teléfono si Meta lo comparte, nombre de perfil, responsable, estado, no leídos, último mensaje entrante (ventana), prospecto y cliente. |
 | `messages`         | Entrantes (`recibido`) y salientes (`pendiente` → `enviado` → `entregado` → `leido`, o `fallido`), con id de Meta, tipo, texto, quién envió y error.                                                  |
 
+### Triaje, notas, respuestas rápidas y plantillas (`20261027000000_inbox_triage_templates.sql`)
+
+| Tabla / columna                                           | Para qué                                                                                                                                                                                                         |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `conversations.priority`, `tags`, `pending`               | Triaje: prioridad (baja, normal, alta; las altas van primero), hasta 10 etiquetas en minúsculas y «pendiente». Se cambian con `set_conversation_triage` (versión y auditoría).                                   |
+| `conversation_notes`                                      | Notas internas: inmutables, idempotentes por `request_id`, visibles para quien usa la bandeja del centro. **Nunca** se envían a Meta.                                                                            |
+| `quick_replies`                                           | Respuestas rápidas por centro o para toda la organización. Sólo admiten `{nombre}` (primer nombre) y `{centro}`; cualquier otro marcador (p. ej. `{precio}`) se rechaza. Las administra el admin o el encargado. |
+| `whatsapp_templates`                                      | Copia de las plantillas de la WABA traídas de Meta (`record_whatsapp_templates`, sólo servidor). Se borran las que Meta ya no devuelve.                                                                          |
+| `prepare_outbound_message(…, p_expected_last_message_at)` | Guarda contra duplicados: si llegó un mensaje o alguien respondió después de abrir la conversación, el envío se detiene (40001) para que la persona revise.                                                      |
+| `prepare_template_message`                                | Envío de plantilla fuera de 24 h: sólo WhatsApp con cuenta verificada, plantilla `APPROVED`, no de autenticación; las de **marketing** exigen que el contacto haya autorizado WhatsApp (prospecto o cliente).    |
+
 ## Configuración (una vez por negocio)
 
 Lo hace el admin, con acceso a Meta Business Suite y a Vercel.
@@ -63,28 +74,34 @@ Lo hace el admin, con acceso a Meta Business Suite y a Vercel.
    1. Genera el token de la cuenta con `instagram_business_manage_messages`. En Vercel guárdalo como `INSTAGRAM_ACCESS_TOKEN`.
    2. Registra la cuenta con su **IG ID**. La verificación comprueba que el token sea de esa misma cuenta.
 6. **Revisión de Meta.** Mientras la app esté en modo desarrollo sólo funciona con cuentas de prueba o con roles en la app. Para clientes reales, la app necesita **verificación del negocio** y **App Review** de los permisos anteriores (acceso avanzado).
-7. **Probar conexión.** Redespliega Vercel. En Plataforma → Comercial → Integraciones, usa «Probar conexión» en cada cuenta. Si Meta la acepta, el canal queda «Conectada»; si no, se muestra la causa, por ejemplo `(#190)` para un token inválido.
+7. **Probar conexión.** Redespliega Vercel. En Plataforma → Marketing → Integraciones (redes), usa «Probar conexión» en cada cuenta. Si Meta la acepta, el canal queda «Conectada»; si no, se muestra la causa, por ejemplo `(#190)` para un token inválido.
 8. **Probar extremo a extremo.** Envía un mensaje real al número, a la página o a la cuenta y confirma que aparece en la Bandeja. Responde desde ahí. Hasta hacer esta prueba con una cuenta real no se debe declarar el canal operativo.
+
+9. **Plantillas de WhatsApp (opcional, para escribir fuera de 24 h).**
+   1. Crea las plantillas en **WhatsApp Manager** y espera la aprobación de Meta. La plataforma no crea ni edita plantillas.
+   2. En Vercel define `WHATSAPP_BUSINESS_ACCOUNT_ID` con el id de la cuenta de WhatsApp Business (WABA), no el phone_number_id. El token del usuario del sistema necesita también `whatsapp_business_management`.
+   3. En Marketing → Integraciones usa «Sincronizar plantillas con Meta» (`GET /{WABA}/message_templates`). Vuelve a sincronizar cuando Meta apruebe, pause o rechace una plantilla.
+   4. Envía una plantilla de utilidad a un número de prueba y confirma que llega. Hasta entonces, el envío de plantillas no se declara operativo.
 
 `META_GRAPH_VERSION` es opcional (por omisión `v26.0`). Súbela cuando Meta retire la versión y vuelve a probar la conexión.
 
 ## Pantallas
 
-| Web                        | Móvil                | Contenido                                                                                                                                               |
-| -------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/comercial/bandeja`       | `InboxScreen`        | Conversaciones del centro: filtros por estado, canal, «Mías» y «Sin asignar», no leídos y estado de la ventana.                                         |
-| `/comercial/bandeja/[id]`  | `ConversationScreen` | Hilo, responder dentro de la ventana (tiempo restante), responsable, atendida / reabrir, registrar o ligar prospecto.                                   |
-| `/comercial/integraciones` | `IntegrationsScreen` | Estado real por canal. En web, para el admin: URL del webhook, variables presentes o faltantes, cuentas, «Probar conexión» y alta o edición de cuentas. |
+| Web                        | Móvil                | Contenido                                                                                                                                                                                            |
+| -------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/comercial/bandeja`       | `InboxScreen`        | Conversaciones del centro: filtros por estado, canal, «Mías», «Sin asignar», «Pendientes» y etiqueta; prioridad, notas, no leídos y ventana. En web, alta y edición de respuestas rápidas.           |
+| `/comercial/bandeja/[id]`  | `ConversationScreen` | Hilo, responder dentro de la ventana (respuestas rápidas y guarda contra duplicados), plantilla aprobada con la ventana cerrada, notas internas, triaje, responsable, atendida / reabrir, prospecto. |
+| `/comercial/integraciones` | `IntegrationsScreen` | Estado real por canal. En web, para el admin: URL del webhook, variables presentes o faltantes, cuentas, «Probar conexión», alta o edición de cuentas y plantillas de WhatsApp sincronizadas.        |
 
 La app móvil responde a través de `EXPO_PUBLIC_WEB_URL` (`/api/inbox/send`). El registro de cuentas se hace sólo en web.
 
 ## Limitaciones por canal
 
-| Canal     | Qué funciona                                                                      | Qué no (todavía o por la plataforma)                                                                                                                                                                                                                                                                                |
-| --------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WhatsApp  | Recibir texto (y aviso de archivos), responder texto en 24 h, estados de entrega. | Plantillas fuera de 24 h, archivos (se ven como aviso), llamadas. Un número conectado a la Cloud API no se usa en la app WhatsApp Business salvo en coexistencia; lo que respondas fuera de la plataforma no se copia. Si el contacto usa nombre de usuario, Meta puede no compartir su teléfono (se usa el BSUID). |
-| Messenger | Recibir texto y aviso de adjuntos, responder en 24 h, «entregado».                | Etiquetas fuera de 24 h (p. ej. HUMAN_AGENT), comentarios de publicaciones, lectura (`read`). No se obtiene el nombre del perfil: se registra al crear el prospecto.                                                                                                                                                |
-| Instagram | Recibir DM y aviso de adjuntos, responder en 24 h.                                | Comentarios, menciones, publicaciones y estados de entrega. Meta no comparte teléfono ni usuario en el webhook: se pide el @usuario al registrar el prospecto.                                                                                                                                                      |
+| Canal     | Qué funciona                                                                                                                                                          | Qué no (todavía o por la plataforma)                                                                                                                                                                                                                                                                                                                                            |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WhatsApp  | Recibir texto (y aviso de archivos), responder texto en 24 h, plantillas aprobadas de texto fuera de 24 h (pendiente de probar con la WABA real), estados de entrega. | Plantillas con encabezado multimedia o botones, crear plantillas desde la plataforma, archivos (se ven como aviso), llamadas. Un número conectado a la Cloud API no se usa en la app WhatsApp Business salvo en coexistencia; lo que respondas fuera de la plataforma no se copia. Si el contacto usa nombre de usuario, Meta puede no compartir su teléfono (se usa el BSUID). |
+| Messenger | Recibir texto y aviso de adjuntos, responder en 24 h, «entregado».                                                                                                    | Etiquetas fuera de 24 h (p. ej. HUMAN_AGENT), comentarios de publicaciones, lectura (`read`). No se obtiene el nombre del perfil: se registra al crear el prospecto.                                                                                                                                                                                                            |
+| Instagram | Recibir DM y aviso de adjuntos, responder en 24 h.                                                                                                                    | Comentarios, menciones, publicaciones y estados de entrega. Meta no comparte teléfono ni usuario en el webhook: se pide el @usuario al registrar el prospecto.                                                                                                                                                                                                                  |
 
 Además:
 
@@ -105,6 +122,8 @@ Además:
   - falla de Meta, ventana de 24 h y cuenta no verificada;
   - reabrir por mensaje nuevo y cuenta desactivada.
 
+  `supabase/tests/inbox_extras.test.sql` cubre triaje y etiquetas inválidas, notas inmutables e idempotentes, respuestas rápidas (marcadores, permisos por rol y centro), guarda contra duplicados y plantillas (sólo servicio sincroniza; aprobada, categoría, consentimiento de marketing y número de datos).
+
   El barrido de aislamiento cubre las RPC nuevas.
 
 - `packages/domain/src/inbox/inbox.test.ts` cubre:
@@ -122,10 +141,11 @@ Además:
   - prospecto desde la conversación;
   - ventana cerrada;
   - permisos.
+- E2E de los extras: sincronizar plantillas (GET oficial con el token del servidor), respuesta rápida con `{precio}` rechazada y pegada con nombre y centro, guarda contra duplicados, triaje y nota sin envío a Meta, filtros, plantilla UTILITY enviada fuera de 24 h con el formato oficial (marketing sin consentimiento y no aprobadas excluidas) y permisos.
 
 ## Pendientes
 
-- Plantillas aprobadas de WhatsApp (utilidad o marketing con consentimiento) para escribir fuera de las 24 h.
+- Validar las plantillas con la WABA real (falta `WHATSAPP_BUSINESS_ACCOUNT_ID` y una plantilla aprobada); hasta entonces sólo están probadas contra Meta simulado.
+- Plantillas con encabezado, botones o multimedia; Messenger e Instagram fuera de 24 h (etiquetas de mensaje).
 - Adjuntos (ver y enviar imágenes).
-- Respuestas rápidas.
 - Automatizaciones: hechas en la fase 4 como tareas ([automatizaciones](automatizaciones.md)); una respuesta del cliente en la bandeja detiene sus secuencias. Falta la asignación automática de conversaciones.

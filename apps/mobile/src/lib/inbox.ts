@@ -10,10 +10,12 @@ export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? "").replace(/\/$/, ""
 export type SendResult =
   { ok: true; status: "enviado" | "fallido"; error?: string } | { ok: false; error: string };
 
-export async function sendFromApp(
-  client: MeguiarsSupabaseClient,
-  input: { conversationId: string; requestId: string; body: string },
-): Promise<SendResult> {
+/** Texto dentro de las 24 h (con el último mensaje visto) o plantilla aprobada de WhatsApp. */
+export type SendInput =
+  | { conversationId: string; requestId: string; body: string; expectedLastMessageAt?: string }
+  | { conversationId: string; requestId: string; templateId: string; params: string[] };
+
+export async function sendFromApp(client: MeguiarsSupabaseClient, input: SendInput): Promise<SendResult> {
   if (!WEB_URL)
     return { ok: false, error: "La app no tiene configurada la URL del servidor (EXPO_PUBLIC_WEB_URL)." };
   const { data } = await client.auth.getSession();

@@ -849,3 +849,21 @@ select private.run_automation(a.id, 'programada', null)
                 'a7000000-0000-4000-8000-000000000003')
    and not exists (select 1 from public.automation_runs r where r.automation_id = a.id);
 select set_config('app.change_reason', '', false);
+
+-- CR2 (bandeja): respuestas rápidas del centro CDMX y una nota interna de ejemplo.
+-- Las plantillas de WhatsApp NO se siembran: sólo existen si Meta las devuelve.
+select set_config('app.change_reason', 'Datos demo', false);
+insert into public.quick_replies (id, organization_id, detail_center_id, title, body)
+values ('9b000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'Horario', 'Hola {nombre}, en {centro} atendemos de lunes a sábado de 9:00 a 19:00.'),
+       ('9b000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000d3e0', null,
+        'Pedir fotos', 'Hola {nombre}, ¿nos compartes fotos de tu auto para darte una cotización precisa?')
+on conflict (id) do nothing;
+insert into public.conversation_notes (id, organization_id, detail_center_id, conversation_id, body, request_id)
+values ('9c000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-00000000d3e0', '11111111-1111-4111-8111-111111111111',
+        'c4b00000-0000-4000-8000-000000000001', 'Pregunta por pulido; confirmar si es para SUV antes de cotizar.',
+        '9c000000-0000-4000-8000-0000000000aa')
+on conflict (id) do nothing;
+update public.conversations set priority = 'alta', tags = '{pulido}', pending = true
+ where id = 'c4b00000-0000-4000-8000-000000000001' and not pending;
+select set_config('app.change_reason', '', false);
