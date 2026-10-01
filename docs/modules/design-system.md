@@ -55,25 +55,27 @@ Catálogo vivo: **`/sistema`** en web y **"Sistema de diseño"** en el encabezad
 
 ## Navegación por rol
 
-| Sección                   | Pantallas (capacidad)                                        | admin_socio |  encargado  | operador_recepcion | contador | comercial_b2b |
-| ------------------------- | ------------------------------------------------------------ | :---------: | :---------: | :----------------: | :------: | :-----------: |
-| Inicio                    | Mi centro                                                    |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
-| Operación                 | Operación del día (`operations.read`)                        |      ✓      |      ✓      |         ✓          |          |               |
-| Operación                 | Agenda (`agenda.read`, módulo O3)                            |      ✓      |      ✓      |         ✓          |          |               |
-| Operación                 | Clientes y vehículos (`clients.read`, módulo O1)             |      ✓      |      ✓      |         ✓          |          |       ✓       |
-| Operación                 | Catálogo (`catalog.read`, módulo O2)                         |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
-| Comercial                 | Membresías y B2B (`commercial.read`)                         |      ✓      |      ✓      |                    |          |       ✓       |
-| Marketing                 | Campañas, Calendario, Promociones (consulta)                 |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
-| Marketing                 | Segmentos, Integraciones (redes)                             |      ✓      |      ✓      |         ✓          |          |       ✓       |
-| Marketing                 | Automatizaciones                                             |      ✓      |      ✓      |                    |          |       ✓       |
-| Administración y Finanzas | Resumen financiero (`finance.read`), Equipo (`members.read`) |      ✓      | sólo Equipo |                    |    ✓     |               |
-| Dirección                 | Vista consolidada (`executive.read`)                         |      ✓      |             |                    |          |               |
+| Sección   | Pantallas (capacidad)                                        | admin_socio |  encargado  | operador_recepcion | contador | comercial_b2b |
+| --------- | ------------------------------------------------------------ | :---------: | :---------: | :----------------: | :------: | :-----------: |
+| Inicio    | Mi centro                                                    |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
+| Operación | Operación del día (`operations.read`)                        |      ✓      |      ✓      |         ✓          |          |               |
+| Operación | Agenda (`agenda.read`, módulo O3)                            |      ✓      |      ✓      |         ✓          |          |               |
+| Operación | Clientes y vehículos (`clients.read`, módulo O1)             |      ✓      |      ✓      |         ✓          |          |       ✓       |
+| Operación | Catálogo (`catalog.read`, módulo O2)                         |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
+| Comercial | Membresías y B2B (`commercial.read`)                         |      ✓      |      ✓      |                    |          |       ✓       |
+| Marketing | Campañas, Calendario, Promociones (consulta)                 |      ✓      |      ✓      |         ✓          |    ✓     |       ✓       |
+| Marketing | Segmentos, Integraciones (redes)                             |      ✓      |      ✓      |         ✓          |          |       ✓       |
+| Marketing | Automatizaciones                                             |      ✓      |      ✓      |                    |          |       ✓       |
+| Finanzas  | Resumen financiero (`finance.read`), Equipo (`members.read`) |      ✓      | sólo Equipo |                    |    ✓     |               |
+| Dirección | Vista consolidada (`executive.read`)                         |      ✓      |             |                    |          |               |
 
 - Las secciones visibles dependen del **centro activo**: al cambiar de centro, cambia la navegación.
 - Si un usuario entra a una ruta sin permiso, el guard lo redirige a `/sin-permiso`, igual que en F0.3.
-- **Secciones:** Inicio, Operación, Comercial, Marketing, Administración y Finanzas («AyF» en pestañas) y Dirección. Marketing agrupa Campañas, Calendario, Promociones, Segmentos, Automatizaciones e Integraciones; sus rutas siguen bajo `/comercial/…`.
+- **Secciones:** Inicio, Operación, Comercial, Marketing, Finanzas y Dirección. Marketing agrupa Campañas, Calendario, Promociones, Segmentos, Automatizaciones e Integraciones; sus rutas siguen bajo `/comercial/…`.
 - **Web:** barra lateral desde 768 px con menús desplegables: sólo se ven los títulos de sección y la sección de la página actual aparece abierta (una sección con una sola pantalla, como Inicio, es enlace directo). En móvil, barra inferior con los títulos. Las secciones con varias pantallas muestran subnavegación.
 - **Móvil:** barra de pestañas nativa con las mismas secciones y la misma subnavegación.
+- **Iconos:** un solo set para web y móvil en `@meguiars/ui-tokens` (`icons.ts`, trazos de Lucide, licencia ISC, guardados como nodos SVG sin dependencia en tiempo de ejecución). Cada sección y pantalla de `NAV_SECTIONS` declara su icono; web los dibuja con `<svg>` (`components/ui/icon.tsx`) y móvil con `react-native-svg` (`src/ui/icon.tsx`). El typecheck de ambas apps falla si un icono no existe.
+- **Encabezado y páginas (web):** encabezado compacto con el centro activo, cambiar centro y salir (en pantallas chicas sólo iconos, con nombre accesible); fondo gris con tarjetas blancas; ubicación (sección / pantalla) sobre el título; Inicio muestra accesos rápidos por sección.
 - Operación, Comercial y Finanzas muestran un estado vacío y una vista previa de carga, porque su contenido llega con sus módulos. Dirección muestra KPIs reales de acceso (centros activos y deshabilitados, organizaciones, alcance corporativo).
 
 ## Responsive
