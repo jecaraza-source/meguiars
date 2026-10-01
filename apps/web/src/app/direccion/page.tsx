@@ -12,12 +12,14 @@ import { createDashboardRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { CentersTable } from "@/components/centers-view";
+import { BarList, LineChart } from "@/components/charts";
 import { ComparisonTable, CorporateCardTile } from "@/components/corporate-board";
 import { DeleteThresholdForm, KpiThresholdForm } from "@/components/corporate-forms";
 import { DashboardFiltersForm } from "@/components/dashboard-filters";
 import { CsvExport } from "@/components/pnl-export";
 import { Card, EmptyState } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
+import { loadCorporateCharts } from "@/lib/charts";
 import { loadCorporateView } from "@/lib/corporate";
 import { canManageDashboards } from "@/lib/dashboards";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -33,6 +35,7 @@ export default async function DireccionPage({ searchParams }: PageProps<"/direcc
   const params = await searchParams;
   const repo = createDashboardRepository((await createSupabaseServerClient())!);
   const view = await loadCorporateView(state, repo, params);
+  const charts = await loadCorporateCharts(state, repo, view);
   const { filters } = view;
   const sort: MixSort = params.orden === "margen" ? "margin" : "revenue";
   const sortHref = (orden: string) =>
@@ -90,6 +93,20 @@ export default async function DireccionPage({ searchParams }: PageProps<"/direcc
           >
             <ComparisonTable cards={view.cards} centers={view.chosen} />
           </Card>
+          {charts.trend ? (
+            <Card
+              title="Tendencia de ventas"
+              subtitle={`${corporatePeriodLabel(filters.from, filters.to)} · ${charts.trendNote}`}
+            >
+              <div data-testid="chart-trend">
+                <LineChart
+                  data={charts.trend}
+                  caption="Ventas por periodo"
+                  labelEvery={Math.max(1, Math.ceil(charts.trend.categories.length / 8))}
+                />
+              </div>
+            </Card>
+          ) : null}
         </>
       ) : null}
       {mix ? (
@@ -119,6 +136,18 @@ export default async function DireccionPage({ searchParams }: PageProps<"/direcc
             <p className="text-sm text-muted">{corporateCopy.mixForbidden}</p>
           ) : (
             <div className="grid gap-lg lg:grid-cols-2" data-testid="mix">
+              {charts.engines.length > 0 ? (
+                <div data-testid="chart-engines" className="flex flex-col gap-sm">
+                  <p className="text-sm font-bold">{corporateCopy.byEngine}</p>
+                  <BarList rows={charts.engines} caption={`Ingreso ${corporateCopy.byEngine}`} />
+                </div>
+              ) : null}
+              {charts.services.length > 0 ? (
+                <div data-testid="chart-services" className="flex flex-col gap-sm">
+                  <p className="text-sm font-bold">{corporateCopy.byService} (8 con más ingreso)</p>
+                  <BarList rows={charts.services} caption={`Ingreso ${corporateCopy.byService}`} />
+                </div>
+              ) : null}
               {(
                 [
                   ["engines", corporateCopy.byEngine, mix.byEngine],

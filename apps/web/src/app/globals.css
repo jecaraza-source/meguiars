@@ -29,6 +29,9 @@
   --color-info: var(--mg-color-info);
   --color-info-surface: var(--mg-color-info-surface);
   --color-overlay: var(--mg-color-overlay);
+  --color-chart1: var(--mg-color-chart1);
+  --color-chart2: var(--mg-color-chart2);
+  --color-chart3: var(--mg-color-chart3);
   --color-transparent: transparent;
   --color-current: currentColor;
 

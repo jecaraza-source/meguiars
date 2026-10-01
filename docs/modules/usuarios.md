@@ -1,6 +1,6 @@
 # Administración / Usuarios (A1)
 
-El admin corporativo da de alta a las personas con **correo (usuario) y contraseña**, les asigna roles por centro o corporativos, cambia contraseñas y desactiva o reactiva cuentas. Web: **Administración y Finanzas → Usuarios** (`/equipo/usuarios`, ficha en `/equipo/usuarios/[id]`). Móvil: **Usuarios** en consulta; las altas y contraseñas se hacen en la web. Decisiones en [ADR 0028](../adr/0028-alta-de-usuarios-con-llave-de-servicio.md).
+El admin corporativo da de alta a las personas con **correo (usuario) y contraseña**, les asigna roles por centro o corporativos, cambia contraseñas y desactiva o reactiva cuentas. Web: **Finanzas → Usuarios** (`/equipo/usuarios`, ficha en `/equipo/usuarios/[id]`). Móvil: **Usuarios** en consulta; las altas y contraseñas se hacen en la web. Decisiones en [ADR 0028](../adr/0028-alta-de-usuarios-con-llave-de-servicio.md).
 
 ## Qué se puede hacer
 

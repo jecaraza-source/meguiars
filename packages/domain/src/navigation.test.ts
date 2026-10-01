@@ -38,7 +38,7 @@ describe("navegación por rol", () => {
       "Operación",
       "Comercial",
       "Marketing",
-      "Administración y Finanzas",
+      "Finanzas",
       "Dirección",
     ]);
   });
@@ -48,7 +48,7 @@ describe("navegación por rol", () => {
     // Dirección → Tableros (dirigidos a su rol); la vista consolidada es sólo del admin.
     ["encargado", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion"]],
     // Vende y renueva membresías en recepción (Comercial → Membresías) y hace el
-    // corte de caja (Administración y Finanzas → Cobranza).
+    // corte de caja (Finanzas → Cobranza).
     ["operador_recepcion", ["inicio", "operacion", "comercial", "marketing", "finanzas"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).

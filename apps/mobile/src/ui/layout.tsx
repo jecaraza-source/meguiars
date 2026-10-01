@@ -18,6 +18,7 @@ import { APP_ENV } from "@/lib/environment";
 import { BrandLogo } from "./brand";
 import { LinkButton } from "./controls";
 import { Badge } from "./display";
+import { Icon } from "./icon";
 import { textStyle } from "./theme";
 
 /** Aviso de ambiente (local o preview), igual que en web; no aparece en producción. */
@@ -138,6 +139,11 @@ export function TabBar({
               onPress={() => onSelect(section.items[0]!.screen)}
               style={[styles.tab, selected ? styles.tabActive : null]}
             >
+              <Icon
+                name={section.icon}
+                size={space.xl}
+                color={selected ? colors.brandForeground : colors.muted}
+              />
               <Text
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -154,7 +160,7 @@ export function TabBar({
   );
 }
 
-/** Pantallas de una sección con más de un ítem (p. ej. Admin. y Finanzas). */
+/** Pantallas de una sección con más de un ítem (p. ej. Finanzas). */
 export function SubNav({
   section,
   current,
@@ -175,6 +181,11 @@ export function SubNav({
           onPress={() => onSelect(item.screen)}
           style={[styles.chip, item.screen === current ? styles.chipActive : null]}
         >
+          <Icon
+            name={item.icon}
+            size={space.lg}
+            color={item.screen === current ? colors.brandForeground : colors.accent}
+          />
           <Text style={textStyle("menu", item.screen === current ? "brandForeground" : "accent")}>
             {item.label}
           </Text>
@@ -200,11 +211,21 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: space.sm },
   tabBar: { backgroundColor: colors.surfaceRaised, borderTopWidth: 1, borderTopColor: colors.border },
   tabs: { flexDirection: "row" },
-  tab: { flex: 1, minHeight: touchTarget, alignItems: "center", justifyContent: "center", gap: space.xxs },
+  tab: {
+    flex: 1,
+    minHeight: touchTarget,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: space.xxs,
+    paddingVertical: space.xs,
+  },
   tabActive: { backgroundColor: colors.accent },
   subnav: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   chip: {
     minHeight: touchTarget,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.xs,
     justifyContent: "center",
     paddingHorizontal: space.md,
     borderWidth: 1,

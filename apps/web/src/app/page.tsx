@@ -6,10 +6,12 @@ import {
   formatDateInCenterTimeZone,
   formatTimeInCenterTimeZone,
   presentCenterAccess,
+  visibleNavigation,
 } from "@meguiars/domain";
 import { AppShell } from "@/components/app-shell";
 import { CentersTable } from "@/components/centers-view";
 import { EditCenterForm } from "@/components/forms";
+import { SectionShortcuts } from "@/components/section-shortcuts";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, KpiCard } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
@@ -22,6 +24,7 @@ export default async function Home() {
 
   return (
     <AppShell state={state} screen="home" title={item.title} description={item.subtitle}>
+      <SectionShortcuts sections={visibleNavigation(state)} />
       <div className="grid gap-lg md:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           label={centersCopy.rolesLabel}

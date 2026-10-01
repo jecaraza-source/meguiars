@@ -29,6 +29,15 @@ export const colors = {
   info: "#1d4ed8",
   infoSurface: "#eff6ff",
   overlay: "rgba(24, 24, 27, 0.5)",
+  /**
+   * Series de gráficas (orden fijo, nunca cíclico): primeros tres pasos de la
+   * paleta categórica validada (azul, naranja, aqua; CVD ΔE ≥ 9 entre vecinos).
+   * El aqua queda bajo 3:1 sobre blanco: toda gráfica lleva leyenda y tabla.
+   * No se usan para estados (éxito/advertencia/error).
+   */
+  chart1: "#2a78d6",
+  chart2: "#eb6834",
+  chart3: "#1baf7a",
 } as const;
 
 /** Escala de espacio en px (múltiplos de 4). */
@@ -86,8 +95,8 @@ export const breakpoints = { tablet: 768, desktop: 1024, wide: 1280 } as const;
 
 export const zIndex = { nav: 10, overlay: 40, modal: 50, toast: 60 } as const;
 
-/** Anchos de layout: barra lateral, contenido y formularios de autenticación. */
-export const layout = { sidebar: 256, content: 1024, narrow: 384 } as const;
+/** Medidas de layout: barra lateral, contenido, formularios de autenticación, alto de gráficas y ancho de su eje. */
+export const layout = { sidebar: 256, content: 1024, narrow: 384, chart: 224, axis: 56 } as const;
 
 export const motion = { fast: 120, normal: 200, pulse: 1400 } as const;
 
