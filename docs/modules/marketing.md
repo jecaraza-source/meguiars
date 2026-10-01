@@ -109,6 +109,8 @@ El seed trae:
 - la promoción **LAVA15** (15 % en lavado manual detallado);
 - la prospecta Mariana Soto atribuida a la campaña.
 
+`supabase/demo/marketing.sql` agrega un escenario completo (ver [datos demo](datos-demo.md)): 6 campañas en ambos centros, inversión semanal dentro del presupuesto, calendario con piezas publicadas y programadas, promociones `PULIDO10`, `CERAMICO1500`, `EXPRES15`, `VUELVE20` (vencida) y `BUENFIN25` (futura), y prospectos atribuidos cuyas ventas son OS entregadas reales del historial.
+
 ## Pruebas
 
 - SQL (`supabase/tests/marketing.test.sql`):
