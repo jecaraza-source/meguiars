@@ -1,12 +1,21 @@
 "use client";
 
 import {
+  CONVERSATION_PRIORITIES,
+  CONVERSATION_PRIORITY_LABELS,
+  fillQuickReply,
   INBOX_CHANNEL_LABELS,
   INBOX_CHANNELS,
+  INBOX_COPY,
   MAX_MESSAGE_LENGTH,
+  renderTemplate,
+  TEMPLATE_CATEGORY_LABELS,
+  templateBlocker,
   type ChannelAccount,
   type Conversation,
   type LeadOwner,
+  type QuickReply,
+  type WhatsappTemplate,
 } from "@meguiars/domain";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -15,8 +24,13 @@ import {
   conversationLeadAction,
   conversationStatusAction,
   linkConversationLeadAction,
+  addNoteAction,
   saveChannelAccountAction,
+  saveQuickReplyAction,
   sendMessageAction,
+  sendTemplateAction,
+  syncTemplatesAction,
+  triageAction,
   verifyChannelAccountAction,
   type InboxFormState,
 } from "@/app/actions/inbox";
@@ -52,7 +66,15 @@ const valueOf = (state: InboxFormState, key: string, fallback = "") => {
 };
 
 /** Respuesta dentro de la ventana de 24 h; el texto se envía con la API oficial desde el servidor. */
-export function ReplyForm({ conversation }: { conversation: Conversation }) {
+export function ReplyForm({
+  conversation,
+  quickReplies = [],
+  centerName = "",
+}: {
+  conversation: Conversation;
+  quickReplies?: QuickReply[];
+  centerName?: string;
+}) {
   const [state, action] = useActionState(sendMessageAction, {});
   useToastOnMessage(state);
   // Tras un envío exitoso, un formulario nuevo (y otro request_id); con error se conserva el texto.
@@ -62,6 +84,8 @@ export function ReplyForm({ conversation }: { conversation: Conversation }) {
       conversation={conversation}
       state={state}
       action={action}
+      quickReplies={quickReplies}
+      centerName={centerName}
     />
   );
 }
@@ -70,16 +94,46 @@ function ReplyFields({
   conversation,
   state,
   action,
+  quickReplies,
+  centerName,
 }: {
   conversation: Conversation;
   state: InboxFormState;
   action: (form: FormData) => void;
+  quickReplies: QuickReply[];
+  centerName: string;
 }) {
   const [requestId] = useState(() => crypto.randomUUID());
+  const [body, setBody] = useState(state.error ? valueOf(state, "body") : "");
+  const active = quickReplies.filter((q) => q.active);
   return (
     <form action={action} className="flex flex-col gap-sm" data-testid="reply-form">
       <input type="hidden" name="conversationId" value={conversation.id} />
       <input type="hidden" name="requestId" value={requestId} />
+      {/* Último mensaje visto: si alguien responde antes, el envío se detiene. */}
+      <input type="hidden" name="expectedLastMessageAt" value={conversation.lastMessageAt} />
+      {active.length ? (
+        <label className="flex flex-col gap-xs text-sm">
+          <span className="font-medium">Respuesta rápida</span>
+          <select
+            className="mg-input"
+            aria-label="Respuesta rápida"
+            data-testid="quick-reply-picker"
+            value=""
+            onChange={(e) => {
+              const q = active.find((x) => x.id === e.currentTarget.value);
+              if (q) setBody(fillQuickReply(q.body, { name: conversation.contactName, center: centerName }));
+            }}
+          >
+            <option value="">Elige para pegarla (puedes editarla)</option>
+            {active.map((q) => (
+              <option key={q.id} value={q.id}>
+                {q.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
       <label className="flex flex-col gap-xs text-sm">
         <span className="font-medium">Respuesta</span>
         <textarea
@@ -88,10 +142,12 @@ function ReplyFields({
           maxLength={MAX_MESSAGE_LENGTH}
           rows={3}
           className="mg-input"
-          defaultValue={state.error ? valueOf(state, "body") : ""}
+          value={body}
+          onChange={(e) => setBody(e.currentTarget.value)}
           aria-label="Respuesta"
         />
       </label>
+      <p className="text-xs text-muted">{INBOX_COPY.duplicateGuard}</p>
       <div className="flex flex-wrap items-center gap-sm">
         <Submit label={`Enviar por ${INBOX_CHANNEL_LABELS[conversation.channel]}`} />
       </div>
@@ -297,6 +353,277 @@ export function VerifyAccountButton({ account, disabled }: { account: ChannelAcc
           <Submit label="Probar conexión" variant="secondary" />
         )}
       </div>
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** Prioridad, etiquetas y «pendiente» de la conversación. */
+export function TriageForm({ conversation }: { conversation: Conversation }) {
+  const [state, action] = useActionState(triageAction, {});
+  useToastOnMessage(state);
+  return (
+    <form
+      key={state.message ? String(state.at) : "triage"}
+      action={action}
+      className="flex flex-col gap-sm"
+      data-testid="triage-form"
+    >
+      <input type="hidden" name="conversationId" value={conversation.id} />
+      <input type="hidden" name="version" value={conversation.version} />
+      <Select
+        name="priority"
+        id="triage-priority"
+        label="Prioridad"
+        options={CONVERSATION_PRIORITIES.map((p) => ({ value: p, label: CONVERSATION_PRIORITY_LABELS[p] }))}
+        defaultValue={valueOf(state, "priority", conversation.priority)}
+      />
+      <Input
+        name="tags"
+        id="triage-tags"
+        label="Etiquetas"
+        hint="Separadas por coma, p. ej. pulido, cotizar"
+        defaultValue={valueOf(state, "tags", conversation.tags.join(", "))}
+      />
+      <Checkbox
+        name="pending"
+        value="on"
+        id="triage-pending"
+        label="Marcar como pendiente"
+        checked={conversation.pending}
+      />
+      <Submit label="Guardar triaje" variant="secondary" />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** Nota interna: sólo la ve el equipo; nunca se envía al cliente. */
+export function NoteForm({ conversation }: { conversation: Conversation }) {
+  const [state, action] = useActionState(addNoteAction, {});
+  useToastOnMessage(state);
+  return (
+    <NoteFields
+      key={state.message ? String(state.at) : "note"}
+      conversation={conversation}
+      state={state}
+      action={action}
+    />
+  );
+}
+
+function NoteFields({
+  conversation,
+  state,
+  action,
+}: {
+  conversation: Conversation;
+  state: InboxFormState;
+  action: (form: FormData) => void;
+}) {
+  const [requestId] = useState(() => crypto.randomUUID());
+  return (
+    <form action={action} className="flex flex-col gap-sm" data-testid="note-form">
+      <input type="hidden" name="conversationId" value={conversation.id} />
+      <input type="hidden" name="requestId" value={requestId} />
+      <label className="flex flex-col gap-xs text-sm">
+        <span className="font-medium">Nota interna</span>
+        <textarea
+          name="body"
+          rows={2}
+          maxLength={2000}
+          className="mg-input"
+          defaultValue={state.error ? valueOf(state, "body") : ""}
+          aria-label="Nota interna"
+        />
+      </label>
+      <Submit label="Guardar nota (no se envía)" variant="secondary" />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** Plantilla aprobada de WhatsApp: la única forma de escribir fuera de la ventana de 24 h. */
+export function TemplateForm({
+  conversation,
+  templates,
+  whatsappConsent,
+}: {
+  conversation: Conversation;
+  templates: WhatsappTemplate[];
+  whatsappConsent: boolean;
+}) {
+  const [state, action] = useActionState(sendTemplateAction, {});
+  useToastOnMessage(state);
+  return (
+    <TemplateFields
+      key={state.message ? String(state.at) : "tpl"}
+      conversation={conversation}
+      templates={templates}
+      whatsappConsent={whatsappConsent}
+      state={state}
+      action={action}
+    />
+  );
+}
+
+function TemplateFields({
+  conversation,
+  templates,
+  whatsappConsent,
+  state,
+  action,
+}: {
+  conversation: Conversation;
+  templates: WhatsappTemplate[];
+  whatsappConsent: boolean;
+  state: InboxFormState;
+  action: (form: FormData) => void;
+}) {
+  const [requestId] = useState(() => crypto.randomUUID());
+  const usable = templates.filter((t) => !templateBlocker(t, conversation, whatsappConsent));
+  const [templateId, setTemplateId] = useState(usable[0]?.id ?? "");
+  const t = usable.find((x) => x.id === templateId);
+  const [params, setParams] = useState<string[]>([]);
+  if (usable.length === 0)
+    return (
+      <p className="text-sm text-muted" data-testid="no-templates">
+        No hay plantillas aprobadas que se puedan usar con este contacto. {INBOX_COPY.templatesNote}
+      </p>
+    );
+  const values = Array.from({ length: t?.paramCount ?? 0 }, (_, i) => params[i] ?? "");
+  return (
+    <form action={action} className="flex flex-col gap-sm" data-testid="template-form">
+      <input type="hidden" name="conversationId" value={conversation.id} />
+      <input type="hidden" name="requestId" value={requestId} />
+      <label className="flex flex-col gap-xs text-sm">
+        <span className="font-medium">Plantilla aprobada</span>
+        <select
+          name="templateId"
+          className="mg-input"
+          value={templateId}
+          onChange={(e) => {
+            setTemplateId(e.currentTarget.value);
+            setParams([]);
+          }}
+        >
+          {usable.map((x) => (
+            <option key={x.id} value={x.id}>
+              {x.name} · {x.language} · {TEMPLATE_CATEGORY_LABELS[x.category]}
+            </option>
+          ))}
+        </select>
+      </label>
+      {values.map((v, i) => (
+        <Input
+          key={`${templateId}-${i}`}
+          name="params"
+          id={`tpl-param-${i}`}
+          label={`Dato {{${i + 1}}}`}
+          value={v}
+          onChange={(e) => {
+            const next = [...values];
+            next[i] = e.currentTarget.value;
+            setParams(next);
+          }}
+        />
+      ))}
+      {t ? (
+        <p
+          className="mg-tone rounded-md border p-sm text-sm"
+          data-tone="neutral"
+          data-testid="template-preview"
+        >
+          {renderTemplate(
+            t.bodyText,
+            t.name,
+            values.map((v, i) => v || `{{${i + 1}}}`),
+          )}
+        </p>
+      ) : null}
+      <Submit label="Enviar plantilla por WhatsApp" />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** Alta o edición de una respuesta rápida (admin o encargado). */
+export function QuickReplyForm({ reply, centers }: { reply?: QuickReply; centers: Option[] }) {
+  const [state, action] = useActionState(saveQuickReplyAction, {});
+  useToastOnMessage(state);
+  return (
+    <form
+      key={state.message ? String(state.at) : (reply?.id ?? "qr")}
+      action={action}
+      className="flex flex-col gap-sm"
+      data-testid={reply ? `quick-reply-form-${reply.id}` : "quick-reply-form"}
+    >
+      {reply ? (
+        <>
+          <input type="hidden" name="id" value={reply.id} />
+          <input type="hidden" name="version" value={reply.version} />
+        </>
+      ) : null}
+      <div className="grid gap-sm md:grid-cols-2">
+        <Input
+          name="title"
+          id={`qr-title-${reply?.id ?? "new"}`}
+          label="Título"
+          required
+          defaultValue={valueOf(state, "title", reply?.title ?? "")}
+        />
+        <Select
+          name="detailCenterId"
+          id={`qr-center-${reply?.id ?? "new"}`}
+          label="Centro"
+          options={centers}
+          defaultValue={valueOf(
+            state,
+            "detailCenterId",
+            reply ? (reply.detailCenterId ?? "") : (centers[0]?.value ?? ""),
+          )}
+        />
+      </div>
+      <label className="flex flex-col gap-xs text-sm">
+        <span className="font-medium">Texto</span>
+        <textarea
+          name="body"
+          rows={2}
+          maxLength={1000}
+          className="mg-input"
+          defaultValue={valueOf(state, "body", reply?.body ?? "")}
+        />
+        <span className="text-xs text-muted">
+          Datos disponibles: {"{nombre}"} {"{centro}"}. Sin precios ni promociones inventados.
+        </span>
+      </label>
+      <Checkbox
+        name="active"
+        value="on"
+        id={`qr-active-${reply?.id ?? "new"}`}
+        label="Activa"
+        checked={reply?.active ?? true}
+      />
+      <Input
+        name="reason"
+        id={`qr-reason-${reply?.id ?? "new"}`}
+        label="Motivo"
+        required
+        defaultValue={reply ? "" : "Alta de respuesta rápida"}
+      />
+      <Submit label={reply ? "Guardar" : "Agregar respuesta rápida"} variant="secondary" />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** Trae de Meta las plantillas de la WABA (admin). */
+export function SyncTemplatesButton() {
+  const [state, action] = useActionState(syncTemplatesAction, {});
+  useToastOnMessage(state);
+  return (
+    <form action={action} className="flex flex-col gap-xs" data-testid="sync-templates">
+      <Submit label="Sincronizar plantillas con Meta" variant="secondary" />
       <FormError state={state} />
     </form>
   );

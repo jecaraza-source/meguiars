@@ -5,6 +5,7 @@ import {
   commercialErrorMessage,
   guardScreen,
   canInCenter,
+  type ConversationPriority,
   type InboxChannel,
   type Screen,
 } from "@meguiars/domain";
@@ -13,8 +14,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthState } from "@/lib/auth/dal";
 import { stamp, text, values, type ActionFormState } from "@/lib/form-data";
-import { sendConversationMessage } from "@/lib/inbox";
-import { channelServerReady, verifyWithMeta } from "@/lib/meta";
+import { sendConversationMessage, sendTemplateMessage } from "@/lib/inbox";
+import {
+  channelServerReady,
+  fetchWhatsappTemplates,
+  verifyWithMeta,
+  whatsappBusinessAccountId,
+} from "@/lib/meta";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
@@ -43,12 +49,77 @@ export async function sendMessageAction(_prev: InboxFormState, form: FormData): 
     conversationId,
     requestId: text(form, "requestId"),
     body: text(form, "body"),
+    expectedLastMessageAt: text(form, "expectedLastMessageAt") || undefined,
   });
   revalidatePath(conversationPath(conversationId));
+  // Guarda contra duplicados: el mensaje de la base explica qué cambió (no es el genérico de versión).
+  if (!r.ok && r.error.code === "40001") return stamp({ error: r.error.message, values: values(form) });
   if (!r.ok) return fail(r.error, form);
   if (r.data.status === "fallido")
     return stamp({ error: `Meta no aceptó el mensaje: ${r.data.error ?? "error"}` });
   return stamp({ message: "Mensaje enviado" });
+}
+
+/** Plantilla aprobada de WhatsApp (fuera de la ventana de 24 h). */
+export async function sendTemplateAction(_prev: InboxFormState, form: FormData): Promise<InboxFormState> {
+  const ctx = await context("conversation");
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const conversationId = text(form, "conversationId");
+  const r = await sendTemplateMessage(ctx.supabase, {
+    conversationId,
+    requestId: text(form, "requestId"),
+    templateId: text(form, "templateId"),
+    params: form.getAll("params").map(String),
+  });
+  revalidatePath(conversationPath(conversationId));
+  if (!r.ok) return fail(r.error, form);
+  if (r.data.status === "fallido")
+    return stamp({ error: `Meta no aceptó la plantilla: ${r.data.error ?? "error"}` });
+  return stamp({ message: "Plantilla enviada" });
+}
+
+export async function triageAction(_prev: InboxFormState, form: FormData): Promise<InboxFormState> {
+  const ctx = await context("conversation");
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const id = text(form, "conversationId");
+  const r = await ctx.repo.setTriage(id, Number(text(form, "version")), {
+    priority: (text(form, "priority") || "normal") as ConversationPriority,
+    tags: text(form, "tags").split(","),
+    pending: form.get("pending") === "on",
+  });
+  if (!r.ok) return fail(r.error, form);
+  revalidatePath(conversationPath(id));
+  revalidatePath("/comercial/bandeja");
+  return stamp({ message: "Triaje guardado" });
+}
+
+export async function addNoteAction(_prev: InboxFormState, form: FormData): Promise<InboxFormState> {
+  const ctx = await context("conversation");
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const id = text(form, "conversationId");
+  const r = await ctx.repo.addNote(id, text(form, "requestId"), text(form, "body"));
+  if (!r.ok) return fail(r.error, form);
+  revalidatePath(conversationPath(id));
+  return stamp({ message: "Nota interna guardada" });
+}
+
+export async function saveQuickReplyAction(_prev: InboxFormState, form: FormData): Promise<InboxFormState> {
+  const ctx = await context("inbox");
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const id = text(form, "id") || undefined;
+  const r = await ctx.repo.saveQuickReply({
+    organizationId: ctx.center.organizationId,
+    id,
+    version: id ? Number(text(form, "version")) : undefined,
+    detailCenterId: text(form, "detailCenterId") || undefined,
+    title: text(form, "title"),
+    body: text(form, "body"),
+    active: form.get("active") === "on",
+    reason: text(form, "reason"),
+  });
+  if (!r.ok) return fail(r.error, form);
+  revalidatePath("/comercial/bandeja");
+  return stamp({ message: "Respuesta rápida guardada" });
 }
 
 export async function assignConversationAction(
@@ -164,4 +235,31 @@ export async function verifyChannelAccountAction(
   return result.ok
     ? stamp({ message: `Conexión verificada con Meta: ${result.name}` })
     : stamp({ error: `Meta rechazó la verificación: ${result.error}` });
+}
+
+/** Sincroniza las plantillas de la WABA desde Meta (sólo admin; el servidor usa su token). */
+export async function syncTemplatesAction(_prev: InboxFormState, _form: FormData): Promise<InboxFormState> {
+  const ctx = await adminContext();
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const allowed = await ctx.repo.canSyncTemplates(ctx.center.organizationId);
+  if (!allowed.ok || !allowed.data) return stamp({ error: FORBIDDEN });
+  const waba = whatsappBusinessAccountId();
+  if (!waba) return stamp({ error: "Falta WHATSAPP_BUSINESS_ACCOUNT_ID en el servidor." });
+  if (!channelServerReady("whatsapp"))
+    return stamp({ error: "Faltan credenciales de WhatsApp en el servidor (revisa la lista de variables)." });
+  const service = createSupabaseServiceClient();
+  if (!service) return stamp({ error: "Falta SUPABASE_SERVICE_ROLE_KEY en el servidor." });
+  const fetched = await fetchWhatsappTemplates(waba);
+  if (!fetched.ok) return stamp({ error: `Meta rechazó la consulta de plantillas: ${fetched.error}` });
+  const saved = await createInboxServiceGateway(service).recordTemplates(
+    ctx.center.organizationId,
+    waba,
+    fetched.items,
+  );
+  revalidatePath("/comercial/integraciones");
+  if (!saved.ok) return fail(saved.error);
+  const approved = fetched.items.filter((t) => t.status === "APPROVED").length;
+  return stamp({
+    message: `Plantillas sincronizadas con Meta: ${fetched.items.length} (${approved} aprobadas)`,
+  });
 }

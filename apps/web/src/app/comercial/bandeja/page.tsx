@@ -1,5 +1,7 @@
 import {
   activeCenterAccess,
+  canInCenter,
+  CONVERSATION_PRIORITY_LABELS,
   CONVERSATION_STATUS_LABELS,
   INBOX_CHANNEL_LABELS,
   INBOX_CHANNELS,
@@ -10,6 +12,7 @@ import {
 import { createInboxRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { QuickReplyForm } from "@/components/inbox-forms";
 import { Badge, Card, EmptyState } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -26,15 +29,21 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
   const channel = INBOX_CHANNELS.find((c) => c === param("canal")) as InboxChannel | undefined;
   const mine = param("mias") === "1";
   const unassigned = param("sinasignar") === "1";
+  const pending = param("pendientes") === "1";
+  const tag = param("etiqueta") || undefined;
   const repo = createInboxRepository((await createSupabaseServerClient())!);
-  const [list, accounts] = await Promise.all([
+  const canManageReplies = canInCenter(state, center.id, "automations.manage");
+  const [list, accounts, replies] = await Promise.all([
     repo.conversations([center.id], {
       status,
       channel,
       assignedTo: mine ? state.user.id : undefined,
       unassigned,
+      pending,
+      tag,
     }),
     repo.accounts(center.organizationId),
+    repo.quickReplies(center.organizationId, center.id),
   ]);
   const href = (patch: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
@@ -43,6 +52,8 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
       canal: channel,
       mias: mine ? "1" : undefined,
       sinasignar: unassigned ? "1" : undefined,
+      pendientes: pending ? "1" : undefined,
+      etiqueta: tag,
       ...patch,
     };
     for (const [k, v] of Object.entries(next)) if (v && !(k === "estado" && v === "abierta")) q.set(k, v);
@@ -68,6 +79,8 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
         {STATUSES.map((s) => chip(status === s, CONVERSATION_STATUS_LABELS[s], href({ estado: s })))}
         {chip(mine, "Mías", href({ mias: mine ? undefined : "1", sinasignar: undefined }))}
         {chip(unassigned, "Sin asignar", href({ sinasignar: unassigned ? undefined : "1", mias: undefined }))}
+        {chip(pending, "Pendientes", href({ pendientes: pending ? undefined : "1" }))}
+        {tag ? chip(true, `Etiqueta: ${tag} ✕`, href({ etiqueta: undefined })) : null}
       </div>
       <div className="flex flex-wrap gap-xs" aria-label="Canal">
         {chip(!channel, "Todos los canales", href({ canal: undefined }))}
@@ -95,6 +108,19 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
                 </div>
                 <div className="flex flex-wrap items-center gap-xs">
                   <Badge label={INBOX_CHANNEL_LABELS[c.channel]} tone="neutral" />
+                  {c.priority !== "normal" ? (
+                    <Badge
+                      label={`Prioridad ${CONVERSATION_PRIORITY_LABELS[c.priority].toLowerCase()}`}
+                      tone={c.priority === "alta" ? "warning" : "neutral"}
+                    />
+                  ) : null}
+                  {c.pending ? <Badge label="Pendiente" tone="info" /> : null}
+                  {c.tags.map((t) => (
+                    <Link key={t} href={href({ etiqueta: t })} className="mg-badge" data-tone="neutral">
+                      #{t}
+                    </Link>
+                  ))}
+                  {c.notes ? <Badge label={`${c.notes} notas`} tone="neutral" /> : null}
                   {c.unreadCount > 0 ? <Badge label={`${c.unreadCount} sin leer`} tone="brand" /> : null}
                   {c.leadName ? <Badge label={`Prospecto: ${c.leadName}`} tone="info" /> : null}
                   <Badge
@@ -108,6 +134,45 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
           </ul>
         </Card>
       )}
+      <Card title="Respuestas rápidas">
+        <p className="text-sm text-muted">
+          Se pegan en la caja de respuesta y se pueden editar antes de enviar. Sólo admiten {"{nombre}"} y{" "}
+          {"{centro}"}.
+        </p>
+        <ul className="mt-sm flex flex-col gap-sm" data-testid="quick-replies">
+          {(replies.ok ? replies.data : []).map((q) => (
+            <li key={q.id} className="flex flex-col gap-xs border-b border-border pb-sm text-sm">
+              <span className="font-medium">
+                {q.title} {!q.active ? <Badge label="Inactiva" tone="neutral" /> : null}
+              </span>
+              <span className="text-muted">{q.body}</span>
+              {q.canManage ? (
+                <details>
+                  <summary className="cursor-pointer underline">Editar</summary>
+                  <QuickReplyForm
+                    reply={q}
+                    centers={[
+                      { value: "", label: "Todos los centros" },
+                      { value: center.id, label: center.name },
+                    ]}
+                  />
+                </details>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+        {canManageReplies ? (
+          <details className="mt-sm">
+            <summary className="cursor-pointer text-sm underline">Nueva respuesta rápida</summary>
+            <QuickReplyForm
+              centers={[
+                { value: center.id, label: center.name },
+                { value: "", label: "Todos los centros" },
+              ]}
+            />
+          </details>
+        ) : null}
+      </Card>
     </AppShell>
   );
 }

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createMeguiarsClient } from "@meguiars/supabase";
-import { sendMessageSchema } from "@meguiars/validation";
-import { sendConversationMessage } from "@/lib/inbox";
+import { sendMessageSchema, sendTemplateSchema } from "@meguiars/validation";
+import { sendConversationMessage, sendTemplateMessage } from "@/lib/inbox";
 import { supabaseEnv } from "@/lib/supabase/env";
 
 /**
@@ -16,7 +16,10 @@ export async function POST(request: NextRequest) {
   const auth = request.headers.get("authorization") ?? "";
   if (!env || !/^Bearer [\w.-]+$/.test(auth))
     return NextResponse.json({ error: "Sin sesión" }, { status: 401 });
-  const parsed = sendMessageSchema.safeParse(await request.json().catch(() => null));
+  const raw: unknown = await request.json().catch(() => null);
+  // Con templateId es una plantilla aprobada de WhatsApp; si no, un texto dentro de las 24 h.
+  const isTemplate = typeof raw === "object" && raw !== null && "templateId" in raw;
+  const parsed = isTemplate ? sendTemplateSchema.safeParse(raw) : sendMessageSchema.safeParse(raw);
   if (!parsed.success)
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Datos inválidos" },
@@ -28,7 +31,10 @@ export async function POST(request: NextRequest) {
   });
   const { data: user } = await client.auth.getUser(auth.slice("Bearer ".length));
   if (!user.user) return NextResponse.json({ error: "Sesión inválida" }, { status: 401 });
-  const r = await sendConversationMessage(client, parsed.data);
+  const r =
+    "templateId" in parsed.data
+      ? await sendTemplateMessage(client, parsed.data)
+      : await sendConversationMessage(client, parsed.data);
   if (!r.ok) {
     const status =
       r.error.kind === "permission_denied"

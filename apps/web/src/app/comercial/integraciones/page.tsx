@@ -5,14 +5,16 @@ import {
   COMMERCIAL_COPY,
   formatInCenterTimeZone,
   INBOX_CHANNEL_LABELS,
+  INBOX_COPY,
   INTEGRATION_STATUS_LABELS,
   INTEGRATIONS,
   integrationState,
+  TEMPLATE_CATEGORY_LABELS,
   usableCenters,
 } from "@meguiars/domain";
 import { createInboxRepository } from "@meguiars/supabase";
 import { AppShell } from "@/components/app-shell";
-import { ChannelAccountForm, VerifyAccountButton } from "@/components/inbox-forms";
+import { ChannelAccountForm, SyncTemplatesButton, VerifyAccountButton } from "@/components/inbox-forms";
 import { Badge, Card } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
 import { metaConfigStatus } from "@/lib/meta";
@@ -27,7 +29,11 @@ export default async function IntegrationsPage() {
   const state = await requireScreen("integrations");
   const center = activeCenterAccess(state)!.center;
   const repo = createInboxRepository((await createSupabaseServerClient())!);
-  const accountsR = await repo.accounts(center.organizationId);
+  const [accountsR, templatesR] = await Promise.all([
+    repo.accounts(center.organizationId),
+    repo.templates(center.organizationId),
+  ]);
+  const templates = templatesR.ok ? templatesR.data : [];
   const accounts = accountsR.ok ? accountsR.data : [];
   const config = metaConfigStatus();
   const isAdmin = canInCenter(state, center.id, "channels.manage");
@@ -97,6 +103,10 @@ export default async function IntegrationsPage() {
               <li>
                 SUPABASE_SERVICE_ROLE_KEY (registrar mensajes): {config.serviceKey ? "configurada" : "falta"}
               </li>
+              <li>
+                WHATSAPP_BUSINESS_ACCOUNT_ID (plantillas de WhatsApp):{" "}
+                {config.businessAccount ? "configurada" : "falta"}
+              </li>
               {(["whatsapp", "messenger", "instagram"] as const).map((c) => (
                 <li key={c}>
                   {config.tokenEnv[c]} ({INBOX_CHANNEL_LABELS[c]}):{" "}
@@ -150,6 +160,29 @@ export default async function IntegrationsPage() {
                 </li>
               ))}
             </ul>
+          </Card>
+          <Card title="Plantillas de WhatsApp">
+            <p className="text-sm text-muted">{INBOX_COPY.templatesNote}</p>
+            {templates.length === 0 ? (
+              <p className="mt-sm text-sm text-muted" data-testid="templates-empty">
+                Sin plantillas sincronizadas.
+              </p>
+            ) : (
+              <ul className="mt-sm flex flex-col gap-xs text-sm" data-testid="templates">
+                {templates.map((t) => (
+                  <li key={t.id} className="flex flex-wrap items-center gap-xs">
+                    <span className="font-medium">{t.name}</span>
+                    <span className="text-muted">{t.language}</span>
+                    <Badge label={TEMPLATE_CATEGORY_LABELS[t.category]} tone="neutral" />
+                    <Badge label={t.status} tone={t.status === "APPROVED" ? "success" : "warning"} />
+                    <span className="text-muted">{t.bodyText ?? ""}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-sm">
+              <SyncTemplatesButton />
+            </div>
           </Card>
           <Card title="Registrar cuenta">
             <ChannelAccountForm centers={centers} />
