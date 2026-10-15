@@ -11,11 +11,12 @@ import {
   todayIn,
   zonedToUtc,
 } from "@meguiars/domain";
-import { createAgendaRepository } from "@meguiars/supabase";
+import { createAgendaRepository, createMyWorkRepository } from "@meguiars/supabase";
 import { agendaFilterSchema } from "@meguiars/validation";
 import Link from "next/link";
 import { AgendaDayList } from "@/components/agenda-day";
 import { ResourcesManager } from "@/components/agenda-forms";
+import { TechnicianUsersForm } from "@/components/work-forms";
 import { AppShell } from "@/components/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState } from "@/components/ui/display";
@@ -36,14 +37,16 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
     technicianId: param("tecnico"),
   });
   const filter = parsed.success ? parsed.data : { day: todayIn(center.timezone) };
-  const repo = createAgendaRepository((await createSupabaseServerClient())!);
-  const [items, bays, technicians] = await Promise.all([
+  const supabase = (await createSupabaseServerClient())!;
+  const repo = createAgendaRepository(supabase);
+  const canWrite = canInActiveCenter(state, "agenda.write");
+  const canManage = canInActiveCenter(state, "agenda.manage");
+  const [items, bays, technicians, technicianUsers] = await Promise.all([
     repo.listDay(center.id, filter.day, filter),
     repo.listBays(center.id),
     repo.listTechnicians(center.id),
+    canManage ? createMyWorkRepository(supabase).listTechnicianUsers(center.id) : null,
   ]);
-  const canWrite = canInActiveCenter(state, "agenda.write");
-  const canManage = canInActiveCenter(state, "agenda.manage");
   const dayLabel = formatDateInCenterTimeZone(
     zonedToUtc(filter.day, "12:00", center.timezone),
     center.timezone,
@@ -138,6 +141,11 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
       {canManage && bays.ok && technicians.ok ? (
         <Card title={agendaCopy.resourcesTitle}>
           <ResourcesManager bays={bays.data} technicians={technicians.data} />
+        </Card>
+      ) : null}
+      {canManage && technicians.ok && technicianUsers?.ok ? (
+        <Card title="Técnicos y su usuario («Mi día»)">
+          <TechnicianUsersForm technicians={technicians.data} users={technicianUsers.data} />
         </Card>
       ) : null}
     </AppShell>

@@ -497,6 +497,14 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "set_conversation_assistant",
   "update_assistant_settings",
   "upsert_assistant_faq",
+  "center_technician_users",
+  "link_technician_user",
+  "my_work",
+  "my_work_done",
+  "my_work_note",
+  "my_work_register_evidence",
+  "my_work_report_problem",
+  "my_work_start",
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {
@@ -658,7 +666,8 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect(listIn(/kind text not null check \(kind in \(('incidencia', 'retrabajo')\)\)/)).toEqual([
       ...INCIDENT_KINDS,
     ]);
-    const events = /check \(kind in \(\s*('os_inicio'[\s\S]*?'incidencia_resuelta')/.exec(allSql)?.[1] ?? "";
+    // Definición vigente: la última (20261029000100 agrega «comentario»).
+    const events = [...allSql.matchAll(/check \(kind in \(\s*('os_inicio'[\s\S]*?)\)\)/g)].at(-1)?.[1] ?? "";
     expect([...events.matchAll(/'(\w+)'/g)].map((m) => m[1])).toEqual([...EXECUTION_EVENT_KINDS]);
     const bucket =
       /values \('service-order-evidence', 'service-order-evidence', false, (\d+),\s*array\[([^\]]+)\]/.exec(
@@ -998,7 +1007,11 @@ describe("paridad SQL ↔ TypeScript", () => {
       .at(-1)?.[1]
       ?.split(",")
       .map((r) => r.trim().replace(/'/g, ""));
-    expect(sqlRoles).toEqual([...APP_ROLES]);
+    // Valores agregados después (alter type … add value), en orden.
+    const added = [
+      ...allSql.matchAll(/alter type public\.app_role add value (?:if not exists )?'(\w+)'/gi),
+    ].map((m) => m[1]);
+    expect([...(sqlRoles ?? []), ...added]).toEqual([...APP_ROLES]);
     expect([...Constants.public.Enums.app_role]).toEqual([...APP_ROLES]);
   });
 

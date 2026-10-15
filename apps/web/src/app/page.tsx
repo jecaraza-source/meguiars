@@ -5,6 +5,7 @@ import {
   centersCopy,
   formatDateInCenterTimeZone,
   formatTimeInCenterTimeZone,
+  landingScreen,
   presentCenterAccess,
   visibleNavigation,
 } from "@meguiars/domain";
@@ -14,10 +15,13 @@ import { EditCenterForm } from "@/components/forms";
 import { SectionShortcuts } from "@/components/section-shortcuts";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, KpiCard } from "@/components/ui/display";
+import { redirect } from "next/navigation";
 import { requireScreen } from "@/lib/auth/dal";
 
 export default async function Home() {
   const state = await requireScreen("home");
+  // El técnico / lavador no tiene «Mi centro»: su inicio es «Mi día».
+  if (landingScreen(state) === "myWork") redirect("/mi-dia");
   const active = activeCenterAccess(state)!;
   const item = presentCenterAccess(active);
   const now = new Date();

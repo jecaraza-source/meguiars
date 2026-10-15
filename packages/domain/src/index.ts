@@ -38,3 +38,4 @@ export * from "./inbox";
 export * from "./marketing";
 export * from "./automations";
 export * from "./assistant";
+export * from "./work";

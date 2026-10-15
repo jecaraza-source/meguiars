@@ -33,6 +33,13 @@ describe("roles y capacidades", () => {
     expect(readers("audit.read")).toEqual(["admin_socio", "contador"]);
   });
 
+  it("el técnico sólo tiene «Mi día»", () => {
+    expect(ROLE_CAPABILITIES.tecnico).toEqual(["center.read", "work.mine"]);
+    expect(APP_ROLES.filter((r) => can([r], "work.mine"))).toEqual(["tecnico"]);
+    expect(can(["tecnico"], "catalog.read")).toBe(false);
+    expect(can(["tecnico"], "orders.read")).toBe(false);
+  });
+
   it("combina capacidades de varios roles", () => {
     expect(can(["contador", "operador_recepcion"], "operations.write")).toBe(true);
     expect(hasAnyRole(["encargado"], ["admin_socio"])).toBe(false);

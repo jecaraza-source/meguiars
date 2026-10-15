@@ -1,5 +1,5 @@
 import { guardScreen, type Screen } from "./auth/guards";
-import type { AuthState } from "./auth/session";
+import { canInActiveCenter, type AuthState } from "./auth/session";
 
 /**
  * Navegación principal compartida por web y móvil: cinco dominios de negocio
@@ -82,7 +82,10 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     label: "Inicio",
     shortLabel: "Inicio",
     icon: "house",
-    items: [{ screen: "home", label: "Mi centro", href: "/", icon: "house" }],
+    items: [
+      { screen: "home", label: "Mi centro", href: "/", icon: "house" },
+      { screen: "myWork", label: "Mi día", href: "/mi-dia", icon: "listChecks" },
+    ],
   },
   {
     id: "operacion",
@@ -188,11 +191,24 @@ export const NAV_SECTIONS: readonly NavSection[] = [
   },
 ];
 
+/**
+ * Pantalla de inicio del centro activo: el técnico / lavador (sólo «Mi día», sin
+ * operación del centro) entra directo a sus asignaciones; los demás, a «Mi centro».
+ */
+export function landingScreen(state: AuthState): "home" | "myWork" {
+  return canInActiveCenter(state, "work.mine") && !canInActiveCenter(state, "operations.read")
+    ? "myWork"
+    : "home";
+}
+
 /** Secciones e ítems visibles para el estado de sesión (filtrados por guard). */
 export function visibleNavigation(state: AuthState): NavSection[] {
+  const hideHome = landingScreen(state) === "myWork";
   return NAV_SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => guardScreen(state, item.screen).allow),
+    items: section.items.filter(
+      (item) => guardScreen(state, item.screen).allow && !(hideHome && item.screen === "home"),
+    ),
   })).filter((section) => section.items.length > 0);
 }
 

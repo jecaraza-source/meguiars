@@ -38,6 +38,16 @@ Una persona por rol, en el mismo día, en web **y** móvil (alternando):
 | O4  | Cobro mixto y recibo compartido/impreso                         | ☐   | ☐     |
 | O5  | No ve Finanzas, Dirección, Usuarios ni Centros (sin permiso)    | ☐   | ☐     |
 
+### Técnico / lavador
+
+| #   | Caso                                                                               | Web | Móvil |
+| --- | ---------------------------------------------------------------------------------- | --- | ----- |
+| T1  | Entra directo a «Mi día»; sólo ve sus autos (OS autorizadas y citas) de hoy/mañana | ☐   | ☐     |
+| T2  | Empezar y «Trabajo realizado»; el último servicio deja la OS terminada             | ☐   | ☐     |
+| T3  | Foto antes y después con la cámara; recepción las ve en la OS                      | —   | ☐     |
+| T4  | Comentario y reportar problema; recepción los ve en la OS                          | ☐   | ☐     |
+| T5  | No ve precios, clientes, catálogo, Operación ni Finanzas (sin permiso)             | ☐   | ☐     |
+
 ### Encargado
 
 | #   | Caso                                                        | Web | Móvil |

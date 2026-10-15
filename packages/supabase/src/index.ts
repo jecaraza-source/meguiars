@@ -7,6 +7,7 @@ export * from "./repositories/catalog";
 export * from "./repositories/agenda";
 export * from "./repositories/orders";
 export * from "./repositories/execution";
+export * from "./repositories/work";
 export * from "./repositories/memberships";
 export * from "./repositories/crm";
 export * from "./repositories/b2b";

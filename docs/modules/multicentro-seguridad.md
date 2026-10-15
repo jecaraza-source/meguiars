@@ -45,6 +45,8 @@ Todo acceso exige que la organización, el centro, el perfil y la asignación es
 | `operations.write`            |      ✓      |     ✓     |         ✓          |          |               | contrato para módulos futuros |
 | `b2b.write`                   |      ✓      |           |                    |          |       ✓       | contrato para módulos futuros |
 
+El rol `tecnico` (técnico / lavador) sólo tiene `center.read` y `work.mine`; los chequeos «cualquier rol del centro» no lo incluyen. Ver [«Mi día»](mi-dia-tecnico.md).
+
 ¹ El admin_socio **corporativo** asigna cualquier rol en su organización, incluidos los roles corporativos. El admin_socio **de centro** asigna cualquier rol salvo admin_socio, y sólo en su centro. Toda organización conserva al menos un admin_socio corporativo activo.
 
 - **Vista corporativa:** un rol en `role_assignments` da acceso a todos los centros activos de la organización. El admin_socio corporativo ve además los centros deshabilitados.

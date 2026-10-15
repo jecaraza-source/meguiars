@@ -7068,6 +7068,17 @@ export type Database = {
         };
         Returns: boolean;
       };
+      center_technician_users: {
+        Args: {
+          p_detail_center_id: string;
+        };
+        Returns: {
+          full_name: string | null;
+          role: Database["public"]["Enums"]["app_role"];
+          technician_id: string | null;
+          user_id: string;
+        }[];
+      };
       commercial_sales_facts: {
         Args: {
           p_detail_center_ids: string[];
@@ -7212,6 +7223,15 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      link_technician_user: {
+        Args: {
+          p_reason: string;
+          p_technician_id: string;
+          p_user_id?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["technicians"]["Row"];
+        SetofOptions: { from: "*"; to: "technicians"; isOneToOne: true; isSetofReturn: false };
       };
       list_assistant_faqs: {
         Args: {
@@ -7778,6 +7798,59 @@ export type Database = {
           status: string;
           synced_at: string;
         }[];
+      };
+      my_work: {
+        Args: {
+          p_day?: string | null;
+          p_detail_center_id: string;
+        };
+        Returns: Json;
+      };
+      my_work_done: {
+        Args: {
+          p_item_id: string;
+          p_note?: string | null;
+        };
+        Returns: Json;
+      };
+      my_work_note: {
+        Args: {
+          p_item_id?: string | null;
+          p_note: string;
+          p_order_id: string;
+        };
+        Returns: undefined;
+      };
+      my_work_register_evidence: {
+        Args: {
+          p_content_type: string;
+          p_height?: number | null;
+          p_incident_id?: string | null;
+          p_item_id?: string | null;
+          p_kind: string;
+          p_note?: string | null;
+          p_order_id: string;
+          p_size_bytes: number;
+          p_storage_path: string;
+          p_width?: number | null;
+        };
+        Returns: Database["public"]["Tables"]["service_order_evidence"]["Row"];
+        SetofOptions: { from: "*"; to: "service_order_evidence"; isOneToOne: true; isSetofReturn: false };
+      };
+      my_work_report_problem: {
+        Args: {
+          p_description: string;
+          p_item_id?: string | null;
+          p_order_id: string;
+        };
+        Returns: Database["public"]["Tables"]["service_order_incidents"]["Row"];
+        SetofOptions: { from: "*"; to: "service_order_incidents"; isOneToOne: true; isSetofReturn: false };
+      };
+      my_work_start: {
+        Args: {
+          p_item_id: string;
+        };
+        Returns: Json;
       };
       prepare_outbound_message: {
         Args: {
@@ -11189,7 +11262,7 @@ export type Database = {
         | "entregada"
         | "cancelada"
         | "no_show";
-      app_role: "admin_socio" | "encargado" | "operador_recepcion" | "contador" | "comercial_b2b";
+      app_role: "admin_socio" | "encargado" | "operador_recepcion" | "contador" | "comercial_b2b" | "tecnico";
       discount_level: "operador" | "encargado" | "admin";
       item_work_status: "pendiente" | "en_proceso" | "pausada" | "terminada";
       membership_state: "activa" | "suspendida" | "cancelada";
@@ -11246,7 +11319,7 @@ export const Constants = {
   public: {
     Enums: {
       appointment_status: ["programada", "recibida", "en_servicio", "terminada", "entregada", "cancelada", "no_show"],
-      app_role: ["admin_socio", "encargado", "operador_recepcion", "contador", "comercial_b2b"],
+      app_role: ["admin_socio", "encargado", "operador_recepcion", "contador", "comercial_b2b", "tecnico"],
       discount_level: ["operador", "encargado", "admin"],
       item_work_status: ["pendiente", "en_proceso", "pausada", "terminada"],
       membership_state: ["activa", "suspendida", "cancelada"],

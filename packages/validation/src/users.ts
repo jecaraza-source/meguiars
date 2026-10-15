@@ -33,6 +33,8 @@ export const newUserSchema = z
     passwordsMatch(v, ctx);
     if (v.accessKind === "centro" && !v.role)
       ctx.addIssue({ code: "custom", path: ["role"], message: "Elige el rol" });
+    if (v.accessKind === "corporativo" && v.role === "tecnico")
+      ctx.addIssue({ code: "custom", path: ["role"], message: "El técnico es un rol de centro" });
     if (v.accessKind === "centro" && v.centerIds.length === 0)
       ctx.addIssue({ code: "custom", path: ["centerIds"], message: "Elige al menos un centro" });
   });

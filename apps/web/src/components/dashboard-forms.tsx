@@ -290,7 +290,7 @@ export function DashboardBuilder({
           onChange={(e) => setAudience(e.target.value as AppRole | "")}
           options={[
             { value: "", label: dashboardsCopy.audienceAll },
-            ...APP_ROLES.filter((r) => r !== "operador_recepcion").map((r) => ({
+            ...APP_ROLES.filter((r) => r !== "operador_recepcion" && r !== "tecnico").map((r) => ({
               value: r,
               label: ROLE_LABELS[r],
             })),
