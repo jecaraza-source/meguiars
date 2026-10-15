@@ -93,6 +93,8 @@ Reglas:
 
 El cálculo vive en `@meguiars/analytics` (`commercial-panel.ts`). El cargador `lib/commercial-panel.ts` es idéntico en web y móvil (prueba de paridad).
 
+**Acceso:** el Panel comercial es exclusivo del admin (capacidad `commercial.panel`). Los indicadores sin datos personales siguen disponibles en Reportes para quien tiene `commercial.metrics.read`.
+
 ## Permisos
 
 | Acción                           | Quién                                                                                        |

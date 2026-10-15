@@ -505,6 +505,8 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "my_work_register_evidence",
   "my_work_report_problem",
   "my_work_start",
+  "receive_and_open_order",
+  "convert_lead_to_client",
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {

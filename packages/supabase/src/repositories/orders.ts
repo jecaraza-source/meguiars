@@ -216,7 +216,8 @@ export function createServiceOrderRepository(client: MeguiarsSupabaseClient): Se
       const c = parsed.data;
       return run(
         () =>
-          client.rpc("create_service_order_from_appointment", {
+          // Recibe la cita si sigue programada y abre su OS (un solo paso).
+          client.rpc("receive_and_open_order", {
             p_appointment_id: c.appointmentId,
             p_request_id: c.requestId,
             p_channel: c.channel,

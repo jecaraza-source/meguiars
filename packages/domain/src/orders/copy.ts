@@ -59,6 +59,8 @@ export const ordersCopy = {
   newTitle: "Nueva orden de servicio",
   newDescription: "Elige al cliente y su vehículo; las líneas salen del catálogo del centro.",
   fromAppointment: "Abrir OS",
+  /** Cita aún programada: un solo paso recibe el auto y abre la OS. */
+  receiveAndOpen: "Recibir auto y abrir OS",
   viewOrder: "Ver OS",
   search: "Buscar por folio, cliente o placa",
   statusFilter: "Estatus",

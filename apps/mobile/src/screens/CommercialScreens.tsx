@@ -536,6 +536,17 @@ export function LeadScreen({
               variant="secondary"
               onPress={() => onNewQuote(lead.id)}
             />
+            {!lead.clientId ? (
+              <Button
+                label="Convertir en cliente"
+                onPress={() =>
+                  void run(
+                    () => repo.convertLeadToClient(lead.id, lead.version),
+                    "Prospecto convertido en cliente",
+                  )
+                }
+              />
+            ) : null}
             <Select
               label="Marcar como perdido"
               placeholder="Motivo"

@@ -157,6 +157,17 @@ Desde la fase 2, WhatsApp Business, Messenger e Instagram tienen conexión ofici
 
 Ninguna nueva.
 
+## Convertir en cliente (20261029000400)
+
+En el detalle del prospecto (web y móvil), **«Convertir en cliente»** con un botón:
+
+- si ya hay un cliente de la organización con el mismo teléfono o correo, lo liga (no duplica);
+- si no, lo da de alta con nombre, teléfono, correo y los canales de marketing que el prospecto autorizó;
+- exige teléfono (si falta, pide capturarlo) y los permisos de alta de clientes (`clients.write`) y de prospectos;
+- es idempotente (el alta usa el id del prospecto como `request_id`) y queda en la bitácora del prospecto.
+
+«Registrar con más datos» sigue abriendo el formulario completo de cliente. Pruebas: `supabase/tests/convert_lead_to_client.test.sql`.
+
 ## Pendientes
 
 - Calendario, campañas con UTM y promociones: hechos en la fase 3 ([marketing](marketing.md)).

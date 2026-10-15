@@ -120,6 +120,10 @@ El contador **no** ve datos personales de clientes.
 
 Ninguna nueva.
 
+## Búsqueda por nombre o apellido (20261029000200)
+
+`search_clients` encuentra el nombre si contiene **todas** las palabras escritas, en cualquier orden, sin acentos y con pedazos de palabra («gom jua» → «Juan Pérez Gómez»). Primero salen los que empiezan con lo escrito. Teléfono, placa y correo no cambian. Pruebas: `supabase/tests/client_search_words.test.sql`.
+
 ## Pruebas
 
 - **SQL** (`supabase/tests/clients_vehicles.test.sql`), 63 aserciones:

@@ -7146,6 +7146,15 @@ export type Database = {
           id: string;
         }[];
       };
+      convert_lead_to_client: {
+        Args: {
+          p_id: string;
+          p_reason?: string | null;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["leads"]["Row"];
+        SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
       create_lead_from_conversation: {
         Args: {
           p_conversation_id: string;
@@ -7888,6 +7897,18 @@ export type Database = {
           template_name: string;
           template_params: string[];
         }[];
+      };
+      receive_and_open_order: {
+        Args: {
+          p_appointment_id: string;
+          p_channel?: Database["public"]["Enums"]["sales_channel"] | null;
+          p_channel_reference?: string | null;
+          p_odometer_km?: number | null;
+          p_promised_at?: string | null;
+          p_request_id: string;
+        };
+        Returns: Database["public"]["Tables"]["service_orders"]["Row"];
+        SetofOptions: { from: "*"; to: "service_orders"; isOneToOne: true; isSetofReturn: false };
       };
       record_channel_verification: {
         Args: {

@@ -58,6 +58,10 @@ Web y móvil comparten tokens, recetas, contratos, textos y navegación; cada un
 
 Catálogo vivo: **`/sistema`** en web y **"Sistema de diseño"** en el encabezado de la app móvil. Usa datos de ejemplo.
 
+## Ayuda en el menú
+
+Cada opción del menú tiene una descripción breve de lo que se captura o consulta ahí (`NAV_ITEM_DESCRIPTIONS` en `@meguiars/domain`). La web la muestra al pasar el cursor (`title`) en el menú lateral, el submenú y los accesos rápidos; la app móvil, como pista de accesibilidad y al dejar presionada la opción. Una prueba exige que toda opción la tenga.
+
 ## Navegación por rol
 
 | Sección   | Pantallas (capacidad)                                        | admin_socio |  encargado  | operador_recepcion | contador | comercial_b2b |

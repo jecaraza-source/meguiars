@@ -89,10 +89,17 @@ export default async function AppointmentPage({ params, searchParams }: PageProp
           <ButtonLink href={`/ordenes/${a.serviceOrderId}`} label={ordersCopy.viewOrder} variant="primary" />
         </Card>
       ) : !a.serviceOrderId &&
-        (a.status === "recibida" || a.status === "en_servicio") &&
+        (a.status === "programada" || a.status === "recibida" || a.status === "en_servicio") &&
         canInActiveCenter(state, "orders.write") ? (
-        <Card title={ordersCopy.fromAppointment} subtitle={agendaCopy.draftSubtitle}>
-          <FromAppointmentForm appointmentId={a.id} requestId={newRequestId()} />
+        <Card
+          title={a.status === "programada" ? ordersCopy.receiveAndOpen : ordersCopy.fromAppointment}
+          subtitle={agendaCopy.draftSubtitle}
+        >
+          <FromAppointmentForm
+            appointmentId={a.id}
+            requestId={newRequestId()}
+            label={a.status === "programada" ? ordersCopy.receiveAndOpen : ordersCopy.fromAppointment}
+          />
         </Card>
       ) : null}
 
