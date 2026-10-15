@@ -17,6 +17,7 @@ import { useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import { AgendaScreen } from "@/screens/AgendaScreen";
+import { AssistantScreen } from "@/screens/AssistantScreen";
 import { AppointmentDetailScreen } from "@/screens/AppointmentDetailScreen";
 import { AppointmentNewScreen } from "@/screens/AppointmentNewScreen";
 import { CatalogDetailScreen } from "@/screens/CatalogDetailScreen";
@@ -522,6 +523,9 @@ export function Router() {
         break;
       case "integrations":
         content = <IntegrationsScreen {...props} />;
+        break;
+      case "assistant":
+        content = <AssistantScreen {...props} />;
         break;
       case "pipeline":
         content = (
