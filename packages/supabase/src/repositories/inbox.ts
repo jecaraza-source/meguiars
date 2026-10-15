@@ -165,6 +165,7 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
             status: m.status as MessageStatus,
             error: m.error,
             sentByName: m.sent_by_name,
+            sentByBot: m.sent_by_bot === true,
             occurredAt: m.occurred_at,
             statusAt: m.status_at,
           })),

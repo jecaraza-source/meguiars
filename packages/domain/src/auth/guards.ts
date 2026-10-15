@@ -69,6 +69,7 @@ export const SCREEN_GUARDS = {
   commercialReports: { center: true, capability: "commercial.metrics.read" },
   integrations: { center: true, capability: "leads.use" },
   inbox: { center: true, capability: "leads.use" },
+  assistant: { center: true, capability: "leads.use" },
   conversation: { center: true, capability: "leads.use" },
   contentCalendar: { center: true, capability: "marketing.read" },
   campaigns: { center: true, capability: "marketing.read" },

@@ -14,6 +14,7 @@ export const NAV_ICON_NAMES = [
   "banknote",
   "bell",
   "bookOpen",
+  "bot",
   "building2",
   "calculator",
   "calendar",
@@ -104,6 +105,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     items: [
       { screen: "comercial", label: "Resumen comercial", href: "/comercial", icon: "layoutDashboard" },
       { screen: "inbox", label: "Bandeja", href: "/comercial/bandeja", icon: "inbox" },
+      { screen: "assistant", label: "Asistente de WhatsApp", href: "/comercial/asistente", icon: "bot" },
       { screen: "leads", label: "Prospectos", href: "/comercial/prospectos", icon: "userPlus" },
       { screen: "quotes", label: "Cotizaciones", href: "/comercial/cotizaciones", icon: "fileText" },
       { screen: "memberships", label: "Membresías", href: "/comercial/membresias", icon: "badgeCheck" },
