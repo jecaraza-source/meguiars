@@ -1,6 +1,14 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  ASSISTANT_LIMITS,
+  ASSISTANT_MODELS,
+  ASSISTANT_MODES,
+  BOT_STATUSES,
+  CENTER_CHOICES,
+  HANDOFF_CODES,
+  REQUIRED_HANDOFF_CODES,
+  TURN_STATUSES,
   DEFAULT_PIPELINE_STAGES,
   DEFAULT_LEAD_STAGES,
   LEAD_CONSENT_CHANNELS,
@@ -223,6 +231,13 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "user_dashboard_preferences",
   "user_detail_centers",
   "vehicles",
+  "bot_faqs",
+  "bot_handoff_rules",
+  "bot_service_settings",
+  "bot_settings",
+  "bot_turns",
+  "center_hours",
+  "center_public_info",
 ];
 
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
@@ -458,6 +473,30 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "upsert_technician",
   "void_membership_redemption",
   "void_service_order_discount",
+  "assistant_begin_turn",
+  "assistant_choose_center",
+  "assistant_finish_turn",
+  "assistant_free_slots",
+  "assistant_handoff",
+  "assistant_membership_plans",
+  "assistant_metrics",
+  "assistant_opt_out",
+  "assistant_promotions",
+  "assistant_reply",
+  "assistant_services",
+  "conversation_assistant",
+  "delete_assistant_faq",
+  "get_assistant_settings",
+  "list_assistant_faqs",
+  "list_assistant_handoff_rules",
+  "list_assistant_services",
+  "list_center_public_info",
+  "set_assistant_handoff_rule",
+  "set_assistant_service",
+  "set_center_public_info",
+  "set_conversation_assistant",
+  "update_assistant_settings",
+  "upsert_assistant_faq",
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {
@@ -921,6 +960,30 @@ describe("paridad SQL ↔ TypeScript", () => {
       ...TASK_SOURCES,
       ...LATER_TASK_SOURCES,
     ]);
+  });
+
+  it("Asistente de WhatsApp: modos, modelos, elección de centro, motivos, estados y límites coinciden", () => {
+    const sql = allSql.slice(allSql.indexOf("-- Asistente de WhatsApp (fases F0 y F1)"));
+    const listOf = (re: RegExp) =>
+      re
+        .exec(sql)?.[1]
+        ?.split(",")
+        .map((r) => r.trim().replace(/'/g, ""));
+    expect(listOf(/mode text not null default 'apagado' check \(mode in \(([^)]+)\)\)/)).toEqual([
+      ...ASSISTANT_MODES,
+    ]);
+    expect(listOf(/check \(model in \(([^)]+)\)\)/)).toEqual([...ASSISTANT_MODELS]);
+    expect(listOf(/check \(center_choice in \(([^)]+)\)\)/)).toEqual([...CENTER_CHOICES]);
+    expect(listOf(/code text not null check \(code in \(([^)]+)\)\)/)?.sort()).toEqual(
+      [...HANDOFF_CODES].sort(),
+    );
+    expect(listOf(/check \(active or code not in \(([^)]+)\)\)/)).toEqual([...REQUIRED_HANDOFF_CODES]);
+    expect(listOf(/check \(status in \(('procesando'[^)]+)\)\)/)).toEqual([...TURN_STATUSES]);
+    expect(listOf(/check \(bot_status in \(([^)]+)\)\)/)).toEqual([...BOT_STATUSES]);
+    const { maxDaysAhead: d, minHoursAhead: h } = ASSISTANT_LIMITS;
+    expect(sql).toContain(`check (max_days_ahead between ${d.min} and ${d.max})`);
+    expect(sql).toContain(`check (min_hours_ahead between ${h.min} and ${h.max})`);
+    expect(sql).toContain(`cardinality(test_numbers) <= ${ASSISTANT_LIMITS.testNumbers}`);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

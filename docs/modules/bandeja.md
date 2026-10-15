@@ -143,6 +143,15 @@ Además:
   - permisos.
 - E2E de los extras: sincronizar plantillas (GET oficial con el token del servidor), respuesta rápida con `{precio}` rechazada y pegada con nombre y centro, guarda contra duplicados, triaje y nota sin envío a Meta, filtros, plantilla UTILITY enviada fuera de 24 h con el formato oficial (marketing sin consentimiento y no aprobadas excluidas) y permisos.
 
+## Asistente de WhatsApp
+
+Las conversaciones de WhatsApp pueden atenderlas primero el asistente con IA ([asistente-whatsapp.md](asistente-whatsapp.md)):
+
+- Sus respuestas aparecen marcadas «Asistente».
+- Cuando pasa la conversación a una persona, la deja pendiente, asignada y con una nota interna que resume lo que pidió el cliente.
+- Si alguien responde desde la Bandeja, el asistente se retira de esa conversación.
+- El botón «Reactivar asistente aquí» lo vuelve a encender.
+
 ## Pendientes
 
 - Validar las plantillas con la WABA real (falta `WHATSAPP_BUSINESS_ACCOUNT_ID` y una plantilla aprobada); hasta entonces sólo están probadas contra Meta simulado.

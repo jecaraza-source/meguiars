@@ -10,6 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.132.1",
     "@meguiars/analytics": "*",
     "@meguiars/domain": "*",
     "@meguiars/supabase": "*",

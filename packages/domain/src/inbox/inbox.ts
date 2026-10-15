@@ -142,6 +142,8 @@ export interface InboxMessage {
   status: MessageStatus;
   error: string | null;
   sentByName: string | null;
+  /** Respuesta del asistente de WhatsApp (no de una persona del equipo). */
+  sentByBot: boolean;
   occurredAt: string;
   statusAt: string;
 }

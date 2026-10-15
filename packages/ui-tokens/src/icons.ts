@@ -180,6 +180,15 @@ export const icons = {
     ["path", { d: "m3 17 2 2 4-4" }],
     ["path", { d: "m3 7 2 2 4-4" }],
   ],
+  /** lucide: bot */
+  bot: [
+    ["path", { d: "M12 8V4H8" }],
+    ["rect", { width: "16", height: "12", x: "4", y: "8", rx: "2" }],
+    ["path", { d: "M2 14h2" }],
+    ["path", { d: "M20 14h2" }],
+    ["path", { d: "M15 13v2" }],
+    ["path", { d: "M9 13v2" }],
+  ],
   /** lucide: building-2 */
   building2: [
     ["path", { d: "M10 12h4" }],

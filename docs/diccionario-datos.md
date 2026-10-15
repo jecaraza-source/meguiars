@@ -491,6 +491,114 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `bot_faqs`
+
+- **Módulo:** —
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | sí |  |
+| `question` | text | no |  |
+| `answer` | text | no |  |
+| `position` | smallint | no | 100 |
+| `active` | boolean | no | true |
+| `version` | integer | no | 1 |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `bot_handoff_rules`
+
+- **Módulo:** —
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `organization_id` | uuid | no |  |
+| `code` | text | no |  |
+| `active` | boolean | no | true |
+| `assign_to` | uuid | sí |  |
+| `message` | text | sí |  |
+| `version` | integer | no | 1 |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `bot_service_settings`
+
+- **Módulo:** —
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `service_id` | uuid | no |  |
+| `organization_id` | uuid | no |  |
+| `visible` | boolean | no | true |
+| `bookable` | boolean | no | true |
+| `price_varies_by_size` | boolean | no | false |
+| `version` | integer | no | 1 |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `bot_settings`
+
+- **Módulo:** —
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `organization_id` | uuid | no |  |
+| `mode` | text | no | 'apagado'::text |
+| `model` | text | no | 'claude-opus-5-5'::text |
+| `assistant_name` | text | no | 'Asistente virtual'::text |
+| `tone` | text | no | 'Cordial, breve y claro; trata al cliente de usted.'::text |
+| `greeting` | text | sí |  |
+| `privacy_url` | text | sí |  |
+| `human_hours` | text | sí |  |
+| `after_hours_message` | text | sí |  |
+| `center_choice` | text | no | 'colonia'::text |
+| `max_days_ahead` | smallint | no | 14 |
+| `min_hours_ahead` | smallint | no | 2 |
+| `mention_promotions` | boolean | no | true |
+| `mention_memberships` | boolean | no | true |
+| `test_numbers` | text[] | no | '{}'::text[] |
+| `version` | integer | no | 1 |
+| `updated_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `bot_turns`
+
+- **Módulo:** —
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `conversation_id` | uuid | no |  |
+| `inbound_message_id` | uuid | no |  |
+| `status` | text | no | 'procesando'::text |
+| `skip_reason` | text | sí |  |
+| `model` | text | sí |  |
+| `input_tokens` | integer | no | 0 |
+| `output_tokens` | integer | no | 0 |
+| `cache_read_tokens` | integer | no | 0 |
+| `cache_write_tokens` | integer | no | 0 |
+| `tool_calls` | jsonb | no | '[]'::jsonb |
+| `reply_message_id` | uuid | sí |  |
+| `handoff_code` | text | sí |  |
+| `error` | text | sí |  |
+| `started_at` | timestamp with time zone | no | now() |
+| `finished_at` | timestamp with time zone | sí |  |
+
 ### `campaign_spend`
 
 - **Módulo:** [marketing](modules/marketing.md)
@@ -638,6 +746,42 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `source` | text | no |  |
 | `version` | integer | no | 1 |
 | `updated_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `center_hours`
+
+- **Módulo:** —
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `detail_center_id` | uuid | no |  |
+| `organization_id` | uuid | no |  |
+| `weekday` | smallint | no |  |
+| `opens_at` | time without time zone | no |  |
+| `closes_at` | time without time zone | no |  |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
+### `center_public_info`
+
+- **Módulo:** —
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `detail_center_id` | uuid | no |  |
+| `organization_id` | uuid | no |  |
+| `address` | text | sí |  |
+| `phone` | text | sí |  |
+| `maps_url` | text | sí |  |
+| `directions` | text | sí |  |
+| `nearby_zones` | text[] | no | '{}'::text[] |
+| `handoff_user_id` | uuid | sí |  |
+| `version` | integer | no | 1 |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
@@ -826,6 +970,12 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `priority` | text | no | 'normal'::text |
 | `tags` | text[] | no | '{}'::text[] |
 | `pending` | boolean | no | false |
+| `bot_status` | text | no | 'activo'::text |
+| `bot_paused_reason` | text | sí |  |
+| `bot_paused_at` | timestamp with time zone | sí |  |
+| `bot_resumed_at` | timestamp with time zone | sí |  |
+| `marketing_opt_out_at` | timestamp with time zone | sí |  |
+| `center_confirmed_at` | timestamp with time zone | sí |  |
 
 ### `crm_tasks`
 
@@ -1333,6 +1483,7 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `occurred_at` | timestamp with time zone | no | now() |
 | `status_at` | timestamp with time zone | no | now() |
 | `created_at` | timestamp with time zone | no | now() |
+| `sent_by_bot` | boolean | no | false |
 
 ### `metric_registry`
 

@@ -230,6 +230,294 @@ export type Database = {
           },
         ];
       };
+      bot_faqs: {
+        Row: {
+          active: boolean;
+          answer: string;
+          created_at: string;
+          detail_center_id: string | null;
+          id: string;
+          organization_id: string;
+          position: number;
+          question: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          answer: string;
+          created_at?: string;
+          detail_center_id?: string | null;
+          id?: string;
+          organization_id: string;
+          position?: number;
+          question: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          answer?: string;
+          created_at?: string;
+          detail_center_id?: string | null;
+          id?: string;
+          organization_id?: string;
+          position?: number;
+          question?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bot_faqs_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "bot_faqs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      bot_handoff_rules: {
+        Row: {
+          active: boolean;
+          assign_to: string | null;
+          code: string;
+          created_at: string;
+          message: string | null;
+          organization_id: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          assign_to?: string | null;
+          code: string;
+          created_at?: string;
+          message?: string | null;
+          organization_id: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          assign_to?: string | null;
+          code?: string;
+          created_at?: string;
+          message?: string | null;
+          organization_id?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bot_handoff_rules_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      bot_service_settings: {
+        Row: {
+          bookable: boolean;
+          created_at: string;
+          organization_id: string;
+          price_varies_by_size: boolean;
+          service_id: string;
+          updated_at: string;
+          version: number;
+          visible: boolean;
+        };
+        Insert: {
+          bookable?: boolean;
+          created_at?: string;
+          organization_id: string;
+          price_varies_by_size?: boolean;
+          service_id: string;
+          updated_at?: string;
+          version?: number;
+          visible?: boolean;
+        };
+        Update: {
+          bookable?: boolean;
+          created_at?: string;
+          organization_id?: string;
+          price_varies_by_size?: boolean;
+          service_id?: string;
+          updated_at?: string;
+          version?: number;
+          visible?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bot_service_settings_organization_id_service_id_fkey";
+            columns: ["organization_id", "service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      bot_settings: {
+        Row: {
+          after_hours_message: string | null;
+          assistant_name: string;
+          center_choice: string;
+          created_at: string;
+          greeting: string | null;
+          human_hours: string | null;
+          max_days_ahead: number;
+          mention_memberships: boolean;
+          mention_promotions: boolean;
+          min_hours_ahead: number;
+          mode: string;
+          model: string;
+          organization_id: string;
+          privacy_url: string | null;
+          test_numbers: string[];
+          tone: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        Insert: {
+          after_hours_message?: string | null;
+          assistant_name?: string;
+          center_choice?: string;
+          created_at?: string;
+          greeting?: string | null;
+          human_hours?: string | null;
+          max_days_ahead?: number;
+          mention_memberships?: boolean;
+          mention_promotions?: boolean;
+          min_hours_ahead?: number;
+          mode?: string;
+          model?: string;
+          organization_id: string;
+          privacy_url?: string | null;
+          test_numbers?: string[];
+          tone?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          after_hours_message?: string | null;
+          assistant_name?: string;
+          center_choice?: string;
+          created_at?: string;
+          greeting?: string | null;
+          human_hours?: string | null;
+          max_days_ahead?: number;
+          mention_memberships?: boolean;
+          mention_promotions?: boolean;
+          min_hours_ahead?: number;
+          mode?: string;
+          model?: string;
+          organization_id?: string;
+          privacy_url?: string | null;
+          test_numbers?: string[];
+          tone?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bot_settings_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      bot_turns: {
+        Row: {
+          cache_read_tokens: number;
+          cache_write_tokens: number;
+          conversation_id: string;
+          detail_center_id: string;
+          error: string | null;
+          finished_at: string | null;
+          handoff_code: string | null;
+          id: string;
+          inbound_message_id: string;
+          input_tokens: number;
+          model: string | null;
+          organization_id: string;
+          output_tokens: number;
+          reply_message_id: string | null;
+          skip_reason: string | null;
+          started_at: string;
+          status: string;
+          tool_calls: Json;
+        };
+        Insert: {
+          cache_read_tokens?: number;
+          cache_write_tokens?: number;
+          conversation_id: string;
+          detail_center_id: string;
+          error?: string | null;
+          finished_at?: string | null;
+          handoff_code?: string | null;
+          id?: string;
+          inbound_message_id: string;
+          input_tokens?: number;
+          model?: string | null;
+          organization_id: string;
+          output_tokens?: number;
+          reply_message_id?: string | null;
+          skip_reason?: string | null;
+          started_at?: string;
+          status?: string;
+          tool_calls?: Json;
+        };
+        Update: {
+          cache_read_tokens?: number;
+          cache_write_tokens?: number;
+          conversation_id?: string;
+          detail_center_id?: string;
+          error?: string | null;
+          finished_at?: string | null;
+          handoff_code?: string | null;
+          id?: string;
+          inbound_message_id?: string;
+          input_tokens?: number;
+          model?: string | null;
+          organization_id?: string;
+          output_tokens?: number;
+          reply_message_id?: string | null;
+          skip_reason?: string | null;
+          started_at?: string;
+          status?: string;
+          tool_calls?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bot_turns_organization_id_conversation_id_fkey";
+            columns: ["organization_id", "conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "bot_turns_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       campaign_spend: {
         Row: {
           amount: number;
@@ -363,6 +651,94 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "campaigns_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      center_hours: {
+        Row: {
+          closes_at: string;
+          created_at: string;
+          detail_center_id: string;
+          opens_at: string;
+          organization_id: string;
+          updated_at: string;
+          weekday: number;
+        };
+        Insert: {
+          closes_at: string;
+          created_at?: string;
+          detail_center_id: string;
+          opens_at: string;
+          organization_id: string;
+          updated_at?: string;
+          weekday: number;
+        };
+        Update: {
+          closes_at?: string;
+          created_at?: string;
+          detail_center_id?: string;
+          opens_at?: string;
+          organization_id?: string;
+          updated_at?: string;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "center_hours_organization_id_detail_center_id_fkey";
+            columns: ["organization_id", "detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      center_public_info: {
+        Row: {
+          address: string | null;
+          created_at: string;
+          detail_center_id: string;
+          directions: string | null;
+          handoff_user_id: string | null;
+          maps_url: string | null;
+          nearby_zones: string[];
+          organization_id: string;
+          phone: string | null;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          address?: string | null;
+          created_at?: string;
+          detail_center_id: string;
+          directions?: string | null;
+          handoff_user_id?: string | null;
+          maps_url?: string | null;
+          nearby_zones?: string[];
+          organization_id: string;
+          phone?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          address?: string | null;
+          created_at?: string;
+          detail_center_id?: string;
+          directions?: string | null;
+          handoff_user_id?: string | null;
+          maps_url?: string | null;
+          nearby_zones?: string[];
+          organization_id?: string;
+          phone?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "center_public_info_organization_id_detail_center_id_fkey";
             columns: ["organization_id", "detail_center_id"];
             isOneToOne: false;
             referencedRelation: "detail_centers";
@@ -564,6 +940,11 @@ export type Database = {
       conversations: {
         Row: {
           assigned_to: string | null;
+          bot_paused_at: string | null;
+          bot_paused_reason: string | null;
+          bot_resumed_at: string | null;
+          bot_status: string;
+          center_confirmed_at: string | null;
           channel: string;
           channel_account_id: string;
           client_id: string | null;
@@ -577,6 +958,7 @@ export type Database = {
           last_message_at: string;
           last_message_preview: string | null;
           lead_id: string | null;
+          marketing_opt_out_at: string | null;
           organization_id: string;
           pending: boolean;
           priority: string;
@@ -588,6 +970,11 @@ export type Database = {
         };
         Insert: {
           assigned_to?: string | null;
+          bot_paused_at?: string | null;
+          bot_paused_reason?: string | null;
+          bot_resumed_at?: string | null;
+          bot_status?: string;
+          center_confirmed_at?: string | null;
           channel: string;
           channel_account_id: string;
           client_id?: string | null;
@@ -601,6 +988,7 @@ export type Database = {
           last_message_at?: string;
           last_message_preview?: string | null;
           lead_id?: string | null;
+          marketing_opt_out_at?: string | null;
           organization_id: string;
           pending?: boolean;
           priority?: string;
@@ -612,6 +1000,11 @@ export type Database = {
         };
         Update: {
           assigned_to?: string | null;
+          bot_paused_at?: string | null;
+          bot_paused_reason?: string | null;
+          bot_resumed_at?: string | null;
+          bot_status?: string;
+          center_confirmed_at?: string | null;
           channel?: string;
           channel_account_id?: string;
           client_id?: string | null;
@@ -625,6 +1018,7 @@ export type Database = {
           last_message_at?: string;
           last_message_preview?: string | null;
           lead_id?: string | null;
+          marketing_opt_out_at?: string | null;
           organization_id?: string;
           pending?: boolean;
           priority?: string;
@@ -1002,6 +1396,7 @@ export type Database = {
           organization_id: string;
           request_id: string | null;
           sent_by: string | null;
+          sent_by_bot: boolean;
           status: string;
           status_at: string;
         };
@@ -1019,6 +1414,7 @@ export type Database = {
           organization_id: string;
           request_id?: string | null;
           sent_by?: string | null;
+          sent_by_bot?: boolean;
           status: string;
           status_at?: string;
         };
@@ -1036,6 +1432,7 @@ export type Database = {
           organization_id?: string;
           request_id?: string | null;
           sent_by?: string | null;
+          sent_by_bot?: boolean;
           status?: string;
           status_at?: string;
         };
@@ -6463,6 +6860,115 @@ export type Database = {
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
       };
+      assistant_begin_turn: {
+        Args: {
+          p_message_id: string;
+        };
+        Returns: Json;
+      };
+      assistant_choose_center: {
+        Args: {
+          p_detail_center_id: string;
+          p_turn_id: string;
+        };
+        Returns: Json;
+      };
+      assistant_finish_turn: {
+        Args: {
+          p_cache_read_tokens: number;
+          p_cache_write_tokens: number;
+          p_error: string;
+          p_input_tokens: number;
+          p_output_tokens: number;
+          p_status: string;
+          p_tool_calls: Json;
+          p_turn_id: string;
+        };
+        Returns: Database["public"]["Tables"]["bot_turns"]["Row"];
+        SetofOptions: { from: "*"; to: "bot_turns"; isOneToOne: true; isSetofReturn: false };
+      };
+      assistant_free_slots: {
+        Args: {
+          p_days?: number | null;
+          p_detail_center_id: string;
+          p_from?: string | null;
+          p_service_ids: string[];
+          p_turn_id: string;
+        };
+        Returns: Json;
+      };
+      assistant_handoff: {
+        Args: {
+          p_code: string;
+          p_summary: string;
+          p_turn_id: string;
+        };
+        Returns: Json;
+      };
+      assistant_membership_plans: {
+        Args: {
+          p_turn_id: string;
+        };
+        Returns: Json;
+      };
+      assistant_metrics: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_to: string;
+        };
+        Returns: {
+          answered: number;
+          cache_read_tokens: number;
+          cache_write_tokens: number;
+          conversations: number;
+          detail_center_id: string;
+          errors: number;
+          handed_off: number;
+          handoffs: Json;
+          input_tokens: number;
+          output_tokens: number;
+          skipped: number;
+          turns: number;
+        }[];
+      };
+      assistant_opt_out: {
+        Args: {
+          p_turn_id: string;
+        };
+        Returns: Json;
+      };
+      assistant_promotions: {
+        Args: {
+          p_detail_center_id: string;
+          p_turn_id: string;
+        };
+        Returns: Json;
+      };
+      assistant_reply: {
+        Args: {
+          p_body: string;
+          p_turn_id: string;
+        };
+        Returns: {
+          already_sent: boolean;
+          body: string | null;
+          channel: string;
+          contact_external_id: string | null;
+          contact_phone: string | null;
+          external_account_id: string | null;
+          message_id: string | null;
+          superseded: boolean;
+        }[];
+      };
+      assistant_services: {
+        Args: {
+          p_detail_center_id: string;
+          p_query?: string | null;
+          p_turn_id: string;
+        };
+        Returns: Json;
+      };
       automation_executions_list: {
         Args: {
           p_automation_id: string;
@@ -6585,6 +7091,21 @@ export type Database = {
           total: number;
         }[];
       };
+      conversation_assistant: {
+        Args: {
+          p_conversation_id: string;
+        };
+        Returns: {
+          assistant_mode: string;
+          bot_paused_at: string | null;
+          bot_paused_reason: string | null;
+          bot_status: string;
+          last_turn_at: string | null;
+          last_turn_status: string | null;
+          marketing_opt_out_at: string | null;
+          turns: number;
+        }[];
+      };
       conversation_messages: {
         Args: {
           p_conversation_id: string;
@@ -6597,6 +7118,7 @@ export type Database = {
           id: string;
           message_type: string;
           occurred_at: string;
+          sent_by_bot: boolean;
           sent_by_name: string | null;
           status: string;
           status_at: string;
@@ -6626,6 +7148,14 @@ export type Database = {
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
       };
+      delete_assistant_faq: {
+        Args: {
+          p_id: string;
+          p_organization_id: string;
+          p_reason: string;
+        };
+        Returns: undefined;
+      };
       finish_outbound_message: {
         Args: {
           p_error: string | null;
@@ -6634,6 +7164,30 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["messages"]["Row"];
         SetofOptions: { from: "*"; to: "messages"; isOneToOne: true; isSetofReturn: false };
+      };
+      get_assistant_settings: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          after_hours_message: string | null;
+          assistant_name: string;
+          can_manage: boolean;
+          center_choice: string;
+          greeting: string | null;
+          human_hours: string | null;
+          max_days_ahead: number;
+          mention_memberships: boolean;
+          mention_promotions: boolean;
+          min_hours_ahead: number;
+          mode: string;
+          model: string;
+          privacy_url: string | null;
+          test_numbers: string[];
+          tone: string;
+          updated_at: string;
+          version: number;
+        }[];
       };
       ingest_inbound_messages: {
         Args: {
@@ -6658,6 +7212,54 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["conversations"]["Row"];
         SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
+      };
+      list_assistant_faqs: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          active: boolean;
+          answer: string;
+          detail_center_id: string | null;
+          detail_center_name: string | null;
+          id: string;
+          position: number;
+          question: string;
+          version: number;
+        }[];
+      };
+      list_assistant_handoff_rules: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          active: boolean;
+          assign_to: string | null;
+          assign_to_name: string | null;
+          code: string;
+          default_message: string;
+          label: string;
+          message: string | null;
+          required: boolean;
+          version: number;
+        }[];
+      };
+      list_assistant_services: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          active: boolean;
+          base_price: number;
+          bookable: boolean;
+          code: string;
+          name: string;
+          price_varies_by_size: boolean;
+          revenue_engine: Database["public"]["Enums"]["revenue_engine"];
+          service_id: string;
+          standard_duration_minutes: number;
+          visible: boolean;
+        }[];
       };
       list_automations: {
         Args: {
@@ -6723,6 +7325,28 @@ export type Database = {
           utm_medium: string;
           utm_source: string;
           version: number;
+        }[];
+      };
+      list_center_public_info: {
+        Args: {
+          p_organization_id: string;
+        };
+        Returns: {
+          active: boolean;
+          address: string | null;
+          can_edit: boolean;
+          code: string;
+          detail_center_id: string;
+          directions: string | null;
+          handoff_user_id: string | null;
+          handoff_user_name: string | null;
+          hours: Json;
+          maps_url: string | null;
+          name: string;
+          nearby_zones: string[];
+          phone: string | null;
+          timezone: string;
+          version: number | null;
         }[];
       };
       list_channel_accounts: {
@@ -7218,6 +7842,31 @@ export type Database = {
         Returns: Database["public"]["Tables"]["automation_runs"]["Row"];
         SetofOptions: { from: "*"; to: "automation_runs"; isOneToOne: true; isSetofReturn: false };
       };
+      set_assistant_handoff_rule: {
+        Args: {
+          p_active: boolean;
+          p_assign_to: string;
+          p_code: string;
+          p_message: string;
+          p_organization_id: string;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["bot_handoff_rules"]["Row"];
+        SetofOptions: { from: "*"; to: "bot_handoff_rules"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_assistant_service: {
+        Args: {
+          p_bookable: boolean;
+          p_organization_id: string;
+          p_price_varies_by_size: boolean;
+          p_reason: string;
+          p_service_id: string;
+          p_visible: boolean;
+        };
+        Returns: Database["public"]["Tables"]["bot_service_settings"]["Row"];
+        SetofOptions: { from: "*"; to: "bot_service_settings"; isOneToOne: true; isSetofReturn: false };
+      };
       set_automation_active: {
         Args: {
           p_active: boolean;
@@ -7227,6 +7876,22 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["automations"]["Row"];
         SetofOptions: { from: "*"; to: "automations"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_center_public_info: {
+        Args: {
+          p_address: string;
+          p_detail_center_id: string;
+          p_directions: string;
+          p_handoff_user_id: string;
+          p_hours: Json;
+          p_maps_url: string;
+          p_nearby_zones: string[];
+          p_phone: string;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["center_public_info"]["Row"];
+        SetofOptions: { from: "*"; to: "center_public_info"; isOneToOne: true; isSetofReturn: false };
       };
       set_content_post_status: {
         Args: {
@@ -7238,6 +7903,14 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["content_posts"]["Row"];
         SetofOptions: { from: "*"; to: "content_posts"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_conversation_assistant: {
+        Args: {
+          p_active: boolean;
+          p_conversation_id: string;
+        };
+        Returns: Database["public"]["Tables"]["conversations"]["Row"];
+        SetofOptions: { from: "*"; to: "conversations"; isOneToOne: true; isSetofReturn: false };
       };
       set_conversation_status: {
         Args: {
@@ -7267,6 +7940,29 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      update_assistant_settings: {
+        Args: {
+          p_after_hours_message: string;
+          p_assistant_name: string;
+          p_center_choice: string;
+          p_greeting: string;
+          p_human_hours: string;
+          p_max_days_ahead: number;
+          p_mention_memberships: boolean;
+          p_mention_promotions: boolean;
+          p_min_hours_ahead: number;
+          p_mode: string;
+          p_model: string;
+          p_organization_id: string;
+          p_privacy_url: string;
+          p_reason: string;
+          p_test_numbers: string[];
+          p_tone: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["bot_settings"]["Row"];
+        SetofOptions: { from: "*"; to: "bot_settings"; isOneToOne: true; isSetofReturn: false };
       };
       update_lead: {
         Args: {
@@ -7337,6 +8033,21 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["leads"]["Row"];
         SetofOptions: { from: "*"; to: "leads"; isOneToOne: true; isSetofReturn: false };
+      };
+      upsert_assistant_faq: {
+        Args: {
+          p_active: boolean;
+          p_answer: string;
+          p_detail_center_id: string;
+          p_id: string;
+          p_organization_id: string;
+          p_position: number;
+          p_question: string;
+          p_reason: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["bot_faqs"]["Row"];
+        SetofOptions: { from: "*"; to: "bot_faqs"; isOneToOne: true; isSetofReturn: false };
       };
       upsert_automation: {
         Args: {

@@ -1,4 +1,5 @@
 import {
+  ASSISTANT_COPY,
   activeCenterAccess,
   canInCenter,
   CONVERSATION_PRIORITY_LABELS,
@@ -12,12 +13,14 @@ import {
   windowRemaining,
 } from "@meguiars/domain";
 import {
+  createAssistantRepository,
   createCatalogRepository,
   createCommercialRepository,
   createInboxRepository,
 } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { ConversationAssistantToggle } from "@/components/assistant-forms";
 import {
   AssignConversationForm,
   ConversationLeadForm,
@@ -56,16 +59,21 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
   }
   const c = r.data;
   const commercial = createCommercialRepository(supabase);
-  const [messages, owners, leads, catalog, notes, quickReplies, templates, lead] = await Promise.all([
-    repo.messages(c.id),
-    commercial.leadOwners(c.detailCenterId),
-    c.leadId ? Promise.resolve(null) : commercial.leads([c.detailCenterId], { status: "abierta" }),
-    c.leadId ? Promise.resolve(null) : createCatalogRepository(supabase).listForCenter(c.detailCenterId),
-    repo.notes(c.id),
-    repo.quickReplies(center.organizationId, c.detailCenterId),
-    c.channel === "whatsapp" ? repo.templates(center.organizationId) : Promise.resolve(null),
-    c.leadId ? commercial.lead(c.leadId, [c.detailCenterId]) : Promise.resolve(null),
-  ]);
+  const [messages, owners, leads, catalog, notes, quickReplies, templates, lead, assistant] =
+    await Promise.all([
+      repo.messages(c.id),
+      commercial.leadOwners(c.detailCenterId),
+      c.leadId ? Promise.resolve(null) : commercial.leads([c.detailCenterId], { status: "abierta" }),
+      c.leadId ? Promise.resolve(null) : createCatalogRepository(supabase).listForCenter(c.detailCenterId),
+      repo.notes(c.id),
+      repo.quickReplies(center.organizationId, c.detailCenterId),
+      c.channel === "whatsapp" ? repo.templates(center.organizationId) : Promise.resolve(null),
+      c.leadId ? commercial.lead(c.leadId, [c.detailCenterId]) : Promise.resolve(null),
+      c.channel === "whatsapp"
+        ? createAssistantRepository(supabase).conversationState(c.id)
+        : Promise.resolve(null),
+    ]);
+  const bot = assistant?.ok ? assistant.data : null;
   // Consentimiento de WhatsApp para plantillas de marketing: el del prospecto ligado; con
   // un cliente, la base lo vuelve a validar al enviar.
   const whatsappConsent = lead?.ok ? lead.data.consentChannels.includes("whatsapp") : !!c.clientId;
@@ -107,7 +115,7 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
                     >
                       {formatInCenterTimeZone(m.occurredAt, tz)}
                       {m.direction === "saliente"
-                        ? ` · ${m.sentByName ?? ""} · ${MESSAGE_STATUS_LABELS[m.status]}`
+                        ? ` · ${m.sentByBot ? ASSISTANT_COPY.label : (m.sentByName ?? "")} · ${MESSAGE_STATUS_LABELS[m.status]}`
                         : ""}
                     </p>
                     {m.error ? (
@@ -223,6 +231,34 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
               </div>
             ) : null}
           </Card>
+          {bot ? (
+            <Card title={ASSISTANT_COPY.title}>
+              <div className="flex flex-col gap-sm text-sm" data-testid="conversation-assistant">
+                <p>
+                  <Badge
+                    label={ASSISTANT_COPY.botStatuses[bot.botStatus]}
+                    tone={bot.botStatus === "activo" && bot.mode !== "apagado" ? "brand" : "neutral"}
+                  />{" "}
+                  <span className="text-muted">{ASSISTANT_COPY.modes[bot.mode]}</span>
+                </p>
+                {bot.pausedReason ? <p className="text-muted">Motivo: {bot.pausedReason}</p> : null}
+                {bot.marketingOptOutAt ? (
+                  <p className="text-muted">El contacto pidió no recibir promociones por WhatsApp.</p>
+                ) : null}
+                <p className="text-muted">
+                  {bot.turns
+                    ? `${bot.turns} mensajes atendidos · último: ${bot.lastTurnStatus ? ASSISTANT_COPY.turnStatuses[bot.lastTurnStatus] : "—"}`
+                    : "El asistente aún no atiende esta conversación."}
+                </p>
+                <p className="text-xs text-muted">
+                  Si respondes tú, el asistente se retira de esta conversación hasta que lo reactives.
+                </p>
+                {canWrite ? (
+                  <ConversationAssistantToggle conversationId={c.id} active={bot.botStatus === "activo"} />
+                ) : null}
+              </div>
+            </Card>
+          ) : null}
           {canWrite && !c.leadId ? (
             <Card title="Registrar como prospecto">
               <ConversationLeadForm

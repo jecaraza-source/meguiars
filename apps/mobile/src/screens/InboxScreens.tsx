@@ -1,4 +1,5 @@
 import {
+  ASSISTANT_COPY,
   activeCenterAccess,
   canInCenter,
   commercialErrorMessage,
@@ -18,6 +19,7 @@ import {
   usableCenters,
   windowRemaining,
   type Conversation,
+  type ConversationAssistantState,
   type ConversationNote,
   type ConversationPriority,
   type ConversationStatus,
@@ -28,7 +30,11 @@ import {
   type ViewState,
   type WhatsappTemplate,
 } from "@meguiars/domain";
-import { createCommercialRepository, createInboxRepository } from "@meguiars/supabase";
+import {
+  createAssistantRepository,
+  createCommercialRepository,
+  createInboxRepository,
+} from "@meguiars/supabase";
 import { space } from "@meguiars/ui-tokens";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -156,6 +162,7 @@ interface Loaded {
   notes: ConversationNote[];
   quickReplies: QuickReply[];
   templates: WhatsappTemplate[];
+  assistant: ConversationAssistantState | null;
 }
 
 /** Conversación (equivale a /comercial/bandeja/[id]); responder pasa por el servidor. */
@@ -200,12 +207,15 @@ export function ConversationScreen({
         if (!r.ok) return setData({ status: "error", message: commercialErrorMessage(r.error) });
         const org = usableCenters(state.access).find((a) => a.center.id === r.data.detailCenterId)?.center
           .organizationId;
-        const [messages, owners, notes, quickReplies, templates] = await Promise.all([
+        const [messages, owners, notes, quickReplies, templates, assistant] = await Promise.all([
           repo.messages(r.data.id),
           createCommercialRepository(client).leadOwners(r.data.detailCenterId),
           repo.notes(r.data.id),
           org ? repo.quickReplies(org, r.data.detailCenterId) : null,
           org && r.data.channel === "whatsapp" ? repo.templates(org) : null,
+          r.data.channel === "whatsapp"
+            ? createAssistantRepository(client).conversationState(r.data.id)
+            : null,
         ]);
         if (!active) return;
         setOwner(r.data.assignedTo ?? "");
@@ -222,6 +232,7 @@ export function ConversationScreen({
             notes: notes.ok ? notes.data : [],
             quickReplies: quickReplies?.ok ? quickReplies.data.filter((q) => q.active) : [],
             templates: templates?.ok ? templates.data : [],
+            assistant: assistant?.ok ? assistant.data : null,
           },
         });
       });
@@ -243,7 +254,7 @@ export function ConversationScreen({
       </Screen>
     );
   }
-  const { conversation: c, messages, owners, notes, quickReplies, templates } = data.data;
+  const { conversation: c, messages, owners, notes, quickReplies, templates, assistant: bot } = data.data;
   const centerName =
     usableCenters(state.access).find((a) => a.center.id === c.detailCenterId)?.center.name ?? "";
   // Con un prospecto ligado se usa su consentimiento; con un cliente, la base lo valida al enviar.
@@ -319,7 +330,9 @@ export function ConversationScreen({
             <Text style={textStyle("bodySmall")}>{m.body ?? INBOX_COPY.mediaNotice}</Text>
             <Text style={textStyle("caption", "muted")}>
               {formatInCenterTimeZone(m.occurredAt, tz)}
-              {m.direction === "saliente" ? ` · ${MESSAGE_STATUS_LABELS[m.status]}` : ""}
+              {m.direction === "saliente"
+                ? ` · ${m.sentByBot ? `${ASSISTANT_COPY.label} · ` : ""}${MESSAGE_STATUS_LABELS[m.status]}`
+                : ""}
             </Text>
             {m.error ? <Text style={textStyle("caption")}>{m.error}</Text> : null}
           </View>
@@ -440,6 +453,43 @@ export function ConversationScreen({
           ) : null}
         </View>
       </Card>
+      {bot ? (
+        <Card title={ASSISTANT_COPY.title} subtitle={ASSISTANT_COPY.botStatuses[bot.botStatus]}>
+          <View style={styles.stack}>
+            <Text style={textStyle("bodySmall", "muted")}>
+              {ASSISTANT_COPY.modes[bot.mode]}
+              {bot.pausedReason ? ` · ${bot.pausedReason}` : ""}
+            </Text>
+            {bot.marketingOptOutAt ? (
+              <Text style={textStyle("bodySmall", "muted")}>
+                El contacto pidió no recibir promociones por WhatsApp.
+              </Text>
+            ) : null}
+            <Text style={textStyle("caption", "muted")}>
+              Si respondes tú, el asistente se retira de esta conversación hasta que lo reactives.
+            </Text>
+            {canWrite ? (
+              <Button
+                label={bot.botStatus === "activo" ? "Pausar asistente aquí" : "Reactivar asistente aquí"}
+                variant="secondary"
+                loading={busy}
+                onPress={() =>
+                  run(
+                    () =>
+                      createAssistantRepository(client!).setConversationActive(
+                        c.id,
+                        bot.botStatus !== "activo",
+                      ),
+                    bot.botStatus === "activo"
+                      ? "Asistente pausado"
+                      : "Asistente reactivado en la conversación",
+                  )
+                }
+              />
+            ) : null}
+          </View>
+        </Card>
+      ) : null}
       <Card title="Contacto" subtitle={CONVERSATION_STATUS_LABELS[c.status]}>
         <View style={styles.stack}>
           <Text style={textStyle("bodySmall")}>Teléfono: {c.contactPhone ?? "No compartido por Meta"}</Text>
