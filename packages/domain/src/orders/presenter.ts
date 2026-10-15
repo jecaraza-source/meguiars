@@ -57,8 +57,11 @@ export function workedMinutes(
   return order.workedMinutes + running;
 }
 
-/** Resumen de la OS: KPIs y permisos de edición según estatus. */
-export function presentOrder(order: ServiceOrder, now = new Date()) {
+/**
+ * Resumen de la OS: KPIs y permisos de edición según estatus. El margen sólo
+ * se muestra a quien tiene `orders.margin` (admin).
+ */
+export function presentOrder(order: ServiceOrder, now = new Date(), { showMargin = false } = {}) {
   const margin = orderMargin(order);
   const balance = orderBalance(order);
   return {
@@ -79,7 +82,9 @@ export function presentOrder(order: ServiceOrder, now = new Date()) {
         value: formatMoney(balance),
         caption: `${ordersCopy.paid} ${formatMoney(order.paidAmount)}`,
       },
-      { label: ordersCopy.margin, value: formatMoney(margin.amount), caption: `${margin.percent}%` },
+      ...(showMargin
+        ? [{ label: ordersCopy.margin, value: formatMoney(margin.amount), caption: `${margin.percent}%` }]
+        : []),
       {
         label: ordersCopy.worked,
         value: formatDuration(workedMinutes(order, now)),

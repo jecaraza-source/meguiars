@@ -69,6 +69,12 @@ describe("navegación por rol", () => {
     expect(sectionsOf([role])).toEqual(expected);
   });
 
+  it("toda opción del menú tiene una descripción breve (se muestra al pasar el cursor)", () => {
+    const items = NAV_SECTIONS.flatMap((s) => s.items);
+    expect(items.filter((i) => !i.description).map((i) => i.screen)).toEqual([]);
+    for (const i of items) expect(i.description!.length).toBeLessThanOrEqual(120);
+  });
+
   it("el técnico entra directo a «Mi día» y no ve «Mi centro»", () => {
     expect(itemsOf(["tecnico"])).toEqual(["myWork"]);
     expect(landingScreen(stateFor(["tecnico"]))).toBe("myWork");
@@ -183,12 +189,21 @@ describe("navegación por rol", () => {
     expect(sectionOfPath("/finanzas/resultados")).toBe("finanzas");
   });
 
-  it("Corte de caja: admin, encargado, recepción y contador; comercial no", () => {
+  it("Corte de caja (en Operación): admin, encargado, recepción y contador; comercial no", () => {
     expect(itemsOf(["operador_recepcion"])).toContain("cash");
     expect(itemsOf(["contador"])).toContain("cash");
     expect(itemsOf(["comercial_b2b"])).not.toContain("cash");
     expect(navScreenOf("cashSession")).toBe("cash");
-    expect(sectionOfPath("/finanzas/caja")).toBe("finanzas");
+    expect(sectionOfScreen("cash")).toBe("operacion");
+    expect(sectionOfPath("/finanzas/caja")).toBe("operacion");
+    expect(sectionOfPath("/finanzas/caja/123")).toBe("operacion");
+  });
+
+  it("Panel comercial: exclusivo del admin", () => {
+    expect(itemsOf(["admin_socio"])).toContain("commercialPanel");
+    for (const role of ["encargado", "contador", "comercial_b2b", "operador_recepcion"] as const) {
+      expect(itemsOf([role])).not.toContain("commercialPanel");
+    }
   });
 
   it("Cobranza: recepción, encargado, admin y contador; comercial no", () => {

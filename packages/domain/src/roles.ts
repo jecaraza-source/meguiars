@@ -124,6 +124,10 @@ export const CAPABILITIES = [
   // realizado, comentarios, fotos y problemas (public.my_work_*, exige estar ligado a un
   // técnico del centro). Ligar técnico y usuario usa agenda.manage.
   "work.mine",
+  // Margen y costo de la OS (sólo el admin; los demás ven precio, saldo y tiempo).
+  "orders.margin",
+  // Panel comercial (/comercial/panel): exclusivo del admin.
+  "commercial.panel",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -181,6 +185,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "orders.read",
     "orders.write",
     "orders.manage",
+    "orders.margin",
+    "commercial.panel",
     "memberships.read",
     "memberships.write",
     "memberships.manage",

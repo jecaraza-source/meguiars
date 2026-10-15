@@ -77,7 +77,7 @@ export const SCREEN_GUARDS = {
   campaignDetail: { center: true, capability: "marketing.read" },
   promotions: { center: true, capability: "marketing.read" },
   automations: { center: true, capability: "automations.read" },
-  commercialPanel: { center: true, capability: "commercial.metrics.read" },
+  commercialPanel: { center: true, capability: "commercial.panel" },
   finanzas: { center: true, capability: "finance.read" },
   payments: { center: true, capability: "payments.read" },
   paymentReceipt: { center: true, capability: "payments.read" },

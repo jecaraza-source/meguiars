@@ -19,6 +19,7 @@ import { BrandLogo } from "./brand";
 import { LinkButton } from "./controls";
 import { Badge } from "./display";
 import { Icon } from "./icon";
+import { useToast } from "./overlay";
 import { textStyle } from "./theme";
 
 /** Aviso de ambiente (local o preview), igual que en web; no aparece en producción. */
@@ -170,6 +171,7 @@ export function SubNav({
   current: ScreenId;
   onSelect: (screen: ScreenId) => void;
 }) {
+  const toast = useToast();
   if (!section || section.items.length < 2) return null;
   return (
     <View accessibilityRole="tablist" style={styles.subnav}>
@@ -178,7 +180,9 @@ export function SubNav({
           key={item.screen}
           accessibilityRole="tab"
           accessibilityState={{ selected: item.screen === current }}
+          accessibilityHint={item.description}
           onPress={() => onSelect(item.screen)}
+          onLongPress={() => item.description && toast({ message: item.description, tone: "info" })}
           style={[styles.chip, item.screen === current ? styles.chipActive : null]}
         >
           <Icon

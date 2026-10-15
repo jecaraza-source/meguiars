@@ -54,7 +54,7 @@ export default async function OrderExecutionPage({ params }: PageProps<"/ordenes
     );
   }
   const order = orderResult.data;
-  const view = presentOrder(order);
+  const view = presentOrder(order, new Date(), { showMargin: canInActiveCenter(state, "orders.margin") });
   const back = (
     <Link href={`/ordenes/${order.id}`} className="text-sm underline">
       ← {executionCopy.back} {order.folio}
