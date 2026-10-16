@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "eval:assistant": "vite-node scripts/assistant-eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.1",
