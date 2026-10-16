@@ -19,6 +19,8 @@ export const GUARD_REDIRECTS: Record<Redirect, string> = {
  */
 export const PUBLIC_PATHS = [
   "/login",
+  // Aviso de privacidad (lo pide Meta para la app de WhatsApp en modo activo).
+  "/privacidad",
   "/recuperar",
   "/auth/confirm",
   "/cuenta-deshabilitada",
