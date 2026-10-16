@@ -137,6 +137,12 @@ Ninguna nueva.
   - vista de móvil;
   - contador sin acceso.
 
+## Recibir auto y abrir OS (20261029000300)
+
+- Desde una cita **programada**, «Recibir auto y abrir OS» (web y móvil) la marca recibida (registra la visita) y abre su OS con los servicios agendados, en un paso. En citas recibidas o en servicio el botón sigue siendo «Abrir OS».
+- `public.receive_and_open_order` reutiliza `set_appointment_status` y `create_service_order_from_appointment`: mismos permisos, auditoría (motivo «Recibida al abrir la OS») y una sola OS por cita. Pruebas: `supabase/tests/receive_and_open_order.test.sql`.
+- **Buscar cliente al agendar:** los clientes aparecen mientras se escribe (desde 2 letras). El nombre coincide con todas las palabras en cualquier orden y sin acentos («perez juan» encuentra a «Juan Pérez»); también por teléfono o placa. Ver [Clientes y vehículos](clientes-vehiculos.md).
+
 ## Pendientes
 
 - **Horario de apertura por centro:** permitiría el KPI de ocupación (minutos agendados entre minutos disponibles por bahía) con una sola definición en `packages/analytics`.

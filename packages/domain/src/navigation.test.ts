@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { CenterAccess } from "./access/access";
 import type { AuthState } from "./auth/session";
-import { NAV_SECTIONS, navScreenOf, sectionOfPath, sectionOfScreen, visibleNavigation } from "./navigation";
+import {
+  landingScreen,
+  NAV_SECTIONS,
+  navScreenOf,
+  sectionOfPath,
+  sectionOfScreen,
+  visibleNavigation,
+} from "./navigation";
 import { APP_ROLES, type AppRole } from "./roles";
 
 const stateFor = (roles: AppRole[]): AuthState => ({
@@ -56,8 +63,24 @@ describe("navegación por rol", () => {
     // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día;
     // en Finanzas sólo ve Cuentas por cobrar B2B (factura y cobra a las cuentas).
     ["comercial_b2b", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion"]],
+    // Sólo «Mi día» (sus asignaciones).
+    ["tecnico", ["inicio"]],
   ])("%s ve %j", (role, expected) => {
     expect(sectionsOf([role])).toEqual(expected);
+  });
+
+  it("toda opción del menú tiene una descripción breve (se muestra al pasar el cursor)", () => {
+    const items = NAV_SECTIONS.flatMap((s) => s.items);
+    expect(items.filter((i) => !i.description).map((i) => i.screen)).toEqual([]);
+    for (const i of items) expect(i.description!.length).toBeLessThanOrEqual(120);
+  });
+
+  it("el técnico entra directo a «Mi día» y no ve «Mi centro»", () => {
+    expect(itemsOf(["tecnico"])).toEqual(["myWork"]);
+    expect(landingScreen(stateFor(["tecnico"]))).toBe("myWork");
+    expect(landingScreen(stateFor(["encargado"]))).toBe("home");
+    expect(itemsOf(["encargado"])).not.toContain("myWork");
+    expect(sectionOfPath("/mi-dia")).toBe("inicio");
   });
 
   it("Órdenes de servicio: operación del centro (no contador ni comercial B2B)", () => {
@@ -166,12 +189,21 @@ describe("navegación por rol", () => {
     expect(sectionOfPath("/finanzas/resultados")).toBe("finanzas");
   });
 
-  it("Corte de caja: admin, encargado, recepción y contador; comercial no", () => {
+  it("Corte de caja (en Operación): admin, encargado, recepción y contador; comercial no", () => {
     expect(itemsOf(["operador_recepcion"])).toContain("cash");
     expect(itemsOf(["contador"])).toContain("cash");
     expect(itemsOf(["comercial_b2b"])).not.toContain("cash");
     expect(navScreenOf("cashSession")).toBe("cash");
-    expect(sectionOfPath("/finanzas/caja")).toBe("finanzas");
+    expect(sectionOfScreen("cash")).toBe("operacion");
+    expect(sectionOfPath("/finanzas/caja")).toBe("operacion");
+    expect(sectionOfPath("/finanzas/caja/123")).toBe("operacion");
+  });
+
+  it("Panel comercial: exclusivo del admin", () => {
+    expect(itemsOf(["admin_socio"])).toContain("commercialPanel");
+    for (const role of ["encargado", "contador", "comercial_b2b", "operador_recepcion"] as const) {
+      expect(itemsOf([role])).not.toContain("commercialPanel");
+    }
   });
 
   it("Cobranza: recepción, encargado, admin y contador; comercial no", () => {
@@ -192,8 +224,11 @@ describe("navegación por rol", () => {
     expect(visibleNavigation(noCenter)).toEqual([]);
   });
 
-  it("todo rol tiene al menos una sección de negocio además de Inicio", () => {
-    for (const role of APP_ROLES) expect(sectionsOf([role]).length).toBeGreaterThan(1);
+  it("todo rol de oficina tiene al menos una sección de negocio además de Inicio", () => {
+    // El técnico / lavador sólo usa «Mi día» (Inicio).
+    for (const role of APP_ROLES.filter((r) => r !== "tecnico")) {
+      expect(sectionsOf([role]).length).toBeGreaterThan(1);
+    }
   });
 
   it("resuelve la sección activa por pantalla y por ruta", () => {

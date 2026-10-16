@@ -445,6 +445,13 @@ export function createCommercialRepository(client: MeguiarsSupabaseClient): Comm
       );
     },
 
+    convertLeadToClient(id, version) {
+      return run(
+        () => client.rpc("convert_lead_to_client", { p_id: id, p_version: version }),
+        (row) => ({ version: row.version, clientId: row.client_id ?? "" }),
+      );
+    },
+
     createLeadTask(command) {
       const parsed = leadTaskSchema.safeParse(command);
       if (!parsed.success) return Promise.resolve(invalid(parsed.error));

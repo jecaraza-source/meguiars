@@ -25,6 +25,7 @@ export function SectionShortcuts({ sections }: { sections: NavSection[] }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  title={item.description}
                   className="inline-flex min-h-(--mg-touch-target) items-center gap-xs rounded-md px-xs text-sm text-muted hover:bg-surface hover:text-foreground"
                 >
                   <Icon name={item.icon} />

@@ -94,6 +94,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    title={item.description}
                     aria-current={current ? "page" : undefined}
                     className="flex min-h-(--mg-touch-target) items-center gap-sm rounded-md px-sm text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:font-bold aria-[current=page]:text-brand-foreground"
                   >
@@ -145,6 +146,7 @@ export function SubNav({ section }: { section: NavSection }) {
         <Link
           key={item.href}
           href={item.href}
+          title={item.description}
           aria-current={currentItemHref([section], pathname) === item.href ? "page" : undefined}
           className="inline-flex min-h-(--mg-touch-target) shrink-0 items-center gap-xs whitespace-nowrap rounded-full border border-border bg-surface-raised px-md text-sm font-bold text-foreground shadow-sm transition-colors hover:border-accent hover:text-accent aria-[current=page]:border-accent aria-[current=page]:bg-accent aria-[current=page]:text-brand-foreground"
         >

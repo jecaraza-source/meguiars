@@ -1,5 +1,6 @@
 import { guardScreen, type Screen } from "./auth/guards";
-import type { AuthState } from "./auth/session";
+import { canInActiveCenter, type AuthState } from "./auth/session";
+import { NAV_ITEM_DESCRIPTIONS } from "./navigation-help";
 
 /**
  * Navegación principal compartida por web y móvil: cinco dominios de negocio
@@ -65,6 +66,8 @@ export interface NavItem {
   href: string;
   /** Icono del set compartido (@meguiars/ui-tokens → icons). */
   icon: NavIconName;
+  /** Qué se captura o consulta ahí (se muestra al pasar el cursor). */
+  description?: string;
 }
 
 export interface NavSection {
@@ -76,13 +79,16 @@ export interface NavSection {
   items: readonly NavItem[];
 }
 
-export const NAV_SECTIONS: readonly NavSection[] = [
+const BASE_SECTIONS: readonly NavSection[] = [
   {
     id: "inicio",
     label: "Inicio",
     shortLabel: "Inicio",
     icon: "house",
-    items: [{ screen: "home", label: "Mi centro", href: "/", icon: "house" }],
+    items: [
+      { screen: "home", label: "Mi centro", href: "/", icon: "house" },
+      { screen: "myWork", label: "Mi día", href: "/mi-dia", icon: "listChecks" },
+    ],
   },
   {
     id: "operacion",
@@ -93,6 +99,7 @@ export const NAV_SECTIONS: readonly NavSection[] = [
       { screen: "operacion", label: "Operación del día", href: "/operacion", icon: "clipboardList" },
       { screen: "agenda", label: "Agenda", href: "/agenda", icon: "calendarDays" },
       { screen: "orders", label: "Órdenes de servicio", href: "/ordenes", icon: "clipboardCheck" },
+      { screen: "cash", label: "Corte de caja", href: "/finanzas/caja", icon: "banknote" },
       { screen: "clients", label: "Clientes y vehículos", href: "/clientes", icon: "car" },
       { screen: "catalog", label: "Catálogo", href: "/catalogo", icon: "bookOpen" },
     ],
@@ -164,7 +171,6 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     items: [
       { screen: "finanzas", label: "Resumen financiero", href: "/finanzas", icon: "chartPie" },
       { screen: "payments", label: "Cobranza", href: "/finanzas/cobranza", icon: "creditCard" },
-      { screen: "cash", label: "Corte de caja", href: "/finanzas/caja", icon: "banknote" },
       { screen: "expenses", label: "Egresos", href: "/finanzas/egresos", icon: "receipt" },
       { screen: "pnl", label: "Estado de resultados", href: "/finanzas/resultados", icon: "calculator" },
       { screen: "receivables", label: "Cuentas por cobrar B2B", href: "/finanzas/cxc", icon: "handCoins" },
@@ -188,11 +194,29 @@ export const NAV_SECTIONS: readonly NavSection[] = [
   },
 ];
 
+export const NAV_SECTIONS: readonly NavSection[] = BASE_SECTIONS.map((section) => ({
+  ...section,
+  items: section.items.map((item) => ({ ...item, description: NAV_ITEM_DESCRIPTIONS[item.screen] })),
+}));
+
+/**
+ * Pantalla de inicio del centro activo: el técnico / lavador (sólo «Mi día», sin
+ * operación del centro) entra directo a sus asignaciones; los demás, a «Mi centro».
+ */
+export function landingScreen(state: AuthState): "home" | "myWork" {
+  return canInActiveCenter(state, "work.mine") && !canInActiveCenter(state, "operations.read")
+    ? "myWork"
+    : "home";
+}
+
 /** Secciones e ítems visibles para el estado de sesión (filtrados por guard). */
 export function visibleNavigation(state: AuthState): NavSection[] {
+  const hideHome = landingScreen(state) === "myWork";
   return NAV_SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => guardScreen(state, item.screen).allow),
+    items: section.items.filter(
+      (item) => guardScreen(state, item.screen).allow && !(hideHome && item.screen === "home"),
+    ),
   })).filter((section) => section.items.length > 0);
 }
 

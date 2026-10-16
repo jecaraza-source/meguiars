@@ -642,6 +642,8 @@ export interface CommercialRepository {
     clientId: string,
     reason: string,
   ): Promise<Result<{ version: number }>>;
+  /** Alta del cliente con los datos del prospecto (o liga el que ya coincide por teléfono o email). */
+  convertLeadToClient(id: string, version: number): Promise<Result<{ version: number; clientId: string }>>;
   createLeadTask(command: CreateLeadTaskCommand): Promise<Result<{ id: string }>>;
   upsertStage(command: UpsertLeadStageCommand): Promise<Result<{ id: string }>>;
   quotes(

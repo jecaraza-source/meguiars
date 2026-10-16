@@ -28,6 +28,7 @@ import {
   LeadContactForm,
   LeadNoteForm,
   LeadTaskForm,
+  ConvertLeadForm,
   LinkClientForm,
   LoseLeadForm,
   MoveLeadForm,
@@ -241,11 +242,14 @@ export default async function LeadPage({ params, searchParams }: PageProps<"/com
                 label={COMMERCIAL_COPY.newQuote}
               />
               {!lead.clientId ? (
-                <ButtonLink
-                  href={`/clientes/nuevo?prospecto=${lead.id}`}
-                  label="Registrar como cliente"
-                  variant="secondary"
-                />
+                <>
+                  <ConvertLeadForm lead={lead} />
+                  <ButtonLink
+                    href={`/clientes/nuevo?prospecto=${lead.id}`}
+                    label="Registrar con más datos"
+                    variant="secondary"
+                  />
+                </>
               ) : null}
             </div>
           </div>

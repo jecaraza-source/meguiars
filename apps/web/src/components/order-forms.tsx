@@ -244,9 +244,11 @@ export function NewOrderForm({
 export function FromAppointmentForm({
   appointmentId,
   requestId,
+  label = ordersCopy.fromAppointment,
 }: {
   appointmentId: string;
   requestId: string;
+  label?: string;
 }) {
   const [state, action] = useActionState(createFromAppointmentAction, {});
   return (
@@ -263,7 +265,7 @@ export function FromAppointmentForm({
       />
       <Alert text={state.error} />
       <div>
-        <Submit label={ordersCopy.fromAppointment} />
+        <Submit label={label} />
       </div>
     </form>
   );

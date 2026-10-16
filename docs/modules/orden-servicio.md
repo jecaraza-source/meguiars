@@ -84,6 +84,8 @@ Importes en MXN con IVA incluido. El desglose de IVA llega con facturación.
 - El contador y el comercial B2B no ven OS: el snapshot tiene datos personales. Los KPIs financieros consolidados llegarán por RPC agregadas.
 - RLS: `private.can_use_orders`, `private.can_manage_orders` y `private.discount_level_of`. Las escrituras directas fallan (`23514` sin motivo, `42501` borrado o historial).
 
+**Margen:** el KPI de margen de la OS sólo se muestra a quien tiene `orders.margin` (admin). Los demás ven total, saldo y tiempo. Es una restricción de pantalla: el costo sigue en la base para el P&L.
+
 ## RPC
 
 | RPC                                                                  | Uso                                                                            |

@@ -55,6 +55,8 @@ export const EXECUTION_EVENT_KINDS = [
   "consumo",
   "incidencia",
   "incidencia_resuelta",
+  // Comentario del técnico desde «Mi día» (20261029000100).
+  "comentario",
 ] as const;
 export type ExecutionEventKind = (typeof EXECUTION_EVENT_KINDS)[number];
 

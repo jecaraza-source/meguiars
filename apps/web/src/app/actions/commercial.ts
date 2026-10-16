@@ -289,6 +289,20 @@ export async function linkLeadClientAction(
   return stamp({ message: "Prospecto ligado al cliente" });
 }
 
+/** «Convertir en cliente» con un botón: alta con los datos del prospecto o liga el que ya coincide. */
+export async function convertLeadAction(
+  _prev: CommercialFormState,
+  form: FormData,
+): Promise<CommercialFormState> {
+  const ctx = await context("leadDetail");
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const id = text(form, "id");
+  const r = await ctx.repo.convertLeadToClient(id, Number(text(form, "version")));
+  if (!r.ok) return fail(r.error, form);
+  refreshLead(id);
+  return stamp({ message: "Prospecto convertido en cliente" });
+}
+
 export async function winLeadAction(
   _prev: CommercialFormState,
   form: FormData,

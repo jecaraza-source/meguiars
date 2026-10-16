@@ -154,7 +154,7 @@ export function OrderDetailScreen({
   }
 
   const { order } = data.data;
-  const view = presentOrder(order);
+  const view = presentOrder(order, new Date(), { showMargin: canInActiveCenter(state, "orders.margin") });
   const canWrite = canInActiveCenter(state, "orders.write");
   const repo = client ? createServiceOrderRepository(client) : null;
   const lineName = (itemId: string) => order.items.find((i) => i.id === itemId)?.serviceName ?? "—";

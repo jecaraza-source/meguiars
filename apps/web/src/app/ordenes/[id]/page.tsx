@@ -71,7 +71,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
     );
   }
   const order = result.data;
-  const view = presentOrder(order);
+  const view = presentOrder(order, new Date(), { showMargin: canInActiveCenter(state, "orders.margin") });
   const canWrite = canInActiveCenter(state, "orders.write");
   const agenda = createAgendaRepository(supabase);
   const [catalog, bays, technicians] = canWrite

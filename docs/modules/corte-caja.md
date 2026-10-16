@@ -85,6 +85,8 @@ El contador consulta cortes, versiones y movimientos, y sigue de sólo lectura. 
 
 Estados de carga, vacío, error y sin permiso en todas. Reglas (`cashTotals`, `cashDifference`, `closeNoteRequired`, `cashSessionActions`), textos (`cashCopy`), resumen (`cashSummaryText`) y CSV (`cashSummaryCsv`) viven en `@meguiars/domain`, así el cierre en web y en móvil produce el mismo resultado.
 
+**Menú:** «Corte de caja» está en la sección **Operación** (antes en Finanzas); la ruta sigue siendo `/finanzas/caja`.
+
 ## Datos seed
 
 CDMX: corte de ayer cerrado con fondo $1,000, contado $980 y faltante de $20 explicado; caja de hoy abierta desde antes del anticipo de AF1 (esperado $1,500 = fondo $1,000 + efectivo $500).

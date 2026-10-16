@@ -30,10 +30,22 @@ describe("sin secretos en el repositorio", () => {
     expect(tracked.length).toBeGreaterThan(50);
   });
 
-  it.each(SECRET_PATTERNS)("sin $name", ({ pattern }) => {
-    const offenders = tracked.filter((file) => pattern.test(readFileSync(join(root, file), "utf8")));
-    expect(offenders).toEqual([]);
-  });
+  // Cada archivo se lee una sola vez para todos los patrones (con el repo
+  // creciendo, releerlo por patrón superaba el límite de 5 s con carga).
+  let contents;
+  const contentsOf = () =>
+    (contents ??= tracked.map((file) => [file, readFileSync(join(root, file), "utf8")]));
+
+  it.each(SECRET_PATTERNS)(
+    "sin $name",
+    ({ pattern }) => {
+      const offenders = contentsOf()
+        .filter(([, text]) => pattern.test(text))
+        .map(([file]) => file);
+      expect(offenders).toEqual([]);
+    },
+    30_000,
+  );
 });
 
 /** Ids de job de un workflow (claves con dos espacios bajo `jobs:`). */

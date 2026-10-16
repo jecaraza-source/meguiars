@@ -136,7 +136,7 @@ export function OrderExecutionScreen({
   }
 
   const { order, execution, technicians } = data.data;
-  const view = presentOrder(order);
+  const view = presentOrder(order, new Date(), { showMargin: canInActiveCenter(state, "orders.margin") });
   const canWrite = canInActiveCenter(state, "orders.write");
   const repo = client ? createExecutionRepository(client) : null;
   const techName = (id: string) => technicians.find((t) => t.id === id)?.fullName ?? "—";

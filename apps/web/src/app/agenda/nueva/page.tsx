@@ -9,10 +9,11 @@ import {
 } from "@meguiars/domain";
 import { createAgendaRepository, createCatalogRepository, createClientRepository } from "@meguiars/supabase";
 import Link from "next/link";
+import { Suspense } from "react";
 import { AppointmentForm } from "@/components/agenda-forms";
 import { AppShell } from "@/components/app-shell";
 import { Card, EmptyState, Table } from "@/components/ui/display";
-import { Input } from "@/components/ui/field";
+import { LiveSearchInput } from "@/components/live-search";
 import { requireScreen } from "@/lib/auth/dal";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -39,7 +40,13 @@ export default async function NewAppointmentPage({ searchParams }: PageProps<"/a
             {walkIn ? <input type="hidden" name="walkin" value="1" /> : null}
             <input type="hidden" name="dia" value={day} />
             <div className="flex-1">
-              <Input name="q" type="search" label={agendaCopy.clientSearch} defaultValue={q} autoFocus />
+              <Suspense>
+                <LiveSearchInput
+                  label={agendaCopy.clientSearch}
+                  hint="Escribe nombre, apellido, teléfono o placa; los clientes aparecen al escribir."
+                  defaultValue={q}
+                />
+              </Suspense>
             </div>
             <button type="submit" className="mg-btn" data-variant="secondary" data-size="md">
               Buscar

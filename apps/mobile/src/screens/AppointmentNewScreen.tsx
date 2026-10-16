@@ -12,7 +12,7 @@ import {
 } from "@meguiars/domain";
 import { createAgendaRepository, createCatalogRepository, createClientRepository } from "@meguiars/supabase";
 import { appointmentFormSchema, fieldErrors, toCreateAppointmentCommand } from "@meguiars/validation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { DateTimeFields, ScheduleFields } from "@/components/AgendaFields";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
@@ -58,13 +58,34 @@ export function AppointmentNewScreen({
   const [busy, setBusy] = useState(false);
   const set = (key: string, value: string) => setValues((v) => ({ ...v, [key]: value }));
 
-  const search = async () => {
+  const search = async (text = query) => {
     if (!client) return;
-    const result = await createClientRepository(client).search(center.id, query);
+    const result = await createClientRepository(client).search(center.id, text);
     if (!result.ok) return setError(clientErrorMessage(result.error));
     setError(null);
     setResults(result.data.map((r) => presentSearchResult(r, center.timezone)));
   };
+
+  // Sugerencias al escribir (nombre o apellido en cualquier orden, teléfono o placa).
+  useEffect(() => {
+    const text = query.trim();
+    if (!client || text.length < 2) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      void createClientRepository(client)
+        .search(center.id, text)
+        .then((result) => {
+          if (!active) return;
+          if (!result.ok) return setError(clientErrorMessage(result.error));
+          setError(null);
+          setResults(result.data.map((r) => presentSearchResult(r, center.timezone)));
+        });
+    }, 300);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [client, center.id, center.timezone, query]);
 
   // Paso 2: el cliente elegido y sus vehículos, sin recapturarlos.
   const choose = async (clientId: string) => {

@@ -151,9 +151,13 @@ export function AppointmentDetailScreen({
           <Button label={ordersCopy.viewOrder} onPress={() => onOpenOrder(a.serviceOrderId!)} />
         </Card>
       ) : !a.serviceOrderId &&
-        (a.status === "recibida" || a.status === "en_servicio") &&
+        (a.status === "programada" || a.status === "recibida" || a.status === "en_servicio") &&
         canInActiveCenter(state, "orders.write") ? (
-        <OpenOrderCard appointmentId={a.id} onOpenOrder={onOpenOrder} />
+        <OpenOrderCard
+          appointmentId={a.id}
+          label={a.status === "programada" ? ordersCopy.receiveAndOpen : ordersCopy.fromAppointment}
+          onOpenOrder={onOpenOrder}
+        />
       ) : null}
       {draft ? (
         <Card title={agendaCopy.draftTitle} subtitle={agendaCopy.draftSubtitle}>
@@ -186,12 +190,14 @@ export function AppointmentDetailScreen({
   );
 }
 
-/** Abrir la OS desde la cita recibida (mismo flujo que la web). */
+/** Abrir la OS desde la cita; si sigue programada, la recibe en el mismo paso (igual que la web). */
 function OpenOrderCard({
   appointmentId,
+  label,
   onOpenOrder,
 }: {
   appointmentId: string;
+  label: string;
   onOpenOrder: (id: string) => void;
 }) {
   const { client } = useAuth();
@@ -219,7 +225,7 @@ function OpenOrderCard({
   };
 
   return (
-    <Card title={ordersCopy.fromAppointment} subtitle={agendaCopy.draftSubtitle}>
+    <Card title={label} subtitle={agendaCopy.draftSubtitle}>
       <ChannelFields values={values} errors={errors} set={set} />
       <Field
         label={ordersCopy.odometerLabel}
@@ -229,7 +235,7 @@ function OpenOrderCard({
         error={errors.odometerKm}
       />
       <Notice tone="danger" text={error} />
-      <Button label={ordersCopy.fromAppointment} loading={busy} onPress={() => void submit()} />
+      <Button label={label} loading={busy} onPress={() => void submit()} />
     </Card>
   );
 }

@@ -41,10 +41,16 @@ export const setCenterMembershipSchema = z.object({
   reason: changeReasonSchema,
 });
 
+/** Roles corporativos: el técnico / lavador es sólo de centro (role_assignments_not_tecnico). */
+export const corporateRoleSchema = appRoleSchema.refine(
+  (r) => r !== "tecnico",
+  "El técnico es un rol de centro",
+);
+
 export const setRoleAssignmentSchema = z.object({
   organizationId: z.uuid(),
   userId: z.uuid(),
-  role: appRoleSchema,
+  role: corporateRoleSchema,
   active: z.boolean(),
   reason: changeReasonSchema,
 });

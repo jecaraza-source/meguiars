@@ -4,6 +4,7 @@ import {
   corporatePathParams,
   dashboardsCopy,
   guardScreen,
+  landingScreen,
   navScreenOf,
   sectionOfScreen,
   visibleNavigation,
@@ -38,6 +39,7 @@ import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
+import { MyWorkScreen } from "@/screens/MyWorkScreen";
 import { ComercialScreen } from "@/screens/ComercialScreen";
 import {
   CommercialReportsScreen,
@@ -954,6 +956,9 @@ export function Router() {
           <CashScreen {...props} onOpenReceipt={(id) => openReceipt(id, "payments")} />
         );
         break;
+      case "myWork":
+        content = <MyWorkScreen {...props} />;
+        break;
       case "orderExecution":
         content = orderId ? (
           <OrderExecutionScreen
@@ -1059,7 +1064,8 @@ export function Router() {
         content = <DesignSystemScreen {...props} />;
         break;
       default:
-        content = <HomeScreen {...props} />;
+        // El técnico / lavador no tiene «Mi centro»: su inicio es «Mi día».
+        content = landingScreen(state) === "myWork" ? <MyWorkScreen {...props} /> : <HomeScreen {...props} />;
     }
   }
 

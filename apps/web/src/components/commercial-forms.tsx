@@ -37,6 +37,7 @@ import {
   createLeadTaskAction,
   createQuoteAction,
   linkLeadClientAction,
+  convertLeadAction,
   logLeadContactAction,
   loseLeadAction,
   mergeClientsAction,
@@ -456,6 +457,20 @@ export function ReopenLeadForm({ lead, stages }: { lead: Lead; stages: LeadStage
         error={state.fields?.reason}
       />
       <Submit label="Reabrir" variant="secondary" />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** «Convertir en cliente» con un botón (requiere teléfono del prospecto). */
+export function ConvertLeadForm({ lead }: { lead: Lead }) {
+  const [state, action] = useActionState(convertLeadAction, {});
+  useToastOnMessage(state);
+  return (
+    <form action={action} className="flex flex-col gap-xs" data-testid="convert-lead-form">
+      <input type="hidden" name="id" value={lead.id} />
+      <input type="hidden" name="version" value={lead.version} />
+      <Submit label="Convertir en cliente" />
       <FormError state={state} />
     </form>
   );

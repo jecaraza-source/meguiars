@@ -11,6 +11,7 @@ export const APP_ROLES = [
   "operador_recepcion",
   "contador",
   "comercial_b2b",
+  "tecnico",
 ] as const;
 
 export type AppRole = (typeof APP_ROLES)[number];
@@ -21,6 +22,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   operador_recepcion: "Operador de recepción",
   contador: "Contador",
   comercial_b2b: "Comercial B2B",
+  tecnico: "Técnico / lavador",
 };
 
 export const CAPABILITIES = [
@@ -118,6 +120,14 @@ export const CAPABILITIES = [
   // (private.can_manage_automations). El panel comercial usa commercial.metrics.read.
   "automations.read",
   "automations.manage",
+  // «Mi día» del técnico / lavador (20261029000100): sus asignaciones, empezar, trabajo
+  // realizado, comentarios, fotos y problemas (public.my_work_*, exige estar ligado a un
+  // técnico del centro). Ligar técnico y usuario usa agenda.manage.
+  "work.mine",
+  // Margen y costo de la OS (sólo el admin; los demás ven precio, saldo y tiempo).
+  "orders.margin",
+  // Panel comercial (/comercial/panel): exclusivo del admin.
+  "commercial.panel",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -175,6 +185,8 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "orders.read",
     "orders.write",
     "orders.manage",
+    "orders.margin",
+    "commercial.panel",
     "memberships.read",
     "memberships.write",
     "memberships.manage",
@@ -332,6 +344,9 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "marketing.manage",
     "automations.read",
   ],
+  // Sólo su trabajo: no ve catálogo, precios, clientes ni indicadores. Es un rol de
+  // centro, nunca corporativo (role_assignments_not_tecnico).
+  tecnico: ["center.read", "work.mine"],
 };
 
 export function can(roles: readonly AppRole[], capability: Capability): boolean {

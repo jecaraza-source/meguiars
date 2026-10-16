@@ -213,10 +213,11 @@ describe("presentadores", () => {
   });
 
   it("KPIs de la OS y permisos de edición por estatus", () => {
-    const view = presentOrder(
-      order({ status: "autorizada", total: 2850, costTotal: 1040, paidAmount: 1000 }),
-    );
+    const o = order({ status: "autorizada", total: 2850, costTotal: 1040, paidAmount: 1000 });
+    const view = presentOrder(o, new Date(), { showMargin: true });
     expect(view.kpis.map((k) => k.value)).toEqual(["$2,850.00", "$1,850.00", "$1,810.00", "0 min"]);
+    // Sin orders.margin (todos menos el admin) no se muestra el margen.
+    expect(presentOrder(o).kpis.map((k) => k.value)).toEqual(["$2,850.00", "$1,850.00", "0 min"]);
     expect(view).toMatchObject({
       canEditItems: true,
       itemsNeedReason: true,

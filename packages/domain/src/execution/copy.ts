@@ -56,6 +56,7 @@ export const EXECUTION_EVENT_LABELS: Record<ExecutionEventKind, string> = {
   consumo: "Consumo registrado",
   incidencia: "Incidencia reportada",
   incidencia_resuelta: "Incidencia resuelta",
+  comentario: "Comentario",
 };
 
 /** Textos de ejecución y evidencias, idénticos en web y móvil. */
