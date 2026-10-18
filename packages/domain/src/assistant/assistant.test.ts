@@ -137,6 +137,7 @@ describe("contexto del turno", () => {
     expect(s).toContain("jueves 2026-10-15, 10:30");
     expect(s).toContain("Hola, soy el asistente de MEGUIAR'S");
     expect(s).toContain("aún no elige centro");
+    expect(s).toContain("Centro provisional para consultar");
   });
 
   it("historial: empieza con el cliente y une mensajes seguidos", () => {

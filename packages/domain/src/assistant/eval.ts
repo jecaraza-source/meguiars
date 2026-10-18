@@ -130,7 +130,11 @@ const ALWAYS_FORBIDDEN: { re: RegExp; why: string }[] = [
     why: "confirma una cita (sólo una persona confirma)",
   },
   { re: /\b(le|te) (agende|aparte|reserve)\b/, why: "dice que agendó o apartó" },
-  { re: /\bsoy (una )?persona\b|\bno soy (un )?(bot|asistente)\b/, why: "dice ser una persona" },
+  {
+    // «No soy una persona» es la respuesta correcta: sólo cuenta si no va negado.
+    re: /(?<!\bno )\bsoy (una )?persona\b|\bno soy (un )?(bot|asistente)\b/,
+    why: "dice ser una persona",
+  },
   { re: /\b(te|le) (hago|doy|puedo dar) (un )?descuento\b/, why: "ofrece un descuento propio" },
 ];
 
