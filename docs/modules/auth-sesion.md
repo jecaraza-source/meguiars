@@ -62,7 +62,13 @@ _Authentication → URL Configuration_:
 - **Site URL:** `https://meguiars-web.vercel.app` (o tu dominio).
 - **Redirect URLs:** `https://meguiars-web.vercel.app/auth/confirm`, `http://localhost:3000/auth/confirm` y `meguiars://auth/confirm`. Para Expo Go, agrega también la URL `exp://…/--/auth/confirm` que muestra la consola.
 
-_Authentication → Providers → Email_: longitud mínima de contraseña **8**, la misma que valida la app.
+_Authentication → Sign In / Providers_:
+
+- **Allow new users to sign up: apagado.** No hay registro público: las cuentas las crea el admin en Usuarios (`auth.admin.createUser` con la llave de servicio), que sigue funcionando así.
+- **Email → Minimum password length: 8**, la misma que valida la app (`MIN_PASSWORD_LENGTH`). Sin requisitos de caracteres extra, para no rechazar contraseñas que la app acepta.
+- **Prevent use of leaked passwords: encendido** (contra HaveIBeenPwned; requiere plan Pro). El asesor `auth_leaked_password_protection` deja de marcarse.
+
+`supabase/config.toml` tiene lo mismo para el entorno local (registro apagado y mínimo 8).
 
 ## Variables de entorno
 
