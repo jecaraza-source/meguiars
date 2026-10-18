@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { channelAccountSchema, conversationLeadSchema, sendMessageSchema } from "./inbox";
+import {
+  channelAccountSchema,
+  conversationHistorySchema,
+  conversationLeadSchema,
+  sendMessageSchema,
+} from "./inbox";
 
 const U = "11111111-1111-4111-8111-111111111111";
 
@@ -39,5 +44,27 @@ describe("bandeja", () => {
         interestServiceIds: U,
       }),
     ).toMatchObject({ fullName: "Ana Ruiz", socialHandle: undefined, interestServiceIds: [U], version: 2 });
+  });
+});
+
+describe("historial de conversaciones", () => {
+  it("acepta filtros vacíos y teléfonos en cualquier formato", () => {
+    expect(conversationHistorySchema.parse({ client: " ", phone: "", from: "", to: "" })).toEqual({
+      client: undefined,
+      phone: undefined,
+      channel: undefined,
+      status: undefined,
+      from: undefined,
+      to: undefined,
+    });
+    expect(conversationHistorySchema.parse({ phone: "+52 (55) 1111-2222" }).phone).toBe("+52 (55) 1111-2222");
+  });
+
+  it("rechaza teléfonos cortos o con letras, fechas inválidas y rangos al revés", () => {
+    expect(conversationHistorySchema.safeParse({ phone: "123" }).success).toBe(false);
+    expect(conversationHistorySchema.safeParse({ phone: "55abc1234" }).success).toBe(false);
+    expect(conversationHistorySchema.safeParse({ from: "18/10/2026" }).success).toBe(false);
+    expect(conversationHistorySchema.safeParse({ from: "2026-10-18", to: "2026-10-01" }).success).toBe(false);
+    expect(conversationHistorySchema.safeParse({ channel: "sms" }).success).toBe(false);
   });
 });

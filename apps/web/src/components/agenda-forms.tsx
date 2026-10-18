@@ -1,13 +1,14 @@
 "use client";
 
 import {
+  activeTone,
   agendaCopy,
-  formatDuration,
-  formatMoney,
-  statusActions,
   type AppointmentStatus,
   type Bay,
   type CatalogItem,
+  formatDuration,
+  formatMoney,
+  statusActions,
   type Technician,
   type Vehicle,
 } from "@meguiars/domain";
@@ -340,9 +341,11 @@ function ResourceList({
       <ul className="flex flex-col gap-xs text-sm">
         {items.map((i) => (
           <li key={i.id} className="flex items-center justify-between gap-sm">
-            <span className={i.active ? "" : "text-muted"}>
+            <span className="flex items-center gap-xs">
               {i.name}
-              {i.active ? "" : ` · ${agendaCopy.inactive}`}
+              <span className="mg-badge" data-tone={activeTone(i.active)}>
+                {field === "bayName" ? (i.active ? "Activa" : "Inactiva") : i.active ? "Activo" : "Inactivo"}
+              </span>
             </span>
             <form action={formAction}>
               <input type="hidden" name="id" value={i.id} />

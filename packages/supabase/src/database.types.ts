@@ -7117,6 +7117,37 @@ export type Database = {
           turns: number;
         }[];
       };
+      conversation_history: {
+        Args: {
+          p_channel?: string | null;
+          p_client?: string | null;
+          p_detail_center_ids: string[];
+          p_from?: string | null;
+          p_limit?: number | null;
+          p_phone?: string | null;
+          p_status?: string | null;
+          p_to?: string | null;
+        };
+        Returns: {
+          channel: string;
+          client_id: string | null;
+          client_name: string | null;
+          contact_name: string | null;
+          contact_phone: string | null;
+          detail_center_id: string;
+          detail_center_name: string;
+          id: string;
+          last_message_at: string;
+          last_message_preview: string | null;
+          lead_id: string | null;
+          lead_name: string | null;
+          messages_in: number;
+          messages_out: number;
+          priority: string;
+          started_at: string;
+          status: string;
+        }[];
+      };
       conversation_messages: {
         Args: {
           p_conversation_id: string;

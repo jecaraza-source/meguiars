@@ -6,6 +6,7 @@ import type {
   MessageStatus,
   TemplateCategory,
 } from "./inbox";
+import type { StatusTone } from "../agenda/copy";
 
 export const INBOX_CHANNEL_LABELS: Record<InboxChannel, string> = {
   whatsapp: "WhatsApp",
@@ -23,6 +24,22 @@ export const CONVERSATION_STATUS_LABELS: Record<ConversationStatus, string> = {
   abierta: "Abierta",
   cerrada: "Atendida",
 };
+
+/** Colores de estado: abierta en verde, atendida (cerrada) en rojo. */
+export const CONVERSATION_STATUS_TONES: Record<ConversationStatus, StatusTone> = {
+  abierta: "success",
+  cerrada: "danger",
+};
+
+/** Prioridad tipo semáforo: alta en rojo, normal en ámbar, baja en verde. */
+export const CONVERSATION_PRIORITY_TONES: Record<ConversationPriority, StatusTone> = {
+  alta: "danger",
+  normal: "warning",
+  baja: "success",
+};
+
+/** Ventana de 24 h de WhatsApp: abierta en verde, cerrada en rojo. */
+export const windowTone = (open: boolean): StatusTone => (open ? "success" : "danger");
 
 export const MESSAGE_STATUS_LABELS: Record<MessageStatus, string> = {
   recibido: "Recibido",

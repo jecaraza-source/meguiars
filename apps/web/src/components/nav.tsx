@@ -46,7 +46,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
   const currentHref = currentItemHref(sections, pathname);
   const activeSection = sectionOfPath(pathname);
   const title =
-    "group/title flex min-h-(--mg-touch-target) w-full items-center gap-sm rounded-md px-sm text-sm font-bold text-foreground transition-colors hover:bg-surface";
+    "group/title flex min-h-(--mg-touch-target) w-full items-center gap-sm rounded-md px-sm text-md font-bold text-foreground transition-colors hover:bg-surface";
   const badge = (on: boolean) =>
     `flex size-xxl items-center justify-center rounded-md transition-colors ${
       on ? "bg-accent text-brand-foreground" : "bg-surface text-accent group-hover/title:bg-surface-raised"

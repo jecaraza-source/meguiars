@@ -1,21 +1,22 @@
 import {
-  ASSISTANT_COPY,
-  ASSISTANT_MODEL_INFO,
   activeCenterAccess,
   addDays,
+  ASSISTANT_COPY,
+  ASSISTANT_MODE_TONES,
+  ASSISTANT_MODEL_INFO,
+  type AssistantCenterMetrics,
+  type AssistantSettings,
+  type CenterPublicInfo,
   estimateAssistantCost,
   formatCenterHours,
   todayIn,
   usableCenters,
-  type AssistantCenterMetrics,
-  type AssistantSettings,
-  type CenterPublicInfo,
 } from "@meguiars/domain";
 import { createAssistantRepository } from "@meguiars/supabase";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
-import { Card, EmptyState, KpiCard, Skeleton } from "@/ui/display";
+import { Badge, Card, EmptyState, KpiCard, Skeleton } from "@/ui/display";
 import { Screen } from "@/ui/layout";
 import { textStyle } from "@/ui/theme";
 import type { PrivateScreenProps } from "./types";
@@ -70,7 +71,8 @@ export function AssistantScreen({ state, header, subnav }: PrivateScreenProps) {
       {data !== null && !s ? <EmptyState title="Sin acceso a la configuración del asistente" /> : null}
       {s ? (
         <>
-          <Card title="Estado" subtitle={ASSISTANT_COPY.modes[s.mode]}>
+          <Card title="Estado">
+            <Badge label={ASSISTANT_COPY.modes[s.mode]} tone={ASSISTANT_MODE_TONES[s.mode]} />
             <Text style={textStyle("bodySmall")}>Modelo: {ASSISTANT_MODEL_INFO[s.model].label}</Text>
             <Text style={textStyle("bodySmall", "muted")}>{ASSISTANT_COPY.phaseNote}</Text>
             <Text style={textStyle("caption", "muted")}>La configuración se cambia en la web.</Text>

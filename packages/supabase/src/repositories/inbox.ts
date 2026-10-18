@@ -3,6 +3,7 @@ import {
   type ChannelAccount,
   type ChannelAccountStatus,
   type Conversation,
+  type ConversationHistoryEntry,
   type ConversationNote,
   type ConversationPriority,
   type ConversationStatus,
@@ -21,6 +22,7 @@ import {
 import {
   assignConversationSchema,
   channelAccountSchema,
+  conversationHistorySchema,
   conversationLeadSchema,
   conversationNoteSchema,
   conversationStatusSchema,
@@ -37,6 +39,30 @@ import { invalid, run } from "./shared";
 
 type Fns = Database["public"]["Functions"];
 type ConversationRow = Fns["list_conversations"]["Returns"][number];
+type HistoryRow = Fns["conversation_history"]["Returns"][number];
+
+/** Máximo de conversaciones por búsqueda del historial (las más recientes). */
+export const HISTORY_LIMIT = 200;
+
+export const toHistoryEntry = (r: HistoryRow): ConversationHistoryEntry => ({
+  id: r.id,
+  detailCenterId: r.detail_center_id,
+  centerName: r.detail_center_name,
+  channel: r.channel as InboxChannel,
+  contactName: r.contact_name,
+  contactPhone: r.contact_phone,
+  clientId: r.client_id,
+  clientName: r.client_name,
+  leadId: r.lead_id,
+  leadName: r.lead_name,
+  status: r.status as ConversationStatus,
+  priority: r.priority as ConversationPriority,
+  startedAt: r.started_at,
+  lastMessageAt: r.last_message_at,
+  lastMessagePreview: r.last_message_preview,
+  messagesIn: r.messages_in,
+  messagesOut: r.messages_out,
+});
 
 export const toConversation = (r: ConversationRow): Conversation => ({
   id: r.id,
@@ -138,6 +164,26 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
             p_tag: filter.tag ?? null,
           }),
         (rows) => rows.map(toConversation),
+      );
+    },
+
+    history(detailCenterIds, filter = {}) {
+      const parsed = conversationHistorySchema.safeParse(filter);
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      const f = parsed.data;
+      return run(
+        () =>
+          client.rpc("conversation_history", {
+            p_detail_center_ids: detailCenterIds,
+            p_client: f.client ?? null,
+            p_phone: f.phone ?? null,
+            p_channel: f.channel ?? null,
+            p_status: f.status ?? null,
+            p_from: f.from ?? null,
+            p_to: f.to ?? null,
+            p_limit: HISTORY_LIMIT,
+          }),
+        (rows) => rows.map(toHistoryEntry),
       );
     },
 

@@ -1,13 +1,16 @@
 import {
   activeCenterAccess,
+  activeTone,
   canInCenter,
   CONVERSATION_PRIORITY_LABELS,
+  CONVERSATION_PRIORITY_TONES,
   CONVERSATION_STATUS_LABELS,
+  type ConversationStatus,
   INBOX_CHANNEL_LABELS,
   INBOX_CHANNELS,
   INBOX_COPY,
-  type ConversationStatus,
   type InboxChannel,
+  windowTone,
 } from "@meguiars/domain";
 import { createInboxRepository } from "@meguiars/supabase";
 import Link from "next/link";
@@ -111,7 +114,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
                   {c.priority !== "normal" ? (
                     <Badge
                       label={`Prioridad ${CONVERSATION_PRIORITY_LABELS[c.priority].toLowerCase()}`}
-                      tone={c.priority === "alta" ? "warning" : "neutral"}
+                      tone={CONVERSATION_PRIORITY_TONES[c.priority]}
                     />
                   ) : null}
                   {c.pending ? <Badge label="Pendiente" tone="info" /> : null}
@@ -125,7 +128,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
                   {c.leadName ? <Badge label={`Prospecto: ${c.leadName}`} tone="info" /> : null}
                   <Badge
                     label={c.windowOpen ? "Ventana abierta" : "Ventana cerrada"}
-                    tone={c.windowOpen ? "success" : "warning"}
+                    tone={windowTone(c.windowOpen)}
                   />
                   <span className="text-sm text-muted">{c.assignedName ?? "Sin asignar"}</span>
                 </div>
@@ -143,7 +146,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/comercial/
           {(replies.ok ? replies.data : []).map((q) => (
             <li key={q.id} className="flex flex-col gap-xs border-b border-border pb-sm text-sm">
               <span className="font-medium">
-                {q.title} {!q.active ? <Badge label="Inactiva" tone="neutral" /> : null}
+                {q.title} {!q.active ? <Badge label="Inactiva" tone={activeTone(false)} /> : null}
               </span>
               <span className="text-muted">{q.body}</span>
               {q.canManage ? (

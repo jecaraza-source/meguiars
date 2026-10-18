@@ -13,6 +13,7 @@ import {
 } from "@meguiars/analytics";
 import {
   activeCenterAccess,
+  activeTone,
   addDays,
   can,
   formatMoney,
@@ -187,7 +188,7 @@ export default async function PipelineMetricsPage({
               >
                 <span className="flex flex-wrap items-center gap-xs text-sm">
                   <strong>{s.name}</strong> · posición {s.position} · {s.probability} %
-                  {!s.active ? <Badge label="Inactiva" tone="neutral" /> : null}
+                  {!s.active ? <Badge label="Inactiva" tone={activeTone(false)} /> : null}
                   {s.kind !== "abierta" ? (
                     <Badge label={s.kind === "ganada" ? "Cierre ganado" : "Cierre perdido"} tone="info" />
                   ) : null}

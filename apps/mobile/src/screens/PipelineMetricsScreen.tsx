@@ -13,16 +13,17 @@ import {
 } from "@meguiars/analytics";
 import {
   activeCenterAccess,
+  activeTone,
   addDays,
   can,
   formatMoney,
   OPPORTUNITY_KIND_LABELS,
   pipelineCopy,
   pipelineErrorMessage,
-  todayIn,
-  usableCenters,
   type PipelineMetricFact,
   type PipelineStage,
+  todayIn,
+  usableCenters,
   type ViewState,
 } from "@meguiars/domain";
 import { createPipelineRepository } from "@meguiars/supabase";
@@ -187,7 +188,7 @@ export function PipelineMetricsScreen({ state, header, subnav }: PrivateScreenPr
               <Text style={textStyle("label")}>
                 {s.name} · posición {s.position} · {s.probability} %
               </Text>
-              {!s.active ? <Badge label="Inactiva" tone="neutral" /> : null}
+              {!s.active ? <Badge label="Inactiva" tone={activeTone(false)} /> : null}
               {canManage ? <LinkButton label={pipelineCopy.saveStage} onPress={() => setEditing(s)} /> : null}
             </View>
           ))}

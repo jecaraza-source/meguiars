@@ -1,5 +1,6 @@
 import {
   activeCenterAccess,
+  activeTone,
   canInCenter,
   CHANNEL_ACCOUNT_STATUS_LABELS,
   COMMERCIAL_COPY,
@@ -132,7 +133,7 @@ export default async function IntegrationsPage() {
                         a.status === "verificada" ? "success" : a.status === "error" ? "danger" : "warning"
                       }
                     />
-                    {!a.active ? <Badge label="Desactivada" tone="neutral" /> : null}
+                    {!a.active ? <Badge label="Desactivada" tone={activeTone(false)} /> : null}
                   </div>
                   <p className="text-sm text-muted">
                     {a.centerName} · id {a.externalAccountId}

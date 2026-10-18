@@ -1,5 +1,6 @@
 import {
   activeCenterAccess,
+  activeTone,
   canManageServices,
   catalogCopy,
   executionCopy,
@@ -51,7 +52,9 @@ export default async function SuppliesPage() {
                 <li key={i.id} className="mg-card flex flex-col gap-sm">
                   <div className="flex flex-wrap items-center gap-sm text-sm font-semibold">
                     {i.name} · {i.code}
-                    {!i.active ? <Badge label={executionCopy.supplyInactive} /> : null}
+                    {!i.active ? (
+                      <Badge label={executionCopy.supplyInactive} tone={activeTone(false)} />
+                    ) : null}
                   </div>
                   <InventoryItemForm item={i} />
                 </li>

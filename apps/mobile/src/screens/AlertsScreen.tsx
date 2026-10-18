@@ -1,11 +1,12 @@
 import {
+  activeTone,
   ALERT_INBOX_STATUS_LABELS,
   ALERT_INBOX_STATUSES,
   ALERT_SEVERITIES,
   ALERT_SEVERITY_LABELS,
-  ALERTS_COPY,
-  alertInboxParams,
   type AlertInboxFilters,
+  alertInboxParams,
+  ALERTS_COPY,
 } from "@meguiars/domain";
 import { createAlertsRepository, createDashboardRepository } from "@meguiars/supabase";
 import { useCallback, useEffect, useState } from "react";
@@ -351,7 +352,7 @@ export function AlertRulesScreen({ state, header, onBack }: PrivateScreenProps &
         <Card key={r.id} title={r.name} subtitle={`${r.metric} ${r.condition}`}>
           <View style={styles.row}>
             <Badge label={r.severity} tone={r.severityTone} />
-            {r.active ? null : <Badge label="Inactiva" tone="neutral" />}
+            {r.active ? null : <Badge label="Inactiva" tone={activeTone(false)} />}
           </View>
           <Text style={textStyle("caption", "muted")}>
             {r.period} · {r.scope} · {r.cooldown}

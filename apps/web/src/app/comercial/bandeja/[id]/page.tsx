@@ -1,9 +1,13 @@
 import {
-  ASSISTANT_COPY,
   activeCenterAccess,
+  ASSISTANT_COPY,
+  ASSISTANT_MODE_TONES,
   canInCenter,
   CONVERSATION_PRIORITY_LABELS,
+  CONVERSATION_PRIORITY_TONES,
   CONVERSATION_STATUS_LABELS,
+  CONVERSATION_STATUS_TONES,
+  conversationAssistantBadge,
   formatInCenterTimeZone,
   INBOX_CHANNEL_LABELS,
   INBOX_COPY,
@@ -195,14 +199,14 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
               <dd>
                 <Badge
                   label={CONVERSATION_STATUS_LABELS[c.status]}
-                  tone={c.status === "abierta" ? "brand" : "neutral"}
+                  tone={CONVERSATION_STATUS_TONES[c.status]}
                 />
               </dd>
               <dt className="text-muted">Prioridad</dt>
               <dd>
                 <Badge
                   label={CONVERSATION_PRIORITY_LABELS[c.priority]}
-                  tone={c.priority === "alta" ? "warning" : "neutral"}
+                  tone={CONVERSATION_PRIORITY_TONES[c.priority]}
                 />
                 {c.pending ? <Badge label="Pendiente" tone="info" /> : null}
               </dd>
@@ -235,11 +239,8 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
             <Card title={ASSISTANT_COPY.title}>
               <div className="flex flex-col gap-sm text-sm" data-testid="conversation-assistant">
                 <p>
-                  <Badge
-                    label={ASSISTANT_COPY.botStatuses[bot.botStatus]}
-                    tone={bot.botStatus === "activo" && bot.mode !== "apagado" ? "brand" : "neutral"}
-                  />{" "}
-                  <span className="text-muted">{ASSISTANT_COPY.modes[bot.mode]}</span>
+                  <Badge {...conversationAssistantBadge(bot.botStatus, bot.mode)} />{" "}
+                  <Badge label={ASSISTANT_COPY.modes[bot.mode]} tone={ASSISTANT_MODE_TONES[bot.mode]} />
                 </p>
                 {bot.pausedReason ? <p className="text-muted">Motivo: {bot.pausedReason}</p> : null}
                 {bot.marketingOptOutAt ? (

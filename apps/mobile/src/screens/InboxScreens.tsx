@@ -1,34 +1,41 @@
 import {
-  ASSISTANT_COPY,
   activeCenterAccess,
+  ASSISTANT_COPY,
+  ASSISTANT_MODE_TONES,
   canInCenter,
   commercialErrorMessage,
+  type Conversation,
+  type ConversationHistoryEntry,
   CONVERSATION_PRIORITIES,
   CONVERSATION_PRIORITY_LABELS,
+  CONVERSATION_PRIORITY_TONES,
   CONVERSATION_STATUS_LABELS,
+  CONVERSATION_STATUS_TONES,
+  conversationAssistantBadge,
+  type ConversationAssistantState,
+  type ConversationNote,
+  type ConversationPriority,
+  type ConversationStatus,
   fillQuickReply,
   formatInCenterTimeZone,
   INBOX_CHANNEL_LABELS,
   INBOX_CHANNELS,
   INBOX_COPY,
-  MESSAGE_STATUS_LABELS,
-  newRequestId,
-  renderTemplate,
-  replyBlocker,
-  templateBlocker,
-  usableCenters,
-  windowRemaining,
-  type Conversation,
-  type ConversationAssistantState,
-  type ConversationNote,
-  type ConversationPriority,
-  type ConversationStatus,
   type InboxChannel,
   type InboxMessage,
   type LeadOwner,
+  MESSAGE_STATUS_LABELS,
+  newRequestId,
   type QuickReply,
+  renderTemplate,
+  replyBlocker,
+  templateBlocker,
+  historyDisplayName,
+  usableCenters,
   type ViewState,
   type WhatsappTemplate,
+  windowRemaining,
+  windowTone,
 } from "@meguiars/domain";
 import {
   createAssistantRepository,
@@ -36,6 +43,7 @@ import {
   createInboxRepository,
 } from "@meguiars/supabase";
 import { space } from "@meguiars/ui-tokens";
+import { conversationHistorySchema } from "@meguiars/validation";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
@@ -454,12 +462,13 @@ export function ConversationScreen({
         </View>
       </Card>
       {bot ? (
-        <Card title={ASSISTANT_COPY.title} subtitle={ASSISTANT_COPY.botStatuses[bot.botStatus]}>
+        <Card title={ASSISTANT_COPY.title}>
           <View style={styles.stack}>
-            <Text style={textStyle("bodySmall", "muted")}>
-              {ASSISTANT_COPY.modes[bot.mode]}
-              {bot.pausedReason ? ` · ${bot.pausedReason}` : ""}
-            </Text>
+            <Badge {...conversationAssistantBadge(bot.botStatus, bot.mode)} />
+            <Badge label={ASSISTANT_COPY.modes[bot.mode]} tone={ASSISTANT_MODE_TONES[bot.mode]} />
+            {bot.pausedReason ? (
+              <Text style={textStyle("bodySmall", "muted")}>Motivo: {bot.pausedReason}</Text>
+            ) : null}
             {bot.marketingOptOutAt ? (
               <Text style={textStyle("bodySmall", "muted")}>
                 El contacto pidió no recibir promociones por WhatsApp.
@@ -490,17 +499,21 @@ export function ConversationScreen({
           </View>
         </Card>
       ) : null}
-      <Card title="Contacto" subtitle={CONVERSATION_STATUS_LABELS[c.status]}>
+      <Card title="Contacto">
         <View style={styles.stack}>
+          <Badge label={CONVERSATION_STATUS_LABELS[c.status]} tone={CONVERSATION_STATUS_TONES[c.status]} />
+          <Badge
+            label={`Prioridad ${CONVERSATION_PRIORITY_LABELS[c.priority].toLowerCase()}`}
+            tone={CONVERSATION_PRIORITY_TONES[c.priority]}
+          />
           <Text style={textStyle("bodySmall")}>Teléfono: {c.contactPhone ?? "No compartido por Meta"}</Text>
           {c.leadId ? (
             <LinkButton label={`Prospecto: ${c.leadName}`} onPress={() => onLead(c.leadId!)} />
           ) : null}
-          {c.windowOpen ? (
-            <Badge label="Ventana abierta" tone="success" />
-          ) : (
-            <Badge label="Ventana cerrada" tone="warning" />
-          )}
+          <Badge
+            label={c.windowOpen ? "Ventana abierta" : "Ventana cerrada"}
+            tone={windowTone(c.windowOpen)}
+          />
           {canWrite ? (
             <>
               <Select
@@ -595,6 +608,149 @@ export function ConversationScreen({
         </Card>
       ) : null}
       <Notice text={error} tone="danger" />
+    </Screen>
+  );
+}
+
+/**
+ * Historial de conversaciones (equivale a /comercial/historial en web): todas
+ * las guardadas, abiertas y atendidas, por cliente, teléfono, canal, estado y fechas.
+ */
+export function ConversationHistoryScreen({
+  state,
+  header,
+  subnav,
+  onOpen,
+}: PrivateScreenProps & { onOpen: (id: string) => void }) {
+  const { client } = useAuth();
+  const center = activeCenterAccess(state)!.center;
+  const [form, setForm] = useState({ client: "", phone: "", channel: "", status: "", from: "", to: "" });
+  const [query, setQuery] = useState(form);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [data, setData] = useState<ViewState<ConversationHistoryEntry[]>>({ status: "loading" });
+  const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    if (!client) return;
+    const parsed = conversationHistorySchema.safeParse({
+      ...query,
+      channel: query.channel || undefined,
+      status: query.status || undefined,
+    });
+    if (!parsed.success) return;
+    let active = true;
+    void createInboxRepository(client)
+      .history([center.id], parsed.data)
+      .then((r) => {
+        if (!active) return;
+        setData(
+          r.ok
+            ? { status: "ready", data: r.data }
+            : { status: "error", message: commercialErrorMessage(r.error) },
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, [client, center.id, query]);
+
+  const search = () => {
+    const parsed = conversationHistorySchema.safeParse({
+      ...form,
+      channel: form.channel || undefined,
+      status: form.status || undefined,
+    });
+    if (!parsed.success) {
+      setErrors(Object.fromEntries(parsed.error.issues.map((i) => [String(i.path[0]), i.message])));
+      return;
+    }
+    setErrors({});
+    setData({ status: "loading" });
+    setQuery(form);
+  };
+
+  return (
+    <Screen title="Historial de conversaciones" description={center.name} header={header}>
+      {subnav}
+      <Card title="Buscar">
+        <View style={styles.stack}>
+          <Field
+            label="Cliente"
+            hint="Nombre o apellido, en cualquier orden"
+            value={form.client}
+            onChangeText={set("client")}
+            error={errors.client}
+          />
+          <Field
+            label="Teléfono"
+            hint="Con o sin lada; al menos 4 dígitos"
+            keyboardType="phone-pad"
+            value={form.phone}
+            onChangeText={set("phone")}
+            error={errors.phone}
+          />
+          <Select
+            label="Canal"
+            options={[
+              { value: "", label: "Todos" },
+              ...INBOX_CHANNELS.map((c) => ({ value: c, label: INBOX_CHANNEL_LABELS[c] })),
+            ]}
+            value={form.channel}
+            onChange={set("channel")}
+          />
+          <Select
+            label="Estado"
+            options={[
+              { value: "", label: "Todas" },
+              { value: "abierta", label: CONVERSATION_STATUS_LABELS.abierta },
+              { value: "cerrada", label: CONVERSATION_STATUS_LABELS.cerrada },
+            ]}
+            value={form.status}
+            onChange={set("status")}
+          />
+          <Field
+            label="Desde (AAAA-MM-DD)"
+            value={form.from}
+            onChangeText={set("from")}
+            error={errors.from}
+          />
+          <Field label="Hasta (AAAA-MM-DD)" value={form.to} onChangeText={set("to")} error={errors.to} />
+          <Button label="Buscar" onPress={search} />
+        </View>
+      </Card>
+      {data.status === "loading" ? <Skeleton lines={5} label="Buscando conversaciones" /> : null}
+      {data.status === "error" || data.status === "permission_denied" ? (
+        <EmptyState title={data.message} />
+      ) : null}
+      {data.status === "ready" ? (
+        <List
+          caption="Historial de conversaciones"
+          rows={data.data}
+          rowKey={(e) => e.id}
+          emptyMessage="Sin conversaciones con esos filtros"
+          onRowPress={(e) => onOpen(e.id)}
+          columns={[
+            { key: "name", header: "Cliente", value: (e) => historyDisplayName(e) },
+            { key: "phone", header: "Teléfono", value: (e) => e.contactPhone ?? "—" },
+            {
+              key: "status",
+              header: "Estado",
+              value: (e) =>
+                `${INBOX_CHANNEL_LABELS[e.channel]} · ${CONVERSATION_STATUS_LABELS[e.status]} · Prioridad ${CONVERSATION_PRIORITY_LABELS[e.priority].toLowerCase()}`,
+            },
+            {
+              key: "messages",
+              header: "Mensajes",
+              value: (e) => `${e.messagesIn} recibidos · ${e.messagesOut} enviados`,
+            },
+            {
+              key: "last",
+              header: "Último",
+              value: (e) => formatInCenterTimeZone(e.lastMessageAt, center.timezone),
+            },
+          ]}
+        />
+      ) : null}
     </Screen>
   );
 }

@@ -53,7 +53,7 @@ import {
   QuotesScreen,
   SegmentsScreen,
 } from "@/screens/CommercialScreens";
-import { ConversationScreen, InboxScreen } from "@/screens/InboxScreens";
+import { ConversationHistoryScreen, ConversationScreen, InboxScreen } from "@/screens/InboxScreens";
 import {
   CalendarScreen,
   CampaignScreen,
@@ -168,8 +168,16 @@ export function Router() {
   // /comercial/cotizaciones/[id] y /comercial/cotizaciones/nueva?prospecto=&cliente= en web).
   // Parámetro de la conversación (equivale a /comercial/bandeja/[id] en web).
   const [conversationId, setConversationId] = useState<string | null>(null);
+  // A dónde regresa la conversación: la bandeja o el historial.
+  const [conversationBack, setConversationBack] = useState<"inbox" | "conversationHistory">("inbox");
   const openConversation = (id: string) => {
     setConversationId(id);
+    setConversationBack("inbox");
+    setScreen("conversation");
+  };
+  const openHistoryConversation = (id: string) => {
+    setConversationId(id);
+    setConversationBack("conversationHistory");
     setScreen("conversation");
   };
   // Parámetro de la campaña (equivale a /comercial/campanas/[id] en web).
@@ -483,13 +491,16 @@ export function Router() {
       case "inbox":
         content = <InboxScreen {...props} onOpen={openConversation} />;
         break;
+      case "conversationHistory":
+        content = <ConversationHistoryScreen {...props} onOpen={openHistoryConversation} />;
+        break;
       case "conversation":
         content = conversationId ? (
           <ConversationScreen
             key={conversationId}
             {...props}
             conversationId={conversationId}
-            onBack={() => setScreen("inbox")}
+            onBack={() => setScreen(conversationBack)}
             onLead={openLead}
           />
         ) : (

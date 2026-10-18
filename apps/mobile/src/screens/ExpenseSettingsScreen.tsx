@@ -1,13 +1,14 @@
 import {
   activeCenterAccess,
+  activeTone,
   can,
   canInActiveCenter,
+  type ExpenseCategory,
   expenseErrorMessage,
   expensesCopy,
   formatMoney,
   PNL_GROUP_LABELS,
   PNL_GROUPS,
-  type ExpenseCategory,
   type Vendor,
   type ViewState,
 } from "@meguiars/domain";
@@ -119,7 +120,7 @@ export function ExpenseSettingsScreen({
                   {v.name}
                   {v.rfc ? ` · ${v.rfc}` : ""}
                 </Text>
-                {!v.active ? <Badge label="Inactivo" tone="neutral" /> : null}
+                {!v.active ? <Badge label="Inactivo" tone={activeTone(false)} /> : null}
                 {canWrite && editing !== v.id ? (
                   <LinkButton label="Editar" onPress={() => setEditing(v.id)} />
                 ) : null}
@@ -154,7 +155,7 @@ export function ExpenseSettingsScreen({
                 <Text style={textStyle("bodySmall")}>
                   {c.name} · {PNL_GROUP_LABELS[c.pnlGroup]}
                 </Text>
-                {!c.active ? <Badge label="Inactiva" tone="neutral" /> : null}
+                {!c.active ? <Badge label="Inactiva" tone={activeTone(false)} /> : null}
                 {canManage && editing !== c.id ? (
                   <LinkButton label="Editar" onPress={() => setEditing(c.id)} />
                 ) : null}

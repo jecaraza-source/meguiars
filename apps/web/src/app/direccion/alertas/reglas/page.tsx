@@ -1,4 +1,4 @@
-import { ALERTS_COPY } from "@meguiars/domain";
+import { activeTone, ALERTS_COPY } from "@meguiars/domain";
 import { createAlertsRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AlertRuleForm, EvaluateNowForm } from "@/components/alert-forms";
@@ -60,7 +60,7 @@ export default async function AlertRulesPage({ searchParams }: PageProps<"/direc
           <li key={r.id} className="mg-card flex flex-col gap-xxs" data-testid={`rule-${r.id}`}>
             <div className="flex flex-wrap items-center gap-xs">
               <Badge label={r.severity} tone={r.severityTone} />
-              {r.active ? null : <Badge label="Inactiva" tone="neutral" />}
+              {r.active ? null : <Badge label="Inactiva" tone={activeTone(false)} />}
               <span className="font-medium">{r.name}</span>
               <Link href={`/direccion/alertas/reglas?editar=${r.id}`} className="text-sm underline">
                 Editar

@@ -112,6 +112,12 @@ const BASE_SECTIONS: readonly NavSection[] = [
     items: [
       { screen: "comercial", label: "Resumen comercial", href: "/comercial", icon: "layoutDashboard" },
       { screen: "inbox", label: "Bandeja", href: "/comercial/bandeja", icon: "inbox" },
+      {
+        screen: "conversationHistory",
+        label: "Historial de conversaciones",
+        href: "/comercial/historial",
+        icon: "clipboardList",
+      },
       { screen: "assistant", label: "Asistente de WhatsApp", href: "/comercial/asistente", icon: "bot" },
       { screen: "leads", label: "Prospectos", href: "/comercial/prospectos", icon: "userPlus" },
       { screen: "quotes", label: "Cotizaciones", href: "/comercial/cotizaciones", icon: "fileText" },

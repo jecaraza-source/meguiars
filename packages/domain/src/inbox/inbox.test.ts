@@ -1,8 +1,13 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { INTEGRATIONS, integrationState } from "../commercial/integrations";
+import { activeTone } from "../agenda/copy";
+import { ASSISTANT_MODE_TONES, conversationAssistantBadge } from "../assistant/assistant";
+import { CONVERSATION_PRIORITY_TONES, CONVERSATION_STATUS_TONES, windowTone } from "./copy";
 import {
+  type ConversationHistoryEntry,
   fillQuickReply,
+  historyDisplayName,
   normalizeTags,
   renderTemplate,
   replyBlocker,
@@ -439,5 +444,68 @@ describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", (
       ok: false,
       error: "(#200) Permissions error",
     });
+  });
+});
+
+describe("colores de estado", () => {
+  it("activo en verde, inactivo en rojo; abierta en verde, atendida en rojo", () => {
+    expect([activeTone(true), activeTone(false)]).toEqual(["success", "danger"]);
+    expect(CONVERSATION_STATUS_TONES).toEqual({ abierta: "success", cerrada: "danger" });
+    expect([windowTone(true), windowTone(false)]).toEqual(["success", "danger"]);
+  });
+
+  it("prioridad tipo semáforo y modo del asistente", () => {
+    expect(CONVERSATION_PRIORITY_TONES).toEqual({ alta: "danger", normal: "warning", baja: "success" });
+    expect(ASSISTANT_MODE_TONES).toEqual({ activo: "success", prueba: "warning", apagado: "danger" });
+  });
+
+  it("el asistente apagado se ve apagado aunque la conversación lo tenga activo", () => {
+    expect(conversationAssistantBadge("activo", "apagado")).toEqual({
+      label: "Asistente apagado",
+      tone: "danger",
+    });
+    expect(conversationAssistantBadge("pausado", "activo")).toEqual({
+      label: "Asistente pausado",
+      tone: "danger",
+    });
+    expect(conversationAssistantBadge("activo", "prueba")).toEqual({
+      label: "Asistente en prueba",
+      tone: "warning",
+    });
+    expect(conversationAssistantBadge("activo", "activo")).toEqual({
+      label: "Asistente activo",
+      tone: "success",
+    });
+  });
+});
+
+describe("historial de conversaciones", () => {
+  const base: ConversationHistoryEntry = {
+    id: "c1",
+    detailCenterId: "d1",
+    centerName: "Centro",
+    channel: "whatsapp",
+    contactName: null,
+    contactPhone: null,
+    clientId: null,
+    clientName: null,
+    leadId: null,
+    leadName: null,
+    status: "abierta",
+    priority: "normal",
+    startedAt: "2026-10-01T00:00:00Z",
+    lastMessageAt: "2026-10-01T00:00:00Z",
+    lastMessagePreview: null,
+    messagesIn: 0,
+    messagesOut: 0,
+  };
+  it("muestra cliente, luego prospecto, luego contacto, luego teléfono", () => {
+    expect(
+      historyDisplayName({ ...base, clientName: "Cliente", leadName: "Prospecto", contactName: "WA" }),
+    ).toBe("Cliente");
+    expect(historyDisplayName({ ...base, leadName: "Prospecto", contactName: "WA" })).toBe("Prospecto");
+    expect(historyDisplayName({ ...base, contactName: "WA", contactPhone: "+52" })).toBe("WA");
+    expect(historyDisplayName({ ...base, contactPhone: "+5215511112222" })).toBe("+5215511112222");
+    expect(historyDisplayName(base)).toBe("Contacto sin nombre");
   });
 });

@@ -157,6 +157,46 @@ export interface ConversationFilter {
   tag?: string | undefined;
 }
 
+/**
+ * Historial de conversaciones (20261030000000_conversation_history.sql):
+ * abiertas y atendidas, por cliente (todas las palabras, sin acentos) y por
+ * teléfono (cualquier formato).
+ */
+export interface ConversationHistoryFilter {
+  client?: string | undefined;
+  phone?: string | undefined;
+  channel?: InboxChannel | undefined;
+  status?: ConversationStatus | undefined;
+  /** Día local del centro, AAAA-MM-DD. */
+  from?: string | undefined;
+  to?: string | undefined;
+}
+
+export interface ConversationHistoryEntry {
+  id: string;
+  detailCenterId: string;
+  centerName: string;
+  channel: InboxChannel;
+  contactName: string | null;
+  contactPhone: string | null;
+  clientId: string | null;
+  clientName: string | null;
+  leadId: string | null;
+  leadName: string | null;
+  status: ConversationStatus;
+  priority: ConversationPriority;
+  startedAt: string;
+  lastMessageAt: string;
+  lastMessagePreview: string | null;
+  messagesIn: number;
+  messagesOut: number;
+}
+
+/** Nombre que se muestra en el historial: cliente, prospecto, contacto o teléfono. */
+export function historyDisplayName(e: ConversationHistoryEntry): string {
+  return e.clientName ?? e.leadName ?? e.contactName ?? e.contactPhone ?? "Contacto sin nombre";
+}
+
 /** Lo que el servidor necesita para enviar un mensaje preparado. */
 export interface OutboundMessage {
   messageId: string;
@@ -182,6 +222,10 @@ export interface InboxRepository {
   }): Promise<Result<{ id: string }>>;
   conversations(detailCenterIds: string[], filter?: ConversationFilter): Promise<Result<Conversation[]>>;
   conversation(id: string, detailCenterIds: string[]): Promise<Result<Conversation>>;
+  history(
+    detailCenterIds: string[],
+    filter?: ConversationHistoryFilter,
+  ): Promise<Result<ConversationHistoryEntry[]>>;
   messages(conversationId: string): Promise<Result<InboxMessage[]>>;
   assign(id: string, version: number, userId: string | null): Promise<Result<void>>;
   setStatus(id: string, version: number, status: ConversationStatus): Promise<Result<void>>;

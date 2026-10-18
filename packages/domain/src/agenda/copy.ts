@@ -3,6 +3,9 @@ import type { AppointmentStatus } from "./agenda";
 /** Tonos del design system (mismo conjunto que TONES de @meguiars/ui-tokens). */
 export type StatusTone = "neutral" | "brand" | "success" | "warning" | "danger" | "info";
 
+/** Indicador encendido/apagado en toda la plataforma: verde si está activo, rojo si no. */
+export const activeTone = (active: boolean): StatusTone => (active ? "success" : "danger");
+
 export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   programada: "Programada",
   recibida: "Recibida",

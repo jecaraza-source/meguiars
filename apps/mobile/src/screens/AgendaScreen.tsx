@@ -1,21 +1,22 @@
 import {
   activeCenterAccess,
+  activeTone,
   addDays,
   agendaCopy,
   APPOINTMENT_STATUS_LABELS,
   APPOINTMENT_STATUSES,
+  type AppointmentListItem,
+  type AppointmentStatus,
+  type Bay,
   canInActiveCenter,
   daySummary,
   formatDateInCenterTimeZone,
   presentAppointment,
   statusActions,
-  todayIn,
-  zonedToUtc,
-  type AppointmentListItem,
-  type AppointmentStatus,
-  type Bay,
   type Technician,
+  todayIn,
   type ViewState,
+  zonedToUtc,
 } from "@meguiars/domain";
 import { createAgendaRepository, type MeguiarsSupabaseClient } from "@meguiars/supabase";
 import { space } from "@meguiars/ui-tokens";
@@ -244,10 +245,10 @@ function Resources({
       <Text style={textStyle("label")}>{agendaCopy.bays}</Text>
       {bays.map((b) => (
         <View key={b.id} style={styles.resource}>
-          <Text style={textStyle("body", b.active ? "foreground" : "muted")}>
-            {b.name}
-            {b.active ? "" : ` · ${agendaCopy.inactive}`}
-          </Text>
+          <View style={styles.resourceName}>
+            <Text style={textStyle("body")}>{b.name}</Text>
+            <Badge label={b.active ? "Activa" : "Inactiva"} tone={activeTone(b.active)} />
+          </View>
           <LinkButton
             label={b.active ? agendaCopy.deactivate : agendaCopy.activate}
             onPress={() => void save("bay", { id: b.id, name: b.name, active: !b.active })}
@@ -263,10 +264,10 @@ function Resources({
       <Text style={textStyle("label")}>{agendaCopy.technicians}</Text>
       {technicians.map((t) => (
         <View key={t.id} style={styles.resource}>
-          <Text style={textStyle("body", t.active ? "foreground" : "muted")}>
-            {t.fullName}
-            {t.active ? "" : ` · ${agendaCopy.inactive}`}
-          </Text>
+          <View style={styles.resourceName}>
+            <Text style={textStyle("body")}>{t.fullName}</Text>
+            <Badge label={t.active ? "Activo" : "Inactivo"} tone={activeTone(t.active)} />
+          </View>
           <LinkButton
             label={t.active ? agendaCopy.deactivate : agendaCopy.activate}
             onPress={() => void save("tech", { id: t.id, name: t.fullName, active: !t.active })}
@@ -289,4 +290,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   card: { gap: space.xs },
   resource: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  resourceName: { flexDirection: "row", alignItems: "center", gap: space.xs, flexShrink: 1 },
 });
