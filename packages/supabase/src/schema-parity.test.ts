@@ -282,6 +282,8 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "ingest_inbound_messages",
   "ingest_message_statuses",
   "list_conversations",
+  "conversation_history",
+  "inbox_unread",
   "conversation_messages",
   "assign_conversation",
   "set_conversation_status",

@@ -89,3 +89,13 @@ body {
   font-size: var(--mg-text-body-size);
   line-height: var(--mg-text-body-line-height);
 }
+
+/*
+ * Menú lateral (web ≥ 768 px): fijo bajo el encabezado y con el alto de la
+ * ventana, para que «Sistema de diseño» quede siempre al fondo del menú.
+ */
+.mg-shell-sidebar {
+  position: sticky;
+  top: var(--mg-layout-header);
+  height: calc(100dvh - var(--mg-layout-header));
+}

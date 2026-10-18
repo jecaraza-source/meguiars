@@ -1,3 +1,4 @@
+import type { StatusTone } from "../agenda/copy";
 import type { Result } from "../result";
 
 /**
@@ -329,6 +330,27 @@ export const ASSISTANT_COPY = {
     "Costo estimado con el precio público por millón de tokens del modelo; la factura real está en la consola de Anthropic.",
   label: "Asistente",
 } as const;
+
+/** Modo del asistente: activo en verde, prueba en ámbar, apagado en rojo. */
+export const ASSISTANT_MODE_TONES: Record<AssistantMode, StatusTone> = {
+  activo: "success",
+  prueba: "warning",
+  apagado: "danger",
+};
+
+/**
+ * Estado real del asistente en una conversación: aunque la conversación lo
+ * tenga activo, si el asistente está apagado en la configuración no responde.
+ */
+export function conversationAssistantBadge(
+  botStatus: BotStatus,
+  mode: AssistantMode,
+): { label: string; tone: StatusTone } {
+  if (mode === "apagado") return { label: "Asistente apagado", tone: "danger" };
+  if (botStatus === "pausado") return { label: ASSISTANT_COPY.botStatuses.pausado, tone: "danger" };
+  if (mode === "prueba") return { label: "Asistente en prueba", tone: "warning" };
+  return { label: ASSISTANT_COPY.botStatuses.activo, tone: "success" };
+}
 
 export const HANDOFF_LABELS: Record<HandoffCode, string> = {
   pide_persona: "El cliente pidió hablar con una persona",

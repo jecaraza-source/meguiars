@@ -157,6 +157,57 @@ export interface ConversationFilter {
   tag?: string | undefined;
 }
 
+/**
+ * Historial de conversaciones (20261030000000_conversation_history.sql):
+ * abiertas y atendidas, por cliente (todas las palabras, sin acentos) y por
+ * teléfono (cualquier formato).
+ */
+export interface ConversationHistoryFilter {
+  client?: string | undefined;
+  phone?: string | undefined;
+  channel?: InboxChannel | undefined;
+  status?: ConversationStatus | undefined;
+  /** Día local del centro, AAAA-MM-DD. */
+  from?: string | undefined;
+  to?: string | undefined;
+}
+
+export interface ConversationHistoryEntry {
+  id: string;
+  detailCenterId: string;
+  centerName: string;
+  channel: InboxChannel;
+  contactName: string | null;
+  contactPhone: string | null;
+  clientId: string | null;
+  clientName: string | null;
+  leadId: string | null;
+  leadName: string | null;
+  status: ConversationStatus;
+  priority: ConversationPriority;
+  startedAt: string;
+  lastMessageAt: string;
+  lastMessagePreview: string | null;
+  messagesIn: number;
+  messagesOut: number;
+}
+
+/** Pantalla del menú que muestra el aviso de mensajes sin leer. */
+export const UNREAD_NAV_SCREEN = "inbox";
+/** Cada cuánto se revisa el aviso de no leídos (web y móvil). */
+export const UNREAD_POLL_MS = 30_000;
+
+/** Texto del aviso para lectores de pantalla y para el título de la pestaña. */
+export function unreadLabel(n: number): string | null {
+  if (n <= 0) return null;
+  return n === 1 ? "1 mensaje sin leer" : `${n > 99 ? "99+" : n} mensajes sin leer`;
+}
+
+/** Nombre que se muestra en el historial: cliente, prospecto, contacto o teléfono. */
+export function historyDisplayName(e: ConversationHistoryEntry): string {
+  return e.clientName ?? e.leadName ?? e.contactName ?? e.contactPhone ?? "Contacto sin nombre";
+}
+
 /** Lo que el servidor necesita para enviar un mensaje preparado. */
 export interface OutboundMessage {
   messageId: string;
@@ -182,6 +233,12 @@ export interface InboxRepository {
   }): Promise<Result<{ id: string }>>;
   conversations(detailCenterIds: string[], filter?: ConversationFilter): Promise<Result<Conversation[]>>;
   conversation(id: string, detailCenterIds: string[]): Promise<Result<Conversation>>;
+  /** Mensajes sin leer del centro (aviso del menú); 0 si no usa la bandeja. */
+  unreadCount(detailCenterId: string): Promise<Result<number>>;
+  history(
+    detailCenterIds: string[],
+    filter?: ConversationHistoryFilter,
+  ): Promise<Result<ConversationHistoryEntry[]>>;
   messages(conversationId: string): Promise<Result<InboxMessage[]>>;
   assign(id: string, version: number, userId: string | null): Promise<Result<void>>;
   setStatus(id: string, version: number, status: ConversationStatus): Promise<Result<void>>;

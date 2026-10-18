@@ -1,16 +1,18 @@
 import {
-  ASSISTANT_COPY,
-  ASSISTANT_MODEL_INFO,
-  HANDOFF_LABELS,
   activeCenterAccess,
+  activeTone,
   addDays,
+  ASSISTANT_COPY,
+  ASSISTANT_MODE_TONES,
+  ASSISTANT_MODEL_INFO,
   estimateAssistantCost,
   formatCenterHours,
   formatInCenterTimeZone,
   formatMoney,
+  HANDOFF_LABELS,
+  type HandoffCode,
   todayIn,
   usableCenters,
-  type HandoffCode,
 } from "@meguiars/domain";
 import {
   createAssistantRepository,
@@ -121,10 +123,7 @@ export default async function AssistantPage() {
         <dl className="grid gap-xs text-sm md:grid-cols-2" data-testid="assistant-status">
           <dt className="text-muted">Modo</dt>
           <dd>
-            <Badge
-              label={ASSISTANT_COPY.modes[s.mode]}
-              tone={s.mode === "activo" ? "success" : s.mode === "prueba" ? "warning" : "neutral"}
-            />
+            <Badge label={ASSISTANT_COPY.modes[s.mode]} tone={ASSISTANT_MODE_TONES[s.mode]} />
           </dd>
           <dt className="text-muted">Modelo</dt>
           <dd>{ASSISTANT_MODEL_INFO[s.model].label}</dd>
@@ -292,11 +291,7 @@ export default async function AssistantPage() {
             {rules.data.map((r) => (
               <section key={r.code} className="flex flex-col gap-xs border-t border-border pt-sm">
                 <h3 className="text-sm font-semibold">
-                  {r.label}{" "}
-                  <Badge
-                    label={r.active ? "Activa" : "Desactivada"}
-                    tone={r.active ? "success" : "neutral"}
-                  />
+                  {r.label} <Badge label={r.active ? "Activa" : "Desactivada"} tone={activeTone(r.active)} />
                 </h3>
                 {canManage ? (
                   <HandoffRuleForm rule={r} owners={allOwners} />

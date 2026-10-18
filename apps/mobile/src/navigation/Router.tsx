@@ -53,7 +53,7 @@ import {
   QuotesScreen,
   SegmentsScreen,
 } from "@/screens/CommercialScreens";
-import { ConversationScreen, InboxScreen } from "@/screens/InboxScreens";
+import { ConversationHistoryScreen, ConversationScreen, InboxScreen } from "@/screens/InboxScreens";
 import {
   CalendarScreen,
   CampaignScreen,
@@ -101,7 +101,9 @@ import { SuppliesScreen } from "@/screens/SuppliesScreen";
 import { TeamScreen } from "@/screens/TeamScreen";
 import { UsersScreen } from "@/screens/UsersScreen";
 import { CenterSetupScreen, CentersScreen, PilotScreen } from "@/screens/PilotScreens";
-import { AppHeader, SubNav, TabBar } from "@/ui/layout";
+import { useInboxUnread } from "@/lib/inbox-unread";
+import { LinkButton } from "@/ui/controls";
+import { AppHeader, InboxUnreadContext, ScreenFooterContext, SubNav, TabBar } from "@/ui/layout";
 
 /**
  * Navegación nativa por pestañas. Las pestañas y los guards salen de
@@ -168,8 +170,16 @@ export function Router() {
   // /comercial/cotizaciones/[id] y /comercial/cotizaciones/nueva?prospecto=&cliente= en web).
   // Parámetro de la conversación (equivale a /comercial/bandeja/[id] en web).
   const [conversationId, setConversationId] = useState<string | null>(null);
+  // A dónde regresa la conversación: la bandeja o el historial.
+  const [conversationBack, setConversationBack] = useState<"inbox" | "conversationHistory">("inbox");
   const openConversation = (id: string) => {
     setConversationId(id);
+    setConversationBack("inbox");
+    setScreen("conversation");
+  };
+  const openHistoryConversation = (id: string) => {
+    setConversationId(id);
+    setConversationBack("conversationHistory");
     setScreen("conversation");
   };
   // Parámetro de la campaña (equivale a /comercial/campanas/[id] en web).
@@ -281,6 +291,7 @@ export function Router() {
     target.screen === "pnlDrilldown" ? openPnlDrill(target.query) : setScreen(target.screen);
   const [publicScreen, setPublicScreen] = useState<"login" | "forgot">("login");
   const goHome = () => setScreen("home");
+  const unread = useInboxUnread(client, state, screen);
 
   if (!client)
     return <MessageScreen title={authCopy.loginTitle} message={centersCopy.notConfigured} tone="danger" />;
@@ -326,13 +337,7 @@ export function Router() {
 
   const sections = visibleNavigation(state);
   const sectionId = sectionOfScreen(screen);
-  const header = (
-    <AppHeader
-      state={state}
-      onChangeCenter={() => setScreen("selectCenter")}
-      onDesignSystem={() => setScreen("designSystem")}
-    />
-  );
+  const header = <AppHeader state={state} onChangeCenter={() => setScreen("selectCenter")} />;
   const subnav = (
     <SubNav
       section={sections.find((s) => s.id === sectionId)}
@@ -483,13 +488,16 @@ export function Router() {
       case "inbox":
         content = <InboxScreen {...props} onOpen={openConversation} />;
         break;
+      case "conversationHistory":
+        content = <ConversationHistoryScreen {...props} onOpen={openHistoryConversation} />;
+        break;
       case "conversation":
         content = conversationId ? (
           <ConversationScreen
             key={conversationId}
             {...props}
             conversationId={conversationId}
-            onBack={() => setScreen("inbox")}
+            onBack={() => setScreen(conversationBack)}
             onLead={openLead}
           />
         ) : (
@@ -1071,12 +1079,22 @@ export function Router() {
 
   // key = centro activo: al cambiar de centro se descarta el estado de la pantalla anterior.
   return (
-    <View style={styles.fill}>
-      <View key={state.activeCenterId ?? "none"} style={styles.fill}>
-        {content}
-      </View>
-      <TabBar sections={sections} active={sectionId} onSelect={selectScreen} />
-    </View>
+    <InboxUnreadContext.Provider value={unread}>
+      <ScreenFooterContext.Provider
+        value={
+          screen === "designSystem" ? null : (
+            <LinkButton label="Sistema de diseño" onPress={() => setScreen("designSystem")} />
+          )
+        }
+      >
+        <View style={styles.fill}>
+          <View key={state.activeCenterId ?? "none"} style={styles.fill}>
+            {content}
+          </View>
+          <TabBar sections={sections} active={sectionId} onSelect={selectScreen} />
+        </View>
+      </ScreenFooterContext.Provider>
+    </InboxUnreadContext.Provider>
   );
 }
 

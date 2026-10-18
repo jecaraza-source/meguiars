@@ -50,6 +50,59 @@ describe("repositorio de la bandeja", () => {
     });
   });
 
+  it("aviso de no leídos del centro", async () => {
+    const { client, rpc } = fakeClient(3);
+    expect(await createInboxRepository(client).unreadCount(U)).toEqual({ ok: true, data: 3 });
+    expect(rpc).toHaveBeenCalledWith("inbox_unread", { p_detail_center_id: U });
+  });
+
+  it("historial: filtros limpios, teléfono validado y filas mapeadas", async () => {
+    const { client, rpc } = fakeClient([
+      {
+        id: U,
+        detail_center_id: U,
+        detail_center_name: "Centro A",
+        channel: "whatsapp",
+        contact_name: "Ana",
+        contact_phone: "+5215511112222",
+        client_id: null,
+        client_name: null,
+        lead_id: U,
+        lead_name: "Ana Ruiz",
+        status: "cerrada",
+        priority: "alta",
+        started_at: "2026-10-01T10:00:00Z",
+        last_message_at: "2026-10-02T10:00:00Z",
+        last_message_preview: "Gracias",
+        messages_in: 3,
+        messages_out: 2,
+      },
+    ]);
+    const repo = createInboxRepository(client);
+    const r = await repo.history([U], { client: "  ruiz ana ", phone: "", from: "2026-10-01", to: "" });
+    expect(rpc).toHaveBeenCalledWith("conversation_history", {
+      p_detail_center_ids: [U],
+      p_client: "ruiz ana",
+      p_phone: null,
+      p_channel: null,
+      p_status: null,
+      p_from: "2026-10-01",
+      p_to: null,
+      p_limit: 200,
+    });
+    expect(r.ok && r.data[0]).toMatchObject({
+      leadName: "Ana Ruiz",
+      status: "cerrada",
+      priority: "alta",
+      messagesIn: 3,
+      messagesOut: 2,
+    });
+    rpc.mockClear();
+    const bad = await repo.history([U], { phone: "12" });
+    expect(bad.ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("filtros de la bandeja y cuenta sin tokens", async () => {
     const { client, rpc } = fakeClient([]);
     const repo = createInboxRepository(client);

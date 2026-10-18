@@ -18,6 +18,8 @@ export const NAV_ITEM_DESCRIPTIONS: Partial<Record<Screen, string>> = {
   catalog: "Servicios y productos: precio, costo, duración, comisión e insumos estándar por servicio.",
   comercial: "Resumen de ventas, membresías, recurrencia y oportunidades del centro.",
   inbox: "Conversaciones de WhatsApp, Messenger e Instagram: responder, asignar, etiquetar y notas internas.",
+  conversationHistory:
+    "Todas las conversaciones guardadas, abiertas y atendidas: busca por cliente o teléfono, canal, estado y fechas.",
   assistant:
     "Asistente de WhatsApp con IA: modo, horarios, respuestas aprobadas, cuándo pasa a persona e indicadores.",
   leads: "Prospectos: origen, interés, etapa del embudo, seguimiento y conversión en cliente.",

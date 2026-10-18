@@ -1,9 +1,12 @@
 "use client";
 
-import { sectionOfPath, type NavSection } from "@meguiars/domain";
+import { sectionOfPath, UNREAD_NAV_SCREEN, type NavSection } from "@meguiars/domain";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
+import { UnreadCount, UnreadDot, useInboxUnread } from "./inbox-unread";
 import { Icon } from "./ui/icon";
+
+const hasInbox = (section: NavSection) => section.items.some((i) => i.screen === UNREAD_NAV_SCREEN);
 
 /**
  * Ítem de menú que corresponde a la ruta: el de href más largo que la contiene
@@ -45,8 +48,9 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
   const pathname = usePathname();
   const currentHref = currentItemHref(sections, pathname);
   const activeSection = sectionOfPath(pathname);
+  const unread = useInboxUnread();
   const title =
-    "group/title flex min-h-(--mg-touch-target) w-full items-center gap-sm rounded-md px-sm text-sm font-bold text-foreground transition-colors hover:bg-surface";
+    "group/title flex min-h-(--mg-touch-target) w-full items-center gap-sm rounded-md px-sm text-md font-bold text-foreground transition-colors hover:bg-surface";
   const badge = (on: boolean) =>
     `flex size-xxl items-center justify-center rounded-md transition-colors ${
       on ? "bg-accent text-brand-foreground" : "bg-surface text-accent group-hover/title:bg-surface-raised"
@@ -82,6 +86,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
                 <Icon name={section.icon} />
               </span>
               {section.label}
+              {hasInbox(section) ? <UnreadDot count={unread} /> : null}
               <Icon
                 name="chevronDown"
                 className="ml-auto size-lg text-muted transition-transform group-open:rotate-180"
@@ -100,6 +105,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
                   >
                     <Icon name={item.icon} />
                     {item.label}
+                    {item.screen === UNREAD_NAV_SCREEN ? <UnreadCount count={unread} /> : null}
                     <PendingHint className="ml-auto" />
                   </Link>
                 );
@@ -115,6 +121,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
 /** Barra inferior (móvil web): una pestaña por sección, con icono, como la app nativa. */
 export function BottomNav({ sections }: { sections: NavSection[] }) {
   const active = sectionOfPath(usePathname());
+  const unread = useInboxUnread();
   return (
     <nav
       aria-label="Principal"
@@ -127,7 +134,10 @@ export function BottomNav({ sections }: { sections: NavSection[] }) {
           aria-current={section.id === active ? "page" : undefined}
           className="relative flex min-h-(--mg-touch-target) min-w-0 flex-1 flex-col items-center justify-center gap-xxs px-xxs py-xs text-xs font-bold text-muted aria-[current=page]:text-accent"
         >
-          <Icon name={section.icon} className="size-xl" />
+          <span className="relative">
+            <Icon name={section.icon} className="size-xl" />
+            {hasInbox(section) ? <UnreadDot count={unread} className="absolute -top-xxs -right-xs" /> : null}
+          </span>
           <span className="max-w-full truncate">{section.shortLabel}</span>
           <PendingHint className="absolute top-xs right-xs" />
         </Link>
@@ -139,6 +149,7 @@ export function BottomNav({ sections }: { sections: NavSection[] }) {
 /** Sub-navegación de una sección con varias pantallas (p. ej. Finanzas). */
 export function SubNav({ section }: { section: NavSection }) {
   const pathname = usePathname();
+  const unread = useInboxUnread();
   if (section.items.length < 2) return null;
   return (
     <nav aria-label={section.label} className="-mx-xs flex gap-xs overflow-x-auto px-xs pb-xs">
@@ -152,6 +163,7 @@ export function SubNav({ section }: { section: NavSection }) {
         >
           <Icon name={item.icon} />
           {item.label}
+          {item.screen === UNREAD_NAV_SCREEN ? <UnreadCount count={unread} /> : null}
         </Link>
       ))}
     </nav>

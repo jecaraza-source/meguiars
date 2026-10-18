@@ -1,15 +1,16 @@
 import {
-  AUTOMATIONS_COPY,
+  activeCenterAccess,
+  activeTone,
   AUTOMATION_OUTCOME_LABELS,
   AUTOMATION_PURPOSE_LABELS,
   AUTOMATION_RUN_MODE_LABELS,
   AUTOMATION_SKIP_LABELS,
   AUTOMATION_TRIGGER_LABELS,
-  activeCenterAccess,
+  AUTOMATIONS_COPY,
+  type AutomationSkipReason,
   canInCenter,
   formatInCenterTimeZone,
   usableCenters,
-  type AutomationSkipReason,
 } from "@meguiars/domain";
 import {
   createAutomationsRepository,
@@ -80,7 +81,7 @@ export default async function AutomationsPage() {
               >
                 <div className="flex flex-col gap-sm" data-testid={`automation-${a.id}`}>
                   <div className="flex flex-wrap gap-xs">
-                    <Badge label={a.active ? "Activa" : "Inactiva"} tone={a.active ? "success" : "neutral"} />
+                    <Badge label={a.active ? "Activa" : "Inactiva"} tone={activeTone(a.active)} />
                     <Badge
                       label={AUTOMATION_PURPOSE_LABELS[a.purpose]}
                       tone={a.purpose === "promocional" ? "warning" : "info"}

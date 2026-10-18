@@ -1,5 +1,6 @@
 import {
   activeCenterAccess,
+  activeTone,
   can,
   canInActiveCenter,
   expensesCopy,
@@ -63,7 +64,7 @@ export default async function ExpenseSettingsPage() {
                 <span className="flex flex-wrap items-center gap-xs text-sm">
                   <strong>{v.name}</strong>
                   {v.rfc ? ` · ${v.rfc}` : ""}
-                  {!v.active ? <Badge label="Inactivo" tone="neutral" /> : null}
+                  {!v.active ? <Badge label="Inactivo" tone={activeTone(false)} /> : null}
                 </span>
                 {canWrite ? (
                   <details>
@@ -96,7 +97,7 @@ export default async function ExpenseSettingsPage() {
               <li key={c.id} className="flex flex-col gap-sm border-b border-border pb-md">
                 <span className="flex flex-wrap items-center gap-xs text-sm">
                   <strong>{c.name}</strong> · {PNL_GROUP_LABELS[c.pnlGroup]}
-                  {!c.active ? <Badge label="Inactiva" tone="neutral" /> : null}
+                  {!c.active ? <Badge label="Inactiva" tone={activeTone(false)} /> : null}
                 </span>
                 {canManage ? (
                   <details>

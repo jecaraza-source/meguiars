@@ -133,3 +133,43 @@ export const conversationLeadSchema = z.object({
   interestServiceIds: uuidList,
   notes: z.preprocess(blankToUndefined, z.string().trim().max(2000, "Máximo 2000 caracteres").optional()),
 });
+
+const optionalDay = z
+  .string()
+  .trim()
+  .transform((v) => (v === "" ? undefined : v))
+  .pipe(
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida (AAAA-MM-DD)")
+      .optional(),
+  );
+
+/** Filtros del historial de conversaciones (cliente, teléfono, canal, estado y fechas). */
+export const conversationHistorySchema = z
+  .object({
+    client: z.string().trim().max(120, "Máximo 120 caracteres").optional(),
+    phone: z
+      .string()
+      .trim()
+      .max(30, "Máximo 30 caracteres")
+      .refine((v) => v === "" || /^[0-9+()\s-]+$/.test(v), "Sólo números, espacios, + o guiones")
+      .refine((v) => v === "" || v.replace(/\D/g, "").length >= 4, "Escribe al menos 4 dígitos")
+      .optional(),
+    channel: z.enum(INBOX_CHANNELS).optional(),
+    status: z.enum(["abierta", "cerrada"]).optional(),
+    from: optionalDay.optional(),
+    to: optionalDay.optional(),
+  })
+  .refine((v) => !v.from || !v.to || v.from <= v.to, {
+    message: "La fecha inicial debe ser anterior a la final",
+    path: ["to"],
+  })
+  .transform((v) => ({
+    client: v.client || undefined,
+    phone: v.phone || undefined,
+    channel: v.channel,
+    status: v.status,
+    from: v.from,
+    to: v.to,
+  }));

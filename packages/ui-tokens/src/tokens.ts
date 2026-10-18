@@ -95,8 +95,8 @@ export const breakpoints = { tablet: 768, desktop: 1024, wide: 1280 } as const;
 
 export const zIndex = { nav: 10, overlay: 40, modal: 50, toast: 60 } as const;
 
-/** Medidas de layout: barra lateral, contenido, formularios de autenticación, alto de gráficas y ancho de su eje. */
-export const layout = { sidebar: 256, content: 1024, narrow: 384, chart: 224, axis: 56 } as const;
+/** Medidas de layout: barra lateral, encabezado fijo (web), contenido, formularios de autenticación, alto de gráficas y ancho de su eje. */
+export const layout = { sidebar: 256, header: 64, content: 1024, narrow: 384, chart: 224, axis: 56 } as const;
 
 export const motion = { fast: 120, normal: 200, pulse: 1400 } as const;
 

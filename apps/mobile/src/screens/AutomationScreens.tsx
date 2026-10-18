@@ -1,9 +1,12 @@
 import {
   activeCenterAccess,
+  activeTone,
+  type Automation,
   AUTOMATION_PURPOSE_LABELS,
   AUTOMATION_SKIP_LABELS,
   AUTOMATION_TRIGGER_LABELS,
   AUTOMATIONS_COPY,
+  type AutomationSkipReason,
   canInCenter,
   commercialErrorMessage,
   LEAD_SOURCE_LABELS,
@@ -13,8 +16,6 @@ import {
   PILOT_PERIODS,
   skippedTotal,
   todayIn,
-  type Automation,
-  type AutomationSkipReason,
   type ViewState,
 } from "@meguiars/domain";
 import {
@@ -211,7 +212,7 @@ export function AutomationsScreen({ state, header, subnav }: PrivateScreenProps)
             >
               <View style={styles.stack}>
                 <View style={styles.row}>
-                  <Badge label={a.active ? "Activa" : "Inactiva"} tone={a.active ? "success" : "neutral"} />
+                  <Badge label={a.active ? "Activa" : "Inactiva"} tone={activeTone(a.active)} />
                   <Badge
                     label={AUTOMATION_PURPOSE_LABELS[a.purpose]}
                     tone={a.purpose === "promocional" ? "warning" : "info"}

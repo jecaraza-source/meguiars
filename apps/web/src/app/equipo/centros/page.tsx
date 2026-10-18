@@ -1,4 +1,4 @@
-import { PILOT_COPY } from "@meguiars/domain";
+import { activeTone, PILOT_COPY } from "@meguiars/domain";
 import { createPilotRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -30,7 +30,7 @@ export default async function CentersPage() {
               <span className="text-sm text-muted">
                 {c.code} · {c.timezone}
               </span>
-              {c.isActive ? <Badge label="Centro activo" /> : null}
+              {c.isActive ? <Badge label="Centro activo" tone={activeTone(true)} /> : null}
               {c.view ? <Badge label={c.view.readyLabel} tone={c.view.readyTone} /> : null}
             </div>
             {c.view ? <p className="text-sm text-muted">{c.view.progress}</p> : null}

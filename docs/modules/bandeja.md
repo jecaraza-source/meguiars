@@ -50,6 +50,22 @@ conversations ─ leads? / clients? · assigned_to
 | `prepare_outbound_message(…, p_expected_last_message_at)` | Guarda contra duplicados: si llegó un mensaje o alguien respondió después de abrir la conversación, el envío se detiene (40001) para que la persona revise.                                                      |
 | `prepare_template_message`                                | Envío de plantilla fuera de 24 h: sólo WhatsApp con cuenta verificada, plantilla `APPROVED`, no de autenticación; las de **marketing** exigen que el contacto haya autorizado WhatsApp (prospecto o cliente).    |
 
+### Historial de conversaciones (`20261030000000_conversation_history.sql`)
+
+Cada mensaje entrante y saliente ya queda guardado en `messages` y cada contacto en `conversations` (no se borran al atender). **Comercial → Historial de conversaciones** (`/comercial/historial`, móvil «Historial de conversaciones») busca sobre todo ese historial, abiertas y atendidas, con `public.conversation_history`:
+
+| Filtro   | Cómo funciona                                                                                                                                                                                       |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cliente  | Nombre del contacto en la red social, del cliente o del prospecto ligado. Todas las palabras, en cualquier orden y sin acentos («ruiz ana» encuentra «Ana Ruíz»).                                   |
+| Teléfono | Sólo dígitos (mínimo 4). Con 10 o más se comparan los últimos 10: «55 1111 2222», «+52 55…» y el «+52 1 55…» de WhatsApp son el mismo número. Busca también en el teléfono del cliente o prospecto. |
+| Otros    | Canal, estado (abierta/atendida) y fechas (día local del centro; la conversación tuvo mensajes en el rango).                                                                                        |
+
+Cada resultado muestra canal, estado, prioridad, mensajes recibidos y enviados, fechas y el último mensaje; al abrirlo se ve la conversación completa. Mismo acceso que la bandeja (`private.can_use_leads`): el contador y otros centros no ven nada. Máximo 200 resultados por búsqueda (los más recientes). Pruebas: `supabase/tests/conversation_history.test.sql` (11).
+
+### Aviso de mensajes sin leer (`20261030000100_inbox_unread.sql`)
+
+Cuando llega un WhatsApp o mensaje sin leer aparece un **punto rojo** en la sección «Comercial» (menú lateral y barra inferior) y el **número en rojo** junto a «Bandeja» (menú y submenú). En la app móvil, el punto va en la pestaña Comercial y el número en «Bandeja». `public.inbox_unread(centro)` suma `unread_count` del centro activo (abrir la conversación lo regresa a 0); quien no usa la bandeja recibe 0. Web: `GET /api/inbox/unread` con la sesión del usuario, revisado al cargar, cada 30 s, al volver a la pestaña y al cambiar de página; móvil: lo mismo con el repositorio y al volver a la app. Sólo viaja el número, nunca nombres ni textos.
+
 ## Configuración (una vez por negocio)
 
 Lo hace el admin, con acceso a Meta Business Suite y a Vercel.
