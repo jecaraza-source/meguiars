@@ -8,6 +8,7 @@ import {
   type ConversationHistoryEntry,
   fillQuickReply,
   historyDisplayName,
+  unreadLabel,
   normalizeTags,
   renderTemplate,
   replyBlocker,
@@ -507,5 +508,14 @@ describe("historial de conversaciones", () => {
     expect(historyDisplayName({ ...base, contactName: "WA", contactPhone: "+52" })).toBe("WA");
     expect(historyDisplayName({ ...base, contactPhone: "+5215511112222" })).toBe("+5215511112222");
     expect(historyDisplayName(base)).toBe("Contacto sin nombre");
+  });
+});
+
+describe("aviso de no leídos", () => {
+  it("sin mensajes no hay aviso; con mensajes, texto en singular, plural y tope de 99+", () => {
+    expect(unreadLabel(0)).toBeNull();
+    expect(unreadLabel(1)).toBe("1 mensaje sin leer");
+    expect(unreadLabel(4)).toBe("4 mensajes sin leer");
+    expect(unreadLabel(150)).toBe("99+ mensajes sin leer");
   });
 });

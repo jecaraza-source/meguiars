@@ -50,6 +50,12 @@ describe("repositorio de la bandeja", () => {
     });
   });
 
+  it("aviso de no leídos del centro", async () => {
+    const { client, rpc } = fakeClient(3);
+    expect(await createInboxRepository(client).unreadCount(U)).toEqual({ ok: true, data: 3 });
+    expect(rpc).toHaveBeenCalledWith("inbox_unread", { p_detail_center_id: U });
+  });
+
   it("historial: filtros limpios, teléfono validado y filas mapeadas", async () => {
     const { client, rpc } = fakeClient([
       {

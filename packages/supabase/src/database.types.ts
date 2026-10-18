@@ -7240,6 +7240,12 @@ export type Database = {
           version: number;
         }[];
       };
+      inbox_unread: {
+        Args: {
+          p_detail_center_id: string;
+        };
+        Returns: number;
+      };
       ingest_inbound_messages: {
         Args: {
           p_channel: string;

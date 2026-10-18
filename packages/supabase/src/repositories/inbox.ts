@@ -167,6 +167,16 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
       );
     },
 
+    async unreadCount(detailCenterId) {
+      try {
+        const { data, error } = await client.rpc("inbox_unread", { p_detail_center_id: detailCenterId });
+        if (error) return { ok: false, error: toRepoError(error) };
+        return { ok: true, data: typeof data === "number" ? data : 0 };
+      } catch (e) {
+        return { ok: false, error: toRepoError(e) };
+      }
+    },
+
     history(detailCenterIds, filter = {}) {
       const parsed = conversationHistorySchema.safeParse(filter);
       if (!parsed.success) return Promise.resolve(invalid(parsed.error));

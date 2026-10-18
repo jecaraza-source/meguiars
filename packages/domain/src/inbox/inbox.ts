@@ -192,6 +192,17 @@ export interface ConversationHistoryEntry {
   messagesOut: number;
 }
 
+/** Pantalla del menú que muestra el aviso de mensajes sin leer. */
+export const UNREAD_NAV_SCREEN = "inbox";
+/** Cada cuánto se revisa el aviso de no leídos (web y móvil). */
+export const UNREAD_POLL_MS = 30_000;
+
+/** Texto del aviso para lectores de pantalla y para el título de la pestaña. */
+export function unreadLabel(n: number): string | null {
+  if (n <= 0) return null;
+  return n === 1 ? "1 mensaje sin leer" : `${n > 99 ? "99+" : n} mensajes sin leer`;
+}
+
 /** Nombre que se muestra en el historial: cliente, prospecto, contacto o teléfono. */
 export function historyDisplayName(e: ConversationHistoryEntry): string {
   return e.clientName ?? e.leadName ?? e.contactName ?? e.contactPhone ?? "Contacto sin nombre";
@@ -222,6 +233,8 @@ export interface InboxRepository {
   }): Promise<Result<{ id: string }>>;
   conversations(detailCenterIds: string[], filter?: ConversationFilter): Promise<Result<Conversation[]>>;
   conversation(id: string, detailCenterIds: string[]): Promise<Result<Conversation>>;
+  /** Mensajes sin leer del centro (aviso del menú); 0 si no usa la bandeja. */
+  unreadCount(detailCenterId: string): Promise<Result<number>>;
   history(
     detailCenterIds: string[],
     filter?: ConversationHistoryFilter,

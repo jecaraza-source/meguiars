@@ -9,8 +9,11 @@ import {
   type NavSectionId,
   type Screen as ScreenId,
   type SignedInState,
+  UNREAD_NAV_SCREEN,
+  unreadLabel,
 } from "@meguiars/domain";
 import { colorOf, colors, radius, space, toneRecipes, touchTarget } from "@meguiars/ui-tokens";
+import { createContext, useContext } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth/AuthProvider";
@@ -21,6 +24,28 @@ import { Badge } from "./display";
 import { Icon } from "./icon";
 import { useToast } from "./overlay";
 import { textStyle } from "./theme";
+
+/** Pie de las pantallas privadas (enlace al sistema de diseño), al final del contenido. */
+export const ScreenFooterContext = createContext<React.ReactNode>(null);
+
+/** Mensajes sin leer de la bandeja: punto rojo en la pestaña y número en «Bandeja». */
+export const InboxUnreadContext = createContext(0);
+
+const hasInbox = (section: NavSection) => section.items.some((i) => i.screen === UNREAD_NAV_SCREEN);
+
+function UnreadDot() {
+  return <View style={styles.dot} accessibilityElementsHidden importantForAccessibility="no" />;
+}
+
+function UnreadCount({ count, selected }: { count: number; selected: boolean }) {
+  return (
+    <View style={[styles.count, selected ? styles.countSelected : null]}>
+      <Text style={textStyle("caption", selected ? "danger" : "brandForeground")}>
+        {count > 99 ? "99+" : count}
+      </Text>
+    </View>
+  );
+}
 
 /** Aviso de ambiente (local o preview), igual que en web; no aparece en producción. */
 export function EnvironmentBanner() {
@@ -56,6 +81,7 @@ export function Screen({
   header?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const footer = useContext(ScreenFooterContext);
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={styles.safe}>
       <EnvironmentBanner />
@@ -73,21 +99,14 @@ export function Screen({
         </Text>
         {description ? <Text style={textStyle("bodySmall", "muted")}>{description}</Text> : null}
         {children}
+        {footer}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 /** Perfil básico y centro activo, visibles en todas las pantallas privadas. */
-export function AppHeader({
-  state,
-  onChangeCenter,
-  onDesignSystem,
-}: {
-  state: SignedInState;
-  onChangeCenter: () => void;
-  onDesignSystem: () => void;
-}) {
+export function AppHeader({ state, onChangeCenter }: { state: SignedInState; onChangeCenter: () => void }) {
   const { signOut } = useAuth();
   const active = activeCenterAccess(state);
   return (
@@ -109,7 +128,6 @@ export function AppHeader({
         {usableCenters(state.access).length > 1 ? (
           <LinkButton label={authCopy.changeCenter} onPress={onChangeCenter} />
         ) : null}
-        <LinkButton label="Sistema de diseño" onPress={onDesignSystem} />
         <LinkButton label={authCopy.logout} onPress={() => void signOut()} />
       </View>
     </View>
@@ -126,6 +144,7 @@ export function TabBar({
   active: NavSectionId | null;
   onSelect: (screen: ScreenId) => void;
 }) {
+  const unread = useContext(InboxUnreadContext);
   return (
     <SafeAreaView edges={["bottom"]} style={styles.tabBar}>
       <View accessibilityRole="tablist" style={styles.tabs}>
@@ -136,15 +155,20 @@ export function TabBar({
               key={section.id}
               accessibilityRole="tab"
               accessibilityState={{ selected }}
-              accessibilityLabel={section.label}
+              accessibilityLabel={
+                hasInbox(section) && unread > 0 ? `${section.label}, ${unreadLabel(unread)}` : section.label
+              }
               onPress={() => onSelect(section.items[0]!.screen)}
               style={[styles.tab, selected ? styles.tabActive : null]}
             >
-              <Icon
-                name={section.icon}
-                size={space.xl}
-                color={selected ? colors.brandForeground : colors.muted}
-              />
+              <View>
+                <Icon
+                  name={section.icon}
+                  size={space.xl}
+                  color={selected ? colors.brandForeground : colors.muted}
+                />
+                {hasInbox(section) && unread > 0 ? <UnreadDot /> : null}
+              </View>
               <Text
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -172,6 +196,7 @@ export function SubNav({
   onSelect: (screen: ScreenId) => void;
 }) {
   const toast = useToast();
+  const unread = useContext(InboxUnreadContext);
   if (!section || section.items.length < 2) return null;
   return (
     <View accessibilityRole="tablist" style={styles.subnav}>
@@ -193,6 +218,9 @@ export function SubNav({
           <Text style={textStyle("menu", item.screen === current ? "brandForeground" : "accent")}>
             {item.label}
           </Text>
+          {item.screen === UNREAD_NAV_SCREEN && unread > 0 ? (
+            <UnreadCount count={unread} selected={item.screen === current} />
+          ) : null}
         </Pressable>
       ))}
     </View>
@@ -237,4 +265,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   chipActive: { borderColor: colors.accent, backgroundColor: colors.accent },
+  dot: {
+    position: "absolute",
+    top: -space.xxs,
+    right: -space.xs,
+    width: space.sm,
+    height: space.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.danger,
+  },
+  count: {
+    minWidth: space.xl,
+    alignItems: "center",
+    paddingHorizontal: space.xs,
+    borderRadius: radius.full,
+    backgroundColor: colors.danger,
+  },
+  countSelected: { backgroundColor: colors.brandForeground },
 });

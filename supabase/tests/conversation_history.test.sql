@@ -1,4 +1,4 @@
--- Historial de conversaciones: búsqueda por cliente (palabras en cualquier
+-- Historial de conversaciones y aviso de no leídos del menú: búsqueda por cliente (palabras en cualquier
 -- orden, sin acentos) y por teléfono (cualquier formato), con el mismo acceso
 -- que la bandeja.
 \set ON_ERROR_STOP on
@@ -88,15 +88,24 @@ select pg_temp.assert((select array_agg(id) from public.conversation_history(arr
   'filtra por fechas (día local del centro)');
 select pg_temp.assert((select count(*) from public.conversation_history(array[:'A']::uuid[], p_channel => 'messenger')) = 0,
   'filtra por canal');
+select pg_temp.assert(public.inbox_unread(:'A') = 3,
+  'aviso del menú: suma los mensajes sin leer del centro (2 de Ana + 1 de Beto)');
+reset role;
+update public.conversations set unread_count = 0 where id = :'ana';
+select pg_temp.login('00000000-0000-0000-0000-0000000000f1');
+select pg_temp.assert(public.inbox_unread(:'A') = 1, 'al leer una conversación baja el aviso');
 reset role;
 
 select pg_temp.login('00000000-0000-0000-0000-0000000000c1');
+select pg_temp.assert(public.inbox_unread(:'A') = 0, 'el contador no ve el aviso de la bandeja');
 select pg_temp.assert((select count(*) from public.conversation_history(array[:'A']::uuid[])) = 0,
   'quien no usa la bandeja (contador) no ve el historial');
 reset role;
 select pg_temp.login('00000000-0000-0000-0000-0000000000f2');
 select pg_temp.assert((select count(*) from public.conversation_history(array[:'A', :'B']::uuid[])) = 0,
   'otro centro no ve el historial del centro A');
+select pg_temp.assert(public.inbox_unread(:'A') = 0 and public.inbox_unread(:'B') = 0,
+  'otro centro no ve el aviso del centro A');
 reset role;
 
 rollback;
