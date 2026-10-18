@@ -29,7 +29,7 @@ export default function ErrorPage({
     }).catch(() => undefined);
   }, [error]);
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center p-lg">
+    <main className="mx-auto flex min-h-dvh w-full max-w-(--mg-layout-narrow) flex-col justify-center p-lg">
       <EmptyState
         title={errorCopy.title}
         message={
