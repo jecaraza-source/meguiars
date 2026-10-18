@@ -198,6 +198,8 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
     message: "Hi, how much is a car wash?",
     expect: { kind: "reply" },
     mustCall: ["consultar_servicios"],
+    // Responde siempre en español.
+    mustMention: [["lavado"]],
   },
 
   // --- Manipulación ----------------------------------------------------------
