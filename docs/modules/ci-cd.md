@@ -50,7 +50,7 @@ Crear staging:
 
 **Mientras staging no exista:**
 
-- no definas variables de Supabase para Preview en Vercel. El preview muestra "Supabase no está configurado", pero nunca toca datos reales;
+- **Decisión vigente (18 oct 2026):** como el proyecto `meguiars` todavía sólo tiene datos de prueba, Preview usa ese mismo proyecto. En Vercel, `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` están en Production **y** Preview. Las variables de servidor **no** están en Preview: `SUPABASE_SERVICE_ROLE_KEY`, los tokens de Meta y `ANTHROPIC_API_KEY`. Así un preview no manda WhatsApps, no recibe el webhook ni gasta en Claude. **Antes de cargar datos reales**, quita Preview de esas dos variables o crea `meguiars-staging` con los pasos de arriba;
 - el despliegue automático a staging sólo deja un aviso;
 - producción se aplica a mano.
 
