@@ -2,13 +2,13 @@
 
 **Estado: no ejecutada.** La prueba de humo falló porque el entorno no tiene `ANTHROPIC_API_KEY`, así que no se corrieron los 28 escenarios.
 
-| Dato | Valor |
-| --- | --- |
-| Modelo | `claude-opus-5-5` (predeterminado del script) |
-| Aprobados / total | 0 / 0 — no se ejecutó ningún escenario |
-| Costo estimado | US$ 0 — no hubo llamadas a la API |
-| Tokens | 0 |
-| Commit evaluado | `01ec39b` |
+| Dato              | Valor                                         |
+| ----------------- | --------------------------------------------- |
+| Modelo            | `claude-opus-5-5` (predeterminado del script) |
+| Aprobados / total | 0 / 0 — no se ejecutó ningún escenario        |
+| Costo estimado    | US$ 0 — no hubo llamadas a la API             |
+| Tokens            | 0                                             |
+| Commit evaluado   | `01ec39b`                                     |
 
 ## Pasos realizados
 
