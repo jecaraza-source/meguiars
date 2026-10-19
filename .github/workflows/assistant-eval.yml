@@ -1,0 +1,95 @@
+# Evaluación del asistente de WhatsApp con la API real de Claude.
+# Sólo se corre a mano (Actions → «Evaluación del asistente» → Run workflow)
+# porque cuesta dinero (tokens). Usa datos fijos de prueba: no toca Supabase,
+# WhatsApp ni Vercel. La llave vive sólo en el secreto ANTHROPIC_API_KEY del
+# repositorio (docs/modules/asistente-whatsapp.md → Evaluación).
+name: Evaluación del asistente
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Modelo a evaluar
+        type: choice
+        options:
+          - claude-opus-5-5
+          - claude-sonnet-5-5
+        default: claude-opus-5-5
+      only:
+        description: "Sólo estos escenarios, separados por coma (vacío = los 28). Ej.: saludo,queja"
+        type: string
+        default: ""
+      repeat:
+        description: Veces que se repite cada escenario (1 a 5)
+        type: choice
+        options: ["1", "2", "3"]
+        default: "1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: assistant-eval
+  cancel-in-progress: false
+
+jobs:
+  eval:
+    name: Conversaciones de prueba con Claude
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Llave de Claude configurada
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::Falta el secreto ANTHROPIC_API_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Correr la evaluación
+        id: eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODEL: ${{ inputs.model }}
+          ONLY: ${{ inputs.only }}
+          REPEAT: ${{ inputs.repeat }}
+        run: |
+          set -o pipefail
+          args=(--yes --model "$MODEL" --repeat "$REPEAT" --out "$GITHUB_WORKSPACE/reporte-eval.json")
+          if [ -n "$ONLY" ]; then args+=(--only "$ONLY"); fi
+          npm run eval:assistant -w @meguiars/web -- "${args[@]}" 2>&1 | tee "$GITHUB_WORKSPACE/salida-eval.txt"
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "## Evaluación del asistente (${{ inputs.model }})"
+            echo
+            if [ -f salida-eval.txt ]; then
+              grep -E "^(Aprobados|Escenarios)" salida-eval.txt || true
+              echo
+              echo "### Fallas"
+              echo '```'
+              grep -E -A3 "^FALLA" salida-eval.txt || echo "Ninguna"
+              echo '```'
+            else
+              echo "No se generó salida."
+            fi
+            echo
+            echo "El reporte completo está en los artefactos de esta corrida (reporte-eval)."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Guardar reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-eval
+          path: |
+            reporte-eval.json
+            salida-eval.txt
+          if-no-files-found: ignore
+          retention-days: 90

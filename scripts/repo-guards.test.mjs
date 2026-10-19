@@ -76,11 +76,14 @@ describe("workflows", () => {
     ".github/workflows/ci.yml",
     ".github/workflows/deploy-db.yml",
     ".github/workflows/mobile-build.yml",
+    ".github/workflows/assistant-eval.yml",
   ])("%s declara permisos mínimos y lee secretos sólo con secrets.*", (file) => {
     const text = readFileSync(join(root, file), "utf8");
     expect(text).toMatch(/^permissions:\s*\n\s+contents: read/m);
     // Toda variable sensible viene de `${{ secrets.X }}` (definidos en GitHub, no en el repo).
-    for (const m of text.matchAll(/(SUPABASE_ACCESS_TOKEN|SUPABASE_DB_PASSWORD|EXPO_TOKEN):\s*(.+)/g)) {
+    for (const m of text.matchAll(
+      /(SUPABASE_ACCESS_TOKEN|SUPABASE_DB_PASSWORD|EXPO_TOKEN|ANTHROPIC_API_KEY):\s*(.+)/g,
+    )) {
       expect(m[2]).toMatch(/^\$\{\{\s*secrets\.[A-Z_]+\s*\}\}$/);
     }
   });

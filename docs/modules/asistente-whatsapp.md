@@ -150,7 +150,9 @@ Cada escenario corre con el **motor real** contra una **base simulada** con dato
 - nunca confirma una cita, no dice ser persona, no ofrece descuentos propios;
 - menciona (o no) lo esperado.
 
-**Correrla con la API real** (tiene costo; sin `--yes` sólo informa cuántas llamadas haría):
+**Con un botón en GitHub (recomendado):** _Actions → «Evaluación del asistente» → Run workflow_. Eliges el modelo, los escenarios (vacío = los 28) y cuántas veces repetirlos. El resumen de aprobados y fallas sale en la corrida; el reporte completo (`reporte-eval.json` y la salida) queda como artefacto 90 días. Requiere el secreto de repositorio `ANTHROPIC_API_KEY` (_Settings → Secrets and variables → Actions_); sin él la corrida falla de inmediato sin gastar. Sólo corre a mano, nunca en PRs. Workflow: `.github/workflows/assistant-eval.yml`.
+
+**Desde la terminal** (tiene costo; sin `--yes` sólo informa cuántas llamadas haría):
 
 ```bash
 ANTHROPIC_API_KEY=… npm run eval:assistant -w @meguiars/web -- --yes [--model claude-sonnet-5-5] [--only precio-lavado,queja] [--repeat 2] [--out reporte.json]
