@@ -24,6 +24,7 @@ import {
   type CatalogItem,
   type RepoError,
   type Result,
+  vehicleLabel,
 } from "@meguiars/domain";
 import { createB2bRepository, type MeguiarsSupabaseClient } from "@meguiars/supabase";
 import {
@@ -661,7 +662,7 @@ export function NewB2bOrderEditor({
         placeholder="Elige el vehículo"
         options={(account?.vehicles ?? []).map((v) => ({
           value: v.id,
-          label: `${v.make} ${v.model} ${v.year} · ${v.plate}`,
+          label: vehicleLabel(v),
         }))}
         value={vehicleId}
         onChange={setVehicleId}

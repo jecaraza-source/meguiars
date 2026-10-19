@@ -2,10 +2,12 @@ import type {
   AgendaRepository,
   AppointmentDetail,
   AppointmentListItem,
+  AppointmentSource,
   Bay,
   ServiceOrderDraft,
   Technician,
 } from "@meguiars/domain";
+import { vehicleLabel } from "@meguiars/domain";
 import {
   agendaFilterSchema,
   createAppointmentSchema,
@@ -39,12 +41,15 @@ const toListItem = (row: ListRow): AppointmentListItem => ({
   services: row.services,
   notes: row.notes,
   serviceOrderId: row.service_order_id,
+  source: row.source as AppointmentSource,
+  confirmedAt: row.confirmed_at,
+  reminderSentAt: row.reminder_sent_at,
 });
 
 type DetailRow = Tables<"appointments"> & {
   appointment_services: { service_id: string; position: number; services: { name: string } | null }[];
   clients: { full_name: string; phone: string } | null;
-  vehicles: { make: string; model: string; year: number; plate: string } | null;
+  vehicles: { make: string; model: string; year: number; plate: string | null } | null;
   bays: { name: string } | null;
   technicians: { full_name: string } | null;
 };
@@ -64,7 +69,7 @@ const toDetail = (row: DetailRow): AppointmentDetail => {
     clientName: row.clients?.full_name ?? null,
     clientPhone: row.clients?.phone ?? null,
     vehicleId: row.vehicle_id,
-    vehicleLabel: v ? `${v.make} ${v.model} ${v.year} · ${v.plate}` : null,
+    vehicleLabel: v ? vehicleLabel(v) : null,
     bayId: row.bay_id,
     bayName: row.bays?.name ?? null,
     technicianId: row.technician_id,
@@ -73,6 +78,9 @@ const toDetail = (row: DetailRow): AppointmentDetail => {
     serviceIds: services.map((s) => s.service_id),
     notes: row.notes,
     serviceOrderId: row.service_order_id,
+    source: row.source as AppointmentSource,
+    confirmedAt: row.confirmed_at,
+    reminderSentAt: row.reminder_sent_at,
     receivedAt: row.received_at,
     startedAt: row.started_at,
     finishedAt: row.finished_at,

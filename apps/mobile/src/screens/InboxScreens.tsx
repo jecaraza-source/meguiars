@@ -36,18 +36,20 @@ import {
   type WhatsappTemplate,
   windowRemaining,
   windowTone,
+  presentMessageMedia,
 } from "@meguiars/domain";
 import {
   createAssistantRepository,
   createCommercialRepository,
   createInboxRepository,
 } from "@meguiars/supabase";
-import { space } from "@meguiars/ui-tokens";
+import { colors, radius, space } from "@meguiars/ui-tokens";
 import { conversationHistorySchema } from "@meguiars/validation";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, Linking, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
 import { sendFromApp, WEB_URL } from "@/lib/inbox";
+import { capturePhoto } from "@/lib/photo";
 import { Button, Checkbox, Field, LinkButton, Select } from "@/ui/controls";
 import { Badge, Card, EmptyState, List, Skeleton } from "@/ui/display";
 import { Screen } from "@/ui/layout";
@@ -305,6 +307,40 @@ export function ConversationScreen({
     setRequestId(newRequestId());
     reload();
   };
+  // Foto por WhatsApp: se reduce en el teléfono, se sube con la sesión y el servidor la envía.
+  const sendPhoto = async (source: "camera" | "library") => {
+    const org = usableCenters(state.access).find((a) => a.center.id === c.detailCenterId)?.center
+      .organizationId;
+    if (!org) return;
+    const picked = await capturePhoto(source);
+    if (!picked.ok) return picked.canceled ? undefined : setError(picked.message);
+    setBusy(true);
+    setError(null);
+    const up = await repo.uploadPhoto({
+      organizationId: org,
+      conversationId: c.id,
+      fileId: newRequestId(),
+      contentType: "image/jpeg",
+      file: picked.photo.data,
+    });
+    if (!up.ok) {
+      setBusy(false);
+      return setError(commercialErrorMessage(up.error));
+    }
+    const r = await sendFromApp(client!, {
+      conversationId: c.id,
+      requestId: newRequestId(),
+      mediaPath: up.data.path,
+      ...(body.trim() ? { caption: body.trim() } : {}),
+      expectedLastMessageAt: c.lastMessageAt,
+    });
+    setBusy(false);
+    if (!r.ok) return setError(r.error);
+    if (r.status === "fallido") return setError(`Meta no aceptó la foto: ${r.error ?? "error"}`);
+    toast({ message: INBOX_COPY.photoSent, tone: "success" });
+    setBody("");
+    reload();
+  };
   const sendTemplate = async () => {
     if (!tpl) return;
     setBusy(true);
@@ -335,7 +371,10 @@ export function ConversationScreen({
       <Card title="Mensajes">
         {messages.map((m) => (
           <View key={m.id} style={[styles.bubble, m.direction === "saliente" ? styles.out : styles.in]}>
-            <Text style={textStyle("bodySmall")}>{m.body ?? INBOX_COPY.mediaNotice}</Text>
+            <MessageMedia message={m} />
+            {m.body || presentMessageMedia(m).kind === "none" ? (
+              <Text style={textStyle("bodySmall")}>{m.body ?? INBOX_COPY.mediaNotice}</Text>
+            ) : null}
             <Text style={textStyle("caption", "muted")}>
               {formatInCenterTimeZone(m.occurredAt, tz)}
               {m.direction === "saliente"
@@ -425,6 +464,27 @@ export function ConversationScreen({
                 disabled={!body.trim()}
                 onPress={() => void send()}
               />
+              {c.channel === "whatsapp" ? (
+                <View style={styles.row}>
+                  <Button
+                    label="Tomar foto"
+                    variant="secondary"
+                    loading={busy}
+                    onPress={() => void sendPhoto("camera")}
+                  />
+                  <Button
+                    label="Elegir foto"
+                    variant="secondary"
+                    loading={busy}
+                    onPress={() => void sendPhoto("library")}
+                  />
+                </View>
+              ) : null}
+              {c.channel === "whatsapp" ? (
+                <Text style={textStyle("caption", "muted")}>
+                  {INBOX_COPY.photoHint} Si escribiste una respuesta, va como texto de la foto.
+                </Text>
+              ) : null}
             </View>
           )}
           <Text style={textStyle("caption", "muted")}>{INBOX_COPY.notMirrored}</Text>
@@ -755,8 +815,40 @@ export function ConversationHistoryScreen({
   );
 }
 
+/** Foto, audio, video o archivo del mensaje (URL firmada de corta duración). */
+function MessageMedia({ message }: { message: InboxMessage }) {
+  const media = presentMessageMedia(message);
+  if (media.kind === "none") return null;
+  if (media.kind === "pending")
+    return <Text style={textStyle("caption", "muted")}>{INBOX_COPY.mediaPending}</Text>;
+  if (media.kind === "error")
+    return (
+      <Text style={textStyle("caption", "muted")}>
+        {INBOX_COPY.mediaUnavailable}: {media.label}
+      </Text>
+    );
+  if (!media.url) return null;
+  const url = media.url;
+  if (media.kind === "image")
+    return (
+      <Image
+        source={{ uri: url }}
+        accessibilityLabel={media.label}
+        style={styles.photo}
+        resizeMode="contain"
+      />
+    );
+  return (
+    <LinkButton
+      label={`${INBOX_COPY.mediaFile}${media.label ? ` · ${media.label}` : ""}`}
+      onPress={() => void Linking.openURL(url)}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   stack: { gap: space.md },
+  photo: { width: "100%", aspectRatio: 1, borderRadius: radius.md, backgroundColor: colors.surface },
   row: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   bubble: { gap: space.xs, marginBottom: space.sm, padding: space.sm },
   in: { alignSelf: "flex-start" },

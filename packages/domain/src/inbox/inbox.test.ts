@@ -6,7 +6,11 @@ import { ASSISTANT_MODE_TONES, conversationAssistantBadge } from "../assistant/a
 import { CONVERSATION_PRIORITY_TONES, CONVERSATION_STATUS_TONES, windowTone } from "./copy";
 import {
   type ConversationHistoryEntry,
+  type InboxMessage,
   fillQuickReply,
+  inboxMediaExtension,
+  inboxMediaPath,
+  presentMessageMedia,
   historyDisplayName,
   unreadLabel,
   normalizeTags,
@@ -19,7 +23,9 @@ import {
   windowRemaining,
 } from "./inbox";
 import {
+  buildMediaInfoRequest,
   buildSendRequest,
+  parseMediaInfo,
   buildTemplateSendRequest,
   buildTemplatesListRequest,
   parseTemplatesResponse,
@@ -258,6 +264,168 @@ describe("envío y verificación con la Graph API", () => {
       buildSendRequest({ ...base, channel: "whatsapp", contactExternalId: "MX.1", contactPhone: null }).body,
     ).toMatchObject({ recipient: "MX.1" });
   });
+  it("WhatsApp con botones de respuesta (resumen de una cita propuesta)", () => {
+    const req = buildSendRequest({
+      ...base,
+      channel: "whatsapp",
+      contactPhone: "+5215533334444",
+      body: "*Confirme su cita*",
+      buttons: [
+        { id: "cita:confirmar:p1", title: "Confirmar" },
+        { id: "cita:cambiar:p1", title: "Un título demasiado largo" },
+      ],
+    });
+    expect(req.body).toEqual({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: "5215533334444",
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: "*Confirme su cita*" },
+        action: {
+          buttons: [
+            { type: "reply", reply: { id: "cita:confirmar:p1", title: "Confirmar" } },
+            { type: "reply", reply: { id: "cita:cambiar:p1", title: "Un título demasiado" } },
+          ],
+        },
+      },
+    });
+  });
+
+  it("el webhook trae el id del botón que tocó el contacto (interactivo o de plantilla)", () => {
+    const msg = (m: Record<string, unknown>) => ({
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          changes: [
+            {
+              field: "messages",
+              value: {
+                metadata: { phone_number_id: "1234567890" },
+                contacts: [{ wa_id: "5215533334444", profile: { name: "Laura" } }],
+                messages: [{ id: "wamid.b", from: "5215533334444", timestamp: "1760000000", ...m }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const button = parseMetaWebhook(
+      msg({
+        type: "interactive",
+        interactive: { type: "button_reply", button_reply: { id: "cita:confirmar:p1", title: "Confirmar" } },
+      }),
+    ).inbound[0]!.items[0]!;
+    expect(button).toMatchObject({
+      message_type: "interactive",
+      body: "Confirmar",
+      payload: "cita:confirmar:p1",
+    });
+    const template = parseMetaWebhook(
+      msg({ type: "button", button: { payload: "recordatorio:confirmar:a1", text: "Confirmar" } }),
+    ).inbound[0]!.items[0]!;
+    expect(template).toMatchObject({
+      message_type: "button",
+      body: "Confirmar",
+      payload: "recordatorio:confirmar:a1",
+    });
+    expect(
+      parseMetaWebhook(msg({ type: "text", text: { body: "Hola" } })).inbound[0]!.items[0]!.payload,
+    ).toBeUndefined();
+  });
+
+  it("archivos de WhatsApp: id y tipo al recibir, URL de descarga y foto por enlace al enviar", () => {
+    const parsed = parseMetaWebhook({
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          changes: [
+            {
+              field: "messages",
+              value: {
+                metadata: { phone_number_id: "1234567890" },
+                contacts: [{ wa_id: "5215533334444" }],
+                messages: [
+                  {
+                    id: "wamid.img",
+                    from: "5215533334444",
+                    timestamp: "1760000000",
+                    type: "image",
+                    image: { id: "1122334455", mime_type: "image/jpeg", caption: "El cofre" },
+                  },
+                  {
+                    id: "wamid.doc",
+                    from: "5215533334444",
+                    timestamp: "1760000001",
+                    type: "document",
+                    document: { id: "../malo", mime_type: "application/pdf", filename: "factura.pdf" },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const [img, doc] = parsed.inbound[0]!.items;
+    expect(img).toMatchObject({ body: "El cofre", media_id: "1122334455", media_mime_type: "image/jpeg" });
+    // Un id con caracteres raros no se usa para pedir el archivo.
+    expect(doc!.media_id).toBeUndefined();
+    expect(buildMediaInfoRequest("1122334455").url).toBe("https://graph.facebook.com/v26.0/1122334455");
+    expect(
+      parseMediaInfo(200, { url: "https://lookaside.fbsbx.com/x", mime_type: "image/jpeg", file_size: 2048 }),
+    ).toEqual({
+      ok: true,
+      url: "https://lookaside.fbsbx.com/x",
+      mimeType: "image/jpeg",
+      size: 2048,
+    });
+    expect(parseMediaInfo(404, { error: { code: 100, message: "Unknown media" } })).toEqual({
+      ok: false,
+      error: "(#100) Unknown media",
+    });
+    expect(
+      buildSendRequest({
+        ...base,
+        channel: "whatsapp",
+        contactPhone: "+5215533334444",
+        body: "Así quedó",
+        media: { link: "https://x/y.jpg?token=1" },
+      }).body,
+    ).toMatchObject({ type: "image", image: { link: "https://x/y.jpg?token=1", caption: "Así quedó" } });
+  });
+
+  it("el hilo muestra el archivo: foto con URL firmada, pendiente de descarga o el motivo", () => {
+    const m: InboxMessage = {
+      id: "m",
+      direction: "entrante",
+      messageType: "image",
+      body: null,
+      status: "recibido",
+      error: null,
+      sentByName: null,
+      sentByBot: false,
+      occurredAt: "2026-10-19T00:00:00Z",
+      statusAt: "2026-10-19T00:00:00Z",
+      mediaPath: null,
+      mediaMimeType: "image/jpeg",
+      mediaFilename: null,
+      mediaError: null,
+      mediaUrl: null,
+    };
+    expect(presentMessageMedia(m).kind).toBe("pending");
+    expect(presentMessageMedia({ ...m, mediaPath: "o/c/m.jpg", mediaUrl: "https://s/x" })).toEqual({
+      kind: "image",
+      url: "https://s/x",
+      label: "Foto",
+    });
+    expect(presentMessageMedia({ ...m, mediaError: "Archivo de más de 16 MB" }).kind).toBe("error");
+    expect(presentMessageMedia({ ...m, messageType: "text" }).kind).toBe("none");
+    expect(inboxMediaPath("o", "c", "f", inboxMediaExtension("image/png; x")!)).toBe("o/c/f.png");
+    expect(inboxMediaExtension("application/zip")).toBeNull();
+  });
+
   it("Messenger con messaging_type RESPONSE; Instagram en graph.instagram.com", () => {
     expect(
       buildSendRequest({ ...base, channel: "messenger", contactExternalId: "PSID", contactPhone: null }),
@@ -412,6 +580,37 @@ describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", (
         ],
       },
     });
+    // Recordatorio: cada botón de respuesta rápida lleva su id (regresa en el webhook al tocarlo).
+    expect(
+      buildTemplateSendRequest({
+        externalAccountId: "1234567890",
+        contactExternalId: "5215511112222",
+        contactPhone: null,
+        templateName: "recordatorio_cita",
+        templateLanguage: "es_MX",
+        templateParams: ["Beto"],
+        buttonPayloads: ["recordatorio:confirmar:a1", "recordatorio:reagendar:a1"],
+      }).body,
+    ).toMatchObject({
+      recipient: "5215511112222",
+      template: {
+        components: [
+          { type: "body", parameters: [{ type: "text", text: "Beto" }] },
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: "0",
+            parameters: [{ type: "payload", payload: "recordatorio:confirmar:a1" }],
+          },
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: "1",
+            parameters: [{ type: "payload", payload: "recordatorio:reagendar:a1" }],
+          },
+        ],
+      },
+    });
     expect(buildTemplatesListRequest("1029384756").url).toContain("/1029384756/message_templates?fields=");
     const parsed = parseTemplatesResponse(200, {
       data: [
@@ -420,7 +619,17 @@ describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", (
           language: "es_MX",
           status: "APPROVED",
           category: "UTILITY",
-          components: [{ type: "BODY", text: "Hola {{1}}, te esperamos el {{2}}. {{1}}" }],
+          components: [
+            { type: "BODY", text: "Hola {{1}}, te esperamos el {{2}}. {{1}}" },
+            {
+              type: "BUTTONS",
+              buttons: [
+                { type: "QUICK_REPLY", text: "Confirmar" },
+                { type: "QUICK_REPLY", text: "Reagendar" },
+                { type: "URL", text: "Mapa", url: "https://maps.app.goo.gl/x" },
+              ],
+            },
+          ],
         },
         { name: "Mal Nombre", language: "es", status: "APPROVED", category: "UTILITY", components: [] },
         { name: "x", language: "es", status: "APPROVED", category: "OTRA", components: [] },
@@ -437,6 +646,7 @@ describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", (
           status: "APPROVED",
           body: "Hola {{1}}, te esperamos el {{2}}. {{1}}",
           param_count: 2,
+          quick_replies: 2,
         },
       ],
       next: "https://graph.facebook.com/next",

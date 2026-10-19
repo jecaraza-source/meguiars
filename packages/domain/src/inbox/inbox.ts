@@ -1,3 +1,4 @@
+import { WHATSAPP_MEDIA_TYPES } from "./meta";
 import type { Result } from "../result";
 
 /**
@@ -124,6 +125,8 @@ export interface WhatsappTemplate {
   status: string;
   bodyText: string | null;
   paramCount: number;
+  /** Botones de respuesta rápida (el recordatorio de cita exige 2: Confirmar y Reagendar). */
+  quickReplyCount: number;
   syncedAt: string;
 }
 
@@ -146,6 +149,78 @@ export interface InboxMessage {
   sentByBot: boolean;
   occurredAt: string;
   statusAt: string;
+  /** Archivo del mensaje (foto, documento, audio o video) en el bucket privado inbox-media. */
+  mediaPath: string | null;
+  mediaMimeType: string | null;
+  mediaFilename: string | null;
+  /** Por qué no se pudo descargar el archivo de Meta. */
+  mediaError: string | null;
+  /** URL firmada de corta duración para verlo (la pone el repositorio). */
+  mediaUrl: string | null;
+}
+
+/** Archivos de la bandeja: bucket privado, URL firmadas y fotos de hasta 5 MB al enviar. */
+export const INBOX_MEDIA_BUCKET = "inbox-media";
+export const INBOX_MEDIA_URL_TTL = 600;
+export const INBOX_MEDIA_MAX_BYTES = 16 * 1024 * 1024;
+export const INBOX_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+export const INBOX_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+const MEDIA_EXTENSIONS: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "application/pdf": "pdf",
+  "audio/ogg": "ogg",
+  "audio/mpeg": "mp3",
+  "audio/mp4": "m4a",
+  "audio/aac": "aac",
+  "audio/amr": "amr",
+  "video/mp4": "mp4",
+  "video/3gpp": "3gp",
+};
+
+/** Extensión del archivo por su tipo, o null si la bandeja no lo guarda. */
+export function inboxMediaExtension(mimeType: string | null | undefined): string | null {
+  return MEDIA_EXTENSIONS[(mimeType ?? "").split(";")[0]!.trim().toLowerCase()] ?? null;
+}
+
+/** Ruta en el bucket: <organización>/<conversación>/<archivo>.<ext> (espejo de las políticas de Storage). */
+export function inboxMediaPath(
+  organizationId: string,
+  conversationId: string,
+  fileId: string,
+  ext: string,
+): string {
+  return `${organizationId}/${conversationId}/${fileId}.${ext}`;
+}
+
+/** Cómo se muestra el archivo en el hilo. */
+export function inboxMediaKind(mimeType: string | null): "image" | "audio" | "video" | "file" {
+  const t = (mimeType ?? "").toLowerCase();
+  if (t.startsWith("image/")) return "image";
+  if (t.startsWith("audio/")) return "audio";
+  if (t.startsWith("video/")) return "video";
+  return "file";
+}
+
+/** Cómo se muestra el archivo de un mensaje (mismo texto en web y móvil). */
+export function presentMessageMedia(m: InboxMessage): {
+  kind: "image" | "audio" | "video" | "file" | "pending" | "error" | "none";
+  url: string | null;
+  label: string;
+} {
+  if (m.mediaPath && m.mediaUrl) {
+    const kind = inboxMediaKind(m.mediaMimeType);
+    return { kind, url: m.mediaUrl, label: m.mediaFilename ?? (kind === "image" ? "Foto" : "Archivo") };
+  }
+  if (m.mediaError) return { kind: "error", url: null, label: m.mediaError };
+  if (
+    m.direction === "entrante" &&
+    WHATSAPP_MEDIA_TYPES.includes(m.messageType as (typeof WHATSAPP_MEDIA_TYPES)[number])
+  )
+    return { kind: m.mediaPath ? "file" : "pending", url: null, label: m.mediaFilename ?? "" };
+  return { kind: "none", url: null, label: "" };
 }
 
 export interface ConversationFilter {
@@ -217,6 +292,16 @@ export interface OutboundMessage {
   contactPhone: string | null;
   body: string;
   alreadySent: boolean;
+  /** Botones de respuesta rápida (sólo WhatsApp, máximo 3): el asistente los usa para confirmar citas. */
+  buttons?: ReplyButton[] | undefined;
+  /** Foto saliente: URL firmada de corta duración de donde Meta la descarga. */
+  media?: { link: string } | undefined;
+}
+
+/** Botón de respuesta rápida de WhatsApp: el id regresa en el webhook cuando el contacto lo toca. */
+export interface ReplyButton {
+  id: string;
+  title: string;
 }
 
 export interface InboxRepository {
@@ -258,6 +343,22 @@ export interface InboxRepository {
     body: string,
     expectedLastMessageAt?: string | undefined,
   ): Promise<Result<OutboundMessage>>;
+  /** Sube una foto (ya reducida) a la conversación con la sesión de quien responde. */
+  uploadPhoto(command: {
+    organizationId: string;
+    conversationId: string;
+    fileId: string;
+    contentType: string;
+    file: Blob | ArrayBuffer;
+  }): Promise<Result<{ path: string }>>;
+  /** Deja pendiente la foto subida (mismas reglas que el texto). */
+  prepareOutboundMedia(
+    conversationId: string,
+    requestId: string,
+    path: string,
+    caption: string,
+    expectedLastMessageAt?: string | undefined,
+  ): Promise<Result<OutboundMessage & { mediaPath: string }>>;
   setTriage(
     id: string,
     version: number,

@@ -17,6 +17,7 @@ import {
   type MembershipStatus,
   type RedeemableLine,
   type Vehicle,
+  vehicleLabel,
 } from "@meguiars/domain";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -116,7 +117,7 @@ export function NewMembershipForm({
         label={membershipsCopy.vehicle}
         required
         placeholder="Elige el vehículo"
-        options={active.map((v) => ({ value: v.id, label: `${v.make} ${v.model} ${v.year} · ${v.plate}` }))}
+        options={active.map((v) => ({ value: v.id, label: vehicleLabel(v) }))}
         defaultValue={valueOf(state, "vehicleId", active.length === 1 ? active[0]!.id : "")}
         error={f.vehicleId}
       />

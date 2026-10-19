@@ -11,6 +11,7 @@ import {
   todayIn,
   type ClientDetail,
   type MembershipPlan,
+  vehicleLabel,
 } from "@meguiars/domain";
 import { createClientRepository, createMembershipRepository } from "@meguiars/supabase";
 import { createMembershipSchema, fieldErrors } from "@meguiars/validation";
@@ -139,7 +140,7 @@ export function MembershipNewScreen({
             label={membershipsCopy.vehicle}
             options={vehicles.map((v) => ({
               value: v.id,
-              label: `${v.make} ${v.model} ${v.year} · ${v.plate}`,
+              label: vehicleLabel(v),
             }))}
             value={values.vehicleId}
             onChange={(v) => set("vehicleId", v)}

@@ -12,6 +12,7 @@ import {
   type CatalogItem,
   type ClientDetail,
   type Technician,
+  vehicleLabel,
 } from "@meguiars/domain";
 import {
   createAgendaRepository,
@@ -186,7 +187,7 @@ export function OrderNewScreen({
           placeholder="Elige el vehículo"
           options={resources.client.vehicles
             .filter((v) => v.active)
-            .map((v) => ({ value: v.id, label: `${v.make} ${v.model} ${v.year} · ${v.plate}` }))}
+            .map((v) => ({ value: v.id, label: vehicleLabel(v) }))}
           value={values.vehicleId ?? ""}
           onChange={(v) => set("vehicleId", v)}
           error={errors.vehicleId}

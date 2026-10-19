@@ -1,4 +1,4 @@
-import type { EvalScenario } from "./eval";
+import { EVAL_CLIENT_IN_SERVICE, EVAL_KNOWN_CLIENT, type EvalScenario } from "./eval";
 
 /**
  * Conversaciones de prueba del asistente (ver eval.ts). Cubren lo que pide la
@@ -101,7 +101,23 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
   },
   {
     id: "quiere-agendar",
-    title: "Quiere agendar con datos completos: pasa a una persona con resumen",
+    title: "Quiere agendar con datos completos: propone la cita para confirmar con botón",
+    centerConfirmed: true,
+    history: [
+      { from: "cliente", text: "¿Tienen lugar mañana para lavado exterior?" },
+      {
+        from: "asistente",
+        text: "Sí, en Centro Polanco hay lugar mañana a las 10:00, 12:30 o 16:00. ¿Cuál le acomoda?",
+      },
+    ],
+    message: "A las 12:30 por favor, es un Mazda 3 2021, placa ABC123, y me llamo Laura",
+    expect: { kind: "reply" },
+    mustCall: ["proponer_cita"],
+    mustMention: [["confirmar"]],
+  },
+  {
+    id: "agendar-falta-anio",
+    title: "Quiere agendar sin decir el año del auto: lo pide antes de proponer",
     centerConfirmed: true,
     history: [
       { from: "cliente", text: "¿Tienen lugar mañana para lavado exterior?" },
@@ -111,7 +127,77 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
       },
     ],
     message: "A las 12:30 por favor, es un Mazda 3 y me llamo Laura",
-    expect: { kind: "handoff", codes: ["agendar"] },
+    expect: { kind: "reply" },
+    mustNotCall: ["proponer_cita"],
+    mustMention: [["año", "ano"]],
+  },
+  {
+    id: "agendar-sin-placa",
+    title: "No tiene la placa a la mano: agenda sin ella",
+    centerConfirmed: true,
+    history: [
+      { from: "cliente", text: "Quiero un lavado exterior mañana" },
+      {
+        from: "asistente",
+        text: "Con gusto. En Centro Polanco hay lugar mañana a las 10:00, 12:30 o 16:00. ¿Cuál le acomoda? Y compártame su nombre y su auto (marca, modelo, año y placa).",
+      },
+    ],
+    message: "A las 10:00. Soy Laura, es un Mazda 3 2021, la placa no la tengo a la mano",
+    expect: { kind: "reply" },
+    mustCall: ["proponer_cita"],
+  },
+  {
+    id: "reagendar",
+    title: "Cliente registrado mueve su cita: propone el cambio con botón",
+    centerConfirmed: true,
+    profile: EVAL_KNOWN_CLIENT,
+    message: "Necesito mover mi cita de mañana a las 16:00, por favor",
+    expect: { kind: "reply" },
+    mustCall: ["proponer_cambio_cita"],
+    mustMention: [["confirmar"]],
+  },
+  {
+    id: "estado-os",
+    title: "¿Ya está mi coche?: estado, folio y hora promesa de su OS, sin montos",
+    centerConfirmed: true,
+    profile: EVAL_CLIENT_IN_SERVICE,
+    message: "Hola, ¿ya está listo mi coche?",
+    expect: { kind: "reply" },
+    mustCall: ["consultar_cliente"],
+    mustMention: [["proceso"], ["17:30"]],
+    mustNotMention: ["$"],
+  },
+  {
+    id: "estado-os-sin-orden",
+    title: "Pregunta por su auto sin orden en curso: lo dice y ofrece una persona",
+    centerConfirmed: true,
+    message: "¿Ya puedo pasar por mi camioneta?",
+    expect: { kind: "reply_or_handoff", codes: ["pide_persona", "garantia", "no_entiende"] },
+    mustCall: ["consultar_cliente"],
+  },
+  {
+    id: "recordatorio-reagendar",
+    title: "Toca «Reagendar» en el recordatorio: ofrece horarios sin cancelar ni confirmar",
+    centerConfirmed: true,
+    profile: EVAL_KNOWN_CLIENT,
+    history: [
+      {
+        from: "asistente",
+        text: "Hola Laura, le recordamos su cita el viernes 16 de octubre, 10:00 en Centro Polanco. ¿Nos confirma su asistencia?",
+      },
+    ],
+    message: "Reagendar",
+    expect: { kind: "reply_or_handoff", codes: ["agendar"] },
+    mustNotCall: ["proponer_cancelacion"],
+  },
+  {
+    id: "cancelar-cita",
+    title: "Cliente registrado cancela su cita: pide confirmarlo con botón",
+    centerConfirmed: true,
+    profile: EVAL_KNOWN_CLIENT,
+    message: "Ya no voy a poder ir mañana, cancélenme la cita por favor",
+    expect: { kind: "reply_or_handoff", codes: ["agendar"] },
+    mustCall: ["proponer_cancelacion"],
   },
   {
     id: "confirmame-cita",
@@ -135,7 +221,17 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
     title: "Pide descuento especial: no lo inventa",
     message: "Si llevo 3 coches ¿me haces 30% de descuento?",
     expect: { kind: "reply_or_handoff", codes: ["descuento", "b2b", "pide_persona"] },
-    mustNotMention: ["30%", "30 %"],
+    // Reprueba si lo ofrece; decir «no puedo darle el 30%» es correcto.
+    mustNotMention: [
+      "le hago el 30",
+      "le doy el 30",
+      "le damos el 30",
+      "le aplico el 30",
+      "le aplicamos el 30",
+      "le podemos dar el 30",
+      "le puedo dar el 30",
+      "con el 30% de descuento queda",
+    ],
   },
   {
     id: "flotilla",

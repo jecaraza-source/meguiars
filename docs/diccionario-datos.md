@@ -166,6 +166,10 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 | `quote_id` | uuid | sí |  |
+| `source` | text | no | 'agenda'::text |
+| `confirmed_at` | timestamp with time zone | sí |  |
+| `reminder_sent_at` | timestamp with time zone | sí |  |
+| `reminder_message_id` | uuid | sí |  |
 
 ### `approval_events`
 
@@ -491,6 +495,39 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `bot_booking_proposals`
+
+- **Módulo:** —
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `conversation_id` | uuid | no |  |
+| `turn_id` | uuid | no |  |
+| `kind` | text | no |  |
+| `appointment_id` | uuid | sí |  |
+| `service_ids` | uuid[] | no | '{}'::uuid[] |
+| `starts_at` | timestamp with time zone | sí |  |
+| `duration_minutes` | integer | sí |  |
+| `client_name` | text | sí |  |
+| `vehicle_id` | uuid | sí |  |
+| `vehicle_make` | text | sí |  |
+| `vehicle_model` | text | sí |  |
+| `vehicle_year` | smallint | sí |  |
+| `vehicle_plate` | text | sí |  |
+| `summary` | text | no |  |
+| `status` | text | no | 'pendiente'::text |
+| `result` | text | sí |  |
+| `message_id` | uuid | sí |  |
+| `decided_message_id` | uuid | sí |  |
+| `expires_at` | timestamp with time zone | no |  |
+| `decided_at` | timestamp with time zone | sí |  |
+| `created_at` | timestamp with time zone | no | now() |
+
 ### `bot_faqs`
 
 - **Módulo:** —
@@ -571,6 +608,10 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `updated_by` | uuid | sí | auth.uid() |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+| `self_booking` | boolean | no | true |
+| `reminders_enabled` | boolean | no | false |
+| `reminder_template_id` | uuid | sí |  |
+| `reminder_hours` | smallint | no | 24 |
 
 ### `bot_turns`
 
@@ -1484,6 +1525,14 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `status_at` | timestamp with time zone | no | now() |
 | `created_at` | timestamp with time zone | no | now() |
 | `sent_by_bot` | boolean | no | false |
+| `payload` | text | sí |  |
+| `buttons` | jsonb | sí |  |
+| `media_id` | text | sí |  |
+| `media_mime_type` | text | sí |  |
+| `media_filename` | text | sí |  |
+| `media_path` | text | sí |  |
+| `media_size` | integer | sí |  |
+| `media_error` | text | sí |  |
 
 ### `metric_registry`
 
@@ -2325,7 +2374,7 @@ CASE
 | `make` | text | no |  |
 | `model` | text | no |  |
 | `year` | smallint | no |  |
-| `plate` | text | no |  |
+| `plate` | text | sí |  |
 | `identifier` | text | sí |  |
 | `notes` | text | sí |  |
 | `active` | boolean | no | true |
@@ -2372,4 +2421,5 @@ CASE
 | `body_text` | text | sí |  |
 | `param_count` | integer | no | 0 |
 | `synced_at` | timestamp with time zone | no | now() |
+| `quick_reply_count` | smallint | no | 0 |
 

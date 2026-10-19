@@ -65,6 +65,16 @@ export const INBOX_COPY = {
   notMirrored:
     "Los mensajes que respondas desde las apps de Meta (Business Suite, WhatsApp Business) no se copian aquí.",
   mediaNotice: "Mensaje con archivo: ábrelo en la app de Meta.",
+  mediaPending: "Descargando el archivo de WhatsApp…",
+  mediaFile: "Abrir archivo",
+  mediaUnavailable: "No se pudo descargar el archivo",
+  photoTitle: "Enviar foto",
+  photoHint: "JPG, PNG o WEBP. Se reduce antes de enviar (máximo 5 MB).",
+  photoCaption: "Texto de la foto (opcional)",
+  photoSend: "Enviar foto",
+  photoSending: "Enviando…",
+  photoSent: "Foto enviada",
+  photoOnlyWhatsapp: "Por ahora las fotos se envían sólo por WhatsApp.",
   sendUnavailable:
     "El envío no está configurado en el servidor (faltan credenciales). Puedes leer la conversación, pero no responder desde aquí.",
 } as const;

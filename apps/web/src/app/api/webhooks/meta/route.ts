@@ -2,6 +2,7 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import { parseMetaWebhook, signatureMatches, webhookChallenge } from "@meguiars/domain";
 import { createInboxServiceGateway } from "@meguiars/supabase";
 import { runAssistantForMessages } from "@/lib/assistant";
+import { storeInboundMedia } from "@/lib/inbox";
 import { expectedSignature } from "@/lib/meta";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
@@ -46,11 +47,15 @@ export async function POST(request: NextRequest) {
   const gateway = createInboxServiceGateway(service);
   const results: unknown[] = [];
   const forAssistant: string[] = [];
+  const withMedia: string[] = [];
   for (const group of parsed.inbound) {
     const r = await gateway.ingestInbound(group.channel, group.accountId, group.items);
     // Un error de la base sí debe reintentarse: Meta repite el webhook si no recibe 200.
     if (!r.ok) return NextResponse.json({ error: r.error.message }, { status: 500 });
-    if (group.channel === "whatsapp") forAssistant.push(...newMessageIds(r.data));
+    if (group.channel === "whatsapp") {
+      forAssistant.push(...newMessageIds(r.data));
+      withMedia.push(...newMessageIds(r.data, true));
+    }
     const { messages: _ids, ...summary } = r.data;
     results.push(summary);
   }
@@ -58,15 +63,20 @@ export async function POST(request: NextRequest) {
     const r = await gateway.ingestStatuses(group.channel, group.items);
     if (!r.ok) return NextResponse.json({ error: r.error.message }, { status: 500 });
   }
-  if (forAssistant.length) after(() => runAssistantForMessages(forAssistant));
+  // Después de responder 200: primero los archivos (el hilo los muestra), luego el asistente.
+  if (forAssistant.length)
+    after(async () => {
+      await storeInboundMedia(withMedia);
+      await runAssistantForMessages(forAssistant);
+    });
   return NextResponse.json({ received: results, skipped: parsed.skipped.length });
 }
 
-function newMessageIds(result: Record<string, unknown>): string[] {
+function newMessageIds(result: Record<string, unknown>, onlyWithMedia = false): string[] {
   const list = Array.isArray(result.messages) ? result.messages : [];
-  return list.flatMap((m) =>
-    m && typeof m === "object" && typeof (m as { message_id?: unknown }).message_id === "string"
-      ? [(m as { message_id: string }).message_id]
-      : [],
-  );
+  return list.flatMap((m) => {
+    const o = m && typeof m === "object" ? (m as { message_id?: unknown; has_media?: unknown }) : {};
+    if (typeof o.message_id !== "string") return [];
+    return !onlyWithMedia || o.has_media === true ? [o.message_id] : [];
+  });
 }

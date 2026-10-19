@@ -16,8 +16,9 @@ import {
   type LeadOwner,
   type QuickReply,
   type WhatsappTemplate,
+  INBOX_PHOTO_TYPES,
 } from "@meguiars/domain";
-import { useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   assignConversationAction,
@@ -33,10 +34,12 @@ import {
   triageAction,
   verifyChannelAccountAction,
   type InboxFormState,
+  sendPhotoAction,
 } from "@/app/actions/inbox";
 import { Button } from "./ui/button";
 import { Checkbox, Input, Select } from "./ui/field";
 import { useToast } from "./ui/overlay";
+import { preparePhoto, type PreparedPhoto } from "@/lib/photo";
 
 type Option = { value: string; label: string };
 
@@ -625,6 +628,95 @@ export function SyncTemplatesButton() {
     <form action={action} className="flex flex-col gap-xs" data-testid="sync-templates">
       <Submit label="Sincronizar plantillas con Meta" variant="secondary" />
       <FormError state={state} />
+    </form>
+  );
+}
+
+/**
+ * Foto por WhatsApp: el navegador la reduce (≤ 1600 px, JPEG) y la acción la
+ * sube con la sesión del usuario y la envía. Un id nuevo por foto enviada.
+ */
+export function PhotoReplyForm({ conversation }: { conversation: Conversation }) {
+  const [state, action, pending] = useActionState(sendPhotoAction, {});
+  useToastOnMessage(state);
+  const [photo, setPhoto] = useState<PreparedPhoto | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [ids, setIds] = useState(() => ({ fileId: crypto.randomUUID(), requestId: crypto.randomUUID() }));
+  const [handled, setHandled] = useState(state.at);
+  if (state.at !== handled) {
+    setHandled(state.at);
+    if (state.message) {
+      setPhoto(null);
+      setPreview(null);
+      setIds({ fileId: crypto.randomUUID(), requestId: crypto.randomUUID() });
+    }
+  }
+  useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPreparing(true);
+    const prepared = await preparePhoto(file);
+    setPhoto(prepared);
+    setPreview(URL.createObjectURL(prepared.file));
+    setPreparing(false);
+  }
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    data.delete("source");
+    if (photo) data.set("photo", photo.file);
+    startTransition(() => action(data));
+  }
+
+  return (
+    <form key={state.message ? state.at : 0} onSubmit={onSubmit} className="flex flex-col gap-sm" noValidate>
+      <input type="hidden" name="conversationId" value={conversation.id} />
+      <input type="hidden" name="fileId" value={ids.fileId} />
+      <input type="hidden" name="requestId" value={ids.requestId} />
+      <input type="hidden" name="expectedLastMessageAt" value={conversation.lastMessageAt} />
+      <Input
+        name="source"
+        type="file"
+        label={INBOX_COPY.photoTitle}
+        hint={INBOX_COPY.photoHint}
+        accept={INBOX_PHOTO_TYPES.join(",")}
+        capture="environment"
+        onChange={onFile}
+        error={state.fields?.photo}
+      />
+      {preview && photo ? (
+        // eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob:)
+        <img
+          src={preview}
+          alt={INBOX_COPY.photoTitle}
+          className="w-full max-w-(--mg-layout-narrow) self-start rounded-md border border-border"
+        />
+      ) : null}
+      <Input
+        name="caption"
+        label={INBOX_COPY.photoCaption}
+        maxLength={1024}
+        defaultValue={valueOf(state, "caption")}
+      />
+      {state.error ? (
+        <p role="alert" className="mg-tone rounded-md border p-md text-sm" data-tone="danger">
+          {state.error}
+        </p>
+      ) : null}
+      <div>
+        <Button
+          type="submit"
+          label={pending ? INBOX_COPY.photoSending : INBOX_COPY.photoSend}
+          loading={pending || preparing}
+          disabled={!photo}
+          variant="secondary"
+          size="sm"
+        />
+      </div>
     </form>
   );
 }

@@ -23,6 +23,7 @@ import { AppShell } from "@/components/app-shell";
 import {
   AssistantFaqForm,
   AssistantServiceForm,
+  AssistantRemindersForm,
   AssistantSettingsForm,
   CenterInfoForm,
   DeleteFaqButton,
@@ -50,7 +51,7 @@ export default async function AssistantPage() {
   );
   const today = todayIn(center.timezone);
   const from = addDays(today, -29);
-  const [settings, centers, services, faqs, rules, metrics, accounts, owners] = await Promise.all([
+  const [settings, centers, services, faqs, rules, metrics, accounts, owners, templates] = await Promise.all([
     repo.settings(center.organizationId),
     repo.centers(center.organizationId),
     repo.services(center.organizationId),
@@ -68,6 +69,7 @@ export default async function AssistantPage() {
         return { centerId: a.center.id, owners: r.ok ? r.data : [] };
       }),
     ),
+    createInboxRepository(supabase).templates(center.organizationId),
   ]);
   if (!settings.ok || !settings.data) {
     return (
@@ -146,7 +148,7 @@ export default async function AssistantPage() {
         >
           {!keyReady && s.mode !== "apagado" ? <li>{ASSISTANT_COPY.missingKey}</li> : null}
           {!waVerified ? <li>{ASSISTANT_COPY.noMeta}</li> : null}
-          <li>{ASSISTANT_COPY.phaseNote}</li>
+          <li>{ASSISTANT_COPY.bookingNote[s.selfBooking ? "on" : "off"]}</li>
           {!canManage ? <li>{ASSISTANT_COPY.onlyAdmin}</li> : null}
         </ul>
       </Card>
@@ -187,6 +189,18 @@ export default async function AssistantPage() {
             <dt className="text-muted">Última actualización</dt>
             <dd>{s.updatedAt ? formatInCenterTimeZone(s.updatedAt, center.timezone) : "—"}</dd>
           </dl>
+        )}
+      </Card>
+
+      <Card title="Recordatorios de cita">
+        {canManage ? (
+          <AssistantRemindersForm settings={s} templates={templates.ok ? templates.data : []} />
+        ) : (
+          <p className="text-sm">
+            {s.remindersEnabled
+              ? `Se envían ${s.reminderHours} h antes de cada cita, con botones Confirmar y Reagendar.`
+              : "Apagados."}
+          </p>
         )}
       </Card>
 

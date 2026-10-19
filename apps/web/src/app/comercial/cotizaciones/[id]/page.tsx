@@ -10,6 +10,7 @@ import {
   quoteShareText,
   todayIn,
   usableCenters,
+  vehicleLabel,
 } from "@meguiars/domain";
 import {
   createAgendaRepository,
@@ -69,7 +70,7 @@ export default async function QuotePage({ params, searchParams }: PageProps<"/co
   const canWrite = canInCenter(state, q.detailCenterId, "leads.use");
   const vehicles = (client?.ok ? client.data.vehicles : [])
     .filter((v) => v.active)
-    .map((v) => ({ value: v.id, label: `${v.make} ${v.model} ${v.year} · ${v.plate}` }));
+    .map((v) => ({ value: v.id, label: vehicleLabel(v) }));
   const missing = (catalog?.ok ? catalog.data : [])
     .filter((c) => !q.items.some((i) => i.serviceId === c.id))
     .map((c) => ({ value: c.id, label: `${c.name} · ${formatMoney(c.price)}` }));

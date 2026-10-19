@@ -15,6 +15,8 @@ import {
   replyBlocker,
   usableCenters,
   windowRemaining,
+  presentMessageMedia,
+  type InboxMessage,
 } from "@meguiars/domain";
 import {
   createAssistantRepository,
@@ -31,6 +33,7 @@ import {
   ConversationStatusForm,
   LinkConversationLeadForm,
   NoteForm,
+  PhotoReplyForm,
   ReplyForm,
   TemplateForm,
   TriageForm,
@@ -41,6 +44,41 @@ import { channelServerReady } from "@/lib/meta";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /** Conversación: hilo, respuesta dentro de la ventana de 24 h, responsable y prospecto. */
+/** Foto, audio, video o archivo del mensaje (URL firmada de corta duración). */
+function MessageMedia({ message }: { message: InboxMessage }) {
+  const media = presentMessageMedia(message);
+  if (media.kind === "none") return null;
+  if (media.kind === "pending") return <p className="text-xs text-muted">{INBOX_COPY.mediaPending}</p>;
+  if (media.kind === "error")
+    return (
+      <p className="text-xs text-muted">
+        {INBOX_COPY.mediaUnavailable}: {media.label}
+      </p>
+    );
+  if (!media.url) return null;
+  if (media.kind === "image")
+    return (
+      <a href={media.url} target="_blank" rel="noreferrer" className="mb-xs block">
+        {/* eslint-disable-next-line @next/next/no-img-element -- URL firmada de corta duración */}
+        <img
+          src={media.url}
+          alt={media.label}
+          loading="lazy"
+          className="w-full max-w-(--mg-layout-narrow) rounded-md border border-border"
+        />
+      </a>
+    );
+  if (media.kind === "audio") return <audio controls src={media.url} className="mb-xs w-full" />;
+  if (media.kind === "video")
+    return <video controls src={media.url} className="mb-xs w-full max-w-(--mg-layout-narrow) rounded-md" />;
+  return (
+    <a href={media.url} target="_blank" rel="noreferrer" className="mb-xs block underline">
+      {INBOX_COPY.mediaFile}
+      {media.label ? ` · ${media.label}` : ""}
+    </a>
+  );
+}
+
 export default async function ConversationPage({ params }: PageProps<"/comercial/bandeja/[id]">) {
   const state = await requireScreen("conversation");
   const { id } = await params;
@@ -113,7 +151,10 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
                     className={`mg-tone max-w-prose rounded-md border p-sm text-sm ${m.direction === "saliente" ? "self-end" : "self-start"}`}
                     data-tone={m.direction === "saliente" ? "brand" : "neutral"}
                   >
-                    <p className="whitespace-pre-wrap">{m.body ?? INBOX_COPY.mediaNotice}</p>
+                    <MessageMedia message={m} />
+                    {m.body || presentMessageMedia(m).kind === "none" ? (
+                      <p className="whitespace-pre-wrap">{m.body ?? INBOX_COPY.mediaNotice}</p>
+                    ) : null}
                     <p
                       className={`mt-xs text-xs ${m.direction === "saliente" ? "opacity-80" : "text-muted"}`}
                     >
@@ -167,6 +208,11 @@ export default async function ConversationPage({ params }: PageProps<"/comercial
                   quickReplies={quickReplies.ok ? quickReplies.data : []}
                   centerName={c.centerName}
                 />
+                {c.channel === "whatsapp" ? (
+                  <div className="mt-md border-t border-border pt-md">
+                    <PhotoReplyForm conversation={c} />
+                  </div>
+                ) : null}
               </>
             )}
             <p className="mt-sm text-xs text-muted">{INBOX_COPY.notMirrored}</p>

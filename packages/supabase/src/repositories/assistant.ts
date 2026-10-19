@@ -15,6 +15,8 @@ import {
   type HandoffCode,
   type HandoffRule,
   type InboxChannel,
+  type PreparedReminder,
+  type ReminderGateway,
   type Result,
   type TurnStatus,
 } from "@meguiars/domain";
@@ -55,6 +57,19 @@ const hoursOf = (v: Json): CenterHours[] =>
       )
     : [];
 
+const obj = (v: unknown): Record<string, Json | undefined> =>
+  v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, Json | undefined>) : {};
+
+/** Botones guardados por la base ([{id, titulo}]) en el formato del envío. */
+const replyButtons = (v: Json | null): { id: string; title: string }[] | undefined => {
+  if (!Array.isArray(v)) return undefined;
+  const list = v.flatMap((b) => {
+    const o = obj(b);
+    return typeof o.id === "string" && typeof o.titulo === "string" ? [{ id: o.id, title: o.titulo }] : [];
+  });
+  return list.length ? list : undefined;
+};
+
 /** Configuración del asistente con la sesión del usuario (la base valida permisos). */
 export function createAssistantRepository(client: MeguiarsSupabaseClient): AssistantRepository {
   return {
@@ -78,6 +93,10 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
             minHoursAhead: r.min_hours_ahead,
             mentionPromotions: r.mention_promotions,
             mentionMemberships: r.mention_memberships,
+            selfBooking: r.self_booking,
+            remindersEnabled: r.reminders_enabled,
+            reminderTemplateId: r.reminder_template_id,
+            reminderHours: r.reminder_hours,
             testNumbers: r.test_numbers ?? [],
             version: r.version,
             updatedAt: r.updated_at,
@@ -104,7 +123,21 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
           p_min_hours_ahead: c.minHoursAhead,
           p_mention_promotions: c.mentionPromotions,
           p_mention_memberships: c.mentionMemberships,
+          p_self_booking: c.selfBooking,
           p_test_numbers: c.testNumbers,
+          p_reason: c.reason,
+        }),
+      );
+    },
+    setReminders(c) {
+      return done(() =>
+        client.rpc("set_assistant_reminders", {
+          p_organization_id: c.organizationId,
+          p_version: c.version,
+          p_enabled: c.enabled,
+          // La base acepta null (sin plantilla); los tipos generados piden string.
+          p_template_id: c.templateId as string,
+          p_hours: c.hours,
           p_reason: c.reason,
         }),
       );
@@ -291,6 +324,48 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
   };
 }
 
+/** Recordatorios de cita con la llave de servicio (sólo el servidor, desde el cron). */
+export function createReminderServiceGateway(service: MeguiarsSupabaseClient): ReminderGateway {
+  return {
+    due(limit) {
+      return run(
+        () => service.rpc("reminders_due", { p_limit: limit }),
+        (rows) => rows.map((r) => r.appointment_id),
+      );
+    },
+    prepare(appointmentId) {
+      return run(
+        () => service.rpc("prepare_appointment_reminder", { p_appointment_id: appointmentId }),
+        (rows): PreparedReminder | null => {
+          const r = rows[0];
+          if (!r) return null;
+          return {
+            messageId: r.message_id,
+            externalAccountId: r.external_account_id,
+            contactExternalId: r.contact_external_id,
+            contactPhone: r.contact_phone,
+            body: r.body,
+            alreadySent: r.already_sent,
+            templateName: r.template_name,
+            templateLanguage: r.template_language,
+            templateParams: r.template_params,
+            buttonPayloads: r.button_payloads,
+          };
+        },
+      );
+    },
+    finishOutbound(messageId, result) {
+      return done(() =>
+        service.rpc("finish_outbound_message", {
+          p_message_id: messageId,
+          p_external_id: result.ok ? result.externalId : null,
+          p_error: result.ok ? null : result.error,
+        }),
+      );
+    },
+  };
+}
+
 /**
  * Operaciones del asistente con la llave de servicio (sólo el servidor web,
  * después de recibir el webhook firmado de Meta). Cada herramienta recibe el
@@ -344,6 +419,97 @@ export function createAssistantServiceGateway(service: MeguiarsSupabaseClient): 
       return rows(
         () => service.rpc("assistant_choose_center", { p_turn_id: turnId, p_detail_center_id: centerId }),
         (d) => d,
+      );
+    },
+    clientProfile(turnId) {
+      return rows(
+        () => service.rpc("assistant_client_profile", { p_turn_id: turnId }),
+        (d) => d,
+      );
+    },
+    proposeBooking(turnId, b) {
+      return rows(
+        () =>
+          service.rpc("assistant_propose_booking", {
+            p_turn_id: turnId,
+            p_detail_center_id: b.centerId,
+            p_service_ids: b.serviceIds,
+            p_date: b.date,
+            p_time: b.time,
+            p_client_name: b.clientName ?? "",
+            // La base trata null y vacío igual; los tipos generados piden string.
+            p_vehicle_id: b.vehicleId as string,
+            p_vehicle_make: b.vehicle?.make ?? "",
+            p_vehicle_model: b.vehicle?.model ?? "",
+            // null (no undefined): supabase-js omite las claves undefined y la RPC no tiene valor por omisión.
+            p_vehicle_year: (b.vehicle?.year ?? null) as number,
+            p_vehicle_plate: b.vehicle?.plate ?? "",
+          }),
+        (d) => d,
+      );
+    },
+    proposeReschedule(turnId, appointmentId, date, time) {
+      return rows(
+        () =>
+          service.rpc("assistant_propose_reschedule", {
+            p_turn_id: turnId,
+            p_appointment_id: appointmentId,
+            p_date: date,
+            p_time: time,
+          }),
+        (d) => d,
+      );
+    },
+    proposeCancel(turnId, appointmentId) {
+      return rows(
+        () => service.rpc("assistant_propose_cancel", { p_turn_id: turnId, p_appointment_id: appointmentId }),
+        (d) => d,
+      );
+    },
+    replyProposal(turnId, proposalId) {
+      return run(
+        () => service.rpc("assistant_reply_proposal", { p_turn_id: turnId, p_proposal_id: proposalId }),
+        (data) => {
+          const r = data[0];
+          if (!r || r.superseded || !r.message_id) return { superseded: true as const };
+          return {
+            superseded: false as const,
+            reply: {
+              messageId: r.message_id,
+              channel: r.channel as InboxChannel,
+              externalAccountId: r.external_account_id ?? "",
+              contactExternalId: r.contact_external_id ?? "",
+              contactPhone: r.contact_phone,
+              body: r.body ?? "",
+              alreadySent: r.already_sent,
+              buttons: replyButtons(r.buttons),
+            },
+          };
+        },
+      );
+    },
+    handleButton(messageId) {
+      return rows(
+        () => service.rpc("assistant_handle_button", { p_message_id: messageId }),
+        (d) => {
+          const o = obj(d);
+          const r = o.reply && typeof o.reply === "object" && !Array.isArray(o.reply) ? obj(o.reply) : null;
+          return {
+            handled: o.handled === true,
+            reply:
+              r && typeof r.message_id === "string"
+                ? {
+                    messageId: r.message_id,
+                    channel: (typeof r.channel === "string" ? r.channel : "whatsapp") as InboxChannel,
+                    externalAccountId: String(r.external_account_id ?? ""),
+                    contactExternalId: String(r.contact_external_id ?? ""),
+                    contactPhone: typeof r.contact_phone === "string" ? r.contact_phone : null,
+                    body: String(r.body ?? ""),
+                    alreadySent: r.already_sent === true,
+                  }
+                : null,
+          };
+        },
       );
     },
     handoff(turnId, code, summary) {

@@ -188,7 +188,7 @@ export interface B2bPriceRule extends PriceRuleLike {
 export interface B2bVehicle {
   vehicleId: string;
   label: string;
-  plate: string;
+  plate: string | null;
   /** Autorización en el convenio (lista); null = no está en la lista. */
   authorized: boolean;
   costCenter: string | null;
@@ -266,7 +266,7 @@ export interface B2bAccountForOrder {
     make: string;
     model: string;
     year: number;
-    plate: string;
+    plate: string | null;
     identifier: string | null;
   }[];
 }

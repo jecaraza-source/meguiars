@@ -15,6 +15,16 @@ import type { InboxChannel } from "./inbox";
  * - Instagram (API con inicio de sesión de Instagram): POST /{ig-id}/messages
  *   en graph.instagram.com con recipient.id (IGSID); webhook object "instagram".
  * Las tres limitan el texto libre a 24 h desde el último mensaje del contacto.
+ * - Botones de respuesta (asistente F2): POST /{phone-number-id}/messages con
+ *   type "interactive" e interactive {type:"button", body:{text}, action:{buttons:
+ *   [{type:"reply", reply:{id, title}}]}} (máximo 3 botones, título de hasta 20
+ *   caracteres, cuerpo de hasta 1024). Al tocarlo llega un mensaje type
+ *   "interactive" con interactive.button_reply {id, title}; el de una plantilla
+ *   llega como type "button" con button {payload, text}.
+ * - Archivos (F2, parte 3): un mensaje image/document/audio/video/sticker trae
+ *   {id, mime_type, filename?, caption?}. GET /{media-id} devuelve {url,
+ *   mime_type, file_size}; la url se descarga con el mismo token (caduca en
+ *   minutos). Para enviar una foto: type "image" con image {link, caption}.
  * - Plantillas de WhatsApp (revisado para los pendientes de CR2): se listan con
  *   GET /{whatsapp-business-account-id}/message_templates (fields name,
  *   language, status, category, components) y se envían con type "template",
@@ -34,8 +44,17 @@ export interface InboundItem {
   contact_name?: string | undefined;
   message_type: string;
   body?: string | undefined;
+  /** Id del botón que tocó el contacto (respuesta interactiva o de plantilla). */
+  payload?: string | undefined;
+  /** Archivo de WhatsApp (se descarga después con el token del servidor). */
+  media_id?: string | undefined;
+  media_mime_type?: string | undefined;
+  media_filename?: string | undefined;
   occurred_at: string;
 }
+
+/** Tipos de mensaje de WhatsApp que traen archivo. */
+export const WHATSAPP_MEDIA_TYPES = ["image", "document", "audio", "video", "sticker"] as const;
 
 export interface StatusItem {
   external_id: string;
@@ -74,13 +93,38 @@ const WA_STATUS: Record<string, StatusItem["status"]> = {
 function whatsappBody(m: Obj): string | undefined {
   const type = str(m.type);
   if (type === "text" && isObj(m.text)) return str(m.text.body);
-  if (type && isObj(m[type])) return str((m[type] as Obj).caption);
+  // Botones antes que el pie de foto genérico (también son objetos con el nombre del tipo).
   if (type === "button" && isObj(m.button)) return str(m.button.text);
   if (type === "interactive" && isObj(m.interactive)) {
     const reply = (m.interactive.button_reply ?? m.interactive.list_reply) as Obj | undefined;
-    return reply ? str(reply.title) : undefined;
+    return isObj(reply) ? str(reply.title) : undefined;
+  }
+  if (type && isObj(m[type])) return str((m[type] as Obj).caption);
+  return undefined;
+}
+
+/** Id del botón que tocó el contacto (null si el mensaje no es una respuesta a botones). */
+function whatsappPayload(m: Obj): string | undefined {
+  if (str(m.type) === "button" && isObj(m.button)) return str(m.button.payload);
+  if (str(m.type) === "interactive" && isObj(m.interactive)) {
+    const reply = (m.interactive.button_reply ?? m.interactive.list_reply) as Obj | undefined;
+    return isObj(reply) ? str(reply.id) : undefined;
   }
   return undefined;
+}
+
+/** Id, tipo y nombre del archivo del mensaje (si trae). */
+function whatsappMedia(m: Obj): Pick<InboundItem, "media_id" | "media_mime_type" | "media_filename"> {
+  const type = str(m.type);
+  if (!type || !(WHATSAPP_MEDIA_TYPES as readonly string[]).includes(type) || !isObj(m[type])) return {};
+  const media = m[type] as Obj;
+  const id = str(media.id);
+  if (!id || !/^[A-Za-z0-9._-]{1,128}$/.test(id)) return {};
+  return {
+    media_id: id,
+    media_mime_type: str(media.mime_type),
+    media_filename: str(media.filename)?.slice(0, 200),
+  };
 }
 
 function parseWhatsApp(entry: Obj, out: ParsedWebhook) {
@@ -116,6 +160,8 @@ function parseWhatsApp(entry: Obj, out: ParsedWebhook) {
         contact_name: c?.name,
         message_type: str(m.type) ?? "text",
         body: whatsappBody(m),
+        payload: whatsappPayload(m)?.slice(0, 200),
+        ...whatsappMedia(m),
         occurred_at: isoFrom(m.timestamp, "s"),
       });
     }
@@ -249,6 +295,9 @@ export function buildSendRequest(
     contactExternalId: string;
     contactPhone: string | null;
     body: string;
+    buttons?: readonly { id: string; title: string }[] | undefined;
+    /** Foto: Meta la descarga de esta URL (firmada, de corta duración). */
+    media?: { link: string } | undefined;
   },
   bases: GraphBases = {},
 ): GraphRequest {
@@ -258,6 +307,39 @@ export function buildSendRequest(
     const address = msg.contactPhone
       ? { to: msg.contactPhone.replace(/^\+/, "") }
       : { recipient: msg.contactExternalId };
+    if (msg.media)
+      return {
+        url,
+        method: "POST",
+        body: {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          ...address,
+          type: "image",
+          image: { link: msg.media.link, ...(msg.body ? { caption: msg.body.slice(0, 1024) } : {}) },
+        },
+      };
+    if (msg.buttons?.length)
+      return {
+        url,
+        method: "POST",
+        body: {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          ...address,
+          type: "interactive",
+          interactive: {
+            type: "button",
+            body: { text: msg.body.slice(0, 1024) },
+            action: {
+              buttons: msg.buttons.slice(0, 3).map((b) => ({
+                type: "reply",
+                reply: { id: b.id.slice(0, 256), title: b.title.slice(0, 20).trim() },
+              })),
+            },
+          },
+        },
+      };
     return {
       url,
       method: "POST",
@@ -290,9 +372,22 @@ export function buildTemplateSendRequest(
     templateName: string;
     templateLanguage: string;
     templateParams: readonly string[];
+    /** Id que regresa cada botón de respuesta rápida de la plantilla (en orden). */
+    buttonPayloads?: readonly string[] | undefined;
   },
   bases: GraphBases = {},
 ): GraphRequest {
+  const components = [
+    ...(msg.templateParams.length
+      ? [{ type: "body", parameters: msg.templateParams.map((text) => ({ type: "text", text })) }]
+      : []),
+    ...(msg.buttonPayloads ?? []).map((payload, index) => ({
+      type: "button",
+      sub_type: "quick_reply",
+      index: String(index),
+      parameters: [{ type: "payload", payload }],
+    })),
+  ];
   const address = msg.contactPhone
     ? { to: msg.contactPhone.replace(/^\+/, "") }
     : { recipient: msg.contactExternalId };
@@ -307,15 +402,30 @@ export function buildTemplateSendRequest(
       template: {
         name: msg.templateName,
         language: { code: msg.templateLanguage },
-        ...(msg.templateParams.length
-          ? {
-              components: [
-                { type: "body", parameters: msg.templateParams.map((text) => ({ type: "text", text })) },
-              ],
-            }
-          : {}),
+        ...(components.length ? { components } : {}),
       },
     },
+  };
+}
+
+/** Dónde descargar un archivo de WhatsApp (la URL caduca en minutos y pide el mismo token). */
+export function buildMediaInfoRequest(mediaId: string, bases: GraphBases = {}): GraphRequest {
+  return { url: `${base("whatsapp", bases)}/${encodeURIComponent(mediaId)}`, method: "GET" };
+}
+
+export function parseMediaInfo(
+  status: number,
+  json: unknown,
+): { ok: true; url: string; mimeType: string | null; size: number | null } | { ok: false; error: string } {
+  if (status < 200 || status >= 300 || !isObj(json)) return { ok: false, error: graphError(status, json) };
+  const url = str(json.url);
+  if (!url || !/^https:\/\//.test(url)) return { ok: false, error: "Meta no devolvió la URL del archivo" };
+  const size = Number(json.file_size);
+  return {
+    ok: true,
+    url,
+    mimeType: str(json.mime_type) ?? null,
+    size: Number.isFinite(size) && size > 0 ? size : null,
   };
 }
 
@@ -334,6 +444,8 @@ export interface TemplateItem {
   status: string;
   body: string | null;
   param_count: number;
+  /** Botones de respuesta rápida (QUICK_REPLY) de la plantilla. */
+  quick_replies: number;
 }
 
 /** Plantillas que devolvió Meta (sólo lo necesario; descarta las de formato desconocido). */
@@ -356,6 +468,11 @@ export function parseTemplatesResponse(
     const bodyComp = arr(t.components).find((c) => isObj(c) && str(c.type)?.toUpperCase() === "BODY");
     const body = isObj(bodyComp) ? (str(bodyComp.text) ?? null) : null;
     const params = body ? new Set([...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => m[1])).size : 0;
+    const buttonsComp = arr(t.components).find((c) => isObj(c) && str(c.type)?.toUpperCase() === "BUTTONS");
+    const quickReplies = isObj(buttonsComp)
+      ? arr(buttonsComp.buttons).filter((b) => isObj(b) && str(b.type)?.toUpperCase() === "QUICK_REPLY")
+          .length
+      : 0;
     items.push({
       name,
       language,
@@ -363,6 +480,7 @@ export function parseTemplatesResponse(
       status: st,
       body: body ? body.slice(0, 1024) : null,
       param_count: params,
+      quick_replies: quickReplies,
     });
   }
   const paging = isObj(json.paging) ? json.paging : null;

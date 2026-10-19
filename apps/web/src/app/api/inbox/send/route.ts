@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createMeguiarsClient } from "@meguiars/supabase";
-import { sendMessageSchema, sendTemplateSchema } from "@meguiars/validation";
-import { sendConversationMessage, sendTemplateMessage } from "@/lib/inbox";
+import { sendMediaSchema, sendMessageSchema, sendTemplateSchema } from "@meguiars/validation";
+import { sendConversationMedia, sendConversationMessage, sendTemplateMessage } from "@/lib/inbox";
 import { supabaseEnv } from "@/lib/supabase/env";
 
 /**
@@ -17,9 +17,14 @@ export async function POST(request: NextRequest) {
   if (!env || !/^Bearer [\w.-]+$/.test(auth))
     return NextResponse.json({ error: "Sin sesión" }, { status: 401 });
   const raw: unknown = await request.json().catch(() => null);
-  // Con templateId es una plantilla aprobada de WhatsApp; si no, un texto dentro de las 24 h.
+  // templateId: plantilla aprobada de WhatsApp · mediaPath: foto ya subida · si no, un texto dentro de las 24 h.
   const isTemplate = typeof raw === "object" && raw !== null && "templateId" in raw;
-  const parsed = isTemplate ? sendTemplateSchema.safeParse(raw) : sendMessageSchema.safeParse(raw);
+  const isMedia = typeof raw === "object" && raw !== null && "mediaPath" in raw;
+  const parsed = isTemplate
+    ? sendTemplateSchema.safeParse(raw)
+    : isMedia
+      ? sendMediaSchema.safeParse(raw)
+      : sendMessageSchema.safeParse(raw);
   if (!parsed.success)
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Datos inválidos" },
@@ -31,10 +36,19 @@ export async function POST(request: NextRequest) {
   });
   const { data: user } = await client.auth.getUser(auth.slice("Bearer ".length));
   if (!user.user) return NextResponse.json({ error: "Sesión inválida" }, { status: 401 });
+  const d = parsed.data;
   const r =
-    "templateId" in parsed.data
-      ? await sendTemplateMessage(client, parsed.data)
-      : await sendConversationMessage(client, parsed.data);
+    "templateId" in d
+      ? await sendTemplateMessage(client, d)
+      : "mediaPath" in d
+        ? await sendConversationMedia(client, {
+            conversationId: d.conversationId,
+            requestId: d.requestId,
+            path: d.mediaPath,
+            caption: d.caption,
+            expectedLastMessageAt: d.expectedLastMessageAt,
+          })
+        : await sendConversationMessage(client, d);
   if (!r.ok) {
     const status =
       r.error.kind === "permission_denied"

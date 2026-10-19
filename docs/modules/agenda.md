@@ -16,7 +16,7 @@ Citas y capacidad de atención por centro, sin sobreasignar bahías ni técnicos
 
 - **La Orden de Servicio misma:** llegó en O4 ([orden-servicio.md](orden-servicio.md)); la cita recibida abre su OS.
 - **Horarios de apertura y % de ocupación:** se requiere el horario de cada centro para definir el KPI (ver [Pendientes](#pendientes)).
-- **Recordatorios al cliente.**
+- **Recordatorios al cliente:** llegaron con el asistente de WhatsApp (ver «Recordatorios» abajo).
 
 ## Modelo de datos (`20260929000000_agenda.sql`)
 
@@ -142,6 +142,16 @@ Ninguna nueva.
 - Desde una cita **programada**, «Recibir auto y abrir OS» (web y móvil) la marca recibida (registra la visita) y abre su OS con los servicios agendados, en un paso. En citas recibidas o en servicio el botón sigue siendo «Abrir OS».
 - `public.receive_and_open_order` reutiliza `set_appointment_status` y `create_service_order_from_appointment`: mismos permisos, auditoría (motivo «Recibida al abrir la OS») y una sola OS por cita. Pruebas: `supabase/tests/receive_and_open_order.test.sql`.
 - **Buscar cliente al agendar:** los clientes aparecen mientras se escribe (desde 2 letras). El nombre coincide con todas las palabras en cualquier orden y sin acentos («perez juan» encuentra a «Juan Pérez»); también por teléfono o placa. Ver [Clientes y vehículos](clientes-vehiculos.md).
+
+## Citas por WhatsApp (20261031000000)
+
+- `appointments.source`: `agenda` (personal) o `whatsapp` (el cliente la confirmó con el botón del asistente). La agenda web y móvil marca «WhatsApp». Ver [Asistente de WhatsApp](asistente-whatsapp.md) y [ADR 0038](../adr/0038-citas-por-whatsapp-con-boton.md).
+- La cita de WhatsApp llega `programada`, con bahía asignada por la base (la misma validación de capacidad y las _exclusion constraints_).
+- **Falta placa:** si el auto se agendó sin placa, la tarjeta lo marca y el detalle avisa antes de «Recibir auto y abrir OS»; la OS no se abre hasta capturarla en la ficha del cliente.
+
+## Recordatorios (20261031000100)
+
+- `appointments.reminder_sent_at` y `confirmed_at`: la tarjeta muestra «Recordatorio enviado» y, si el cliente tocó Confirmar en WhatsApp, «Confirmó». Ver [ADR 0039](../adr/0039-recordatorios-de-cita-por-whatsapp.md).
 
 ## Pendientes
 

@@ -1,6 +1,6 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { runScheduledAlerts } from "@/lib/alerts-cron";
+import { cronAuthorized } from "@/lib/cron-auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 /**
@@ -10,16 +10,8 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
  */
 export const maxDuration = 60;
 
-function authorized(request: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  const got = Buffer.from(request.headers.get("authorization") ?? "");
-  const want = Buffer.from(`Bearer ${secret}`);
-  return got.length === want.length && timingSafeEqual(got, want);
-}
-
 export async function GET(request: NextRequest) {
-  if (!authorized(request)) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  if (!cronAuthorized(request)) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const client = createSupabaseServiceClient();
   if (!client) {
     return NextResponse.json(

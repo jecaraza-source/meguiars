@@ -74,7 +74,15 @@ export function AssistantScreen({ state, header, subnav }: PrivateScreenProps) {
           <Card title="Estado">
             <Badge label={ASSISTANT_COPY.modes[s.mode]} tone={ASSISTANT_MODE_TONES[s.mode]} />
             <Text style={textStyle("bodySmall")}>Modelo: {ASSISTANT_MODEL_INFO[s.model].label}</Text>
-            <Text style={textStyle("bodySmall", "muted")}>{ASSISTANT_COPY.phaseNote}</Text>
+            <Text style={textStyle("bodySmall", "muted")}>
+              {ASSISTANT_COPY.bookingNote[s.selfBooking ? "on" : "off"]}
+            </Text>
+            <Text style={textStyle("bodySmall")}>
+              Recordatorios:{" "}
+              {s.remindersEnabled
+                ? `${s.reminderHours} h antes de cada cita, con botones Confirmar y Reagendar`
+                : "apagados"}
+            </Text>
             <Text style={textStyle("caption", "muted")}>La configuración se cambia en la web.</Text>
           </Card>
           <Card title="Últimos 30 días">

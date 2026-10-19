@@ -13,6 +13,7 @@ import {
   parseBeginTurn,
   parseToolCall,
   runAssistantTurn,
+  runButtonReply,
   toWhatsappText,
   turnSituation,
   type AssistantGateway,
@@ -161,6 +162,7 @@ describe("contexto del turno", () => {
       "consultar_servicios",
       "consultar_promociones",
       "consultar_horarios_disponibles",
+      "consultar_cliente",
       "elegir_centro",
       "pasar_a_persona",
     ]);
@@ -229,6 +231,7 @@ function fakes(
     begin?: unknown;
     superseded?: boolean;
     sendFails?: boolean;
+    proposalError?: string;
   } = {},
 ) {
   const calls: string[] = [];
@@ -260,6 +263,59 @@ function fakes(
     async chooseCenter(_t, c) {
       calls.push(`center:${c}`);
       return ok({ cambiado: true });
+    },
+    async clientProfile() {
+      calls.push("profile");
+      return ok({ cliente: null, vehiculos: [], citas: [] });
+    },
+    async proposeBooking(_t, b) {
+      calls.push(`propose:${b.date} ${b.time}:${b.vehicle?.make ?? b.vehicleId}`);
+      return ok(
+        opts.proposalError ? { error: opts.proposalError } : { propuesta_id: "prop-1", resumen: "Confirme" },
+      );
+    },
+    async proposeReschedule(_t, id, d, h) {
+      calls.push(`reschedule:${id}:${d} ${h}`);
+      return ok({ propuesta_id: "prop-2", resumen: "Cambio" });
+    },
+    async proposeCancel(_t, id) {
+      calls.push(`cancel:${id}`);
+      return ok({ propuesta_id: "prop-3", resumen: "Cancelar" });
+    },
+    async replyProposal(_t, id) {
+      calls.push(`replyProposal:${id}`);
+      return ok({
+        superseded: false as const,
+        reply: {
+          messageId: "out-2",
+          channel: "whatsapp" as const,
+          externalAccountId: "123",
+          contactExternalId: "521",
+          contactPhone: "+521",
+          body: "*Confirme su cita*",
+          alreadySent: false,
+          buttons: [
+            { id: `cita:confirmar:${id}`, title: "Confirmar" },
+            { id: `cita:cambiar:${id}`, title: "Cambiar" },
+          ],
+        },
+      });
+    },
+    async handleButton(id) {
+      calls.push(`button:${id}`);
+      if (id !== "btn") return ok({ handled: false, reply: null });
+      return ok({
+        handled: true,
+        reply: {
+          messageId: "out-3",
+          channel: "whatsapp" as const,
+          externalAccountId: "123",
+          contactExternalId: "521",
+          contactPhone: "+521",
+          body: "Listo, su cita quedó agendada",
+          alreadySent: false,
+        },
+      });
     },
     async handoff(_t, code, summary) {
       calls.push(`handoff:${code}:${summary}`);
@@ -461,6 +517,112 @@ describe("turno del asistente", () => {
     const req = buildLlmRequest(ctxOf());
     expect(req.model).toBe("claude-opus-5-5");
     expect(req.messages[0]).toEqual({ role: "user", content: "Hola\n¿Cuánto cuesta un lavado?" });
-    expect(req.tools.length).toBe(5);
+    expect(req.tools.length).toBe(6);
+  });
+});
+
+describe("citas desde WhatsApp (agenda propia)", () => {
+  const booking = (over: Record<string, unknown> = {}) =>
+    raw({ settings: { ...raw().settings, self_booking: true }, ...over });
+  const proposal = {
+    centro_id: A,
+    servicio_ids: [SVC],
+    fecha: "2026-10-17",
+    hora: "10:00",
+    nombre: "Laura",
+    vehiculo_id: "",
+    marca: "Mazda",
+    modelo: "3",
+    anio: 2021,
+    placa: "",
+  };
+
+  it("con la agenda propia: herramientas de propuesta y la regla de confirmar con botón", () => {
+    const ctx = ctxOf(booking());
+    const names = assistantTools(ctx).map((t) => t.name);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "consultar_cliente",
+        "proponer_cita",
+        "proponer_cambio_cita",
+        "proponer_cancelacion",
+      ]),
+    );
+    expect(assistantRules(ctx)).toContain("proponer_cita");
+    expect(assistantRules(ctx)).toContain("nunca confirmas una cita con texto");
+    // Sin agenda propia, no se ofrecen y la regla es pasar a una persona.
+    expect(assistantTools(ctxOf()).map((t) => t.name)).not.toContain("proponer_cita");
+    expect(parseToolCall(ctxOf(), "proponer_cita", proposal)).toEqual({
+      ok: false,
+      error: "Herramienta no disponible",
+    });
+  });
+
+  it("valida la propuesta antes de llamar a la base", () => {
+    const ctx = ctxOf(booking());
+    expect(parseToolCall(ctx, "proponer_cita", proposal)).toEqual({
+      ok: true,
+      call: {
+        tool: "proponer_cita",
+        booking: {
+          centerId: A,
+          serviceIds: [SVC],
+          date: "2026-10-17",
+          time: "10:00",
+          clientName: "Laura",
+          vehicleId: null,
+          vehicle: { make: "Mazda", model: "3", year: 2021, plate: null },
+        },
+      },
+    });
+    expect(parseToolCall(ctx, "proponer_cita", { ...proposal, hora: "10" }).ok).toBe(false);
+    expect(parseToolCall(ctx, "proponer_cita", { ...proposal, anio: 0 })).toMatchObject({ ok: false });
+    expect(parseToolCall(ctx, "proponer_cita", { ...proposal, vehiculo_id: "abc" })).toMatchObject({
+      ok: false,
+    });
+    expect(
+      parseToolCall(ctx, "proponer_cambio_cita", { cita_id: "x", fecha: "2026-10-17", hora: "11:00" }),
+    ).toMatchObject({
+      ok: false,
+    });
+  });
+
+  it("una propuesta aceptada se envía como resumen con botones, no como el texto del modelo", async () => {
+    const f = fakes({
+      begin: booking(),
+      responses: [toolResponse("proponer_cita", proposal), textResponse("Le envío el resumen.")],
+    });
+    const out = await runAssistantTurn(f.deps, "m");
+    expect(out).toMatchObject({ status: "respondido", proposalId: "prop-1" });
+    expect(f.calls).toEqual([
+      "begin",
+      "propose:2026-10-17 10:00:Mazda",
+      "replyProposal:prop-1",
+      "outbound:ok",
+    ]);
+    expect(f.sent[0]!.buttons?.map((b) => b.title)).toEqual(["Confirmar", "Cambiar"]);
+  });
+
+  it("si la base rechaza la propuesta, el modelo explica con texto normal", async () => {
+    const f = fakes({
+      begin: booking(),
+      proposalError: "Ese horario ya no está disponible",
+      responses: [
+        toolResponse("proponer_cita", proposal),
+        textResponse("Ese horario se ocupó, ¿le sirve a las 11?"),
+      ],
+    });
+    expect(await runAssistantTurn(f.deps, "m")).toMatchObject({ status: "respondido", proposalId: null });
+    expect(f.calls).toContain("reply");
+    expect(f.calls).not.toContain("replyProposal:prop-1");
+  });
+
+  it("el botón del cliente se atiende sin IA; «Cambiar» o un texto pasan al asistente", async () => {
+    const f = fakes();
+    expect(await runButtonReply(f.deps, "btn")).toBe(true);
+    expect(f.sent[0]!.body).toBe("Listo, su cita quedó agendada");
+    expect(f.calls).toEqual(["button:btn", "outbound:ok"]);
+    expect(await runButtonReply(f.deps, "texto")).toBe(false);
+    expect(f.requests).toHaveLength(0);
   });
 });

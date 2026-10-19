@@ -153,11 +153,14 @@ export function AppointmentDetailScreen({
       ) : !a.serviceOrderId &&
         (a.status === "programada" || a.status === "recibida" || a.status === "en_servicio") &&
         canInActiveCenter(state, "orders.write") ? (
-        <OpenOrderCard
-          appointmentId={a.id}
-          label={a.status === "programada" ? ordersCopy.receiveAndOpen : ordersCopy.fromAppointment}
-          onOpenOrder={onOpenOrder}
-        />
+        <>
+          {view.missingPlate ? <Notice tone="warning" text={agendaCopy.noPlateHint} /> : null}
+          <OpenOrderCard
+            appointmentId={a.id}
+            label={a.status === "programada" ? ordersCopy.receiveAndOpen : ordersCopy.fromAppointment}
+            onOpenOrder={onOpenOrder}
+          />
+        </>
       ) : null}
       {draft ? (
         <Card title={agendaCopy.draftTitle} subtitle={agendaCopy.draftSubtitle}>

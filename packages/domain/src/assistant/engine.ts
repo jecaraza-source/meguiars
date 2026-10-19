@@ -14,6 +14,7 @@ import {
   turnSituation,
   type AssistantToolDef,
   type BeginTurn,
+  type BookingProposalInput,
   type ToolCall,
   type TurnContext,
 } from "./turn";
@@ -67,7 +68,11 @@ export interface PreparedReply {
   contactPhone: string | null;
   body: string;
   alreadySent: boolean;
+  /** Botones de respuesta rápida (resumen de una cita propuesta). */
+  buttons?: { id: string; title: string }[] | undefined;
 }
+
+type ReplyResult = { superseded: true } | { superseded: false; reply: PreparedReply };
 
 export interface AssistantGateway {
   beginTurn(messageId: string): Promise<Result<BeginTurn>>;
@@ -82,16 +87,28 @@ export interface AssistantGateway {
     days: number,
   ): Promise<Result<unknown>>;
   chooseCenter(turnId: string, centerId: string): Promise<Result<unknown>>;
+  /** Nombre, autos y próximas citas del contacto. */
+  clientProfile(turnId: string): Promise<Result<unknown>>;
+  /** Proponer cita / cambio / cancelación: la base valida y devuelve {propuesta_id, resumen} o {error}. */
+  proposeBooking(turnId: string, booking: BookingProposalInput): Promise<Result<unknown>>;
+  proposeReschedule(
+    turnId: string,
+    appointmentId: string,
+    date: string,
+    time: string,
+  ): Promise<Result<unknown>>;
+  proposeCancel(turnId: string, appointmentId: string): Promise<Result<unknown>>;
+  /** Deja pendiente el resumen con botones de la propuesta (en lugar del texto del turno). */
+  replyProposal(turnId: string, proposalId: string): Promise<Result<ReplyResult>>;
+  /** El contacto tocó un botón: la base lo ejecuta o lo descarta (handled = false → lo atiende el asistente). */
+  handleButton(messageId: string): Promise<Result<{ handled: boolean; reply: PreparedReply | null }>>;
   handoff(
     turnId: string,
     code: HandoffCode,
     summary: string,
   ): Promise<Result<{ escalated: boolean; message: string | null; note: string | null }>>;
   optOut(turnId: string): Promise<Result<void>>;
-  reply(
-    turnId: string,
-    body: string,
-  ): Promise<Result<{ superseded: true } | { superseded: false; reply: PreparedReply }>>;
+  reply(turnId: string, body: string): Promise<Result<ReplyResult>>;
   finishOutbound(
     messageId: string,
     result: { ok: true; externalId: string } | { ok: false; error: string },
@@ -121,6 +138,8 @@ export type TurnOutcome =
       toolCalls: { tool: string; ok: boolean }[];
       usage: LlmUsage;
       error: string | null;
+      /** Propuesta de cita enviada con botones en este turno. */
+      proposalId?: string | null;
     };
 
 const ZERO: LlmUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
@@ -158,6 +177,14 @@ async function runTool(
       return gateway.membershipPlans(ctx.turnId);
     case "consultar_horarios_disponibles":
       return gateway.freeSlots(ctx.turnId, call.centerId, call.serviceIds, call.from, call.days);
+    case "consultar_cliente":
+      return gateway.clientProfile(ctx.turnId);
+    case "proponer_cita":
+      return gateway.proposeBooking(ctx.turnId, call.booking);
+    case "proponer_cambio_cita":
+      return gateway.proposeReschedule(ctx.turnId, call.appointmentId, call.date, call.time);
+    case "proponer_cancelacion":
+      return gateway.proposeCancel(ctx.turnId, call.appointmentId);
     case "elegir_centro": {
       const r = await gateway.chooseCenter(ctx.turnId, call.centerId);
       if (r.ok) {
@@ -187,6 +214,8 @@ export async function runAssistantTurn(
   let handoff: HandoffCode | null = null;
   let text: string | null = null;
   let error: string | null = null;
+  // Última propuesta válida del turno: se responde con su resumen y botones.
+  let proposalId: string | null = null;
 
   const escalate = async (code: HandoffCode, summary: string) => {
     const r = await gateway.handoff(ctx.turnId, code, summary);
@@ -237,7 +266,8 @@ export async function runAssistantTurn(
             .map((b) => b.text as string)
             .join("\n")
             .trim();
-          if (res.stopReason === "max_tokens" || out === "") {
+          if (proposalId) text = out || "propuesta";
+          else if (res.stopReason === "max_tokens" || out === "") {
             error = res.stopReason === "max_tokens" ? "Respuesta incompleta (max_tokens)" : "Respuesta vacía";
             const done = await escalate("falla_tecnica", "El asistente no generó una respuesta válida.");
             if (done !== true) throw new Error(String(done));
@@ -273,6 +303,8 @@ export async function runAssistantTurn(
           }
           const r = await runTool(gateway, ctx, call);
           toolCalls.push({ tool: call.tool, ok: r.ok });
+          const pid = proposalIdOf(call.tool, r);
+          if (pid) proposalId = pid;
           results.push(
             r.ok
               ? { type: "tool_result", tool_use_id: id, content: JSON.stringify(r.data) }
@@ -298,13 +330,21 @@ export async function runAssistantTurn(
   // Una sola respuesta por turno; si llegó otro mensaje mientras tanto, contesta su turno.
   let status: Exclude<TurnStatus, "procesando"> = error ? "error" : handoff ? "escalado" : "respondido";
   if (text) {
-    const prepared = await gateway.reply(ctx.turnId, text);
+    // Con una propuesta, el cliente recibe el resumen de la base con botones (no el texto del modelo).
+    const prepared =
+      proposalId && !handoff
+        ? await gateway.replyProposal(ctx.turnId, proposalId)
+        : await gateway.reply(ctx.turnId, text);
     if (!prepared.ok) {
       status = "error";
       error = `No se registró la respuesta: ${prepared.error.message}`;
     } else if (prepared.data.superseded) {
       status = "omitido";
-    } else if (!prepared.data.reply.alreadySent) {
+    } else {
+      // Lo que recibe el cliente (con una propuesta, el resumen de la base).
+      text = prepared.data.reply.body;
+    }
+    if (prepared.ok && !prepared.data.superseded && !prepared.data.reply.alreadySent) {
       const sent = await sender.send(prepared.data.reply);
       await gateway.finishOutbound(prepared.data.reply.messageId, sent);
       if (!sent.ok) {
@@ -314,5 +354,35 @@ export async function runAssistantTurn(
     }
   } else if (!error && !handoff) status = "error";
   await gateway.finishTurn(ctx.turnId, { status, usage, toolCalls, error });
-  return { status, turnId: ctx.turnId, reply: text, handoff, toolCalls, usage, error };
+  return { status, turnId: ctx.turnId, reply: text, handoff, toolCalls, usage, error, proposalId };
+}
+
+/** propuesta_id de una propuesta aceptada por la base (no de un error). */
+function proposalIdOf(tool: string, r: Result<unknown>): string | null {
+  if (!r.ok || !tool.startsWith("proponer_")) return null;
+  const d = r.data;
+  if (!d || typeof d !== "object" || Array.isArray(d)) return null;
+  const id = (d as Record<string, unknown>).propuesta_id;
+  return typeof id === "string" && id !== "" ? id : null;
+}
+
+/**
+ * El contacto tocó un botón de WhatsApp. Si es de una propuesta de cita, la
+ * base la confirma (o la descarta) sin IA y aquí sólo se envía su respuesta.
+ * Devuelve false si el mensaje lo debe atender el asistente (no era un botón,
+ * o el contacto pidió «Cambiar»).
+ */
+export async function runButtonReply(
+  deps: { gateway: AssistantGateway; sender: AssistantSender },
+  messageId: string,
+): Promise<boolean> {
+  const r = await deps.gateway.handleButton(messageId);
+  if (!r.ok) throw new Error(r.error.message);
+  if (!r.data.handled) return false;
+  const reply = r.data.reply;
+  if (reply && !reply.alreadySent) {
+    const sent = await deps.sender.send(reply);
+    await deps.gateway.finishOutbound(reply.messageId, sent);
+  }
+  return true;
 }

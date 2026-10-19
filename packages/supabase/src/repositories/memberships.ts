@@ -14,6 +14,7 @@ import {
   type PeriodMonths,
   type PlanTier,
   type RedeemScope,
+  vehicleLabel,
 } from "@meguiars/domain";
 import {
   createMembershipSchema,
@@ -301,7 +302,7 @@ export function createMembershipRepository(client: MeguiarsSupabaseClient): Memb
           data: {
             membership: toMembership(data),
             clientName: data.clients?.full_name ?? "—",
-            vehicleLabel: v ? `${v.make} ${v.model} ${v.year} · ${v.plate}` : "—",
+            vehicleLabel: v ? vehicleLabel(v) : "—",
             balance: bal.data,
             redemptions: (redemptions.data ?? []).map(toRedemption),
             events: (events.data ?? []).map(toEvent),

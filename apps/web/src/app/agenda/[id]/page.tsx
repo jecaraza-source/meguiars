@@ -95,6 +95,14 @@ export default async function AppointmentPage({ params, searchParams }: PageProp
           title={a.status === "programada" ? ordersCopy.receiveAndOpen : ordersCopy.fromAppointment}
           subtitle={agendaCopy.draftSubtitle}
         >
+          {view.missingPlate ? (
+            <p role="status" className="mg-tone rounded-md border p-md text-sm" data-tone="warning">
+              {agendaCopy.noPlateHint}{" "}
+              <Link href={`/clientes/${a.clientId}`} className="underline">
+                {view.client}
+              </Link>
+            </p>
+          ) : null}
           <FromAppointmentForm
             appointmentId={a.id}
             requestId={newRequestId()}

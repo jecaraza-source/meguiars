@@ -40,6 +40,10 @@ describe("«Mi día»", () => {
     expect(vehicleLabel({ make: "Mazda", model: "3", year: 2021, plate: "ABC1234" })).toBe(
       "Mazda 3 2021 · ABC1234",
     );
+    // Agendado por WhatsApp sin placa (igual que private.vehicle_label).
+    expect(vehicleLabel({ make: "Mazda", model: "3", year: 2021, plate: null })).toBe(
+      "Mazda 3 2021 · sin placa",
+    );
     const o = order({
       items: [
         {

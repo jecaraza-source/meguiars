@@ -6,12 +6,16 @@ import {
   ASSISTANT_MODELS,
   ASSISTANT_MODES,
   CENTER_CHOICES,
+  REMINDER_RULES,
+  REMINDER_TEMPLATE_EXAMPLE,
   WEEKDAY_LABELS,
+  reminderTemplateIssues,
   type AssistantFaq,
   type AssistantService,
   type AssistantSettings,
   type CenterPublicInfo,
   type HandoffRule,
+  type WhatsappTemplate,
 } from "@meguiars/domain";
 import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
@@ -19,6 +23,7 @@ import {
   conversationAssistantAction,
   deleteAssistantFaqAction,
   saveAssistantFaqAction,
+  saveAssistantRemindersAction,
   saveAssistantServiceAction,
   saveAssistantSettingsAction,
   saveCenterInfoAction,
@@ -198,6 +203,12 @@ export function AssistantSettingsForm({ settings }: { settings: AssistantSetting
           label="Sugiere membresías"
           checked={settings.mentionMemberships}
         />
+        <Checkbox
+          name="selfBooking"
+          value="on"
+          label="Agenda, cambia y cancela citas (el cliente confirma con un botón)"
+          checked={settings.selfBooking}
+        />
       </div>
       <TextArea
         name="testNumbers"
@@ -209,6 +220,69 @@ export function AssistantSettingsForm({ settings }: { settings: AssistantSetting
       />
       <Input name="reason" label="Motivo del cambio" required defaultValue="" />
       <Submit label="Guardar configuración" />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** Recordatorio de cita por WhatsApp (sólo el admin): plantilla, horas antes y encendido. */
+export function AssistantRemindersForm({
+  settings,
+  templates,
+}: {
+  settings: AssistantSettings;
+  templates: WhatsappTemplate[];
+}) {
+  const [state, action] = useActionState(saveAssistantRemindersAction, {});
+  useToastOnMessage(state);
+  const v = (k: string, d: string) => valueOf(state, k, d);
+  const usable = templates.filter((t) => reminderTemplateIssues(t).length === 0);
+  return (
+    <form
+      key={state.at ? String(state.at) : "reminders"}
+      action={action}
+      className="flex flex-col gap-md"
+      data-testid="assistant-reminders-form"
+    >
+      <input type="hidden" name="version" value={settings.version} />
+      <p className="text-sm text-muted">
+        Plantilla de WhatsApp de categoría Utilidad, aprobada por Meta, con 3 datos y 2 botones de respuesta
+        rápida. Ejemplo: «{REMINDER_TEMPLATE_EXAMPLE.body}» con botones «
+        {REMINDER_TEMPLATE_EXAMPLE.buttons.join("» y «")}». Créala en WhatsApp Manager y sincroniza las
+        plantillas en Integraciones.
+      </p>
+      <div className="grid gap-sm md:grid-cols-2">
+        <Select
+          name="templateId"
+          label="Plantilla del recordatorio"
+          options={[
+            {
+              value: "",
+              label: usable.length ? "Elige una plantilla" : "Ninguna plantilla cumple los requisitos",
+            },
+            ...usable.map((t) => ({ value: t.id, label: `${t.name} (${t.language})` })),
+          ]}
+          defaultValue={v("templateId", settings.reminderTemplateId ?? "")}
+          error={state.fields?.templateId}
+        />
+        <Input
+          name="hours"
+          type="number"
+          min={REMINDER_RULES.hours.min}
+          max={REMINDER_RULES.hours.max}
+          label="Horas antes de la cita"
+          defaultValue={v("hours", String(settings.reminderHours))}
+          error={state.fields?.hours}
+        />
+      </div>
+      <Checkbox
+        name="enabled"
+        value="on"
+        label="Enviar recordatorio con botones Confirmar y Reagendar"
+        checked={settings.remindersEnabled}
+      />
+      <Input name="reason" label="Motivo del cambio" required defaultValue="" />
+      <Submit label="Guardar recordatorios" />
       <FormError state={state} />
     </form>
   );

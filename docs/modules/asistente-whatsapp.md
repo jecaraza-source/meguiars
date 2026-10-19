@@ -93,6 +93,63 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
 | `messages.sent_by_bot`                    | Respuestas del asistente (sin usuario que las envíe).                                         |
 | `contact_preferences.source = 'whatsapp'` | Origen de la baja pedida por WhatsApp.                                                        |
 
+## Citas por WhatsApp (F2, parte 1 · `20261031000000_whatsapp_booking.sql`)
+
+El asistente agenda, reprograma y cancela citas; **la cita sólo existe cuando el cliente toca «Confirmar»**. Decisiones en [ADR 0038](../adr/0038-citas-por-whatsapp-con-boton.md).
+
+1. Con `consultar_cliente` el asistente ve el nombre, los autos y las próximas citas del número (cliente ligado a la conversación o con el mismo teléfono; los celulares de México llegan como 521… y se normalizan igual que en clientes).
+2. Muestra horarios libres; cuando el cliente elige uno, pide lo que falte: nombre (si no es cliente) y el auto (uno registrado, o marca, modelo y año; **la placa es opcional**).
+3. `proponer_cita` (o `proponer_cambio_cita` / `proponer_cancelacion`): la base valida el horario del centro, la anticipación, los días hacia adelante, la capacidad y que haya una bahía libre, y guarda la propuesta con un resumen.
+4. El cliente recibe ese resumen **con botones** (Confirmar / Cambiar; para cancelar: Sí, cancelar / No, mantenerla). El texto del modelo de ese turno no se envía.
+5. Al tocar **Confirmar**, la base (sin IA) vuelve a validar con un candado por centro, crea el cliente y el auto si no existían, y crea la cita `programada` con origen **WhatsApp** y bahía asignada; o la mueve; o la cancela. Responde «Listo, su cita quedó agendada para el …». Si alguien ganó el horario, avisa y ofrece otros. **Cambiar** deja que el asistente siga la conversación.
+6. El equipo ve la cita marcada «WhatsApp» en la agenda (web y móvil), una nota interna en la conversación y la auditoría con su motivo.
+
+| Regla                      | Cómo se cumple                                                                                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No confirma con texto      | Proponer no crea la cita; sólo el botón la crea (`assistant_handle_button`, llave de servicio). La regla del prompt y el eval lo revisan.                              |
+| Sin encimar bahías         | Validación al proponer y al confirmar, candado por centro, bahía asignada y las _exclusion constraints_ de la agenda.                                                  |
+| Botón repetido o reintento | Idempotente: la misma propuesta no crea dos citas y el mismo botón devuelve la misma respuesta. Una propuesta nueva deja sin efecto la anterior; vencen (máximo 24 h). |
+| Placa opcional             | El auto puede quedar sin placa; la agenda muestra «Falta placa» y la OS no se abre hasta capturarla en la ficha del cliente.                                           |
+| Consentimiento             | El cliente creado por WhatsApp no recibe marketing (sin canales autorizados).                                                                                          |
+| Servicios con valoración   | No se proponen: pasan a una persona.                                                                                                                                   |
+| Interruptor                | Configuración → «Agenda, cambia y cancela citas». Apagado, el asistente muestra horarios y pasa a una persona (F1).                                                    |
+
+Botones en Meta: mensaje `interactive` tipo `button` (máximo 3, título de hasta 20 caracteres); la respuesta llega como `interactive.button_reply.id` y se guarda en `messages.payload`. Los botones enviados quedan en `messages.buttons`.
+
+## Recordatorios de cita (F2, parte 2 · `20261031000100_appointment_reminders.sql`)
+
+Un mensaje de plantilla **24 h antes** de cada cita programada (configurable de 2 a 72 h) con botones **Confirmar** y **Reagendar**. Decisiones en [ADR 0039](../adr/0039-recordatorios-de-cita-por-whatsapp.md).
+
+- **Qué citas:** programadas, que empiezan dentro de las horas configuradas y con al menos 2 h por delante, agendadas con al menos 12 h de anticipación (`REMINDER_RULES` ↔ `private.reminder_rules`). Un recordatorio por cita.
+- **Mensaje:** plantilla de utilidad aprobada con `{{1}}` nombre, `{{2}}` fecha y hora (zona del centro) y `{{3}}` centro. Queda en la conversación de WhatsApp del cliente en la bandeja.
+- **Confirmar:** la base marca la cita como confirmada (auditada) y responde «Gracias por confirmar…». Sólo el número del cliente de la cita puede confirmarla.
+- **Reagendar:** lo atiende el asistente con el flujo de cambio de cita (propone y el cliente confirma con botón).
+- **Agenda:** «Recordatorio enviado» y «Confirmó» en web y móvil.
+
+### Puesta en marcha de los recordatorios
+
+1. En **WhatsApp Manager** crea una plantilla de categoría **Utilidad** (por ejemplo `recordatorio_cita`, español de México):
+   - Cuerpo: `Hola {{1}}, le recordamos su cita el {{2}} en {{3}}. ¿Nos confirma su asistencia?`
+   - Botones de respuesta rápida: `Confirmar` y `Reagendar` (en ese orden).
+   - Ejemplos para Meta: `Laura`, `martes 20 de octubre, 10:00`, `Centro Polanco`.
+2. Cuando Meta la apruebe: **Integraciones → Sincronizar plantillas con Meta**.
+3. **Comercial → Asistente → Recordatorios de cita**: elige la plantilla, las horas y enciéndelos (sólo el admin).
+4. En **Vercel** (Production) define `CRON_SECRET` si aún no existe (un texto largo aleatorio; es el mismo de las alertas).
+5. En **Supabase → SQL Editor** (producción), guarda en Vault la URL pública y el mismo secreto:
+
+   ```sql
+   select vault.create_secret('https://meguiars-web.vercel.app', 'meguiars_web_url');
+   select vault.create_secret('<el mismo valor de CRON_SECRET>', 'meguiars_cron_secret');
+   ```
+
+   Si cambia el dominio: `select vault.update_secret((select id from vault.secrets where name = 'meguiars_web_url'), 'https://nuevo-dominio');`.
+
+6. La tarea `recordatorios-whatsapp` de pg_cron corre cada hora (minuto 7). Para probar sin esperar: `select private.call_reminders_endpoint();` y revisa la respuesta en `net._http_response`.
+
+## Estado de la OS (F2, parte 3)
+
+«¿Ya está mi coche?»: `consultar_cliente` devuelve también las órdenes del cliente en curso (o entregadas hace menos de 3 días) con folio, estado («En proceso», «Listo para entregar»…), auto, servicios y hora promesa. **Sin montos.** Si no hay orden, lo dice y ofrece una persona. Las fotos que manda el cliente siguen pasando a una persona y ahora se ven en la bandeja.
+
 ## Puesta en marcha
 
 1. **WhatsApp real.** Registrar el número central en Integraciones (asignado al centro principal) y «Probar conexión». Ver [bandeja.md](bandeja.md).
@@ -120,6 +177,10 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
   - sólo la llave de servicio ejecuta el asistente.
 - `packages/domain/src/assistant/assistant.test.ts`: contexto, instrucciones, historial, herramientas y su validación; y el motor con base, modelo y WhatsApp simulados (catálogo y respuesta, escalamiento, entrada inválida, BAJA, foto, falla de la API, rechazo, mensaje más reciente, envío rechazado, límite de rondas).
 - `packages/validation/src/assistant.test.ts` y la paridad SQL ↔ TypeScript (modos, modelos, motivos, estados, límites).
+- `supabase/tests/whatsapp_booking.test.sql` (citas por WhatsApp): validaciones al proponer (año, placa, placa de otro cliente, valoración, cierre, días adelante, hora), resumen con botones una sola vez, confirmar crea cliente/auto/cita con bahía y auditoría, reintento sin duplicar, horario ganado por otro, reagendar, «No», cancelar, propuesta vencida y reemplazada, agenda propia apagada, sólo llave de servicio, lectura por centro, la agenda muestra el origen y la OS exige placa.
+- `supabase/tests/appointment_reminders.test.sql` (recordatorios): configuración sólo del admin y plantilla válida (utilidad, aprobada, 3 datos, 2 botones), qué citas tocan, plantilla en la conversación del cliente (la crea), uno por cita, Confirmar sin IA con auditoría y reintento, Reagendar al asistente, otro número no confirma, la agenda lo muestra y apagados no envían.
+- `reminders.test.ts`: envío de pendientes (sigue si uno falla) y qué plantilla sirve.
+- `assistant.test.ts` (agenda propia): herramientas y regla según el ajuste, validación de la propuesta, resumen con botones en lugar del texto del modelo, propuesta rechazada y botón atendido sin IA.
 - E2E con Meta y Claude simulados:
   - estado real sin exponer la llave;
   - datos del centro con horario validado;
@@ -135,12 +196,13 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
 
 ## Evaluación antes de pasar a «activo»
 
-`packages/domain/src/assistant/eval.ts` y `eval-scenarios.ts` definen **28 conversaciones de prueba**:
+`packages/domain/src/assistant/eval.ts` y `eval-scenarios.ts` definen **35 conversaciones de prueba**:
 
 - precios y servicios (catálogo, «desde» por tamaño, servicio inexistente, cerámico con valoración);
 - centro, dirección y horario (incluido domingo cerrado y elección por colonia);
-- agenda (horarios libres sin confirmar, pasar a persona con resumen);
+- agenda (horarios libres sin confirmar, propuesta con botón con datos completos, pide el año si falta, agenda sin placa, reagendar y cancelar a un cliente registrado, «Reagendar» desde el recordatorio);
 - promociones y descuentos (sólo los autorizados, sin descuentos propios), flotilla B2B;
+- estado de la OS («¿ya está mi coche?», con y sin orden en curso);
 - quejas, garantía, «quiero una persona», foto y BAJA;
 - mensajes ambiguos, fuera de tema, en inglés e intentos de manipulación (cambiar precios, ver instrucciones, «¿eres humano?»).
 
@@ -158,11 +220,12 @@ Cada escenario corre con el **motor real** contra una **base simulada** con dato
 ANTHROPIC_API_KEY=… npm run eval:assistant -w @meguiars/web -- --yes [--model claude-sonnet-5-5] [--only precio-lavado,queja] [--repeat 2] [--out reporte.json]
 ```
 
-Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, y termina con código 1 si algo falla. Criterio sugerido para «activo»: 28 de 28 en dos corridas seguidas con el modelo elegido. Las pruebas del arnés (`eval.test.ts`) usan un modelo guionado y corren sin red en `npm test`.
+Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, y termina con código 1 si algo falla. Criterio sugerido para «activo»: 35 de 35 en dos corridas seguidas con el modelo elegido. Las pruebas del arnés (`eval.test.ts`) usan un modelo guionado y corren sin red en `npm test`.
 
 ## Pendientes
 
 - **Validar con el número real de Meta y la llave real de Anthropic.** Hasta entonces sólo está probado contra servicios simulados; no está operativo.
-- F2: agendar con confirmación por botón (apartar horario), cotizar, reagendar o cancelar, estado de la OS, recordatorios con plantillas aprobadas y precios por tamaño en el catálogo.
+- F2 (siguiente): cotizar y precios por tamaño en el catálogo.
+- Validar los recordatorios con la plantilla aprobada y el número real.
 - F3: membresías, reactivación de clientes con consentimiento.
 - Correr la evaluación con la llave real y el modelo elegido (ver arriba) antes de pasar a «activo».
