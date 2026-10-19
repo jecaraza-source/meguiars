@@ -50,7 +50,7 @@ Crear staging:
 
 **Mientras staging no exista:**
 
-- no definas variables de Supabase para Preview en Vercel. El preview muestra "Supabase no está configurado", pero nunca toca datos reales;
+- **Decisión vigente (18 oct 2026):** como el proyecto `meguiars` todavía sólo tiene datos de prueba, Preview usa ese mismo proyecto. En Vercel, `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` están en Production **y** Preview. Las variables de servidor **no** están en Preview: `SUPABASE_SERVICE_ROLE_KEY`, los tokens de Meta y `ANTHROPIC_API_KEY`. Así un preview no manda WhatsApps, no recibe el webhook ni gasta en Claude. **Antes de cargar datos reales**, quita Preview de esas dos variables o crea `meguiars-staging` con los pasos de arriba;
 - el despliegue automático a staging sólo deja un aviso;
 - producción se aplica a mano.
 
@@ -184,7 +184,7 @@ Publicar en tiendas: `npx eas-cli@24.8.0 submit --profile production --platform 
 | `EXPO_TOKEN`                | ídem, en los dos environments                                                                                                                                                                             | mobile-build                                                                                    |
 | llave `service_role`/secret | dashboard de Supabase y Vercel (Production, `SUPABASE_SERVICE_ROLE_KEY`); nunca en móvil ni en el navegador                                                                                               | servidor web: cron de alertas y alta/contraseñas de usuarios                                    |
 | tokens y App Secret de Meta | Vercel (Production y Preview): `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `MESSENGER_PAGE_ACCESS_TOKEN`, `INSTAGRAM_ACCESS_TOKEN`; nunca en la base, el navegador ni la app | servidor web: webhook `/api/webhooks/meta` y envío de la Bandeja (ver [bandeja.md](bandeja.md)) |
-| llave de la API de Claude   | Vercel (Production y Preview): `ANTHROPIC_API_KEY`; nunca en la base, el navegador ni la app                                                                                                              | servidor web: asistente de WhatsApp (ver [asistente-whatsapp.md](asistente-whatsapp.md))        |
+| llave de la API de Claude   | Vercel (Production): `ANTHROPIC_API_KEY`; secreto de GitHub `ANTHROPIC_API_KEY` sólo para el workflow manual «Evaluación del asistente»; nunca en la base, el navegador ni la app                         | servidor web: asistente de WhatsApp (ver [asistente-whatsapp.md](asistente-whatsapp.md))        |
 | llaves publishable (anon)   | Vercel (por ambiente), EAS (por ambiente) y `.env.local`; son públicas por diseño                                                                                                                         | apps                                                                                            |
 
 Configura en GitHub **Environments**:
