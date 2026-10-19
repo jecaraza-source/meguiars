@@ -228,9 +228,10 @@ select pg_temp.assert_fails(format($$select public.assistant_services(%L, %L, nu
 
 reset role;
 insert into public.promotions (organization_id, code, name, kind, value, starts_on, ends_on, authorization_level, terms)
-values (:'O1', 'BIENVENIDA10', 'Bienvenida', 'percent', 10, current_date - 1, current_date + 30, 'operador', 'Primera visita'),
-       (:'O1', 'SOCIO30', 'Descuento especial', 'percent', 30, current_date - 1, current_date + 30, 'admin', null),
-       (:'O1', 'VENCIDA', 'Vencida', 'amount', 100, current_date - 30, current_date - 1, 'operador', null);
+-- Fechas en el día del centro (no en UTC): la vigencia se evalúa con private.center_today.
+values (:'O1', 'BIENVENIDA10', 'Bienvenida', 'percent', 10, private.center_today(:'A') - 1, private.center_today(:'A') + 30, 'operador', 'Primera visita'),
+       (:'O1', 'SOCIO30', 'Descuento especial', 'percent', 30, private.center_today(:'A') - 1, private.center_today(:'A') + 30, 'admin', null),
+       (:'O1', 'VENCIDA', 'Vencida', 'amount', 100, private.center_today(:'A') - 30, private.center_today(:'A') - 1, 'operador', null);
 select pg_temp.as_service();
 select pg_temp.assert((select string_agg(x ->> 'codigo', ',') from jsonb_array_elements(public.assistant_promotions(:'t1', :'A') -> 'promociones') x)
                       = 'BIENVENIDA10',
