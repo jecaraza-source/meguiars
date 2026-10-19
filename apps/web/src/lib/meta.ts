@@ -1,6 +1,10 @@
 import "server-only";
 import { createHmac } from "node:crypto";
 import {
+  INBOX_MEDIA_MAX_BYTES,
+  buildMediaInfoRequest,
+  inboxMediaExtension,
+  parseMediaInfo,
   buildSendRequest,
   buildTemplateSendRequest,
   buildTemplatesListRequest,
@@ -122,6 +126,38 @@ async function callGraph(
 export async function sendViaMeta(msg: OutboundMessage) {
   const { status, json } = await callGraph(msg.channel, buildSendRequest(msg, bases()));
   return parseSendResponse(status, json);
+}
+
+/**
+ * Descarga un archivo de WhatsApp con el token del servidor: primero pide a Meta
+ * su URL (caduca en minutos) y luego lo baja. Sólo tipos que guarda la bandeja y
+ * hasta 16 MB; si no, devuelve el motivo (queda visible en el hilo).
+ */
+export async function downloadWhatsappMedia(
+  mediaId: string,
+): Promise<{ bytes: ArrayBuffer; mimeType: string } | { error: string }> {
+  const info = await callGraph("whatsapp", buildMediaInfoRequest(mediaId, bases()));
+  const parsed = parseMediaInfo(info.status, info.json);
+  if (!parsed.ok) return { error: parsed.error };
+  const mimeType = (parsed.mimeType ?? "").split(";")[0]!.trim().toLowerCase();
+  if (!inboxMediaExtension(mimeType))
+    return { error: `Tipo de archivo no admitido (${mimeType || "desconocido"})` };
+  if (parsed.size && parsed.size > INBOX_MEDIA_MAX_BYTES) return { error: "Archivo de más de 16 MB" };
+  const token = process.env[TOKEN_ENV.whatsapp];
+  if (!token) return { error: `Falta ${TOKEN_ENV.whatsapp} en el servidor` };
+  try {
+    const res = await fetch(parsed.url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return { error: `Meta respondió HTTP ${res.status} al descargar el archivo` };
+    const bytes = await res.arrayBuffer();
+    if (bytes.byteLength > INBOX_MEDIA_MAX_BYTES) return { error: "Archivo de más de 16 MB" };
+    return { bytes, mimeType };
+  } catch (e) {
+    return { error: `Sin respuesta de Meta: ${e instanceof Error ? e.message : String(e)}`.slice(0, 300) };
+  }
 }
 
 /** Envía el recordatorio de cita (plantilla aprobada con los ids de sus botones). */

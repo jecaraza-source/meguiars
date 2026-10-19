@@ -1521,6 +1521,12 @@ export type Database = {
           error: string | null;
           external_id: string | null;
           id: string;
+          media_error: string | null;
+          media_filename: string | null;
+          media_id: string | null;
+          media_mime_type: string | null;
+          media_path: string | null;
+          media_size: number | null;
           message_type: string;
           occurred_at: string;
           organization_id: string;
@@ -1541,6 +1547,12 @@ export type Database = {
           error?: string | null;
           external_id?: string | null;
           id?: string;
+          media_error?: string | null;
+          media_filename?: string | null;
+          media_id?: string | null;
+          media_mime_type?: string | null;
+          media_path?: string | null;
+          media_size?: number | null;
           message_type?: string;
           occurred_at?: string;
           organization_id: string;
@@ -1561,6 +1573,12 @@ export type Database = {
           error?: string | null;
           external_id?: string | null;
           id?: string;
+          media_error?: string | null;
+          media_filename?: string | null;
+          media_id?: string | null;
+          media_mime_type?: string | null;
+          media_path?: string | null;
+          media_size?: number | null;
           message_type?: string;
           occurred_at?: string;
           organization_id?: string;
@@ -7369,6 +7387,10 @@ export type Database = {
           direction: string;
           error: string | null;
           id: string;
+          media_error: string | null;
+          media_filename: string | null;
+          media_mime_type: string | null;
+          media_path: string | null;
           message_type: string;
           occurred_at: string;
           sent_by_bot: boolean;
@@ -8148,6 +8170,26 @@ export type Database = {
           template_params: string[];
         }[];
       };
+      prepare_outbound_media: {
+        Args: {
+          p_caption: string;
+          p_conversation_id: string;
+          p_expected_last_message_at?: string;
+          p_path: string;
+          p_request_id: string;
+        };
+        Returns: {
+          already_sent: boolean;
+          body: string | null;
+          channel: string;
+          contact_external_id: string;
+          contact_phone: string | null;
+          external_account_id: string;
+          media_mime_type: string | null;
+          media_path: string | null;
+          message_id: string;
+        }[];
+      };
       prepare_template_message: {
         Args: {
           p_conversation_id: string;
@@ -8189,6 +8231,16 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["channel_accounts"]["Row"];
         SetofOptions: { from: "*"; to: "channel_accounts"; isOneToOne: true; isSetofReturn: false };
+      };
+      record_message_media: {
+        Args: {
+          p_error: string;
+          p_message_id: string;
+          p_mime_type: string;
+          p_path: string;
+          p_size: number;
+        };
+        Returns: undefined;
       };
       record_whatsapp_templates: {
         Args: {

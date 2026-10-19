@@ -168,9 +168,15 @@ Las conversaciones de WhatsApp pueden atenderlas primero el asistente con IA ([a
 - Si alguien responde desde la Bandeja, el asistente se retira de esa conversación.
 - El botón «Reactivar asistente aquí» lo vuelve a encender.
 
+## Fotos y archivos (20261031000200)
+
+- **Recibir (WhatsApp):** fotos, documentos, audios y videos de hasta 16 MB se descargan de Meta al bucket privado `inbox-media` y se ven en el hilo (web y móvil) con URL firmadas de 10 minutos. Si no se pudo, el hilo dice por qué. Messenger e Instagram siguen con el aviso.
+- **Enviar foto (WhatsApp, dentro de las 24 h):** web «Enviar foto»; móvil «Tomar foto» / «Elegir foto» (el texto escrito va como pie de foto). Se reduce antes de subir (≤ 1600 px, JPEG, máx. 5 MB) y el servidor la envía con un enlace firmado.
+- **Permisos:** quien atiende la bandeja del centro de la conversación; el contador y otros centros no ven los archivos. Decisiones en [ADR 0040](../adr/0040-archivos-de-la-bandeja-y-estado-de-la-os.md).
+
 ## Pendientes
 
 - Validar las plantillas con la WABA real (falta `WHATSAPP_BUSINESS_ACCOUNT_ID` y una plantilla aprobada); hasta entonces sólo están probadas contra Meta simulado.
 - Plantillas con encabezado, botones o multimedia; Messenger e Instagram fuera de 24 h (etiquetas de mensaje).
-- Adjuntos (ver y enviar imágenes).
+- Adjuntos de Messenger e Instagram (WhatsApp ya recibe y envía fotos).
 - Automatizaciones: hechas en la fase 4 como tareas ([automatizaciones](automatizaciones.md)); una respuesta del cliente en la bandeja detiene sus secuencias. Falta la asignación automática de conversaciones.

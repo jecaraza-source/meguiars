@@ -49,6 +49,17 @@ export const sendMessageSchema = z.object({
   expectedLastMessageAt: z.preprocess(blankToUndefined, z.iso.datetime({ offset: true }).optional()),
 });
 
+/** Foto ya subida a la conversación (sólo WhatsApp, dentro de las 24 h). */
+export const sendMediaSchema = z.object({
+  conversationId: z.uuid(),
+  requestId: z.uuid(),
+  mediaPath: z
+    .string()
+    .regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/, "Foto inválida"),
+  caption: z.preprocess(blankToUndefined, z.string().trim().max(1024, "Máximo 1024 caracteres").optional()),
+  expectedLastMessageAt: z.preprocess(blankToUndefined, z.iso.datetime({ offset: true }).optional()),
+});
+
 /** Plantilla aprobada de WhatsApp (fuera de la ventana de 24 h). */
 export const sendTemplateSchema = z.object({
   conversationId: z.uuid(),

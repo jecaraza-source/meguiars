@@ -136,7 +136,34 @@ export interface EvalProfile {
     servicios: string[];
     vehiculo: string;
   }[];
+  ordenes?: {
+    folio: string;
+    centro: string;
+    estado: string;
+    auto: string;
+    servicios: string[];
+    listo_para_entregar: boolean;
+    hora_promesa: string | null;
+  }[];
 }
+
+/** Cliente registrado con su auto en proceso en el centro (escenario de estado de la OS). */
+export const EVAL_CLIENT_IN_SERVICE: EvalProfile = {
+  cliente: { nombre: "Laura Pérez" },
+  vehiculos: [{ vehiculo_id: "7e000000-0000-4000-8000-000000000001", descripcion: "Mazda 3 2021 · ABC1234" }],
+  citas: [],
+  ordenes: [
+    {
+      folio: "POL-01-000123",
+      centro: "Centro Polanco",
+      estado: "En proceso",
+      auto: "Mazda 3 2021 · ABC1234",
+      servicios: ["Pulido y encerado"],
+      listo_para_entregar: false,
+      hora_promesa: "jueves 15 de octubre, 17:30",
+    },
+  ],
+};
 
 /** Cliente registrado con una cita mañana (escenarios de reagendar y cancelar). */
 export const EVAL_KNOWN_CLIENT: EvalProfile = {

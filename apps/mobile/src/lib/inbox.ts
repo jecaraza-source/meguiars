@@ -13,7 +13,14 @@ export type SendResult =
 /** Texto dentro de las 24 h (con el último mensaje visto) o plantilla aprobada de WhatsApp. */
 export type SendInput =
   | { conversationId: string; requestId: string; body: string; expectedLastMessageAt?: string }
-  | { conversationId: string; requestId: string; templateId: string; params: string[] };
+  | { conversationId: string; requestId: string; templateId: string; params: string[] }
+  | {
+      conversationId: string;
+      requestId: string;
+      mediaPath: string;
+      caption?: string;
+      expectedLastMessageAt?: string;
+    };
 
 export async function sendFromApp(client: MeguiarsSupabaseClient, input: SendInput): Promise<SendResult> {
   if (!WEB_URL)

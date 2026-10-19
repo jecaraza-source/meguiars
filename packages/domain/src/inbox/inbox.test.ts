@@ -6,7 +6,11 @@ import { ASSISTANT_MODE_TONES, conversationAssistantBadge } from "../assistant/a
 import { CONVERSATION_PRIORITY_TONES, CONVERSATION_STATUS_TONES, windowTone } from "./copy";
 import {
   type ConversationHistoryEntry,
+  type InboxMessage,
   fillQuickReply,
+  inboxMediaExtension,
+  inboxMediaPath,
+  presentMessageMedia,
   historyDisplayName,
   unreadLabel,
   normalizeTags,
@@ -19,7 +23,9 @@ import {
   windowRemaining,
 } from "./inbox";
 import {
+  buildMediaInfoRequest,
   buildSendRequest,
+  parseMediaInfo,
   buildTemplateSendRequest,
   buildTemplatesListRequest,
   parseTemplatesResponse,
@@ -327,6 +333,97 @@ describe("envío y verificación con la Graph API", () => {
     expect(
       parseMetaWebhook(msg({ type: "text", text: { body: "Hola" } })).inbound[0]!.items[0]!.payload,
     ).toBeUndefined();
+  });
+
+  it("archivos de WhatsApp: id y tipo al recibir, URL de descarga y foto por enlace al enviar", () => {
+    const parsed = parseMetaWebhook({
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          changes: [
+            {
+              field: "messages",
+              value: {
+                metadata: { phone_number_id: "1234567890" },
+                contacts: [{ wa_id: "5215533334444" }],
+                messages: [
+                  {
+                    id: "wamid.img",
+                    from: "5215533334444",
+                    timestamp: "1760000000",
+                    type: "image",
+                    image: { id: "1122334455", mime_type: "image/jpeg", caption: "El cofre" },
+                  },
+                  {
+                    id: "wamid.doc",
+                    from: "5215533334444",
+                    timestamp: "1760000001",
+                    type: "document",
+                    document: { id: "../malo", mime_type: "application/pdf", filename: "factura.pdf" },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const [img, doc] = parsed.inbound[0]!.items;
+    expect(img).toMatchObject({ body: "El cofre", media_id: "1122334455", media_mime_type: "image/jpeg" });
+    // Un id con caracteres raros no se usa para pedir el archivo.
+    expect(doc!.media_id).toBeUndefined();
+    expect(buildMediaInfoRequest("1122334455").url).toBe("https://graph.facebook.com/v26.0/1122334455");
+    expect(
+      parseMediaInfo(200, { url: "https://lookaside.fbsbx.com/x", mime_type: "image/jpeg", file_size: 2048 }),
+    ).toEqual({
+      ok: true,
+      url: "https://lookaside.fbsbx.com/x",
+      mimeType: "image/jpeg",
+      size: 2048,
+    });
+    expect(parseMediaInfo(404, { error: { code: 100, message: "Unknown media" } })).toEqual({
+      ok: false,
+      error: "(#100) Unknown media",
+    });
+    expect(
+      buildSendRequest({
+        ...base,
+        channel: "whatsapp",
+        contactPhone: "+5215533334444",
+        body: "Así quedó",
+        media: { link: "https://x/y.jpg?token=1" },
+      }).body,
+    ).toMatchObject({ type: "image", image: { link: "https://x/y.jpg?token=1", caption: "Así quedó" } });
+  });
+
+  it("el hilo muestra el archivo: foto con URL firmada, pendiente de descarga o el motivo", () => {
+    const m: InboxMessage = {
+      id: "m",
+      direction: "entrante",
+      messageType: "image",
+      body: null,
+      status: "recibido",
+      error: null,
+      sentByName: null,
+      sentByBot: false,
+      occurredAt: "2026-10-19T00:00:00Z",
+      statusAt: "2026-10-19T00:00:00Z",
+      mediaPath: null,
+      mediaMimeType: "image/jpeg",
+      mediaFilename: null,
+      mediaError: null,
+      mediaUrl: null,
+    };
+    expect(presentMessageMedia(m).kind).toBe("pending");
+    expect(presentMessageMedia({ ...m, mediaPath: "o/c/m.jpg", mediaUrl: "https://s/x" })).toEqual({
+      kind: "image",
+      url: "https://s/x",
+      label: "Foto",
+    });
+    expect(presentMessageMedia({ ...m, mediaError: "Archivo de más de 16 MB" }).kind).toBe("error");
+    expect(presentMessageMedia({ ...m, messageType: "text" }).kind).toBe("none");
+    expect(inboxMediaPath("o", "c", "f", inboxMediaExtension("image/png; x")!)).toBe("o/c/f.png");
+    expect(inboxMediaExtension("application/zip")).toBeNull();
   });
 
   it("Messenger con messaging_type RESPONSE; Instagram en graph.instagram.com", () => {

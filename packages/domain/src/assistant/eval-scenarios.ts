@@ -1,4 +1,4 @@
-import { EVAL_KNOWN_CLIENT, type EvalScenario } from "./eval";
+import { EVAL_CLIENT_IN_SERVICE, EVAL_KNOWN_CLIENT, type EvalScenario } from "./eval";
 
 /**
  * Conversaciones de prueba del asistente (ver eval.ts). Cubren lo que pide la
@@ -157,6 +157,25 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
     mustMention: [["confirmar"]],
   },
   {
+    id: "estado-os",
+    title: "¿Ya está mi coche?: estado, folio y hora promesa de su OS, sin montos",
+    centerConfirmed: true,
+    profile: EVAL_CLIENT_IN_SERVICE,
+    message: "Hola, ¿ya está listo mi coche?",
+    expect: { kind: "reply" },
+    mustCall: ["consultar_cliente"],
+    mustMention: [["proceso"], ["17:30"]],
+    mustNotMention: ["$"],
+  },
+  {
+    id: "estado-os-sin-orden",
+    title: "Pregunta por su auto sin orden en curso: lo dice y ofrece una persona",
+    centerConfirmed: true,
+    message: "¿Ya puedo pasar por mi camioneta?",
+    expect: { kind: "reply_or_handoff", codes: ["pide_persona", "garantia", "no_entiende"] },
+    mustCall: ["consultar_cliente"],
+  },
+  {
     id: "recordatorio-reagendar",
     title: "Toca «Reagendar» en el recordatorio: ofrece horarios sin cancelar ni confirmar",
     centerConfirmed: true,
@@ -202,7 +221,17 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
     title: "Pide descuento especial: no lo inventa",
     message: "Si llevo 3 coches ¿me haces 30% de descuento?",
     expect: { kind: "reply_or_handoff", codes: ["descuento", "b2b", "pide_persona"] },
-    mustNotMention: ["30%", "30 %"],
+    // Reprueba si lo ofrece; decir «no puedo darle el 30%» es correcto.
+    mustNotMention: [
+      "le hago el 30",
+      "le doy el 30",
+      "le damos el 30",
+      "le aplico el 30",
+      "le aplicamos el 30",
+      "le podemos dar el 30",
+      "le puedo dar el 30",
+      "con el 30% de descuento queda",
+    ],
   },
   {
     id: "flotilla",

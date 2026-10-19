@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthState } from "@/lib/auth/dal";
 import { stamp, text, values, type ActionFormState } from "@/lib/form-data";
-import { sendConversationMessage, sendTemplateMessage } from "@/lib/inbox";
+import { sendConversationMedia, sendConversationMessage, sendTemplateMessage } from "@/lib/inbox";
 import {
   channelServerReady,
   fetchWhatsappTemplates,
@@ -58,6 +58,43 @@ export async function sendMessageAction(_prev: InboxFormState, form: FormData): 
   if (r.data.status === "fallido")
     return stamp({ error: `Meta no aceptó el mensaje: ${r.data.error ?? "error"}` });
   return stamp({ message: "Mensaje enviado" });
+}
+
+/**
+ * Foto desde la bandeja: el navegador ya la redujo; se sube con la sesión del
+ * usuario (las políticas de Storage validan la conversación) y se envía.
+ */
+export async function sendPhotoAction(_prev: InboxFormState, form: FormData): Promise<InboxFormState> {
+  const ctx = await context("conversation");
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const conversationId = text(form, "conversationId");
+  const file = form.get("photo");
+  if (!(file instanceof File) || file.size === 0) return stamp({ fields: { photo: "Elige una foto" } });
+  const fileId = text(form, "fileId");
+  const upload = await ctx.repo.uploadPhoto({
+    organizationId: ctx.center.organizationId,
+    conversationId,
+    fileId: /^[0-9a-f-]{36}$/i.test(fileId) ? fileId : crypto.randomUUID(),
+    contentType: file.type,
+    file,
+  });
+  if (!upload.ok)
+    return upload.error.kind === "validation"
+      ? stamp({ fields: { photo: upload.error.message } })
+      : fail(upload.error, form);
+  const r = await sendConversationMedia(ctx.supabase, {
+    conversationId,
+    requestId: text(form, "requestId"),
+    path: upload.data.path,
+    caption: text(form, "caption"),
+    expectedLastMessageAt: text(form, "expectedLastMessageAt") || undefined,
+  });
+  revalidatePath(conversationPath(conversationId));
+  if (!r.ok && r.error.code === "40001") return stamp({ error: r.error.message, values: values(form) });
+  if (!r.ok) return fail(r.error, form);
+  if (r.data.status === "fallido")
+    return stamp({ error: `Meta no aceptó la foto: ${r.data.error ?? "error"}` });
+  return stamp({ message: "Foto enviada" });
 }
 
 /** Plantilla aprobada de WhatsApp (fuera de la ventana de 24 h). */

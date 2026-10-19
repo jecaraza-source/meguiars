@@ -1,5 +1,11 @@
 import {
   fail,
+  INBOX_MEDIA_BUCKET,
+  INBOX_MEDIA_URL_TTL,
+  INBOX_PHOTO_MAX_BYTES,
+  INBOX_PHOTO_TYPES,
+  inboxMediaExtension,
+  inboxMediaPath,
   type ChannelAccount,
   type ChannelAccountStatus,
   type Conversation,
@@ -209,8 +215,8 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
         : fail("not_found", "La conversación no existe o no tienes acceso.");
     },
 
-    messages(conversationId) {
-      return run(
+    async messages(conversationId) {
+      const r = await run(
         () => client.rpc("conversation_messages", { p_conversation_id: conversationId }),
         (rows): InboxMessage[] =>
           rows.map((m) => ({
@@ -224,8 +230,83 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
             sentByBot: m.sent_by_bot === true,
             occurredAt: m.occurred_at,
             statusAt: m.status_at,
+            mediaPath: m.media_path,
+            mediaMimeType: m.media_mime_type,
+            mediaFilename: m.media_filename,
+            mediaError: m.media_error,
+            mediaUrl: null,
           })),
       );
+      if (!r.ok) return r;
+      // URL firmadas de corta duración (las políticas de Storage vuelven a validar el permiso).
+      const paths = r.data.flatMap((m) => (m.mediaPath ? [m.mediaPath] : []));
+      if (paths.length === 0) return r;
+      try {
+        const signed = await client.storage
+          .from(INBOX_MEDIA_BUCKET)
+          .createSignedUrls(paths, INBOX_MEDIA_URL_TTL);
+        const urls = new Map(
+          (signed.data ?? []).flatMap((s) => (s.path && s.signedUrl ? [[s.path, s.signedUrl]] : [])),
+        );
+        return {
+          ok: true,
+          data: r.data.map((m) => ({ ...m, mediaUrl: m.mediaPath ? (urls.get(m.mediaPath) ?? null) : null })),
+        };
+      } catch {
+        return r;
+      }
+    },
+
+    async uploadPhoto(c) {
+      const ext = inboxMediaExtension(c.contentType);
+      if (!ext || !(INBOX_PHOTO_TYPES as readonly string[]).includes(c.contentType))
+        return fail("validation", "Sólo fotos JPG, PNG o WEBP");
+      const size = c.file instanceof Blob ? c.file.size : c.file.byteLength;
+      if (size > INBOX_PHOTO_MAX_BYTES) return fail("validation", "La foto pesa más de 5 MB");
+      const path = inboxMediaPath(c.organizationId, c.conversationId, c.fileId, ext);
+      try {
+        const upload = await client.storage
+          .from(INBOX_MEDIA_BUCKET)
+          .upload(path, c.file, { contentType: c.contentType, upsert: false });
+        if (upload.error && !/exists|duplicate/i.test(upload.error.message)) {
+          const status = (upload.error as { statusCode?: string }).statusCode;
+          if (status === "403" || /row-level security|unauthorized/i.test(upload.error.message))
+            return fail("permission_denied", "Sin permiso para enviar fotos en esta conversación");
+          return fail("unavailable", upload.error.message);
+        }
+      } catch (error) {
+        return { ok: false, error: toRepoError(error) };
+      }
+      return { ok: true, data: { path } };
+    },
+
+    async prepareOutboundMedia(conversationId, requestId, path, caption, expectedLastMessageAt) {
+      const r = await run(
+        () =>
+          client.rpc("prepare_outbound_media", {
+            p_conversation_id: conversationId,
+            p_request_id: requestId,
+            p_path: path,
+            p_caption: caption,
+            ...(expectedLastMessageAt ? { p_expected_last_message_at: expectedLastMessageAt } : {}),
+          }),
+        (rows) => rows[0],
+      );
+      if (!r.ok) return r;
+      if (!r.data) return fail("unknown", "La base no devolvió la foto preparada");
+      return {
+        ok: true,
+        data: {
+          messageId: r.data.message_id,
+          channel: r.data.channel as InboxChannel,
+          externalAccountId: r.data.external_account_id,
+          contactExternalId: r.data.contact_external_id,
+          contactPhone: r.data.contact_phone,
+          body: r.data.body ?? "",
+          alreadySent: r.data.already_sent,
+          mediaPath: r.data.media_path ?? path,
+        },
+      };
     },
 
     assign(id, version, userId) {
@@ -498,6 +579,76 @@ export function createInboxServiceGateway(serviceClient: MeguiarsSupabaseClient)
           }),
         (n) => n,
       );
+    },
+    /** Archivo descargado de Meta (o por qué no): sólo el servidor. */
+    async storeInboundMedia(
+      message: { messageId: string; organizationId: string; conversationId: string },
+      file: { bytes: ArrayBuffer; mimeType: string } | { error: string },
+    ): Promise<Result<void>> {
+      if ("error" in file)
+        return done(() =>
+          serviceClient.rpc("record_message_media", {
+            p_message_id: message.messageId,
+            p_path: null as unknown as string,
+            p_mime_type: null as unknown as string,
+            p_size: null as unknown as number,
+            p_error: file.error,
+          }),
+        );
+      const ext = inboxMediaExtension(file.mimeType) ?? "bin";
+      const path = inboxMediaPath(message.organizationId, message.conversationId, message.messageId, ext);
+      const up = await serviceClient.storage
+        .from(INBOX_MEDIA_BUCKET)
+        .upload(path, file.bytes, { contentType: file.mimeType, upsert: true });
+      if (up.error)
+        return done(() =>
+          serviceClient.rpc("record_message_media", {
+            p_message_id: message.messageId,
+            p_path: null as unknown as string,
+            p_mime_type: file.mimeType,
+            p_size: null as unknown as number,
+            p_error: `No se guardó el archivo: ${up.error.message}`.slice(0, 300),
+          }),
+        );
+      return done(() =>
+        serviceClient.rpc("record_message_media", {
+          p_message_id: message.messageId,
+          p_path: path,
+          p_mime_type: file.mimeType,
+          p_size: file.bytes.byteLength,
+          p_error: null as unknown as string,
+        }),
+      );
+    },
+    /** Mensajes entrantes con archivo pendiente de descargar. */
+    pendingMedia(messageIds: string[]) {
+      return run(
+        () =>
+          serviceClient
+            .from("messages")
+            .select("id, organization_id, conversation_id, media_id, media_mime_type")
+            .in("id", messageIds)
+            .not("media_id", "is", null)
+            .is("media_path", null)
+            .is("media_error", null),
+        (rows) =>
+          rows.map((m) => ({
+            messageId: m.id,
+            organizationId: m.organization_id,
+            conversationId: m.conversation_id,
+            mediaId: m.media_id as string,
+            mimeType: m.media_mime_type,
+          })),
+      );
+    },
+    /** URL firmada de corta duración para que Meta descargue una foto saliente. */
+    async signedMediaUrl(path: string): Promise<Result<string>> {
+      const r = await serviceClient.storage
+        .from(INBOX_MEDIA_BUCKET)
+        .createSignedUrl(path, INBOX_MEDIA_URL_TTL);
+      return r.data?.signedUrl
+        ? { ok: true, data: r.data.signedUrl }
+        : fail("unavailable", r.error?.message ?? "No se pudo firmar la foto");
     },
     finishOutbound(
       messageId: string,

@@ -484,6 +484,8 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "assistant_free_slots",
   "assistant_handle_button",
   "prepare_appointment_reminder",
+  "prepare_outbound_media",
+  "record_message_media",
   "reminders_due",
   "set_assistant_reminders",
   "assistant_handoff",

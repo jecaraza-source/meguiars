@@ -5,7 +5,7 @@ import {
   createInboxServiceGateway,
   type MeguiarsSupabaseClient,
 } from "@meguiars/supabase";
-import { channelServerReady, sendTemplateViaMeta, sendViaMeta } from "./meta";
+import { channelServerReady, downloadWhatsappMedia, sendTemplateViaMeta, sendViaMeta } from "./meta";
 import { createSupabaseServiceClient } from "./supabase/service";
 
 /**
@@ -93,4 +93,75 @@ export async function sendTemplateMessage(
   return sent.ok
     ? { ok: true, data: { messageId: msg.messageId, status: "enviado" } }
     : { ok: true, data: { messageId: msg.messageId, status: "fallido", error: sent.error } };
+}
+
+/**
+ * Foto desde la bandeja (web y móvil). La foto ya se subió al bucket privado con
+ * la sesión de quien responde; la base valida permiso, ventana y duplicados y la
+ * deja «pendiente»; el servidor la envía con una URL firmada de corta duración.
+ */
+export async function sendConversationMedia(
+  userClient: MeguiarsSupabaseClient,
+  input: {
+    conversationId: string;
+    requestId: string;
+    path: string;
+    caption?: string | undefined;
+    expectedLastMessageAt?: string | undefined;
+  },
+): Promise<Result<{ messageId: string; status: "enviado" | "fallido"; error?: string }>> {
+  const service = createSupabaseServiceClient();
+  if (!service)
+    return fail("unavailable", "El envío no está configurado en el servidor (falta la llave de servicio).");
+  const prepared = await createInboxRepository(userClient).prepareOutboundMedia(
+    input.conversationId,
+    input.requestId,
+    input.path,
+    input.caption ?? "",
+    input.expectedLastMessageAt,
+  );
+  if (!prepared.ok) return prepared;
+  const msg = prepared.data;
+  if (msg.alreadySent) return { ok: true, data: { messageId: msg.messageId, status: "enviado" } };
+  const gateway = createInboxServiceGateway(service);
+  if (!channelServerReady("whatsapp")) {
+    await gateway.finishOutbound(msg.messageId, {
+      ok: false,
+      error: "Faltan las credenciales de WhatsApp en el servidor",
+    });
+    return fail("unavailable", "Faltan las credenciales de WhatsApp en el servidor: la foto no se envió.");
+  }
+  const link = await gateway.signedMediaUrl(msg.mediaPath);
+  const sent = link.ok
+    ? await sendViaMeta({ ...msg, media: { link: link.data } })
+    : { ok: false as const, error: link.error.message };
+  const recorded = await gateway.finishOutbound(msg.messageId, sent);
+  if (!recorded.ok) return recorded;
+  return sent.ok
+    ? { ok: true, data: { messageId: msg.messageId, status: "enviado" } }
+    : { ok: true, data: { messageId: msg.messageId, status: "fallido", error: sent.error } };
+}
+
+/**
+ * Descarga a la bandeja los archivos de los mensajes nuevos de WhatsApp (fotos,
+ * documentos, audios). Nunca lanza: el webhook ya respondió 200 a Meta.
+ */
+export async function storeInboundMedia(messageIds: string[]): Promise<void> {
+  const service = createSupabaseServiceClient();
+  if (!service || messageIds.length === 0 || !channelServerReady("whatsapp")) return;
+  const gateway = createInboxServiceGateway(service);
+  const pending = await gateway.pendingMedia(messageIds);
+  if (!pending.ok) {
+    console.error("bandeja: archivos sin consultar", pending.error.message);
+    return;
+  }
+  for (const m of pending.data) {
+    try {
+      const file = await downloadWhatsappMedia(m.mediaId);
+      const r = await gateway.storeInboundMedia(m, file);
+      if (!r.ok) console.error("bandeja: archivo sin registrar", m.messageId, r.error.message);
+    } catch (e) {
+      console.error("bandeja: archivo sin descargar", m.messageId, e instanceof Error ? e.message : e);
+    }
+  }
 }

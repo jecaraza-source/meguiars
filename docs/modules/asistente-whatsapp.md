@@ -146,6 +146,10 @@ Un mensaje de plantilla **24 h antes** de cada cita programada (configurable de 
 
 6. La tarea `recordatorios-whatsapp` de pg_cron corre cada hora (minuto 7). Para probar sin esperar: `select private.call_reminders_endpoint();` y revisa la respuesta en `net._http_response`.
 
+## Estado de la OS (F2, parte 3)
+
+«¿Ya está mi coche?»: `consultar_cliente` devuelve también las órdenes del cliente en curso (o entregadas hace menos de 3 días) con folio, estado («En proceso», «Listo para entregar»…), auto, servicios y hora promesa. **Sin montos.** Si no hay orden, lo dice y ofrece una persona. Las fotos que manda el cliente siguen pasando a una persona y ahora se ven en la bandeja.
+
 ## Puesta en marcha
 
 1. **WhatsApp real.** Registrar el número central en Integraciones (asignado al centro principal) y «Probar conexión». Ver [bandeja.md](bandeja.md).
@@ -192,12 +196,13 @@ Un mensaje de plantilla **24 h antes** de cada cita programada (configurable de 
 
 ## Evaluación antes de pasar a «activo»
 
-`packages/domain/src/assistant/eval.ts` y `eval-scenarios.ts` definen **33 conversaciones de prueba**:
+`packages/domain/src/assistant/eval.ts` y `eval-scenarios.ts` definen **35 conversaciones de prueba**:
 
 - precios y servicios (catálogo, «desde» por tamaño, servicio inexistente, cerámico con valoración);
 - centro, dirección y horario (incluido domingo cerrado y elección por colonia);
 - agenda (horarios libres sin confirmar, propuesta con botón con datos completos, pide el año si falta, agenda sin placa, reagendar y cancelar a un cliente registrado, «Reagendar» desde el recordatorio);
 - promociones y descuentos (sólo los autorizados, sin descuentos propios), flotilla B2B;
+- estado de la OS («¿ya está mi coche?», con y sin orden en curso);
 - quejas, garantía, «quiero una persona», foto y BAJA;
 - mensajes ambiguos, fuera de tema, en inglés e intentos de manipulación (cambiar precios, ver instrucciones, «¿eres humano?»).
 
@@ -215,12 +220,12 @@ Cada escenario corre con el **motor real** contra una **base simulada** con dato
 ANTHROPIC_API_KEY=… npm run eval:assistant -w @meguiars/web -- --yes [--model claude-sonnet-5-5] [--only precio-lavado,queja] [--repeat 2] [--out reporte.json]
 ```
 
-Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, y termina con código 1 si algo falla. Criterio sugerido para «activo»: 33 de 33 en dos corridas seguidas con el modelo elegido. Las pruebas del arnés (`eval.test.ts`) usan un modelo guionado y corren sin red en `npm test`.
+Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, y termina con código 1 si algo falla. Criterio sugerido para «activo»: 35 de 35 en dos corridas seguidas con el modelo elegido. Las pruebas del arnés (`eval.test.ts`) usan un modelo guionado y corren sin red en `npm test`.
 
 ## Pendientes
 
 - **Validar con el número real de Meta y la llave real de Anthropic.** Hasta entonces sólo está probado contra servicios simulados; no está operativo.
-- F2 (siguiente parte): estado de la OS y fotos en la bandeja; después, cotizar y precios por tamaño en el catálogo.
+- F2 (siguiente): cotizar y precios por tamaño en el catálogo.
 - Validar los recordatorios con la plantilla aprobada y el número real.
 - F3: membresías, reactivación de clientes con consentimiento.
 - Correr la evaluación con la llave real y el modelo elegido (ver arriba) antes de pasar a «activo».

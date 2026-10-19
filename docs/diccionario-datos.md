@@ -1527,6 +1527,12 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `sent_by_bot` | boolean | no | false |
 | `payload` | text | sí |  |
 | `buttons` | jsonb | sí |  |
+| `media_id` | text | sí |  |
+| `media_mime_type` | text | sí |  |
+| `media_filename` | text | sí |  |
+| `media_path` | text | sí |  |
+| `media_size` | integer | sí |  |
+| `media_error` | text | sí |  |
 
 ### `metric_registry`
 
