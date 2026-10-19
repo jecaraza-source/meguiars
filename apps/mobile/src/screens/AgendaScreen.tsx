@@ -12,6 +12,9 @@ import {
   daySummary,
   formatDateInCenterTimeZone,
   agendaBadgeTone,
+  loadAgendaWeek,
+  type AgendaView,
+  type AgendaWeekDay,
   presentAppointment,
   statusActions,
   type Technician,
@@ -35,6 +38,8 @@ import type { PrivateScreenProps } from "./types";
 
 interface Loaded {
   items: AppointmentListItem[];
+  /** Vista de 7 días: el día elegido y los 6 siguientes. */
+  week: (AgendaWeekDay & { items: AppointmentListItem[] })[] | null;
   bays: Bay[];
   technicians: Technician[];
 }
@@ -44,22 +49,28 @@ async function fetchDay(
   centerId: string,
   day: string,
   filter: { status: string; bayId: string; technicianId: string },
+  view: AgendaView,
+  today: string,
 ): Promise<ViewState<Loaded>> {
   const repo = createAgendaRepository(client);
-  const [items, bays, technicians] = await Promise.all([
-    repo.listDay(centerId, day, {
-      status: (filter.status || undefined) as AppointmentStatus | undefined,
-      bayId: filter.bayId || undefined,
-      technicianId: filter.technicianId || undefined,
-    }),
+  const f = {
+    status: (filter.status || undefined) as AppointmentStatus | undefined,
+    bayId: filter.bayId || undefined,
+    technicianId: filter.technicianId || undefined,
+  };
+  const [items, week, bays, technicians] = await Promise.all([
+    view === "dia" ? repo.listDay(centerId, day, f) : Promise.resolve({ ok: true as const, data: [] }),
+    view === "semana" ? loadAgendaWeek(repo, centerId, day, today, f) : null,
     repo.listBays(centerId),
     repo.listTechnicians(centerId),
   ]);
   if (!items.ok) return { status: "error", message: items.error.message };
+  if (week && !week.ok) return { status: "error", message: week.error.message };
   return {
     status: "ready",
     data: {
       items: items.data,
+      week: week?.ok ? week.data : null,
       bays: bays.ok ? bays.data : [],
       technicians: technicians.ok ? technicians.data : [],
     },
@@ -78,6 +89,9 @@ export function AgendaScreen({
   const center = activeCenterAccess(state)!.center;
   // Día del centro (su zona horaria), no del teléfono.
   const [day, setDay] = useState(() => todayIn(center.timezone));
+  // Por omisión, los 7 días (hoy y los 6 siguientes); «Día» muestra un solo día con acciones rápidas.
+  const [view, setView] = useState<AgendaView>("semana");
+  const step = view === "semana" ? 7 : 1;
   const [filter, setFilter] = useState({ status: "", bayId: "", technicianId: "" });
   const [data, setData] = useState<ViewState<Loaded>>({ status: "loading" });
   const [version, setVersion] = useState(0);
@@ -88,13 +102,13 @@ export function AgendaScreen({
   useEffect(() => {
     if (!client) return;
     let active = true;
-    void fetchDay(client, center.id, day, filter).then((next) => {
+    void fetchDay(client, center.id, day, filter, view, todayIn(center.timezone)).then((next) => {
       if (active) setData(next);
     });
     return () => {
       active = false;
     };
-  }, [client, center.id, day, filter, version]);
+  }, [client, center.id, center.timezone, day, filter, view, version]);
 
   // Acción rápida: el siguiente paso del flujo sin abrir la cita (recibir, iniciar, terminar, entregar).
   const advance = async (id: string, to: AppointmentStatus) => {
@@ -114,12 +128,33 @@ export function AgendaScreen({
   return (
     <Screen title={`${agendaCopy.title} · ${center.name}`} header={header}>
       {subnav}
+      <View style={styles.row}>
+        <Button
+          label="7 días"
+          size="sm"
+          variant={view === "semana" ? "primary" : "secondary"}
+          onPress={() => setView("semana")}
+        />
+        <Button
+          label="Día"
+          size="sm"
+          variant={view === "dia" ? "primary" : "secondary"}
+          onPress={() => setView("dia")}
+        />
+      </View>
       <View style={styles.dayNav}>
-        <LinkButton label={`← ${agendaCopy.previousDay}`} onPress={() => setDay(addDays(day, -1))} />
+        <LinkButton
+          label={`← ${view === "semana" ? "7 días antes" : agendaCopy.previousDay}`}
+          onPress={() => setDay(addDays(day, -step))}
+        />
         <Text accessibilityRole="header" style={textStyle("label")}>
           {formatDateInCenterTimeZone(zonedToUtc(day, "12:00", center.timezone), center.timezone)}
+          {view === "semana" ? " y 6 días siguientes" : ""}
         </Text>
-        <LinkButton label={`${agendaCopy.nextDay} →`} onPress={() => setDay(addDays(day, 1))} />
+        <LinkButton
+          label={`${view === "semana" ? "7 días después" : agendaCopy.nextDay} →`}
+          onPress={() => setDay(addDays(day, step))}
+        />
       </View>
       <LinkButton label={agendaCopy.today} onPress={() => setDay(todayIn(center.timezone))} />
       {canWrite ? (
@@ -154,10 +189,50 @@ export function AgendaScreen({
 
       {data.status === "loading" ? <Skeleton lines={4} label="Cargando agenda" /> : null}
       {data.status === "error" ? <Notice tone="danger" text={data.message} /> : null}
-      {data.status === "ready" && data.data.items.length === 0 ? (
+      {data.status === "ready" && data.data.week
+        ? data.data.week.map((d) => (
+            <Card key={d.day} title={`${d.label} · ${d.items.length}`}>
+              <LinkButton
+                label="Ver el día"
+                onPress={() => {
+                  setDay(d.day);
+                  setView("dia");
+                }}
+              />
+              {d.items.length === 0 ? (
+                <Text style={textStyle("caption", "muted")}>Sin citas</Text>
+              ) : (
+                d.items.map((item) => {
+                  const v = presentAppointment(item, center.timezone);
+                  return (
+                    <Pressable
+                      key={item.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${v.time} ${v.client}`}
+                      onPress={() => onOpen(item.id)}
+                      style={[styles.card, v.fromWhatsapp ? styles.whatsapp : null]}
+                    >
+                      <Text style={textStyle("label")}>
+                        {v.time} · {v.client}
+                      </Text>
+                      <Text style={textStyle("caption", "muted")}>{v.services}</Text>
+                      <View style={styles.row}>
+                        <Badge label={v.status} tone={v.tone} />
+                        {v.badges.map((b) => (
+                          <Badge key={b} label={b} tone={agendaBadgeTone(b)} />
+                        ))}
+                      </View>
+                    </Pressable>
+                  );
+                })
+              )}
+            </Card>
+          ))
+        : null}
+      {data.status === "ready" && !data.data.week && data.data.items.length === 0 ? (
         <EmptyState title={agendaCopy.empty} />
       ) : null}
-      {data.status === "ready" && data.data.items.length > 0 ? (
+      {data.status === "ready" && !data.data.week && data.data.items.length > 0 ? (
         <>
           <View style={styles.row}>
             {daySummary(data.data.items).map((s) => (
