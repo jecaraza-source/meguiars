@@ -9,6 +9,7 @@ out="${1:-docs/diccionario-datos.md}"
 # Módulo que documenta cada tabla (una tabla nueva sin módulo aparece con "—": agrégala aquí).
 declare -A OWNER=(
   [alertas.md]="alert_evaluation_runs alert_events alert_instances alert_rules"
+  [reportes-correo.md]="report_deliveries report_subscriptions"
   [agenda.md]="appointment_services appointments bays technicians"
   [egresos.md]="approval_events expense_attachments expense_categories expense_settings expenses vendors"
   [multicentro-seguridad.md]="audit_log detail_centers organizations role_assignments user_detail_centers"
