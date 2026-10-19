@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { canReschedule, canTransition, type AppointmentListItem } from "./agenda";
-import { daySummary, presentAppointment, presentOrderDraft, statusActions } from "./presenter";
+import {
+  agendaBadgeTone,
+  daySummary,
+  presentAppointment,
+  presentOrderDraft,
+  statusActions,
+} from "./presenter";
 import { addDays, todayIn, utcToZoned, zonedToUtc } from "./zoned-time";
 
 const item: AppointmentListItem = {
@@ -93,6 +99,8 @@ describe("presentadores", () => {
       "America/Mexico_City",
     );
     expect(view.badges).toEqual(["WhatsApp", "Falta placa"]);
+    expect(view.fromWhatsapp).toBe(true);
+    expect(view.badges.map(agendaBadgeTone)).toEqual(["success", "warning"]);
     expect(view.missingPlate).toBe(true);
   });
 

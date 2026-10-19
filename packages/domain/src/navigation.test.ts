@@ -39,7 +39,7 @@ const itemsOf = (roles: AppRole[]) =>
   visibleNavigation(stateFor(roles)).flatMap((s) => s.items.map((i) => i.screen));
 
 describe("navegación por rol", () => {
-  it("define los cinco dominios más Inicio", () => {
+  it("define los cinco dominios más Inicio y Configuración", () => {
     expect(NAV_SECTIONS.map((s) => s.label)).toEqual([
       "Inicio",
       "Operación",
@@ -47,22 +47,32 @@ describe("navegación por rol", () => {
       "Marketing",
       "Finanzas",
       "Dirección",
+      "Configuración",
     ]);
   });
 
   it.each<[AppRole, string[]]>([
-    ["admin_socio", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion"]],
+    [
+      "admin_socio",
+      ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"],
+    ],
     // Dirección → Tableros (dirigidos a su rol); la vista consolidada es sólo del admin.
-    ["encargado", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion"]],
+    [
+      "encargado",
+      ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"],
+    ],
     // Vende y renueva membresías en recepción (Comercial → Membresías) y hace el
     // corte de caja (Finanzas → Cobranza).
-    ["operador_recepcion", ["inicio", "operacion", "comercial", "marketing", "finanzas"]],
+    ["operador_recepcion", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).
-    ["contador", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion"]],
+    ["contador", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"]],
     // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día;
     // en Finanzas sólo ve Cuentas por cobrar B2B (factura y cobra a las cuentas).
-    ["comercial_b2b", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion"]],
+    [
+      "comercial_b2b",
+      ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"],
+    ],
     // Sólo «Mi día» (sus asignaciones).
     ["tecnico", ["inicio"]],
   ])("%s ve %j", (role, expected) => {
@@ -167,6 +177,7 @@ describe("navegación por rol", () => {
       "marketing",
       "finanzas",
       "direccion",
+      "configuracion",
     ]);
   });
 
@@ -232,21 +243,20 @@ describe("navegación por rol", () => {
   });
 
   it("resuelve la sección activa por pantalla y por ruta", () => {
-    expect(sectionOfScreen("team")).toBe("finanzas");
+    expect(sectionOfScreen("team")).toBe("configuracion");
     expect(sectionOfPath("/")).toBe("inicio");
-    expect(sectionOfPath("/equipo")).toBe("finanzas");
+    expect(sectionOfPath("/equipo")).toBe("configuracion");
     expect(sectionOfPath("/direccion/detalle")).toBe("direccion");
     expect(sectionOfPath("/login")).toBeNull();
   });
 
-  it("Marketing agrupa campañas, calendario, promociones, segmentos, automatizaciones e integraciones", () => {
+  it("Marketing agrupa campañas, calendario, promociones, segmentos y automatizaciones", () => {
     expect(NAV_SECTIONS.find((s) => s.id === "marketing")!.items.map((i) => i.screen)).toEqual([
       "campaigns",
       "contentCalendar",
       "promotions",
       "segments",
       "automations",
-      "integrations",
     ]);
     // Comercial conserva la venta: bandeja, prospectos, cotizaciones, CRM, B2B, pipeline y reportes.
     const comercial = NAV_SECTIONS.find((s) => s.id === "comercial")!.items.map((i) => i.screen);
@@ -257,12 +267,34 @@ describe("navegación por rol", () => {
     // Las rutas siguen bajo /comercial: la más específica decide la sección.
     expect(sectionOfPath("/comercial/campanas/abc")).toBe("marketing");
     expect(sectionOfPath("/comercial/calendario")).toBe("marketing");
-    expect(sectionOfPath("/comercial/integraciones")).toBe("marketing");
+    expect(sectionOfPath("/comercial/integraciones")).toBe("configuracion");
     expect(sectionOfPath("/comercial/bandeja/abc")).toBe("comercial");
     expect(sectionOfPath("/comercial")).toBe("comercial");
     expect(sectionOfScreen("campaignDetail")).toBe("marketing");
     // El contador sólo consulta (sin segmentos con datos personales ni automatizaciones).
     const contador = visibleNavigation(stateFor(["contador"])).find((s) => s.id === "marketing")!;
     expect(contador.items.map((i) => i.screen)).toEqual(["campaigns", "contentCalendar", "promotions"]);
+  });
+
+  it("Configuración reúne lo configurable: datos del centro, centros, equipo, usuarios, asistente e integraciones", () => {
+    expect(NAV_SECTIONS.find((s) => s.id === "configuracion")!.items.map((i) => i.screen)).toEqual([
+      "editCenter",
+      "centers",
+      "team",
+      "users",
+      "assistant",
+      "integrations",
+    ]);
+    // «Editar centro» ya no está en Inicio.
+    expect(NAV_SECTIONS.find((s) => s.id === "inicio")!.items.map((i) => i.screen)).toEqual([
+      "home",
+      "myWork",
+    ]);
+    expect(sectionOfPath("/configuracion/centro")).toBe("configuracion");
+    expect(sectionOfPath("/comercial/asistente")).toBe("configuracion");
+    expect(sectionOfPath("/equipo/usuarios")).toBe("configuracion");
+    // Sólo quien administra el centro cambia sus datos.
+    expect(itemsOf(["admin_socio"])).toContain("editCenter");
+    expect(itemsOf(["encargado"])).not.toContain("editCenter");
   });
 });

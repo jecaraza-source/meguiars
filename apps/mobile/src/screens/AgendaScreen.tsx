@@ -11,6 +11,7 @@ import {
   canInActiveCenter,
   daySummary,
   formatDateInCenterTimeZone,
+  agendaBadgeTone,
   presentAppointment,
   statusActions,
   type Technician,
@@ -19,7 +20,7 @@ import {
   zonedToUtc,
 } from "@meguiars/domain";
 import { createAgendaRepository, type MeguiarsSupabaseClient } from "@meguiars/supabase";
-import { space } from "@meguiars/ui-tokens";
+import { colors, radius, space } from "@meguiars/ui-tokens";
 import { upsertResourceSchema } from "@meguiars/validation";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -167,7 +168,7 @@ export function AgendaScreen({
             const view = presentAppointment(item, center.timezone);
             const next = statusActions(item.status).find((a) => !a.needsReason);
             return (
-              <View key={item.id} style={styles.card}>
+              <View key={item.id} style={[styles.card, view.fromWhatsapp ? styles.whatsapp : null]}>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`${view.time} ${view.client}`}
@@ -176,7 +177,7 @@ export function AgendaScreen({
                   <Card title={`${view.time} · ${view.client}`} subtitle={view.vehicle}>
                     <View style={styles.row}>
                       {view.badges.map((b) => (
-                        <Badge key={b} label={b} tone="warning" />
+                        <Badge key={b} label={b} tone={agendaBadgeTone(b)} />
                       ))}
                       <Badge label={view.status} tone={view.tone} />
                     </View>
@@ -289,6 +290,14 @@ const styles = StyleSheet.create({
   dayNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.sm },
   row: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   card: { gap: space.xs },
+  // Reservada por el cliente en WhatsApp: franja y fondo verdes.
+  whatsapp: {
+    borderLeftWidth: space.xs,
+    borderLeftColor: colors.success,
+    backgroundColor: colors.successSurface,
+    paddingLeft: space.xs,
+    borderRadius: radius.md,
+  },
   resource: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   resourceName: { flexDirection: "row", alignItems: "center", gap: space.xs, flexShrink: 1 },
 });

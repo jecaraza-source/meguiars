@@ -38,8 +38,14 @@ export function presentAppointment(item: AppointmentListItem, timeZone: string) 
       ...(missingPlate(item) ? [agendaCopy.noPlateBadge] : []),
     ],
     missingPlate: missingPlate(item),
+    /** La reservó el cliente por WhatsApp: la tarjeta va en otro color. */
+    fromWhatsapp: item.source === "whatsapp",
   };
 }
+
+/** Color de cada nota de la cita: WhatsApp en verde para distinguirla; las demás, advertencia. */
+export const agendaBadgeTone = (badge: string): "success" | "warning" =>
+  badge === agendaCopy.whatsappBadge ? "success" : "warning";
 
 /** El auto de la cita no tiene placa (la OS no se abre hasta capturarla). */
 function missingPlate(item: AppointmentListItem): boolean {

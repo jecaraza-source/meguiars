@@ -7,7 +7,8 @@ import { NAV_ITEM_DESCRIPTIONS } from "./navigation-help";
  * más Inicio (Operación, Comercial, Marketing, Finanzas, Dirección). Una sección se muestra si el rol del centro activo puede ver al
  * menos una de sus pantallas (mismos guards que protegen las rutas).
  */
-export type NavSectionId = "inicio" | "operacion" | "comercial" | "marketing" | "finanzas" | "direccion";
+export type NavSectionId =
+  "inicio" | "operacion" | "comercial" | "marketing" | "finanzas" | "direccion" | "configuracion";
 
 /** Iconos que usa la navegación (existen en @meguiars/ui-tokens → icons; el typecheck de web y móvil lo verifica). */
 export const NAV_ICON_NAMES = [
@@ -45,6 +46,7 @@ export const NAV_ICON_NAMES = [
   "plug",
   "receipt",
   "rocket",
+  "settings",
   "squareKanban",
   "store",
   "target",
@@ -119,7 +121,6 @@ const BASE_SECTIONS: readonly NavSection[] = [
         href: "/comercial/historial",
         icon: "clipboardList",
       },
-      { screen: "assistant", label: "Asistente de WhatsApp", href: "/comercial/asistente", icon: "bot" },
       { screen: "leads", label: "Prospectos", href: "/comercial/prospectos", icon: "userPlus" },
       { screen: "quotes", label: "Cotizaciones", href: "/comercial/cotizaciones", icon: "fileText" },
       { screen: "memberships", label: "Membresías", href: "/comercial/membresias", icon: "badgeCheck" },
@@ -162,12 +163,6 @@ const BASE_SECTIONS: readonly NavSection[] = [
       { screen: "promotions", label: "Promociones", href: "/comercial/promociones", icon: "ticketPercent" },
       { screen: "segments", label: "Segmentos", href: "/comercial/segmentos", icon: "filter" },
       { screen: "automations", label: "Automatizaciones", href: "/comercial/automatizaciones", icon: "zap" },
-      {
-        screen: "integrations",
-        label: "Integraciones (redes)",
-        href: "/comercial/integraciones",
-        icon: "plug",
-      },
     ],
   },
   {
@@ -181,9 +176,6 @@ const BASE_SECTIONS: readonly NavSection[] = [
       { screen: "expenses", label: "Egresos", href: "/finanzas/egresos", icon: "receipt" },
       { screen: "pnl", label: "Estado de resultados", href: "/finanzas/resultados", icon: "calculator" },
       { screen: "receivables", label: "Cuentas por cobrar B2B", href: "/finanzas/cxc", icon: "handCoins" },
-      { screen: "team", label: "Equipo del centro", href: "/equipo", icon: "usersRound" },
-      { screen: "users", label: "Usuarios", href: "/equipo/usuarios", icon: "userCog" },
-      { screen: "centers", label: "Centros", href: "/equipo/centros", icon: "store" },
     ],
   },
   {
@@ -198,6 +190,26 @@ const BASE_SECTIONS: readonly NavSection[] = [
       { screen: "alerts", label: "Alertas", href: "/direccion/alertas", icon: "bell" },
       { screen: "reportEmails", label: "Reportes por correo", href: "/direccion/reportes", icon: "mail" },
       { screen: "pilot", label: "Piloto", href: "/direccion/piloto", icon: "rocket" },
+    ],
+  },
+  {
+    // Todo lo que se configura en un solo lugar; las rutas no cambian.
+    id: "configuracion",
+    label: "Configuración",
+    shortLabel: "Ajustes",
+    icon: "settings",
+    items: [
+      { screen: "editCenter", label: "Datos del centro", href: "/configuracion/centro", icon: "settings" },
+      { screen: "centers", label: "Centros", href: "/equipo/centros", icon: "store" },
+      { screen: "team", label: "Equipo del centro", href: "/equipo", icon: "usersRound" },
+      { screen: "users", label: "Usuarios", href: "/equipo/usuarios", icon: "userCog" },
+      { screen: "assistant", label: "Asistente de WhatsApp", href: "/comercial/asistente", icon: "bot" },
+      {
+        screen: "integrations",
+        label: "Integraciones (redes)",
+        href: "/comercial/integraciones",
+        icon: "plug",
+      },
     ],
   },
 ];
