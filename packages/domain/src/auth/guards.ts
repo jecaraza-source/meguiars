@@ -103,6 +103,7 @@ export const SCREEN_GUARDS = {
   alerts: { center: true, capability: "alerts.read" },
   alertDetail: { center: true, capability: "alerts.read" },
   alertRules: { center: true, capability: "alerts.rules" },
+  reportEmails: { center: true, capability: "executive.read" },
   pilot: { center: true, capability: "pnl.read" },
   designSystem: {},
   account: {},

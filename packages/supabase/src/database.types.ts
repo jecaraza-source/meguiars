@@ -2057,6 +2057,122 @@ export type Database = {
           },
         ];
       };
+      report_subscriptions: {
+        Row: {
+          active: boolean;
+          center_ids: string[] | null;
+          created_at: string;
+          created_by: string | null;
+          frequency: string;
+          id: string;
+          name: string;
+          organization_id: string;
+          recipients: string[];
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          center_ids?: string[] | null;
+          created_at?: string;
+          created_by?: string | null;
+          frequency: string;
+          id?: string;
+          name: string;
+          organization_id: string;
+          recipients: string[];
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          center_ids?: string[] | null;
+          created_at?: string;
+          created_by?: string | null;
+          frequency?: string;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          recipients?: string[];
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "report_subscriptions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      report_deliveries: {
+        Row: {
+          created_at: string;
+          error: string | null;
+          frequency: string;
+          id: string;
+          organization_id: string;
+          period_from: string;
+          period_to: string;
+          provider_message_id: string | null;
+          recipients: string[];
+          requested_by: string | null;
+          source: string;
+          status: string;
+          subscription_id: string | null;
+          subscription_name: string;
+        };
+        Insert: {
+          created_at?: string;
+          error?: string | null;
+          frequency: string;
+          id?: string;
+          organization_id: string;
+          period_from: string;
+          period_to: string;
+          provider_message_id?: string | null;
+          recipients: string[];
+          requested_by?: string | null;
+          source: string;
+          status: string;
+          subscription_id?: string | null;
+          subscription_name: string;
+        };
+        Update: {
+          created_at?: string;
+          error?: string | null;
+          frequency?: string;
+          id?: string;
+          organization_id?: string;
+          period_from?: string;
+          period_to?: string;
+          provider_message_id?: string | null;
+          recipients?: string[];
+          requested_by?: string | null;
+          source?: string;
+          status?: string;
+          subscription_id?: string | null;
+          subscription_name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "report_deliveries_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "report_deliveries_subscription_id_fkey";
+            columns: ["subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "report_subscriptions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       alert_rules: {
         Row: {
           active: boolean;
@@ -8767,6 +8883,48 @@ export type Database = {
       delete_kpi_threshold: {
         Args: { p_id: string; p_reason: string };
         Returns: undefined;
+      };
+      save_report_subscription: {
+        Args: {
+          p_active: boolean;
+          p_center_ids: string[] | null;
+          p_frequency: string;
+          p_id: string | null;
+          p_name: string;
+          p_organization_id: string;
+          p_reason: string;
+          p_recipients: string[];
+          p_version: number | null;
+        };
+        Returns: Database["public"]["Tables"]["report_subscriptions"]["Row"];
+        SetofOptions: { from: "*"; to: "report_subscriptions"; isOneToOne: true; isSetofReturn: false };
+      };
+      delete_report_subscription: {
+        Args: { p_id: string; p_reason: string };
+        Returns: undefined;
+      };
+      record_report_delivery: {
+        Args: {
+          p_error: string | null;
+          p_period_from: string;
+          p_period_to: string;
+          p_provider_message_id: string | null;
+          p_source: string;
+          p_status: string;
+          p_subscription_id: string;
+        };
+        Returns: Database["public"]["Tables"]["report_deliveries"]["Row"];
+        SetofOptions: { from: "*"; to: "report_deliveries"; isOneToOne: true; isSetofReturn: false };
+      };
+      report_subscription_facts: {
+        Args: {
+          p_detail_center_ids: string[];
+          p_from: string;
+          p_subscription_id: string;
+          p_sources: string[];
+          p_to: string;
+        };
+        Returns: Json;
       };
       save_alert_rule: {
         Args: {

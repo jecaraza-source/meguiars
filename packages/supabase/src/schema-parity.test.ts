@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  MAX_REPORT_RECIPIENTS,
+  REPORT_FREQUENCIES,
   ASSISTANT_LIMITS,
   REMINDER_RULES,
   ASSISTANT_MODELS,
@@ -138,6 +140,8 @@ function currentTables(): string[] {
 
 // Nombres de tabla tipados; si falta alguna, este tipo deja de compilar la prueba.
 const typedTables: (keyof Database["public"]["Tables"])[] = [
+  "report_subscriptions",
+  "report_deliveries",
   "appointment_services",
   "appointments",
   "bot_booking_proposals",
@@ -286,6 +290,10 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "list_conversations",
   "conversation_history",
   "inbox_unread",
+  "save_report_subscription",
+  "delete_report_subscription",
+  "record_report_delivery",
+  "report_subscription_facts",
   "conversation_messages",
   "assign_conversation",
   "set_conversation_status",
@@ -1029,6 +1037,18 @@ describe("paridad SQL ↔ TypeScript", () => {
     expect(sql).toContain(`check (max_days_ahead between ${d.min} and ${d.max})`);
     expect(sql).toContain(`check (min_hours_ahead between ${h.min} and ${h.max})`);
     expect(sql).toContain(`cardinality(test_numbers) <= ${ASSISTANT_LIMITS.testNumbers}`);
+  });
+
+  it("Reportes por correo: frecuencias, orígenes, estados y máximo de destinatarios coinciden", () => {
+    const sql = allSql.slice(allSql.indexOf("-- Dirección → Reportes por correo."));
+    const lists = [...sql.matchAll(/check \(frequency in \(([^)]+)\)\)/g)].map((m) =>
+      m[1]!.split(",").map((r) => r.trim().replace(/'/g, "")),
+    );
+    expect(lists.length).toBe(2);
+    for (const l of lists) expect(l).toEqual([...REPORT_FREQUENCIES]);
+    expect(sql).toContain("check (source in ('cron', 'manual'))");
+    expect(sql).toContain("check (status in ('enviado', 'fallido'))");
+    expect(sql).toContain(`cardinality(p_emails) between 1 and ${MAX_REPORT_RECIPIENTS}`);
   });
 
   it("los motores de ingreso del dominio coinciden con el enum revenue_engine", () => {

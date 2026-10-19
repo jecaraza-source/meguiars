@@ -1861,6 +1861,49 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 
+### `report_deliveries`
+
+- **Módulo:** [reportes-correo](modules/reportes-correo.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `subscription_id` | uuid | sí |  |
+| `subscription_name` | text | no |  |
+| `frequency` | text | no |  |
+| `source` | text | no |  |
+| `period_from` | date | no |  |
+| `period_to` | date | no |  |
+| `recipients` | text[] | no |  |
+| `status` | text | no |  |
+| `provider_message_id` | text | sí |  |
+| `error` | text | sí |  |
+| `requested_by` | uuid | sí |  |
+| `created_at` | timestamp with time zone | no | now() |
+
+### `report_subscriptions`
+
+- **Módulo:** [reportes-correo](modules/reportes-correo.md)
+- **Tenencia:** organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `name` | text | no |  |
+| `frequency` | text | no |  |
+| `center_ids` | uuid[] | sí |  |
+| `recipients` | text[] | no |  |
+| `active` | boolean | no | true |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `role_assignments`
 
 - **Módulo:** [multicentro-seguridad](modules/multicentro-seguridad.md)

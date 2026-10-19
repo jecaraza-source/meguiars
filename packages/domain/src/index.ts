@@ -40,3 +40,4 @@ export * from "./marketing";
 export * from "./automations";
 export * from "./assistant";
 export * from "./work";
+export * from "./report-emails";
