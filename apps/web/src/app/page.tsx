@@ -1,7 +1,6 @@
 import {
   activeCenterAccess,
   authCopy,
-  canInActiveCenter,
   centersCopy,
   formatDateInCenterTimeZone,
   formatTimeInCenterTimeZone,
@@ -11,7 +10,6 @@ import {
 } from "@meguiars/domain";
 import { AppShell } from "@/components/app-shell";
 import { CentersTable } from "@/components/centers-view";
-import { EditCenterForm } from "@/components/forms";
 import { SectionShortcuts } from "@/components/section-shortcuts";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, KpiCard } from "@/components/ui/display";
@@ -46,20 +44,6 @@ export default async function Home() {
           caption="en todas tus organizaciones"
         />
       </div>
-
-      {/* La UI oculta lo que el rol no permite; RLS lo bloquea de todos modos. */}
-      {canInActiveCenter(state, "center.manage") ? (
-        <Card
-          title={authCopy.editCenterTitle}
-          subtitle="Los cambios quedan en la bitácora de auditoría con su motivo."
-        >
-          <EditCenterForm
-            key={active.center.id}
-            name={active.center.name}
-            timezone={active.center.timezone}
-          />
-        </Card>
-      ) : null}
 
       <Card
         title={centersCopy.title}

@@ -54,5 +54,6 @@ export const NAV_ITEM_DESCRIPTIONS: Partial<Record<Screen, string>> = {
   dashboards: "Tableros configurables por rol con los indicadores que elijas.",
   kpis: "Catálogo de KPIs con su fórmula, origen del dato y umbrales.",
   alerts: "Alertas cuando un indicador sale de su umbral: revisar y resolver.",
+  editCenter: "Nombre y zona horaria del centro activo (con motivo y auditoría).",
   pilot: "Seguimiento del piloto: adopción del sistema y resultados contra la línea base.",
 };

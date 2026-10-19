@@ -36,7 +36,7 @@ import { DashboardsScreen } from "@/screens/DashboardsScreen";
 import { DireccionScreen } from "@/screens/DireccionScreen";
 import { KpisScreen } from "@/screens/KpisScreen";
 import { ForgotPasswordScreen } from "@/screens/ForgotPasswordScreen";
-import { HomeScreen } from "@/screens/HomeScreen";
+import { CenterSettingsScreen, HomeScreen } from "@/screens/HomeScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { MessageScreen } from "@/screens/MessageScreen";
 import { MyWorkScreen } from "@/screens/MyWorkScreen";
@@ -1067,6 +1067,9 @@ export function Router() {
         break;
       case "pilot":
         content = <PilotScreen {...props} />;
+        break;
+      case "editCenter":
+        content = <CenterSettingsScreen {...props} />;
         break;
       case "designSystem":
         content = <DesignSystemScreen {...props} />;

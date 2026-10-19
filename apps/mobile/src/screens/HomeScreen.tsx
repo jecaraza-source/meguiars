@@ -1,7 +1,6 @@
 import {
   activeCenterAccess,
   authCopy,
-  canInActiveCenter,
   centersCopy,
   formatDateInCenterTimeZone,
   formatTimeInCenterTimeZone,
@@ -76,6 +75,18 @@ function EditCenterForm({ state }: { state: SignedInState }) {
   );
 }
 
+/** Configuración → Datos del centro (equivale a /configuracion/centro en web). */
+export function CenterSettingsScreen({ state, header, subnav }: PrivateScreenProps) {
+  const active = activeCenterAccess(state)!;
+  return (
+    <Screen title="Datos del centro" description={active.center.name} header={header}>
+      {subnav}
+      {/* La UI oculta lo que el rol no permite; RLS lo bloquea de todos modos. */}
+      <EditCenterForm key={active.center.id} state={state} />
+    </Screen>
+  );
+}
+
 export function HomeScreen({ state, header, subnav }: PrivateScreenProps) {
   const active = activeCenterAccess(state)!;
   const item = presentCenterAccess(active);
@@ -100,10 +111,6 @@ export function HomeScreen({ state, header, subnav }: PrivateScreenProps) {
           caption="en todas tus organizaciones"
         />
       </View>
-      {/* La UI oculta lo que el rol no permite; RLS lo bloquea de todos modos. */}
-      {canInActiveCenter(state, "center.manage") ? (
-        <EditCenterForm key={active.center.id} state={state} />
-      ) : null}
       <Card title={centersCopy.title} subtitle={centersCopy.subtitle}>
         <CentersList access={state.access} now={now} />
       </Card>
