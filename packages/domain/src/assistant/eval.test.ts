@@ -79,11 +79,11 @@ describe("evaluación del asistente", () => {
 
   it("escalamiento esperado y motivo", async () => {
     const { llm } = scripted(
-      tool("pasar_a_persona", { motivo: "agendar", resumen: "Lavado exterior mañana 12:30, Mazda 3, Laura" }),
+      tool("pasar_a_persona", { motivo: "b2b", resumen: "Empresa con 25 camionetas" }),
     );
-    const run = await runEvalScenario(byId("quiere-agendar"), llm, "claude-opus-5-5");
+    const run = await runEvalScenario(byId("flotilla"), llm, "claude-opus-5-5");
     expect(run.failures).toEqual([]);
-    expect(run.handoff).toBe("agendar");
+    expect(run.handoff).toBe("b2b");
 
     const wrong = await runEvalScenario(
       byId("queja"),
@@ -91,6 +91,49 @@ describe("evaluación del asistente", () => {
       "claude-opus-5-5",
     );
     expect(wrong.failures).toContain("debía pasar a una persona (queja o garantia)");
+  });
+
+  it("agendar: la propuesta se califica por el resumen con botones que recibe el cliente", async () => {
+    const { llm } = scripted(
+      tool("proponer_cita", {
+        centro_id: EVAL_CENTER_A,
+        servicio_ids: ["5e000000-0000-4000-8000-000000000001"],
+        fecha: "2026-10-16",
+        hora: "12:30",
+        nombre: "Laura",
+        vehiculo_id: "",
+        marca: "Mazda",
+        modelo: "3",
+        anio: 2021,
+        placa: "ABC123",
+      }),
+      text("Listo, le envío el resumen."),
+    );
+    const run = await runEvalScenario(byId("quiere-agendar"), llm, "claude-opus-5-5");
+    expect(run.failures).toEqual([]);
+    expect(run.reply).toContain("*Confirme su cita*");
+
+    // Un horario que no está libre no genera propuesta (el modelo debe ofrecer otro).
+    const taken = await runEvalScenario(
+      byId("quiere-agendar"),
+      scripted(
+        tool("proponer_cita", {
+          centro_id: EVAL_CENTER_A,
+          servicio_ids: ["5e000000-0000-4000-8000-000000000001"],
+          fecha: "2026-10-16",
+          hora: "13:00",
+          nombre: "Laura",
+          vehiculo_id: "",
+          marca: "Mazda",
+          modelo: "3",
+          anio: 2021,
+          placa: "",
+        }),
+        text("Ese horario no está libre, ¿le sirve a las 12:30?"),
+      ).llm,
+      "claude-opus-5-5",
+    );
+    expect(taken.failures).toContain("no menciona: confirmar");
   });
 
   it("foto y BAJA se atienden sin llamar al modelo", async () => {

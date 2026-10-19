@@ -15,7 +15,7 @@ export interface MyWorkVehicle {
   make: string;
   model: string;
   year: number;
-  plate: string;
+  plate: string | null;
 }
 
 export interface MyWorkItem {

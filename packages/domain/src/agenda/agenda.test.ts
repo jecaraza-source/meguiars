@@ -23,6 +23,7 @@ const item: AppointmentListItem = {
   services: ["Lavado", "Pulido"],
   notes: null,
   serviceOrderId: null,
+  source: "agenda",
 };
 
 describe("zona horaria del centro", () => {
@@ -80,7 +81,17 @@ describe("presentadores", () => {
       status: "Programada",
       tone: "info",
       badges: ["Encimada (autorizado)"],
+      missingPlate: false,
     });
+  });
+
+  it("cita de WhatsApp con auto sin placa: marcas y aviso antes de abrir la OS", () => {
+    const view = presentAppointment(
+      { ...item, conflictOverride: false, source: "whatsapp", vehicleLabel: "Mazda 3 2021 · sin placa" },
+      "America/Mexico_City",
+    );
+    expect(view.badges).toEqual(["WhatsApp", "Falta placa"]);
+    expect(view.missingPlate).toBe(true);
   });
 
   it("resumen del día por estatus", () => {

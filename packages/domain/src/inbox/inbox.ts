@@ -217,6 +217,14 @@ export interface OutboundMessage {
   contactPhone: string | null;
   body: string;
   alreadySent: boolean;
+  /** Botones de respuesta rápida (sólo WhatsApp, máximo 3): el asistente los usa para confirmar citas. */
+  buttons?: ReplyButton[] | undefined;
+}
+
+/** Botón de respuesta rápida de WhatsApp: el id regresa en el webhook cuando el contacto lo toca. */
+export interface ReplyButton {
+  id: string;
+  title: string;
 }
 
 export interface InboxRepository {

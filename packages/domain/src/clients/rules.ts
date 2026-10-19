@@ -22,9 +22,13 @@ export function clientErrorMessage(error: RepoError): string {
   return error.message;
 }
 
+/** «Mazda 3 2021 · ABC123» o «… · sin placa» (espejo de private.vehicle_label). */
 export function vehicleLabel(vehicle: Pick<Vehicle, "make" | "model" | "year" | "plate">): string {
-  return `${vehicle.make} ${vehicle.model} ${vehicle.year} · ${vehicle.plate}`;
+  return `${vehicle.make} ${vehicle.model} ${vehicle.year} · ${vehicle.plate ?? NO_PLATE}`;
 }
+
+/** Texto de un vehículo sin placa (agendado por WhatsApp). */
+export const NO_PLATE = "sin placa";
 
 /** Año máximo aceptado para un vehículo (modelos del año siguiente). */
 export function maxVehicleYear(now: Date = new Date()): number {

@@ -93,6 +93,29 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
 | `messages.sent_by_bot`                    | Respuestas del asistente (sin usuario que las envíe).                                         |
 | `contact_preferences.source = 'whatsapp'` | Origen de la baja pedida por WhatsApp.                                                        |
 
+## Citas por WhatsApp (F2, parte 1 · `20261031000000_whatsapp_booking.sql`)
+
+El asistente agenda, reprograma y cancela citas; **la cita sólo existe cuando el cliente toca «Confirmar»**. Decisiones en [ADR 0038](../adr/0038-citas-por-whatsapp-con-boton.md).
+
+1. Con `consultar_cliente` el asistente ve el nombre, los autos y las próximas citas del número (cliente ligado a la conversación o con el mismo teléfono; los celulares de México llegan como 521… y se normalizan igual que en clientes).
+2. Muestra horarios libres; cuando el cliente elige uno, pide lo que falte: nombre (si no es cliente) y el auto (uno registrado, o marca, modelo y año; **la placa es opcional**).
+3. `proponer_cita` (o `proponer_cambio_cita` / `proponer_cancelacion`): la base valida el horario del centro, la anticipación, los días hacia adelante, la capacidad y que haya una bahía libre, y guarda la propuesta con un resumen.
+4. El cliente recibe ese resumen **con botones** (Confirmar / Cambiar; para cancelar: Sí, cancelar / No, mantenerla). El texto del modelo de ese turno no se envía.
+5. Al tocar **Confirmar**, la base (sin IA) vuelve a validar con un candado por centro, crea el cliente y el auto si no existían, y crea la cita `programada` con origen **WhatsApp** y bahía asignada; o la mueve; o la cancela. Responde «Listo, su cita quedó agendada para el …». Si alguien ganó el horario, avisa y ofrece otros. **Cambiar** deja que el asistente siga la conversación.
+6. El equipo ve la cita marcada «WhatsApp» en la agenda (web y móvil), una nota interna en la conversación y la auditoría con su motivo.
+
+| Regla                      | Cómo se cumple                                                                                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No confirma con texto      | Proponer no crea la cita; sólo el botón la crea (`assistant_handle_button`, llave de servicio). La regla del prompt y el eval lo revisan.                              |
+| Sin encimar bahías         | Validación al proponer y al confirmar, candado por centro, bahía asignada y las _exclusion constraints_ de la agenda.                                                  |
+| Botón repetido o reintento | Idempotente: la misma propuesta no crea dos citas y el mismo botón devuelve la misma respuesta. Una propuesta nueva deja sin efecto la anterior; vencen (máximo 24 h). |
+| Placa opcional             | El auto puede quedar sin placa; la agenda muestra «Falta placa» y la OS no se abre hasta capturarla en la ficha del cliente.                                           |
+| Consentimiento             | El cliente creado por WhatsApp no recibe marketing (sin canales autorizados).                                                                                          |
+| Servicios con valoración   | No se proponen: pasan a una persona.                                                                                                                                   |
+| Interruptor                | Configuración → «Agenda, cambia y cancela citas». Apagado, el asistente muestra horarios y pasa a una persona (F1).                                                    |
+
+Botones en Meta: mensaje `interactive` tipo `button` (máximo 3, título de hasta 20 caracteres); la respuesta llega como `interactive.button_reply.id` y se guarda en `messages.payload`. Los botones enviados quedan en `messages.buttons`.
+
 ## Puesta en marcha
 
 1. **WhatsApp real.** Registrar el número central en Integraciones (asignado al centro principal) y «Probar conexión». Ver [bandeja.md](bandeja.md).
@@ -120,6 +143,8 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
   - sólo la llave de servicio ejecuta el asistente.
 - `packages/domain/src/assistant/assistant.test.ts`: contexto, instrucciones, historial, herramientas y su validación; y el motor con base, modelo y WhatsApp simulados (catálogo y respuesta, escalamiento, entrada inválida, BAJA, foto, falla de la API, rechazo, mensaje más reciente, envío rechazado, límite de rondas).
 - `packages/validation/src/assistant.test.ts` y la paridad SQL ↔ TypeScript (modos, modelos, motivos, estados, límites).
+- `supabase/tests/whatsapp_booking.test.sql` (citas por WhatsApp): validaciones al proponer (año, placa, placa de otro cliente, valoración, cierre, días adelante, hora), resumen con botones una sola vez, confirmar crea cliente/auto/cita con bahía y auditoría, reintento sin duplicar, horario ganado por otro, reagendar, «No», cancelar, propuesta vencida y reemplazada, agenda propia apagada, sólo llave de servicio, lectura por centro, la agenda muestra el origen y la OS exige placa.
+- `assistant.test.ts` (agenda propia): herramientas y regla según el ajuste, validación de la propuesta, resumen con botones en lugar del texto del modelo, propuesta rechazada y botón atendido sin IA.
 - E2E con Meta y Claude simulados:
   - estado real sin exponer la llave;
   - datos del centro con horario validado;
@@ -135,11 +160,11 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
 
 ## Evaluación antes de pasar a «activo»
 
-`packages/domain/src/assistant/eval.ts` y `eval-scenarios.ts` definen **28 conversaciones de prueba**:
+`packages/domain/src/assistant/eval.ts` y `eval-scenarios.ts` definen **32 conversaciones de prueba**:
 
 - precios y servicios (catálogo, «desde» por tamaño, servicio inexistente, cerámico con valoración);
 - centro, dirección y horario (incluido domingo cerrado y elección por colonia);
-- agenda (horarios libres sin confirmar, pasar a persona con resumen);
+- agenda (horarios libres sin confirmar, propuesta con botón con datos completos, pide el año si falta, agenda sin placa, reagendar y cancelar a un cliente registrado);
 - promociones y descuentos (sólo los autorizados, sin descuentos propios), flotilla B2B;
 - quejas, garantía, «quiero una persona», foto y BAJA;
 - mensajes ambiguos, fuera de tema, en inglés e intentos de manipulación (cambiar precios, ver instrucciones, «¿eres humano?»).
@@ -158,11 +183,11 @@ Cada escenario corre con el **motor real** contra una **base simulada** con dato
 ANTHROPIC_API_KEY=… npm run eval:assistant -w @meguiars/web -- --yes [--model claude-sonnet-5-5] [--only precio-lavado,queja] [--repeat 2] [--out reporte.json]
 ```
 
-Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, y termina con código 1 si algo falla. Criterio sugerido para «activo»: 28 de 28 en dos corridas seguidas con el modelo elegido. Las pruebas del arnés (`eval.test.ts`) usan un modelo guionado y corren sin red en `npm test`.
+Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, y termina con código 1 si algo falla. Criterio sugerido para «activo»: 32 de 32 en dos corridas seguidas con el modelo elegido (con agenda propia: 2026-10-19, 32 de 32 con Opus 5.5). Las pruebas del arnés (`eval.test.ts`) usan un modelo guionado y corren sin red en `npm test`.
 
 ## Pendientes
 
 - **Validar con el número real de Meta y la llave real de Anthropic.** Hasta entonces sólo está probado contra servicios simulados; no está operativo.
-- F2: agendar con confirmación por botón (apartar horario), cotizar, reagendar o cancelar, estado de la OS, recordatorios con plantillas aprobadas y precios por tamaño en el catálogo.
+- F2 (siguientes partes): recordatorios con plantilla aprobada 24 h antes, estado de la OS, fotos en la bandeja; después, cotizar y precios por tamaño en el catálogo.
 - F3: membresías, reactivación de clientes con consentimiento.
 - Correr la evaluación con la llave real y el modelo elegido (ver arriba) antes de pasar a «activo».

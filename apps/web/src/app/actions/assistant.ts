@@ -61,6 +61,7 @@ export async function saveAssistantSettingsAction(
     minHoursAhead: text(form, "minHoursAhead"),
     mentionPromotions: form.get("mentionPromotions"),
     mentionMemberships: form.get("mentionMemberships"),
+    selfBooking: form.get("selfBooking"),
     testNumbers: text(form, "testNumbers"),
     reason: text(form, "reason"),
   });

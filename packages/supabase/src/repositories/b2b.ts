@@ -11,6 +11,7 @@ import {
   type PriceRuleKind,
   type Result,
   type VehicleRule,
+  vehicleLabel,
 } from "@meguiars/domain";
 import {
   applyB2bAccountSchema,
@@ -227,7 +228,7 @@ export function createB2bRepository(client: MeguiarsSupabaseClient): B2bReposito
               const bv = auth.find((x) => x.vehicle_id === v.id);
               return {
                 vehicleId: v.id,
-                label: `${v.make} ${v.model} ${v.year} · ${v.plate}`,
+                label: vehicleLabel(v),
                 plate: v.plate,
                 authorized: bv?.active ?? false,
                 costCenter: bv?.cost_center ?? null,

@@ -54,6 +54,10 @@ export interface Technician {
   active: boolean;
 }
 
+/** Origen de la cita: el personal (agenda) o el cliente, con el botón del asistente de WhatsApp. */
+export const APPOINTMENT_SOURCES = ["agenda", "whatsapp"] as const;
+export type AppointmentSource = (typeof APPOINTMENT_SOURCES)[number];
+
 /** Cita tal como la muestra la agenda del día. Horas en UTC. */
 export interface AppointmentListItem {
   id: string;
@@ -75,6 +79,7 @@ export interface AppointmentListItem {
   services: string[];
   notes: string | null;
   serviceOrderId: string | null;
+  source: AppointmentSource;
 }
 
 export interface AppointmentDetail extends AppointmentListItem {

@@ -198,6 +198,12 @@ export function AssistantSettingsForm({ settings }: { settings: AssistantSetting
           label="Sugiere membresías"
           checked={settings.mentionMemberships}
         />
+        <Checkbox
+          name="selfBooking"
+          value="on"
+          label="Agenda, cambia y cancela citas (el cliente confirma con un botón)"
+          checked={settings.selfBooking}
+        />
       </div>
       <TextArea
         name="testNumbers"

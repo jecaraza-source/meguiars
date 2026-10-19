@@ -146,7 +146,7 @@ export default async function AssistantPage() {
         >
           {!keyReady && s.mode !== "apagado" ? <li>{ASSISTANT_COPY.missingKey}</li> : null}
           {!waVerified ? <li>{ASSISTANT_COPY.noMeta}</li> : null}
-          <li>{ASSISTANT_COPY.phaseNote}</li>
+          <li>{ASSISTANT_COPY.bookingNote[s.selfBooking ? "on" : "off"]}</li>
           {!canManage ? <li>{ASSISTANT_COPY.onlyAdmin}</li> : null}
         </ul>
       </Card>

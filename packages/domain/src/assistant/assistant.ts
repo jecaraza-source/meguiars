@@ -117,6 +117,8 @@ export interface AssistantSettings {
   minHoursAhead: number;
   mentionPromotions: boolean;
   mentionMemberships: boolean;
+  /** El asistente agenda, reprograma y cancela citas con el botón de confirmación del cliente. */
+  selfBooking: boolean;
   testNumbers: string[];
   version: number;
   updatedAt: string | null;
@@ -227,6 +229,7 @@ export interface UpdateAssistantSettingsCommand {
   minHoursAhead: number;
   mentionPromotions: boolean;
   mentionMemberships: boolean;
+  selfBooking: boolean;
   testNumbers: string[];
   reason: string;
 }
@@ -299,7 +302,7 @@ export interface AssistantRepository {
 export const ASSISTANT_COPY = {
   title: "Asistente de WhatsApp",
   description:
-    "Atiende el número central de WhatsApp con IA usando sólo los datos de la plataforma: precios del catálogo, promociones autorizadas, horarios y disponibilidad. Cuando el cliente quiere una cita o algo que no puede resolver, pasa la conversación a una persona.",
+    "Atiende el número central de WhatsApp con IA usando sólo los datos de la plataforma: precios del catálogo, promociones autorizadas, horarios y disponibilidad. Propone citas que el cliente confirma con un botón; lo que no puede resolver lo pasa a una persona.",
   modes: {
     apagado: "Apagado: no responde",
     prueba: "Prueba: sólo responde a los números de prueba",
@@ -324,8 +327,11 @@ export const ASSISTANT_COPY = {
     "Falta ANTHROPIC_API_KEY en el servidor: el asistente no responde aunque esté en prueba o activo.",
   noMeta: "WhatsApp aún no está conectado (Integraciones): el asistente no recibe mensajes.",
   onlyAdmin: "Sólo el admin de la organización cambia la configuración del asistente.",
-  phaseNote:
-    "Fase 1: el asistente informa y muestra horarios libres; las citas las confirma una persona desde la Bandeja.",
+  /** Cómo se agendan las citas según el ajuste «agenda propia». */
+  bookingNote: {
+    on: "Citas: el asistente propone la cita y el cliente la confirma con el botón «Confirmar»; la base valida el horario y la asigna a una bahía libre. También reprograma y cancela con confirmación del cliente.",
+    off: "Citas: el asistente muestra horarios libres y pasa la conversación a una persona para agendar.",
+  },
   costNote:
     "Costo estimado con el precio público por millón de tokens del modelo; la factura real está en la consola de Anthropic.",
   label: "Asistente",

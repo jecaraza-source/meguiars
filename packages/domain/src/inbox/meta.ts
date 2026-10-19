@@ -15,6 +15,12 @@ import type { InboxChannel } from "./inbox";
  * - Instagram (API con inicio de sesión de Instagram): POST /{ig-id}/messages
  *   en graph.instagram.com con recipient.id (IGSID); webhook object "instagram".
  * Las tres limitan el texto libre a 24 h desde el último mensaje del contacto.
+ * - Botones de respuesta (asistente F2): POST /{phone-number-id}/messages con
+ *   type "interactive" e interactive {type:"button", body:{text}, action:{buttons:
+ *   [{type:"reply", reply:{id, title}}]}} (máximo 3 botones, título de hasta 20
+ *   caracteres, cuerpo de hasta 1024). Al tocarlo llega un mensaje type
+ *   "interactive" con interactive.button_reply {id, title}; el de una plantilla
+ *   llega como type "button" con button {payload, text}.
  * - Plantillas de WhatsApp (revisado para los pendientes de CR2): se listan con
  *   GET /{whatsapp-business-account-id}/message_templates (fields name,
  *   language, status, category, components) y se envían con type "template",
@@ -34,6 +40,8 @@ export interface InboundItem {
   contact_name?: string | undefined;
   message_type: string;
   body?: string | undefined;
+  /** Id del botón que tocó el contacto (respuesta interactiva o de plantilla). */
+  payload?: string | undefined;
   occurred_at: string;
 }
 
@@ -74,11 +82,22 @@ const WA_STATUS: Record<string, StatusItem["status"]> = {
 function whatsappBody(m: Obj): string | undefined {
   const type = str(m.type);
   if (type === "text" && isObj(m.text)) return str(m.text.body);
-  if (type && isObj(m[type])) return str((m[type] as Obj).caption);
+  // Botones antes que el pie de foto genérico (también son objetos con el nombre del tipo).
   if (type === "button" && isObj(m.button)) return str(m.button.text);
   if (type === "interactive" && isObj(m.interactive)) {
     const reply = (m.interactive.button_reply ?? m.interactive.list_reply) as Obj | undefined;
-    return reply ? str(reply.title) : undefined;
+    return isObj(reply) ? str(reply.title) : undefined;
+  }
+  if (type && isObj(m[type])) return str((m[type] as Obj).caption);
+  return undefined;
+}
+
+/** Id del botón que tocó el contacto (null si el mensaje no es una respuesta a botones). */
+function whatsappPayload(m: Obj): string | undefined {
+  if (str(m.type) === "button" && isObj(m.button)) return str(m.button.payload);
+  if (str(m.type) === "interactive" && isObj(m.interactive)) {
+    const reply = (m.interactive.button_reply ?? m.interactive.list_reply) as Obj | undefined;
+    return isObj(reply) ? str(reply.id) : undefined;
   }
   return undefined;
 }
@@ -116,6 +135,7 @@ function parseWhatsApp(entry: Obj, out: ParsedWebhook) {
         contact_name: c?.name,
         message_type: str(m.type) ?? "text",
         body: whatsappBody(m),
+        payload: whatsappPayload(m)?.slice(0, 200),
         occurred_at: isoFrom(m.timestamp, "s"),
       });
     }
@@ -249,6 +269,7 @@ export function buildSendRequest(
     contactExternalId: string;
     contactPhone: string | null;
     body: string;
+    buttons?: readonly { id: string; title: string }[] | undefined;
   },
   bases: GraphBases = {},
 ): GraphRequest {
@@ -258,6 +279,27 @@ export function buildSendRequest(
     const address = msg.contactPhone
       ? { to: msg.contactPhone.replace(/^\+/, "") }
       : { recipient: msg.contactExternalId };
+    if (msg.buttons?.length)
+      return {
+        url,
+        method: "POST",
+        body: {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          ...address,
+          type: "interactive",
+          interactive: {
+            type: "button",
+            body: { text: msg.body.slice(0, 1024) },
+            action: {
+              buttons: msg.buttons.slice(0, 3).map((b) => ({
+                type: "reply",
+                reply: { id: b.id.slice(0, 256), title: b.title.slice(0, 20).trim() },
+              })),
+            },
+          },
+        },
+      };
     return {
       url,
       method: "POST",

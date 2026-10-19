@@ -1,4 +1,5 @@
 import { formatMoney } from "../catalog/presenter";
+import { NO_PLATE } from "../clients/rules";
 import type { AppointmentListItem, AppointmentStatus, ServiceOrderDraft } from "./agenda";
 import { APPOINTMENT_STATUSES, APPOINTMENT_TRANSITIONS, STATUS_NEEDS_REASON } from "./agenda";
 import {
@@ -26,10 +27,18 @@ export function presentAppointment(item: AppointmentListItem, timeZone: string) 
     status: APPOINTMENT_STATUS_LABELS[item.status],
     tone: APPOINTMENT_STATUS_TONES[item.status],
     badges: [
+      ...(item.source === "whatsapp" ? [agendaCopy.whatsappBadge] : []),
       ...(item.isWalkIn ? [agendaCopy.walkInBadge] : []),
       ...(item.conflictOverride ? [agendaCopy.overrideBadge] : []),
+      ...(missingPlate(item) ? [agendaCopy.noPlateBadge] : []),
     ],
+    missingPlate: missingPlate(item),
   };
+}
+
+/** El auto de la cita no tiene placa (la OS no se abre hasta capturarla). */
+function missingPlate(item: AppointmentListItem): boolean {
+  return item.vehicleLabel?.endsWith(`· ${NO_PLATE}`) ?? false;
 }
 
 /** Acciones de estatus disponibles desde el estatus actual. */

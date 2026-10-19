@@ -1,4 +1,10 @@
-import { activeCenterAccess, COMMERCIAL_COPY, newRequestId, usableCenters } from "@meguiars/domain";
+import {
+  activeCenterAccess,
+  COMMERCIAL_COPY,
+  newRequestId,
+  usableCenters,
+  vehicleLabel,
+} from "@meguiars/domain";
 import {
   createCatalogRepository,
   createClientRepository,
@@ -65,7 +71,7 @@ export default async function NewQuotePage({ searchParams }: PageProps<"/comerci
             client={client?.ok ? { id: client.data.id, name: client.data.fullName } : null}
             vehicles={(client?.ok ? client.data.vehicles : [])
               .filter((v) => v.active)
-              .map((v) => ({ value: v.id, label: `${v.make} ${v.model} ${v.year} · ${v.plate}` }))}
+              .map((v) => ({ value: v.id, label: vehicleLabel(v) }))}
           />
         </Card>
       )}

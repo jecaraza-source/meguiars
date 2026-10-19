@@ -25,11 +25,11 @@ organizations 1─* clients 1─* vehicles
                      └─* client_centers *─1 detail_centers   (centros donde se ha atendido: visibilidad + última visita)
 ```
 
-| Tabla            | Clave                                       | Notas                                                                                                                                                                                                               |
-| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `clients`        | `id`, único `(organization_id, request_id)` | Guarda: nombre, teléfono (E.164), email, tipo (`person`/`company`), notas, centro habitual, última visita y consentimiento (`marketing_*`). `search_name` y `phone_digits` son columnas generadas para la búsqueda. |
-| `client_centers` | `(client_id, detail_center_id)`             | Centros donde se ha atendido al cliente, con `first_seen_at` y `last_visit_at`. Define quién lo ve.                                                                                                                 |
-| `vehicles`       | `id`, único `(organization_id, request_id)` | Guarda: marca, modelo, año, placa normalizada y un identificador opcional (VIN o número económico). La placa y el identificador son **únicos entre los vehículos activos** de la organización.                      |
+| Tabla            | Clave                                       | Notas                                                                                                                                                                                                                                                                   |
+| ---------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clients`        | `id`, único `(organization_id, request_id)` | Guarda: nombre, teléfono (E.164), email, tipo (`person`/`company`), notas, centro habitual, última visita y consentimiento (`marketing_*`). `search_name` y `phone_digits` son columnas generadas para la búsqueda.                                                     |
+| `client_centers` | `(client_id, detail_center_id)`             | Centros donde se ha atendido al cliente, con `first_seen_at` y `last_visit_at`. Define quién lo ve.                                                                                                                                                                     |
+| `vehicles`       | `id`, único `(organization_id, request_id)` | Guarda: marca, modelo, año, placa normalizada y un identificador opcional (VIN o número económico). La placa y el identificador son **únicos entre los vehículos activos** de la organización. La placa es opcional sólo para autos agendados por WhatsApp (ver abajo). |
 
 **Integridad:**
 
@@ -123,6 +123,12 @@ Ninguna nueva.
 ## Búsqueda por nombre o apellido (20261029000200)
 
 `search_clients` encuentra el nombre si contiene **todas** las palabras escritas, en cualquier orden, sin acentos y con pedazos de palabra («gom jua» → «Juan Pérez Gómez»). Primero salen los que empiezan con lo escrito. Teléfono, placa y correo no cambian. Pruebas: `supabase/tests/client_search_words.test.sql`.
+
+## Placa opcional (20261031000000)
+
+- Un auto dado de alta por el cliente al confirmar una cita en WhatsApp puede no tener placa (`plate` nulo). Se muestra como «Mazda 3 2021 · sin placa» (`vehicleLabel` ↔ `private.vehicle_label`).
+- Los formularios del personal (web y móvil) siguen pidiendo la placa.
+- La **OS exige placa**: «Captura la placa del vehículo antes de abrir la OS». Se captura editando el vehículo en la ficha del cliente.
 
 ## Pruebas
 

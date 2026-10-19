@@ -23,6 +23,7 @@ import {
   type BillingModel,
   type CatalogItem,
   type PriceRuleKind,
+  vehicleLabel,
 } from "@meguiars/domain";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -255,7 +256,7 @@ export function VehicleToggle({ accountId, vehicle }: { accountId: string; vehic
       action={action}
       className="flex flex-col gap-sm"
       noValidate
-      aria-label={`${label} ${vehicle.plate}`}
+      aria-label={`${label} ${vehicle.plate ?? vehicle.label}`}
     >
       <input type="hidden" name="accountId" value={accountId} />
       <input type="hidden" name="vehicleId" value={vehicle.vehicleId} />
@@ -608,7 +609,7 @@ export function NewB2bOrderForm({
         placeholder="Elige el vehículo"
         options={(account?.vehicles ?? []).map((v) => ({
           value: v.id,
-          label: `${v.make} ${v.model} ${v.year} · ${v.plate}`,
+          label: vehicleLabel(v),
         }))}
         defaultValue={valueOf(
           state,

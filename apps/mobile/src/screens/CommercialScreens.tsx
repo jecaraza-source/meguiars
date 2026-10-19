@@ -45,6 +45,7 @@ import {
   type Quote,
   type SegmentRow,
   type ViewState,
+  vehicleLabel,
 } from "@meguiars/domain";
 import {
   createCatalogRepository,
@@ -797,7 +798,7 @@ export function QuoteScreen({
         if (!active) return;
         const vehicles = (c?.ok ? c.data.vehicles : [])
           .filter((v) => v.active)
-          .map((v) => ({ value: v.id, label: `${v.make} ${v.model} · ${v.plate}` }));
+          .map((v) => ({ value: v.id, label: vehicleLabel(v) }));
         setData({ status: "ready", data: { quote: r.data, vehicles } });
         setBook((b) => ({ ...b, vehicleId: b.vehicleId || r.data.vehicleId || vehicles[0]?.value || "" }));
       });

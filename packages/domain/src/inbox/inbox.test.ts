@@ -258,6 +258,77 @@ describe("envío y verificación con la Graph API", () => {
       buildSendRequest({ ...base, channel: "whatsapp", contactExternalId: "MX.1", contactPhone: null }).body,
     ).toMatchObject({ recipient: "MX.1" });
   });
+  it("WhatsApp con botones de respuesta (resumen de una cita propuesta)", () => {
+    const req = buildSendRequest({
+      ...base,
+      channel: "whatsapp",
+      contactPhone: "+5215533334444",
+      body: "*Confirme su cita*",
+      buttons: [
+        { id: "cita:confirmar:p1", title: "Confirmar" },
+        { id: "cita:cambiar:p1", title: "Un título demasiado largo" },
+      ],
+    });
+    expect(req.body).toEqual({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: "5215533334444",
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: "*Confirme su cita*" },
+        action: {
+          buttons: [
+            { type: "reply", reply: { id: "cita:confirmar:p1", title: "Confirmar" } },
+            { type: "reply", reply: { id: "cita:cambiar:p1", title: "Un título demasiado" } },
+          ],
+        },
+      },
+    });
+  });
+
+  it("el webhook trae el id del botón que tocó el contacto (interactivo o de plantilla)", () => {
+    const msg = (m: Record<string, unknown>) => ({
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          changes: [
+            {
+              field: "messages",
+              value: {
+                metadata: { phone_number_id: "1234567890" },
+                contacts: [{ wa_id: "5215533334444", profile: { name: "Laura" } }],
+                messages: [{ id: "wamid.b", from: "5215533334444", timestamp: "1760000000", ...m }],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const button = parseMetaWebhook(
+      msg({
+        type: "interactive",
+        interactive: { type: "button_reply", button_reply: { id: "cita:confirmar:p1", title: "Confirmar" } },
+      }),
+    ).inbound[0]!.items[0]!;
+    expect(button).toMatchObject({
+      message_type: "interactive",
+      body: "Confirmar",
+      payload: "cita:confirmar:p1",
+    });
+    const template = parseMetaWebhook(
+      msg({ type: "button", button: { payload: "recordatorio:confirmar:a1", text: "Confirmar" } }),
+    ).inbound[0]!.items[0]!;
+    expect(template).toMatchObject({
+      message_type: "button",
+      body: "Confirmar",
+      payload: "recordatorio:confirmar:a1",
+    });
+    expect(
+      parseMetaWebhook(msg({ type: "text", text: { body: "Hola" } })).inbound[0]!.items[0]!.payload,
+    ).toBeUndefined();
+  });
+
   it("Messenger con messaging_type RESPONSE; Instagram en graph.instagram.com", () => {
     expect(
       buildSendRequest({ ...base, channel: "messenger", contactExternalId: "PSID", contactPhone: null }),

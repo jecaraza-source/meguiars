@@ -96,6 +96,8 @@ export function allowedAmounts(): number[] {
   return [...prices, ...withPromo, 15];
 }
 
+const NEW_CONTACT: EvalProfile = { cliente: null, vehiculos: [], citas: [] };
+
 export type EvalExpectation =
   | { kind: "reply" }
   | { kind: "handoff"; codes: HandoffCode[] }
@@ -119,7 +121,38 @@ export interface EvalScenario {
   mustMention?: string[][];
   /** Expresiones que la respuesta no debe contener. */
   mustNotMention?: string[];
+  /** Lo que la base sabe del número (consultar_cliente); por omisión, un número nuevo. */
+  profile?: EvalProfile;
 }
+
+export interface EvalProfile {
+  cliente: { nombre: string } | null;
+  vehiculos: { vehiculo_id: string; descripcion: string }[];
+  citas: {
+    cita_id: string;
+    centro: string;
+    cuando: string;
+    estado: string;
+    servicios: string[];
+    vehiculo: string;
+  }[];
+}
+
+/** Cliente registrado con una cita mañana (escenarios de reagendar y cancelar). */
+export const EVAL_KNOWN_CLIENT: EvalProfile = {
+  cliente: { nombre: "Laura Pérez" },
+  vehiculos: [{ vehiculo_id: "7e000000-0000-4000-8000-000000000001", descripcion: "Mazda 3 2021 · ABC1234" }],
+  citas: [
+    {
+      cita_id: "ca000000-0000-4000-8000-000000000001",
+      centro: "Centro Polanco",
+      cuando: "viernes 16 de octubre, 10:00",
+      estado: "programada",
+      servicios: ["Lavado exterior"],
+      vehiculo: "Mazda 3 2021 · ABC1234",
+    },
+  ],
+};
 
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -222,6 +255,7 @@ export function evalContext(s: EvalScenario, model: string): TurnContext {
       min_hours_ahead: 2,
       mention_promotions: true,
       mention_memberships: false,
+      self_booking: true,
     },
     conversation: {
       id: `conv-${s.id}`,
@@ -285,8 +319,20 @@ export function evalContext(s: EvalScenario, model: string): TurnContext {
 }
 
 /** Base simulada: datos fijos, escalamiento siempre posible, respuesta registrada en memoria. */
-export function evalGateway(ctx: TurnContext): AssistantGateway {
+export function evalGateway(ctx: TurnContext, profile: EvalProfile = NEW_CONTACT): AssistantGateway {
   const okAsync = <T>(data: T): Promise<Result<T>> => Promise.resolve(ok(data));
+  const proposals = new Map<string, string>();
+  // Igual que la base: sólo horarios libres de la lista y servicios que se agendan sin valoración.
+  const slotError = (date: string, time: string) =>
+    EVAL_WORLD.slots.some((d) => d.fecha === date && (d.horarios as readonly string[]).includes(time))
+      ? null
+      : "Ese horario ya no está disponible; consulta los horarios libres otra vez";
+  const propose = (summary: string) => {
+    const id = `ab000000-0000-4000-8000-00000000000${proposals.size + 1}`;
+    proposals.set(id, summary);
+    return okAsync({ propuesta_id: id, resumen: summary });
+  };
+  const appointment = (id: string) => profile.citas.find((c) => c.cita_id === id);
   return {
     beginTurn: () => okAsync({ context: ctx }),
     services: (_t, centerId, query) => {
@@ -316,6 +362,57 @@ export function evalGateway(ctx: TurnContext): AssistantGateway {
       });
     },
     chooseCenter: (_t, centerId) => okAsync({ ok: true, centro_id: centerId }),
+    clientProfile: () => okAsync(profile),
+    proposeBooking: (_t, b) => {
+      if (b.serviceIds.includes(svc(4)))
+        return okAsync({ error: "Alguno de esos servicios requiere valoración previa: pasa a una persona" });
+      const err = slotError(b.date, b.time);
+      if (err) return okAsync({ error: err });
+      if (!profile.cliente && !b.clientName) return okAsync({ error: "Falta el nombre del cliente" });
+      const known = profile.vehiculos.find((v) => v.vehiculo_id === b.vehicleId);
+      if (b.vehicleId && !known) return okAsync({ error: "Ese vehículo no es de este cliente" });
+      const car = known?.descripcion ?? `${b.vehicle?.make} ${b.vehicle?.model} ${b.vehicle?.year}`;
+      const services = EVAL_WORLD.services
+        .filter((s) => b.serviceIds.includes(s.servicio_id))
+        .map((s) => s.nombre);
+      return propose(
+        `*Confirme su cita*\nCentro: Centro Polanco\nFecha: ${b.date}, ${b.time}\nServicio: ${services.join(", ")}\nAuto: ${car}\nNombre: ${profile.cliente?.nombre ?? b.clientName}\n\nToque *Confirmar* para agendarla o *Cambiar* si algo no está bien.`,
+      );
+    },
+    proposeReschedule: (_t, id, date, time) => {
+      const a = appointment(id);
+      if (!a) return okAsync({ error: "Esa cita no es de este cliente (usa cita_id de consultar_cliente)" });
+      const err = slotError(date, time);
+      if (err) return okAsync({ error: err });
+      return propose(
+        `*Cambio de cita*\nCentro: ${a.centro}\nAntes: ${a.cuando}\nNuevo horario: ${date}, ${time}\n\nToque *Confirmar* para cambiarla o *Cambiar* si prefiere otro horario.`,
+      );
+    },
+    proposeCancel: (_t, id) => {
+      const a = appointment(id);
+      if (!a) return okAsync({ error: "Esa cita no es de este cliente (usa cita_id de consultar_cliente)" });
+      return propose(
+        `*Cancelar cita*\nCentro: ${a.centro}\nFecha: ${a.cuando}\n\n¿Confirma que desea cancelarla?`,
+      );
+    },
+    replyProposal: (_t, id) =>
+      okAsync({
+        superseded: false as const,
+        reply: {
+          messageId: "out-1",
+          channel: "whatsapp" as const,
+          externalAccountId: "eval",
+          contactExternalId: "eval",
+          contactPhone: null,
+          body: proposals.get(id) ?? "",
+          alreadySent: true,
+          buttons: [
+            { id: `cita:confirmar:${id}`, title: "Confirmar" },
+            { id: `cita:cambiar:${id}`, title: "Cambiar" },
+          ],
+        },
+      }),
+    handleButton: () => okAsync({ handled: false, reply: null }),
     handoff: () => okAsync({ escalated: true, message: EVAL_WORLD.handoffMessage, note: null }),
     optOut: () => okAsync(undefined),
     reply: (_t, body) =>
@@ -340,7 +437,11 @@ export function evalGateway(ctx: TurnContext): AssistantGateway {
 export async function runEvalScenario(s: EvalScenario, llm: AssistantLlm, model: string): Promise<EvalRun> {
   const ctx = evalContext(s, model);
   const out = await runAssistantTurn(
-    { gateway: evalGateway(ctx), llm, sender: { send: async () => ({ ok: true, externalId: "x" }) } },
+    {
+      gateway: evalGateway(ctx, s.profile),
+      llm,
+      sender: { send: async () => ({ ok: true, externalId: "x" }) },
+    },
     ctx.message.id,
   );
   if (out.status === "skipped")

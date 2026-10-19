@@ -143,6 +143,12 @@ Ninguna nueva.
 - `public.receive_and_open_order` reutiliza `set_appointment_status` y `create_service_order_from_appointment`: mismos permisos, auditoría (motivo «Recibida al abrir la OS») y una sola OS por cita. Pruebas: `supabase/tests/receive_and_open_order.test.sql`.
 - **Buscar cliente al agendar:** los clientes aparecen mientras se escribe (desde 2 letras). El nombre coincide con todas las palabras en cualquier orden y sin acentos («perez juan» encuentra a «Juan Pérez»); también por teléfono o placa. Ver [Clientes y vehículos](clientes-vehiculos.md).
 
+## Citas por WhatsApp (20261031000000)
+
+- `appointments.source`: `agenda` (personal) o `whatsapp` (el cliente la confirmó con el botón del asistente). La agenda web y móvil marca «WhatsApp». Ver [Asistente de WhatsApp](asistente-whatsapp.md) y [ADR 0038](../adr/0038-citas-por-whatsapp-con-boton.md).
+- La cita de WhatsApp llega `programada`, con bahía asignada por la base (la misma validación de capacidad y las _exclusion constraints_).
+- **Falta placa:** si el auto se agendó sin placa, la tarjeta lo marca y el detalle avisa antes de «Recibir auto y abrir OS»; la OS no se abre hasta capturarla en la ficha del cliente.
+
 ## Pendientes
 
 - **Horario de apertura por centro:** permitiría el KPI de ocupación (minutos agendados entre minutos disponibles por bahía) con una sola definición en `packages/analytics`.

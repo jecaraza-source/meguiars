@@ -69,6 +69,7 @@ export const assistantSettingsSchema = z
       ),
     mentionPromotions: checkbox,
     mentionMemberships: checkbox,
+    selfBooking: checkbox,
     /** Texto con un número por línea o separados por coma / punto y coma. */
     testNumbers: z.preprocess(
       (v) =>

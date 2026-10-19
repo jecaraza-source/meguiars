@@ -24,8 +24,11 @@ export interface Vehicle {
   make: string;
   model: string;
   year: number;
-  /** Placa normalizada: mayúsculas, sólo letras y dígitos. */
-  plate: string;
+  /**
+   * Placa normalizada: mayúsculas, sólo letras y dígitos. `null` si el auto se
+   * agendó por WhatsApp sin placa; la recepción la captura antes de abrir la OS.
+   */
+  plate: string | null;
   /** Identificador opcional (VIN, número económico de flotilla…). */
   identifier: string | null;
   notes: string | null;

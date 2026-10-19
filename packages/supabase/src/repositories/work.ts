@@ -38,7 +38,7 @@ const strOrNull = (v: unknown): string | null => (typeof v === "string" && v !==
 
 const toVehicle = (v: unknown): MyWorkVehicle => {
   const o = obj(v);
-  return { make: str(o.make), model: str(o.model), year: Number(o.year) || 0, plate: str(o.plate) };
+  return { make: str(o.make), model: str(o.model), year: Number(o.year) || 0, plate: strOrNull(o.plate) };
 };
 
 /** Convierte la respuesta de public.my_work (jsonb) al modelo del dominio. */

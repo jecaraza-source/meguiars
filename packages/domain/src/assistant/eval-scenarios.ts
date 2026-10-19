@@ -1,4 +1,4 @@
-import type { EvalScenario } from "./eval";
+import { EVAL_KNOWN_CLIENT, type EvalScenario } from "./eval";
 
 /**
  * Conversaciones de prueba del asistente (ver eval.ts). Cubren lo que pide la
@@ -101,7 +101,23 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
   },
   {
     id: "quiere-agendar",
-    title: "Quiere agendar con datos completos: pasa a una persona con resumen",
+    title: "Quiere agendar con datos completos: propone la cita para confirmar con botón",
+    centerConfirmed: true,
+    history: [
+      { from: "cliente", text: "¿Tienen lugar mañana para lavado exterior?" },
+      {
+        from: "asistente",
+        text: "Sí, en Centro Polanco hay lugar mañana a las 10:00, 12:30 o 16:00. ¿Cuál le acomoda?",
+      },
+    ],
+    message: "A las 12:30 por favor, es un Mazda 3 2021, placa ABC123, y me llamo Laura",
+    expect: { kind: "reply" },
+    mustCall: ["proponer_cita"],
+    mustMention: [["confirmar"]],
+  },
+  {
+    id: "agendar-falta-anio",
+    title: "Quiere agendar sin decir el año del auto: lo pide antes de proponer",
     centerConfirmed: true,
     history: [
       { from: "cliente", text: "¿Tienen lugar mañana para lavado exterior?" },
@@ -111,7 +127,43 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
       },
     ],
     message: "A las 12:30 por favor, es un Mazda 3 y me llamo Laura",
-    expect: { kind: "handoff", codes: ["agendar"] },
+    expect: { kind: "reply" },
+    mustNotCall: ["proponer_cita"],
+    mustMention: [["año", "ano"]],
+  },
+  {
+    id: "agendar-sin-placa",
+    title: "No tiene la placa a la mano: agenda sin ella",
+    centerConfirmed: true,
+    history: [
+      { from: "cliente", text: "Quiero un lavado exterior mañana" },
+      {
+        from: "asistente",
+        text: "Con gusto. En Centro Polanco hay lugar mañana a las 10:00, 12:30 o 16:00. ¿Cuál le acomoda? Y compártame su nombre y su auto (marca, modelo, año y placa).",
+      },
+    ],
+    message: "A las 10:00. Soy Laura, es un Mazda 3 2021, la placa no la tengo a la mano",
+    expect: { kind: "reply" },
+    mustCall: ["proponer_cita"],
+  },
+  {
+    id: "reagendar",
+    title: "Cliente registrado mueve su cita: propone el cambio con botón",
+    centerConfirmed: true,
+    profile: EVAL_KNOWN_CLIENT,
+    message: "Necesito mover mi cita de mañana a las 16:00, por favor",
+    expect: { kind: "reply" },
+    mustCall: ["proponer_cambio_cita"],
+    mustMention: [["confirmar"]],
+  },
+  {
+    id: "cancelar-cita",
+    title: "Cliente registrado cancela su cita: pide confirmarlo con botón",
+    centerConfirmed: true,
+    profile: EVAL_KNOWN_CLIENT,
+    message: "Ya no voy a poder ir mañana, cancélenme la cita por favor",
+    expect: { kind: "reply_or_handoff", codes: ["agendar"] },
+    mustCall: ["proponer_cancelacion"],
   },
   {
     id: "confirmame-cita",
