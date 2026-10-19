@@ -24,6 +24,7 @@ import { AppointmentNewScreen } from "@/screens/AppointmentNewScreen";
 import { CatalogDetailScreen } from "@/screens/CatalogDetailScreen";
 import { CatalogNewScreen } from "@/screens/CatalogNewScreen";
 import { AlertDetailScreen, AlertRulesScreen, AlertsScreen } from "@/screens/AlertsScreen";
+import { ReportEmailsScreen } from "@/screens/ReportEmailsScreen";
 import { CorporateDrillScreen } from "@/screens/CorporateDrillScreen";
 import { CatalogScreen } from "@/screens/CatalogScreen";
 import { ClientDetailScreen } from "@/screens/ClientDetailScreen";
@@ -1070,6 +1071,9 @@ export function Router() {
         break;
       case "editCenter":
         content = <CenterSettingsScreen {...props} />;
+        break;
+      case "reportEmails":
+        content = <ReportEmailsScreen {...props} />;
         break;
       case "designSystem":
         content = <DesignSystemScreen {...props} />;

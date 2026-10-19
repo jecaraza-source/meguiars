@@ -20,6 +20,7 @@ export * from "./repositories/pnl";
 export * from "./repositories/receivables";
 export * from "./repositories/dashboards";
 export * from "./repositories/alerts";
+export * from "./repositories/report-emails";
 export * from "./repositories/users";
 export * from "./repositories/day";
 export * from "./repositories/pilot";
