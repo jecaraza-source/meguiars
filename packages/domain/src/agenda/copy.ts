@@ -100,6 +100,8 @@ export const agendaCopy = {
   overrideBadge: "Encimada (autorizado)",
   walkInBadge: "Walk-in",
   whatsappBadge: "WhatsApp",
+  confirmedBadge: "Confirmó",
+  reminderBadge: "Recordatorio enviado",
   noPlateBadge: "Falta placa",
   noPlateHint: "El auto llegó sin placa: captúrala en la ficha del cliente antes de abrir la OS.",
 } as const;

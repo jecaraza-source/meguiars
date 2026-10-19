@@ -42,6 +42,8 @@ const toListItem = (row: ListRow): AppointmentListItem => ({
   notes: row.notes,
   serviceOrderId: row.service_order_id,
   source: row.source as AppointmentSource,
+  confirmedAt: row.confirmed_at,
+  reminderSentAt: row.reminder_sent_at,
 });
 
 type DetailRow = Tables<"appointments"> & {
@@ -77,6 +79,8 @@ const toDetail = (row: DetailRow): AppointmentDetail => {
     notes: row.notes,
     serviceOrderId: row.service_order_id,
     source: row.source as AppointmentSource,
+    confirmedAt: row.confirmed_at,
+    reminderSentAt: row.reminder_sent_at,
     receivedAt: row.received_at,
     startedAt: row.started_at,
     finishedAt: row.finished_at,

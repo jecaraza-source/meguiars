@@ -483,6 +483,37 @@ describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", (
         ],
       },
     });
+    // Recordatorio: cada botón de respuesta rápida lleva su id (regresa en el webhook al tocarlo).
+    expect(
+      buildTemplateSendRequest({
+        externalAccountId: "1234567890",
+        contactExternalId: "5215511112222",
+        contactPhone: null,
+        templateName: "recordatorio_cita",
+        templateLanguage: "es_MX",
+        templateParams: ["Beto"],
+        buttonPayloads: ["recordatorio:confirmar:a1", "recordatorio:reagendar:a1"],
+      }).body,
+    ).toMatchObject({
+      recipient: "5215511112222",
+      template: {
+        components: [
+          { type: "body", parameters: [{ type: "text", text: "Beto" }] },
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: "0",
+            parameters: [{ type: "payload", payload: "recordatorio:confirmar:a1" }],
+          },
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: "1",
+            parameters: [{ type: "payload", payload: "recordatorio:reagendar:a1" }],
+          },
+        ],
+      },
+    });
     expect(buildTemplatesListRequest("1029384756").url).toContain("/1029384756/message_templates?fields=");
     const parsed = parseTemplatesResponse(200, {
       data: [
@@ -491,7 +522,17 @@ describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", (
           language: "es_MX",
           status: "APPROVED",
           category: "UTILITY",
-          components: [{ type: "BODY", text: "Hola {{1}}, te esperamos el {{2}}. {{1}}" }],
+          components: [
+            { type: "BODY", text: "Hola {{1}}, te esperamos el {{2}}. {{1}}" },
+            {
+              type: "BUTTONS",
+              buttons: [
+                { type: "QUICK_REPLY", text: "Confirmar" },
+                { type: "QUICK_REPLY", text: "Reagendar" },
+                { type: "URL", text: "Mapa", url: "https://maps.app.goo.gl/x" },
+              ],
+            },
+          ],
         },
         { name: "Mal Nombre", language: "es", status: "APPROVED", category: "UTILITY", components: [] },
         { name: "x", language: "es", status: "APPROVED", category: "OTRA", components: [] },
@@ -508,6 +549,7 @@ describe("pendientes de la bandeja: triaje, respuestas rápidas y plantillas", (
           status: "APPROVED",
           body: "Hola {{1}}, te esperamos el {{2}}. {{1}}",
           param_count: 2,
+          quick_replies: 2,
         },
       ],
       next: "https://graph.facebook.com/next",

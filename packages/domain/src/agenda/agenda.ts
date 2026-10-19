@@ -80,6 +80,10 @@ export interface AppointmentListItem {
   notes: string | null;
   serviceOrderId: string | null;
   source: AppointmentSource;
+  /** El cliente confirmó con el botón del recordatorio de WhatsApp. */
+  confirmedAt: string | null;
+  /** Se envió el recordatorio de WhatsApp. */
+  reminderSentAt: string | null;
 }
 
 export interface AppointmentDetail extends AppointmentListItem {

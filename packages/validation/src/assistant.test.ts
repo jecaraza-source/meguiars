@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assistantFaqSchema,
+  assistantRemindersSchema,
   assistantSettingsSchema,
   centerPublicInfoSchema,
   handoffRuleSchema,
@@ -116,5 +117,29 @@ describe("asistente: validación", () => {
         hours: [{ weekday: 2, opens: "19:00", closes: "08:00" }],
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("recordatorios de cita", () => {
+  const form = {
+    organizationId: ORG,
+    version: "3",
+    enabled: "on",
+    templateId: "",
+    hours: "24",
+    reason: "Encender",
+  };
+  it("encender exige plantilla; las horas van de 2 a 72", () => {
+    expect(assistantRemindersSchema.safeParse(form).success).toBe(false);
+    const ok = assistantRemindersSchema.parse({
+      ...form,
+      templateId: "7e000000-0000-4000-8000-000000000001",
+    });
+    expect(ok).toMatchObject({ enabled: true, hours: 24, version: 3 });
+    expect(assistantRemindersSchema.safeParse({ ...form, enabled: null, hours: "1" }).success).toBe(false);
+    expect(assistantRemindersSchema.parse({ ...form, enabled: null })).toMatchObject({
+      enabled: false,
+      templateId: null,
+    });
   });
 });

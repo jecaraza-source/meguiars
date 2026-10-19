@@ -16,7 +16,7 @@ Citas y capacidad de atención por centro, sin sobreasignar bahías ni técnicos
 
 - **La Orden de Servicio misma:** llegó en O4 ([orden-servicio.md](orden-servicio.md)); la cita recibida abre su OS.
 - **Horarios de apertura y % de ocupación:** se requiere el horario de cada centro para definir el KPI (ver [Pendientes](#pendientes)).
-- **Recordatorios al cliente.**
+- **Recordatorios al cliente:** llegaron con el asistente de WhatsApp (ver «Recordatorios» abajo).
 
 ## Modelo de datos (`20260929000000_agenda.sql`)
 
@@ -148,6 +148,10 @@ Ninguna nueva.
 - `appointments.source`: `agenda` (personal) o `whatsapp` (el cliente la confirmó con el botón del asistente). La agenda web y móvil marca «WhatsApp». Ver [Asistente de WhatsApp](asistente-whatsapp.md) y [ADR 0038](../adr/0038-citas-por-whatsapp-con-boton.md).
 - La cita de WhatsApp llega `programada`, con bahía asignada por la base (la misma validación de capacidad y las _exclusion constraints_).
 - **Falta placa:** si el auto se agendó sin placa, la tarjeta lo marca y el detalle avisa antes de «Recibir auto y abrir OS»; la OS no se abre hasta capturarla en la ficha del cliente.
+
+## Recordatorios (20261031000100)
+
+- `appointments.reminder_sent_at` y `confirmed_at`: la tarjeta muestra «Recordatorio enviado» y, si el cliente tocó Confirmar en WhatsApp, «Confirmó». Ver [ADR 0039](../adr/0039-recordatorios-de-cita-por-whatsapp.md).
 
 ## Pendientes
 

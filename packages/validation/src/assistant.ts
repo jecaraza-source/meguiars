@@ -4,6 +4,7 @@ import {
   ASSISTANT_MODES,
   CENTER_CHOICES,
   HANDOFF_CODES,
+  REMINDER_RULES,
   REQUIRED_HANDOFF_CODES,
   normalizeTestNumber,
 } from "@meguiars/domain";
@@ -112,6 +113,25 @@ export const assistantSettingsSchema = z
       return z.NEVER;
     }
     return { ...v, testNumbers: numbers };
+  });
+
+/** Recordatorio de cita por WhatsApp (la base valida la plantilla: utilidad aprobada, 3 datos y 2 botones). */
+export const assistantRemindersSchema = z
+  .object({
+    organizationId: z.uuid(),
+    version: z.coerce.number().int().min(1),
+    enabled: checkbox,
+    templateId: z.preprocess(blankToNull, z.uuid({ message: "Elige una plantilla" }).nullable()),
+    hours: z.coerce
+      .number()
+      .int()
+      .min(REMINDER_RULES.hours.min, `Entre ${REMINDER_RULES.hours.min} y ${REMINDER_RULES.hours.max} horas`)
+      .max(REMINDER_RULES.hours.max, `Entre ${REMINDER_RULES.hours.min} y ${REMINDER_RULES.hours.max} horas`),
+    reason: changeReasonSchema,
+  })
+  .refine((v) => !v.enabled || v.templateId !== null, {
+    path: ["templateId"],
+    message: "Elige la plantilla del recordatorio",
   });
 
 export const assistantFaqSchema = z.object({

@@ -119,6 +119,10 @@ export interface AssistantSettings {
   mentionMemberships: boolean;
   /** El asistente agenda, reprograma y cancela citas con el botón de confirmación del cliente. */
   selfBooking: boolean;
+  /** Recordatorio de cita por WhatsApp (plantilla con botones Confirmar/Reagendar). */
+  remindersEnabled: boolean;
+  reminderTemplateId: string | null;
+  reminderHours: number;
   testNumbers: string[];
   version: number;
   updatedAt: string | null;
@@ -234,6 +238,15 @@ export interface UpdateAssistantSettingsCommand {
   reason: string;
 }
 
+export interface SetAssistantRemindersCommand {
+  organizationId: string;
+  version: number;
+  enabled: boolean;
+  templateId: string | null;
+  hours: number;
+  reason: string;
+}
+
 export interface UpsertAssistantFaqCommand {
   organizationId: string;
   id: string | null;
@@ -281,6 +294,7 @@ export interface SetCenterPublicInfoCommand {
 export interface AssistantRepository {
   settings(organizationId: string): Promise<Result<AssistantSettings | null>>;
   updateSettings(command: UpdateAssistantSettingsCommand): Promise<Result<void>>;
+  setReminders(command: SetAssistantRemindersCommand): Promise<Result<void>>;
   faqs(organizationId: string): Promise<Result<AssistantFaq[]>>;
   upsertFaq(command: UpsertAssistantFaqCommand): Promise<Result<void>>;
   deleteFaq(organizationId: string, id: string, reason: string): Promise<Result<void>>;

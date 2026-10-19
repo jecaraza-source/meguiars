@@ -4,6 +4,7 @@ import { activeCenterAccess, commercialErrorMessage, guardScreen, type Screen } 
 import { createAssistantRepository } from "@meguiars/supabase";
 import {
   assistantFaqSchema,
+  assistantRemindersSchema,
   assistantServiceSchema,
   assistantSettingsSchema,
   centerPublicInfoSchema,
@@ -70,6 +71,27 @@ export async function saveAssistantSettingsAction(
   if (!r.ok) return fail(r.error, form);
   revalidatePath(PAGE);
   return stamp({ message: "Configuración del asistente guardada" });
+}
+
+export async function saveAssistantRemindersAction(
+  _prev: AssistantFormState,
+  form: FormData,
+): Promise<AssistantFormState> {
+  const ctx = await context();
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const parsed = assistantRemindersSchema.safeParse({
+    organizationId: ctx.center.organizationId,
+    version: text(form, "version"),
+    enabled: form.get("enabled"),
+    templateId: text(form, "templateId"),
+    hours: text(form, "hours"),
+    reason: text(form, "reason"),
+  });
+  if (!parsed.success) return invalid(parsed.error.issues, form);
+  const r = await ctx.repo.setReminders(parsed.data);
+  if (!r.ok) return fail(r.error, form);
+  revalidatePath(PAGE);
+  return stamp({ message: "Recordatorios guardados" });
 }
 
 export async function saveAssistantFaqAction(

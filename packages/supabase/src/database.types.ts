@@ -492,6 +492,9 @@ export type Database = {
           model: string;
           organization_id: string;
           privacy_url: string | null;
+          reminder_hours: number;
+          reminder_template_id: string | null;
+          reminders_enabled: boolean;
           self_booking: boolean;
           test_numbers: string[];
           tone: string;
@@ -514,6 +517,9 @@ export type Database = {
           model?: string;
           organization_id: string;
           privacy_url?: string | null;
+          reminder_hours?: number;
+          reminder_template_id?: string | null;
+          reminders_enabled?: boolean;
           self_booking?: boolean;
           test_numbers?: string[];
           tone?: string;
@@ -536,6 +542,9 @@ export type Database = {
           model?: string;
           organization_id?: string;
           privacy_url?: string | null;
+          reminder_hours?: number;
+          reminder_template_id?: string | null;
+          reminders_enabled?: boolean;
           self_booking?: boolean;
           test_numbers?: string[];
           tone?: string;
@@ -544,6 +553,13 @@ export type Database = {
           version?: number;
         };
         Relationships: [
+          {
+            foreignKeyName: "bot_settings_reminder_template_id_fkey";
+            columns: ["reminder_template_id"];
+            isOneToOne: false;
+            referencedRelation: "whatsapp_templates";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "bot_settings_organization_id_fkey";
             columns: ["organization_id"];
@@ -2716,6 +2732,7 @@ export type Database = {
           bay_id: string | null;
           cancelled_at: string | null;
           client_id: string;
+          confirmed_at: string | null;
           conflict_override: boolean;
           created_at: string;
           created_by: string | null;
@@ -2730,6 +2747,8 @@ export type Database = {
           organization_id: string;
           quote_id: string | null;
           received_at: string | null;
+          reminder_message_id: string | null;
+          reminder_sent_at: string | null;
           request_id: string;
           service_order_id: string | null;
           started_at: string | null;
@@ -2744,6 +2763,7 @@ export type Database = {
           bay_id?: string | null;
           cancelled_at?: string | null;
           client_id: string;
+          confirmed_at?: string | null;
           conflict_override?: boolean;
           created_at?: string;
           created_by?: string | null;
@@ -2758,6 +2778,8 @@ export type Database = {
           organization_id: string;
           quote_id?: string | null;
           received_at?: string | null;
+          reminder_message_id?: string | null;
+          reminder_sent_at?: string | null;
           request_id: string;
           service_order_id?: string | null;
           started_at?: string | null;
@@ -2772,6 +2794,7 @@ export type Database = {
           bay_id?: string | null;
           cancelled_at?: string | null;
           client_id?: string;
+          confirmed_at?: string | null;
           conflict_override?: boolean;
           created_at?: string;
           created_by?: string | null;
@@ -2786,6 +2809,8 @@ export type Database = {
           organization_id?: string;
           quote_id?: string | null;
           received_at?: string | null;
+          reminder_message_id?: string | null;
+          reminder_sent_at?: string | null;
           request_id?: string;
           service_order_id?: string | null;
           started_at?: string | null;
@@ -6892,6 +6917,7 @@ export type Database = {
           name: string;
           organization_id: string;
           param_count: number;
+          quick_reply_count: number;
           status: string;
           synced_at: string;
         };
@@ -6904,6 +6930,7 @@ export type Database = {
           name: string;
           organization_id: string;
           param_count?: number;
+          quick_reply_count?: number;
           status: string;
           synced_at?: string;
         };
@@ -6916,6 +6943,7 @@ export type Database = {
           name?: string;
           organization_id?: string;
           param_count?: number;
+          quick_reply_count?: number;
           status?: string;
           synced_at?: string;
         };
@@ -7417,6 +7445,9 @@ export type Database = {
           mode: string;
           model: string;
           privacy_url: string | null;
+          reminder_hours: number;
+          reminder_template_id: string | null;
+          reminders_enabled: boolean;
           self_booking: boolean;
           test_numbers: string[];
           tone: string;
@@ -8025,6 +8056,7 @@ export type Database = {
           language: string;
           name: string;
           param_count: number;
+          quick_reply_count: number;
           status: string;
           synced_at: string;
         }[];
@@ -8099,6 +8131,23 @@ export type Database = {
           message_id: string;
         }[];
       };
+      prepare_appointment_reminder: {
+        Args: {
+          p_appointment_id: string;
+        };
+        Returns: {
+          already_sent: boolean;
+          body: string;
+          button_payloads: string[];
+          contact_external_id: string;
+          contact_phone: string | null;
+          external_account_id: string;
+          message_id: string;
+          template_language: string;
+          template_name: string;
+          template_params: string[];
+        }[];
+      };
       prepare_template_message: {
         Args: {
           p_conversation_id: string;
@@ -8169,6 +8218,18 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["bot_handoff_rules"]["Row"];
         SetofOptions: { from: "*"; to: "bot_handoff_rules"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_assistant_reminders: {
+        Args: {
+          p_enabled: boolean;
+          p_hours: number;
+          p_organization_id: string;
+          p_reason: string;
+          p_template_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["bot_settings"]["Row"];
+        SetofOptions: { from: "*"; to: "bot_settings"; isOneToOne: true; isSetofReturn: false };
       };
       set_assistant_service: {
         Args: {
@@ -10355,6 +10416,8 @@ export type Database = {
           is_walk_in: boolean;
           notes: string | null;
           service_order_id: string | null;
+          confirmed_at: string | null;
+          reminder_sent_at: string | null;
           services: string[];
           source: string;
           starts_at: string;
@@ -10623,6 +10686,14 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      reminders_due: {
+        Args: {
+          p_limit?: number;
+        };
+        Returns: {
+          appointment_id: string;
+        }[];
       };
       remove_service_order_evidence: {
         Args: {

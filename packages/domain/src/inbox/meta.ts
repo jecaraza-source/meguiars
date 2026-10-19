@@ -332,9 +332,22 @@ export function buildTemplateSendRequest(
     templateName: string;
     templateLanguage: string;
     templateParams: readonly string[];
+    /** Id que regresa cada botón de respuesta rápida de la plantilla (en orden). */
+    buttonPayloads?: readonly string[] | undefined;
   },
   bases: GraphBases = {},
 ): GraphRequest {
+  const components = [
+    ...(msg.templateParams.length
+      ? [{ type: "body", parameters: msg.templateParams.map((text) => ({ type: "text", text })) }]
+      : []),
+    ...(msg.buttonPayloads ?? []).map((payload, index) => ({
+      type: "button",
+      sub_type: "quick_reply",
+      index: String(index),
+      parameters: [{ type: "payload", payload }],
+    })),
+  ];
   const address = msg.contactPhone
     ? { to: msg.contactPhone.replace(/^\+/, "") }
     : { recipient: msg.contactExternalId };
@@ -349,13 +362,7 @@ export function buildTemplateSendRequest(
       template: {
         name: msg.templateName,
         language: { code: msg.templateLanguage },
-        ...(msg.templateParams.length
-          ? {
-              components: [
-                { type: "body", parameters: msg.templateParams.map((text) => ({ type: "text", text })) },
-              ],
-            }
-          : {}),
+        ...(components.length ? { components } : {}),
       },
     },
   };
@@ -376,6 +383,8 @@ export interface TemplateItem {
   status: string;
   body: string | null;
   param_count: number;
+  /** Botones de respuesta rápida (QUICK_REPLY) de la plantilla. */
+  quick_replies: number;
 }
 
 /** Plantillas que devolvió Meta (sólo lo necesario; descarta las de formato desconocido). */
@@ -398,6 +407,11 @@ export function parseTemplatesResponse(
     const bodyComp = arr(t.components).find((c) => isObj(c) && str(c.type)?.toUpperCase() === "BODY");
     const body = isObj(bodyComp) ? (str(bodyComp.text) ?? null) : null;
     const params = body ? new Set([...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => m[1])).size : 0;
+    const buttonsComp = arr(t.components).find((c) => isObj(c) && str(c.type)?.toUpperCase() === "BUTTONS");
+    const quickReplies = isObj(buttonsComp)
+      ? arr(buttonsComp.buttons).filter((b) => isObj(b) && str(b.type)?.toUpperCase() === "QUICK_REPLY")
+          .length
+      : 0;
     items.push({
       name,
       language,
@@ -405,6 +419,7 @@ export function parseTemplatesResponse(
       status: st,
       body: body ? body.slice(0, 1024) : null,
       param_count: params,
+      quick_replies: quickReplies,
     });
   }
   const paging = isObj(json.paging) ? json.paging : null;

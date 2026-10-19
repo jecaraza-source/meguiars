@@ -403,6 +403,7 @@ export function createInboxRepository(client: MeguiarsSupabaseClient): InboxRepo
             status: t.status,
             bodyText: t.body_text,
             paramCount: t.param_count,
+            quickReplyCount: t.quick_reply_count,
             syncedAt: t.synced_at,
           })),
       );

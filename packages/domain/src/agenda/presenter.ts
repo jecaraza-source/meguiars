@@ -28,6 +28,11 @@ export function presentAppointment(item: AppointmentListItem, timeZone: string) 
     tone: APPOINTMENT_STATUS_TONES[item.status],
     badges: [
       ...(item.source === "whatsapp" ? [agendaCopy.whatsappBadge] : []),
+      ...(item.confirmedAt
+        ? [agendaCopy.confirmedBadge]
+        : item.reminderSentAt && item.status === "programada"
+          ? [agendaCopy.reminderBadge]
+          : []),
       ...(item.isWalkIn ? [agendaCopy.walkInBadge] : []),
       ...(item.conflictOverride ? [agendaCopy.overrideBadge] : []),
       ...(missingPlate(item) ? [agendaCopy.noPlateBadge] : []),

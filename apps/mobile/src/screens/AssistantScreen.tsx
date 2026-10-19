@@ -77,6 +77,12 @@ export function AssistantScreen({ state, header, subnav }: PrivateScreenProps) {
             <Text style={textStyle("bodySmall", "muted")}>
               {ASSISTANT_COPY.bookingNote[s.selfBooking ? "on" : "off"]}
             </Text>
+            <Text style={textStyle("bodySmall")}>
+              Recordatorios:{" "}
+              {s.remindersEnabled
+                ? `${s.reminderHours} h antes de cada cita, con botones Confirmar y Reagendar`
+                : "apagados"}
+            </Text>
             <Text style={textStyle("caption", "muted")}>La configuración se cambia en la web.</Text>
           </Card>
           <Card title="Últimos 30 días">

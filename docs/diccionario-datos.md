@@ -167,6 +167,9 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `updated_at` | timestamp with time zone | no | now() |
 | `quote_id` | uuid | sí |  |
 | `source` | text | no | 'agenda'::text |
+| `confirmed_at` | timestamp with time zone | sí |  |
+| `reminder_sent_at` | timestamp with time zone | sí |  |
+| `reminder_message_id` | uuid | sí |  |
 
 ### `approval_events`
 
@@ -606,6 +609,9 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
 | `self_booking` | boolean | no | true |
+| `reminders_enabled` | boolean | no | false |
+| `reminder_template_id` | uuid | sí |  |
+| `reminder_hours` | smallint | no | 24 |
 
 ### `bot_turns`
 
@@ -2409,4 +2415,5 @@ CASE
 | `body_text` | text | sí |  |
 | `param_count` | integer | no | 0 |
 | `synced_at` | timestamp with time zone | no | now() |
+| `quick_reply_count` | smallint | no | 0 |
 

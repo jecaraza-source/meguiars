@@ -24,6 +24,8 @@ const item: AppointmentListItem = {
   notes: null,
   serviceOrderId: null,
   source: "agenda",
+  confirmedAt: null,
+  reminderSentAt: null,
 };
 
 describe("zona horaria del centro", () => {
@@ -92,6 +94,19 @@ describe("presentadores", () => {
     );
     expect(view.badges).toEqual(["WhatsApp", "Falta placa"]);
     expect(view.missingPlate).toBe(true);
+  });
+
+  it("recordatorio: enviado y, si el cliente confirmó, «Confirmó»", () => {
+    const base = { ...item, conflictOverride: false };
+    expect(
+      presentAppointment({ ...base, reminderSentAt: "2026-09-30T16:00:00Z" }, "America/Mexico_City").badges,
+    ).toEqual(["Recordatorio enviado"]);
+    expect(
+      presentAppointment(
+        { ...base, reminderSentAt: "2026-09-30T16:00:00Z", confirmedAt: "2026-09-30T17:00:00Z" },
+        "America/Mexico_City",
+      ).badges,
+    ).toEqual(["Confirmó"]);
   });
 
   it("resumen del día por estatus", () => {

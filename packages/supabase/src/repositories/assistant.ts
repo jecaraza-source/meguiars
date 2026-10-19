@@ -15,6 +15,8 @@ import {
   type HandoffCode,
   type HandoffRule,
   type InboxChannel,
+  type PreparedReminder,
+  type ReminderGateway,
   type Result,
   type TurnStatus,
 } from "@meguiars/domain";
@@ -92,6 +94,9 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
             mentionPromotions: r.mention_promotions,
             mentionMemberships: r.mention_memberships,
             selfBooking: r.self_booking,
+            remindersEnabled: r.reminders_enabled,
+            reminderTemplateId: r.reminder_template_id,
+            reminderHours: r.reminder_hours,
             testNumbers: r.test_numbers ?? [],
             version: r.version,
             updatedAt: r.updated_at,
@@ -120,6 +125,19 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
           p_mention_memberships: c.mentionMemberships,
           p_self_booking: c.selfBooking,
           p_test_numbers: c.testNumbers,
+          p_reason: c.reason,
+        }),
+      );
+    },
+    setReminders(c) {
+      return done(() =>
+        client.rpc("set_assistant_reminders", {
+          p_organization_id: c.organizationId,
+          p_version: c.version,
+          p_enabled: c.enabled,
+          // La base acepta null (sin plantilla); los tipos generados piden string.
+          p_template_id: c.templateId as string,
+          p_hours: c.hours,
           p_reason: c.reason,
         }),
       );
@@ -301,6 +319,48 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
             cacheWriteTokens: Number(r.cache_write_tokens),
             handoffs: (r.handoffs ?? {}) as Partial<Record<HandoffCode, number>>,
           })),
+      );
+    },
+  };
+}
+
+/** Recordatorios de cita con la llave de servicio (sólo el servidor, desde el cron). */
+export function createReminderServiceGateway(service: MeguiarsSupabaseClient): ReminderGateway {
+  return {
+    due(limit) {
+      return run(
+        () => service.rpc("reminders_due", { p_limit: limit }),
+        (rows) => rows.map((r) => r.appointment_id),
+      );
+    },
+    prepare(appointmentId) {
+      return run(
+        () => service.rpc("prepare_appointment_reminder", { p_appointment_id: appointmentId }),
+        (rows): PreparedReminder | null => {
+          const r = rows[0];
+          if (!r) return null;
+          return {
+            messageId: r.message_id,
+            externalAccountId: r.external_account_id,
+            contactExternalId: r.contact_external_id,
+            contactPhone: r.contact_phone,
+            body: r.body,
+            alreadySent: r.already_sent,
+            templateName: r.template_name,
+            templateLanguage: r.template_language,
+            templateParams: r.template_params,
+            buttonPayloads: r.button_payloads,
+          };
+        },
+      );
+    },
+    finishOutbound(messageId, result) {
+      return done(() =>
+        service.rpc("finish_outbound_message", {
+          p_message_id: messageId,
+          p_external_id: result.ok ? result.externalId : null,
+          p_error: result.ok ? null : result.error,
+        }),
       );
     },
   };

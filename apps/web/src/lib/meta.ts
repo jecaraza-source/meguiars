@@ -13,6 +13,7 @@ import {
   type InboxChannel,
   type OutboundMessage,
   type OutboundTemplate,
+  type PreparedReminder,
   type TemplateItem,
 } from "@meguiars/domain";
 
@@ -120,6 +121,12 @@ async function callGraph(
 /** Envía un texto preparado por la base (ventana ya validada). */
 export async function sendViaMeta(msg: OutboundMessage) {
   const { status, json } = await callGraph(msg.channel, buildSendRequest(msg, bases()));
+  return parseSendResponse(status, json);
+}
+
+/** Envía el recordatorio de cita (plantilla aprobada con los ids de sus botones). */
+export async function sendReminderViaMeta(r: PreparedReminder) {
+  const { status, json } = await callGraph("whatsapp", buildTemplateSendRequest(r, bases()));
   return parseSendResponse(status, json);
 }
 

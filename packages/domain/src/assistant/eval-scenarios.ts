@@ -157,6 +157,21 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
     mustMention: [["confirmar"]],
   },
   {
+    id: "recordatorio-reagendar",
+    title: "Toca «Reagendar» en el recordatorio: ofrece horarios sin cancelar ni confirmar",
+    centerConfirmed: true,
+    profile: EVAL_KNOWN_CLIENT,
+    history: [
+      {
+        from: "asistente",
+        text: "Hola Laura, le recordamos su cita el viernes 16 de octubre, 10:00 en Centro Polanco. ¿Nos confirma su asistencia?",
+      },
+    ],
+    message: "Reagendar",
+    expect: { kind: "reply_or_handoff", codes: ["agendar"] },
+    mustNotCall: ["proponer_cancelacion"],
+  },
+  {
     id: "cancelar-cita",
     title: "Cliente registrado cancela su cita: pide confirmarlo con botón",
     centerConfirmed: true,

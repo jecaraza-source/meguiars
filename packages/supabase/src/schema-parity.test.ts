@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   ASSISTANT_LIMITS,
+  REMINDER_RULES,
   ASSISTANT_MODELS,
   ASSISTANT_MODES,
   BOT_STATUSES,
@@ -482,6 +483,9 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "assistant_finish_turn",
   "assistant_free_slots",
   "assistant_handle_button",
+  "prepare_appointment_reminder",
+  "reminders_due",
+  "set_assistant_reminders",
   "assistant_handoff",
   "assistant_membership_plans",
   "assistant_metrics",
@@ -519,6 +523,25 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
 ];
 
 describe("paridad SQL ↔ TypeScript", () => {
+  it("reglas del recordatorio de cita: SQL y dominio coinciden", () => {
+    const fn = /function private\.reminder_rules\(\)[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(allSql)?.[1] ?? "";
+    const num = (key: string) => Number(new RegExp(`'${key}', (\\d+)`).exec(fn)?.[1]);
+    expect({
+      paramCount: num("param_count"),
+      quickReplies: num("quick_replies"),
+      minNoticeHours: num("min_notice_hours"),
+      minLeadHours: num("min_lead_hours"),
+    }).toEqual({
+      paramCount: REMINDER_RULES.paramCount,
+      quickReplies: REMINDER_RULES.quickReplies,
+      minNoticeHours: REMINDER_RULES.minNoticeHours,
+      minLeadHours: REMINDER_RULES.minLeadHours,
+    });
+    expect(allSql).toContain(
+      `reminder_hours smallint not null default ${REMINDER_RULES.hours.default} check (reminder_hours between ${REMINDER_RULES.hours.min} and ${REMINDER_RULES.hours.max})`,
+    );
+  });
+
   it("estatus y transiciones de citas: SQL y dominio coinciden", () => {
     const def = /create type public\.appointment_status as enum\s*\(([^)]+)\)/i.exec(allSql)?.[1];
     expect(def?.split(",").map((r) => r.trim().replace(/'/g, ""))).toEqual([...APPOINTMENT_STATUSES]);

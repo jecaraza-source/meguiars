@@ -124,6 +124,8 @@ export interface WhatsappTemplate {
   status: string;
   bodyText: string | null;
   paramCount: number;
+  /** Botones de respuesta rápida (el recordatorio de cita exige 2: Confirmar y Reagendar). */
+  quickReplyCount: number;
   syncedAt: string;
 }
 
