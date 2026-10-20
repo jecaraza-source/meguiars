@@ -3,6 +3,8 @@ import {
   agendaCopy,
   canInActiveCenter,
   canReschedule,
+  clientErrorMessage,
+  clientsCopy,
   newRequestId,
   orderErrorMessage,
   ordersCopy,
@@ -16,18 +18,21 @@ import {
   type CatalogItem,
   type ServiceOrderDraft,
   type Technician,
+  type Vehicle,
   type ViewState,
 } from "@meguiars/domain";
 import {
   createAgendaRepository,
   createCatalogRepository,
+  createClientRepository,
   createServiceOrderRepository,
   type MeguiarsSupabaseClient,
 } from "@meguiars/supabase";
-import { space } from "@meguiars/ui-tokens";
+import { colors, radius, space } from "@meguiars/ui-tokens";
 import {
   fieldErrors,
   fromAppointmentFormSchema,
+  updateVehicleSchema,
   rescheduleFormSchema,
   setStatusSchema,
   toUpdateAppointmentCommand,
@@ -154,7 +159,9 @@ export function AppointmentDetailScreen({
         (a.status === "programada" || a.status === "recibida" || a.status === "en_servicio") &&
         canInActiveCenter(state, "orders.write") ? (
         <>
-          {view.missingPlate ? <Notice tone="warning" text={agendaCopy.noPlateHint} /> : null}
+          {view.missingPlate ? (
+            <CapturePlateCard clientId={a.clientId} vehicleId={a.vehicleId} onDone={reload} />
+          ) : null}
           <OpenOrderCard
             appointmentId={a.id}
             label={a.status === "programada" ? ordersCopy.receiveAndOpen : ordersCopy.fromAppointment}
@@ -190,6 +197,92 @@ export function AppointmentDetailScreen({
         />
       ) : null}
     </Screen>
+  );
+}
+
+/**
+ * El auto llegó sin placa (p. ej. cita de WhatsApp): se captura aquí mismo.
+ * Marca, modelo y año ya vienen del alta; sólo se pide lo que falta (sombreado).
+ */
+function CapturePlateCard({
+  clientId,
+  vehicleId,
+  onDone,
+}: {
+  clientId: string;
+  vehicleId: string;
+  onDone: () => void;
+}) {
+  const { client } = useAuth();
+  const toast = useToast();
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [plate, setPlate] = useState("");
+  const [reason, setReason] = useState("Captura de placa");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!client) return;
+    let alive = true;
+    void createClientRepository(client)
+      .get(clientId)
+      .then((r) => {
+        if (alive && r.ok) setVehicle(r.data.vehicles.find((v) => v.id === vehicleId) ?? null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [client, clientId, vehicleId]);
+
+  const submit = async () => {
+    if (!client || !vehicle) return;
+    const parsed = updateVehicleSchema.safeParse({
+      ...vehicle,
+      identifier: vehicle.identifier ?? undefined,
+      notes: vehicle.notes ?? undefined,
+      plate,
+      active: true,
+      reason,
+    });
+    if (!parsed.success) return setErrors(fieldErrors(parsed.error));
+    setErrors({});
+    setBusy(true);
+    const result = await createClientRepository(client).updateVehicle(parsed.data);
+    setBusy(false);
+    if (!result.ok) return setError(clientErrorMessage(result.error));
+    toast({ message: clientsCopy.vehicleUpdated, tone: "success" });
+    onDone();
+  };
+
+  return (
+    <Card title="Falta la placa" subtitle={agendaCopy.noPlateHint}>
+      {vehicle ? (
+        <Text style={textStyle("bodySmall")}>
+          {vehicle.make} {vehicle.model} {vehicle.year}
+        </Text>
+      ) : null}
+      <View style={styles.missing}>
+        <Field
+          label={clientsCopy.plateLabel}
+          hint="Falta: captúrala para poder abrir la OS."
+          required
+          autoCapitalize="characters"
+          value={plate}
+          onChangeText={setPlate}
+          error={errors.plate}
+        />
+      </View>
+      <Field
+        label={clientsCopy.reasonLabel}
+        required
+        value={reason}
+        onChangeText={setReason}
+        error={errors.reason}
+      />
+      <Notice tone="danger" text={error} />
+      <Button label="Guardar placa" loading={busy} onPress={() => void submit()} />
+    </Card>
   );
 }
 
@@ -390,4 +483,12 @@ function Reschedule({
 
 const styles = StyleSheet.create({
   kpis: { flexDirection: "row", flexWrap: "wrap", gap: space.md },
+  // Lo que falta capturar, sombreado (mismo tono de advertencia que en la web).
+  missing: {
+    backgroundColor: colors.warningSurface,
+    borderColor: colors.warning,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: space.sm,
+  },
 });

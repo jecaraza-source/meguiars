@@ -13,7 +13,12 @@ import { createClientRepository } from "@meguiars/supabase";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { AddVehicleForm, DeactivateVehicleForm, EditClientForm } from "@/components/client-forms";
+import {
+  AddVehicleForm,
+  DeactivateVehicleForm,
+  EditClientForm,
+  EditVehicleForm,
+} from "@/components/client-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
@@ -23,7 +28,10 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
   const state = await requireScreen("clientDetail");
   const center = activeCenterAccess(state)!.center;
   const { id } = await params;
-  const created = (await searchParams).nuevo === "1";
+  const sp = await searchParams;
+  const created = sp.nuevo === "1";
+  const editVehicleId = typeof sp.vehiculo === "string" ? sp.vehiculo : null;
+  const back = typeof sp.volver === "string" ? sp.volver : undefined;
   const repo = createClientRepository((await createSupabaseServerClient())!);
   const [detail, history] = await Promise.all([repo.get(id), repo.history(id)]);
 
@@ -39,6 +47,9 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
   }
 
   const client = detail.data;
+  const editingVehicle = editVehicleId
+    ? (client.vehicles.find((v) => v.id === editVehicleId && v.active) ?? null)
+    : null;
   const view = presentClientDetail(client, state.access, center.timezone);
   // Editar requiere clients.write en el centro activo; la base exige además que el cliente esté vinculado a un centro propio.
   const canWrite = canInActiveCenter(state, "clients.write");
@@ -74,6 +85,17 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
         </Link>
       ) : null}
 
+      {editingVehicle && canWrite ? (
+        <section id="editar-vehiculo">
+          <Card
+            title={editingVehicle.plate ? "Editar vehículo" : "Completar vehículo: falta la placa"}
+            subtitle="Los datos que ya tenemos vienen llenos; lo sombreado es lo que falta."
+          >
+            <EditVehicleForm clientId={client.id} vehicle={editingVehicle} back={back} />
+          </Card>
+        </section>
+      ) : null}
+
       <Card title={clientsCopy.vehiclesTitle}>
         <Table
           caption={clientsCopy.vehiclesTitle}
@@ -90,6 +112,22 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
             },
           ]}
         />
+        {canWrite && client.vehicles.some((v) => v.active) ? (
+          <ul className="flex flex-wrap gap-md text-sm" aria-label="Editar vehículos">
+            {client.vehicles
+              .filter((v) => v.active)
+              .map((v) => (
+                <li key={v.id}>
+                  <Link
+                    href={`/clientes/${client.id}?vehiculo=${v.id}#editar-vehiculo`}
+                    className={`underline ${v.plate ? "" : "font-semibold text-warning"}`}
+                  >
+                    {v.plate ? `Editar ${vehicleLabel(v)}` : `Capturar placa: ${vehicleLabel(v)}`}
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        ) : null}
         {canWrite ? (
           <>
             <h3 className="font-semibold">{clientsCopy.addVehicle}</h3>
