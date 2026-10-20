@@ -184,6 +184,48 @@ async function addVehicleActionImpl(_prev: ClientFormState, form: FormData): Pro
   return { message: clientsCopy.vehicleAdded };
 }
 
+/** Completar o corregir un auto existente (p. ej. capturar la placa que faltó). */
+export async function updateVehicleAction(prev: ClientFormState, form: FormData): Promise<ClientFormState> {
+  const result = await updateVehicleActionImpl(prev, form);
+  // Guardado: de vuelta a la cita de donde vino (sólo rutas internas de la agenda).
+  const back = text(form, "back");
+  if (result.message && /^\/agenda\/[0-9a-f-]{36}$/.test(back)) {
+    revalidatePath(back);
+    redirect(back);
+  }
+  return stamp(result);
+}
+
+async function updateVehicleActionImpl(_prev: ClientFormState, form: FormData): Promise<ClientFormState> {
+  const ctx = await context("clientNew");
+  if (!ctx) return { error: authCopy.forbidden };
+  const clientId = text(form, "clientId");
+  const submitted = values(form);
+  const detail = await ctx.repo.get(clientId);
+  if (!detail.ok) return { error: clientErrorMessage(detail.error) };
+  const vehicle = detail.data.vehicles.find((v) => v.id === text(form, "vehicleId") && v.active);
+  if (!vehicle) return { error: "El vehículo no existe o está dado de baja.", values: submitted };
+  const parsed = updateVehicleSchema.safeParse({
+    id: vehicle.id,
+    make: text(form, "make"),
+    model: text(form, "model"),
+    year: text(form, "year"),
+    plate: text(form, "plate"),
+    identifier: text(form, "identifier"),
+    notes: text(form, "vehicleNotes"),
+    active: true,
+    reason: text(form, "vehicleReason"),
+  });
+  if (!parsed.success) {
+    const errors = fieldErrors(parsed.error);
+    return { fields: { ...errors, vehicleReason: errors.reason ?? "" }, values: submitted };
+  }
+  const result = await ctx.repo.updateVehicle(parsed.data);
+  if (!result.ok) return { error: clientErrorMessage(result.error), values: submitted };
+  revalidatePath(`/clientes/${clientId}`);
+  return { message: clientsCopy.vehicleUpdated };
+}
+
 /** Dar de baja un vehículo (vendido, error de captura…) con motivo. */
 export async function deactivateVehicleAction(
   prev: ClientFormState,

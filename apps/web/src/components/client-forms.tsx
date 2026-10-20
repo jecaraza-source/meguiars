@@ -21,6 +21,7 @@ import {
   deactivateVehicleAction,
   linkClientAction,
   updateClientAction,
+  updateVehicleAction,
   type ClientFormState,
 } from "@/app/actions/clients";
 import { Button } from "./ui/button";
@@ -80,51 +81,77 @@ function ConsentFieldset({ state, initial }: { state: ClientFormState; initial: 
   );
 }
 
-function VehicleFields({ state }: { state: ClientFormState }) {
+/** Campo obligatorio que falta: sombreado para que se vea qué capturar. */
+function Missing({ missing, children }: { missing: boolean; children: React.ReactNode }) {
+  return missing ? (
+    <div className="mg-tone rounded-md border p-sm" data-tone="warning" data-missing="true">
+      {children}
+    </div>
+  ) : (
+    <>{children}</>
+  );
+}
+
+function VehicleFields({ state, initial }: { state: ClientFormState; initial?: Vehicle | undefined }) {
   const f = state.fields ?? {};
+  const v = (key: string, current: string | number | null | undefined) =>
+    valueOf(state, key, current === null || current === undefined ? "" : String(current));
+  const missing = (current: string | number | null | undefined) =>
+    initial !== undefined && (current === null || current === undefined || String(current).trim() === "");
   return (
     <div className="grid gap-lg md:grid-cols-2">
-      <Input
-        name="make"
-        label={clientsCopy.makeLabel}
-        required
-        defaultValue={valueOf(state, "make")}
-        error={f.make}
-      />
-      <Input
-        name="model"
-        label={clientsCopy.modelLabel}
-        required
-        defaultValue={valueOf(state, "model")}
-        error={f.model}
-      />
-      <Input
-        name="year"
-        label={clientsCopy.yearLabel}
-        required
-        inputMode="numeric"
-        defaultValue={valueOf(state, "year")}
-        error={f.year}
-      />
-      <Input
-        name="plate"
-        label={clientsCopy.plateLabel}
-        required
-        autoCapitalize="characters"
-        defaultValue={valueOf(state, "plate")}
-        error={f.plate}
-      />
+      <Missing missing={missing(initial?.make)}>
+        <Input
+          name="make"
+          label={clientsCopy.makeLabel}
+          required
+          defaultValue={v("make", initial?.make)}
+          error={f.make}
+        />
+      </Missing>
+      <Missing missing={missing(initial?.model)}>
+        <Input
+          name="model"
+          label={clientsCopy.modelLabel}
+          required
+          defaultValue={v("model", initial?.model)}
+          error={f.model}
+        />
+      </Missing>
+      <Missing missing={missing(initial?.year)}>
+        <Input
+          name="year"
+          label={clientsCopy.yearLabel}
+          required
+          inputMode="numeric"
+          defaultValue={v("year", initial?.year)}
+          error={f.year}
+        />
+      </Missing>
+      <Missing missing={missing(initial?.plate)}>
+        <Input
+          name="plate"
+          label={clientsCopy.plateLabel}
+          required
+          autoCapitalize="characters"
+          {...(missing(initial?.plate)
+            ? { hint: "Falta: captúrala para poder abrir la OS.", autoFocus: true }
+            : {})}
+          defaultValue={v("plate", initial?.plate)}
+          error={f.plate}
+        />
+      </Missing>
       <Input
         name="identifier"
         label={clientsCopy.identifierLabel}
         hint={clientsCopy.identifierHint}
-        defaultValue={valueOf(state, "identifier")}
+        defaultValue={v("identifier", initial?.identifier)}
         error={f.identifier}
       />
       <Input
         name="vehicleNotes"
         label={clientsCopy.vehicleNotesLabel}
-        defaultValue={valueOf(state, "vehicleNotes")}
+        defaultValue={v("vehicleNotes", initial?.notes)}
         error={f.notes ?? f.vehicleNotes}
       />
     </div>
@@ -342,6 +369,48 @@ export function AddVehicleForm({ clientId, requestId }: { clientId: string; requ
       <Alert text={state.error} />
       <div>
         <Submit label={clientsCopy.addVehicle} variant="secondary" />
+      </div>
+    </form>
+  );
+}
+
+/**
+ * Completar o corregir un auto que ya existe (p. ej. el que llegó sin placa por
+ * WhatsApp): los datos que ya tenemos vienen llenos y lo que falta, sombreado.
+ * `back`: a dónde volver al guardar (la cita).
+ */
+export function EditVehicleForm({
+  clientId,
+  vehicle,
+  back,
+}: {
+  clientId: string;
+  vehicle: Vehicle;
+  back?: string | undefined;
+}) {
+  const [state, action] = useActionState(updateVehicleAction, {});
+  useSuccessToast(state);
+  return (
+    <form key={state.at ?? 0} action={action} className="flex flex-col gap-lg" noValidate>
+      <input type="hidden" name="clientId" value={clientId} />
+      <input type="hidden" name="vehicleId" value={vehicle.id} />
+      {back ? <input type="hidden" name="back" value={back} /> : null}
+      <VehicleFields state={state} initial={vehicle} />
+      <Input
+        name="vehicleReason"
+        id={`vehicle-reason-${vehicle.id}`}
+        label={clientsCopy.reasonLabel}
+        required
+        defaultValue={valueOf(
+          state,
+          "vehicleReason",
+          vehicle.plate ? "Corrección de datos del auto" : "Captura de placa",
+        )}
+        error={state.fields?.vehicleReason ?? state.fields?.reason}
+      />
+      <Alert text={state.error} />
+      <div>
+        <Submit label={back ? "Guardar y volver a la cita" : "Guardar vehículo"} />
       </div>
     </form>
   );

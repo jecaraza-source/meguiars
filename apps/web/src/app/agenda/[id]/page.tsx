@@ -98,8 +98,11 @@ export default async function AppointmentPage({ params, searchParams }: PageProp
           {view.missingPlate ? (
             <p role="status" className="mg-tone rounded-md border p-md text-sm" data-tone="warning">
               {agendaCopy.noPlateHint}{" "}
-              <Link href={`/clientes/${a.clientId}`} className="underline">
-                {view.client}
+              <Link
+                href={`/clientes/${a.clientId}?vehiculo=${a.vehicleId}&volver=/agenda/${a.id}#editar-vehiculo`}
+                className="underline"
+              >
+                Capturar placa de {view.client}
               </Link>
             </p>
           ) : null}
