@@ -4,6 +4,7 @@
 
 Citas y capacidad de atención por centro, sin sobreasignar bahías ni técnicos y con una operación simple:
 
+- **vista de 7 días (por omisión):** siete columnas con las citas de hoy y los 6 días siguientes (en el teléfono, un día debajo de otro); cada día abre su vista de día. Las reservas de WhatsApp van en verde. Mismos filtros que la vista de día; avanza o retrocede de 7 en 7;
 - **agenda por día y centro:** lista por hora, filtros por estatus, bahía y técnico, y un resumen por estatus;
 - **cita:** cliente, vehículo, uno o más servicios del catálogo, hora, duración estimada, bahía y técnico opcionales, notas y estatus;
 - **estatus:** `programada`, `recibida`, `en_servicio`, `terminada`, `entregada`, `cancelada` y `no_show`, con transiciones válidas;

@@ -7,6 +7,8 @@ import {
   canInActiveCenter,
   daySummary,
   formatDateInCenterTimeZone,
+  loadAgendaWeek,
+  parseAgendaView,
   presentAppointment,
   todayIn,
   zonedToUtc,
@@ -14,7 +16,7 @@ import {
 import { createAgendaRepository, createMyWorkRepository } from "@meguiars/supabase";
 import { agendaFilterSchema } from "@meguiars/validation";
 import Link from "next/link";
-import { AgendaDayList } from "@/components/agenda-day";
+import { AgendaDayList, AgendaWeekBoard } from "@/components/agenda-day";
 import { ResourcesManager } from "@/components/agenda-forms";
 import { TechnicianUsersForm } from "@/components/work-forms";
 import { AppShell } from "@/components/app-shell";
@@ -37,12 +39,17 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
     technicianId: param("tecnico"),
   });
   const filter = parsed.success ? parsed.data : { day: todayIn(center.timezone) };
+  const today = todayIn(center.timezone);
+  // Por omisión, 7 columnas: el día elegido (hoy) y los 6 siguientes.
+  const view = parseAgendaView(param("vista"));
+  const step = view === "semana" ? 7 : 1;
   const supabase = (await createSupabaseServerClient())!;
   const repo = createAgendaRepository(supabase);
   const canWrite = canInActiveCenter(state, "agenda.write");
   const canManage = canInActiveCenter(state, "agenda.manage");
-  const [items, bays, technicians, technicianUsers] = await Promise.all([
-    repo.listDay(center.id, filter.day, filter),
+  const [items, week, bays, technicians, technicianUsers] = await Promise.all([
+    view === "dia" ? repo.listDay(center.id, filter.day, filter) : null,
+    view === "semana" ? loadAgendaWeek(repo, center.id, filter.day, today, filter) : null,
     repo.listBays(center.id),
     repo.listTechnicians(center.id),
     canManage ? createMyWorkRepository(supabase).listTechnicianUsers(center.id) : null,
@@ -51,7 +58,14 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
     zonedToUtc(filter.day, "12:00", center.timezone),
     center.timezone,
   );
-  const link = (day: string) => `/agenda?dia=${day}`;
+  const filterParams = {
+    ...(filter.status ? { estado: filter.status } : {}),
+    ...(filter.bayId ? { bahia: filter.bayId } : {}),
+    ...(filter.technicianId ? { tecnico: filter.technicianId } : {}),
+  };
+  const link = (day: string, v = view) =>
+    `/agenda?${new URLSearchParams({ vista: v, dia: day, ...filterParams }).toString()}`;
+  const loadError = items && !items.ok ? items.error.message : week && !week.ok ? week.error.message : null;
 
   return (
     <AppShell
@@ -74,19 +88,37 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
           ) : null
         }
       >
+        <nav aria-label="Vista" className="flex flex-wrap items-center gap-sm text-sm">
+          <Link
+            href={link(filter.day, "semana")}
+            aria-current={view === "semana" ? "page" : undefined}
+            className="underline aria-[current=page]:font-bold aria-[current=page]:no-underline"
+          >
+            7 días
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link
+            href={link(filter.day, "dia")}
+            aria-current={view === "dia" ? "page" : undefined}
+            className="underline aria-[current=page]:font-bold aria-[current=page]:no-underline"
+          >
+            Día
+          </Link>
+        </nav>
         <nav aria-label={agendaCopy.day} className="flex flex-wrap items-center gap-md">
-          <Link href={link(addDays(filter.day, -1))} className="underline">
-            ← {agendaCopy.previousDay}
+          <Link href={link(addDays(filter.day, -step))} className="underline">
+            ← {view === "semana" ? "7 días antes" : agendaCopy.previousDay}
           </Link>
-          <strong>{dayLabel}</strong>
-          <Link href={link(addDays(filter.day, 1))} className="underline">
-            {agendaCopy.nextDay} →
+          <strong>{view === "semana" ? `${dayLabel} y 6 días siguientes` : dayLabel}</strong>
+          <Link href={link(addDays(filter.day, step))} className="underline">
+            {view === "semana" ? "7 días después" : agendaCopy.nextDay} →
           </Link>
-          <Link href={link(todayIn(center.timezone))} className="underline">
+          <Link href={link(today)} className="underline">
             {agendaCopy.today}
           </Link>
         </nav>
         <form className="grid gap-sm md:grid-cols-5 md:items-end" action="/agenda">
+          <input type="hidden" name="vista" value={view} />
           <Input name="dia" type="date" label={agendaCopy.day} defaultValue={filter.day} />
           <Select
             name="estado"
@@ -121,13 +153,23 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
         </form>
       </Card>
 
-      {!items.ok ? (
+      {loadError ? (
         <p role="alert" className="mg-tone rounded-md border p-md text-sm" data-tone="danger">
-          {items.error.message}
+          {loadError}
         </p>
-      ) : items.data.length === 0 ? (
+      ) : week?.ok ? (
+        <AgendaWeekBoard
+          days={week.data.map((d) => ({
+            day: d.day,
+            label: d.label,
+            isToday: d.isToday,
+            href: link(d.day, "dia"),
+            items: d.items.map((i) => presentAppointment(i, center.timezone)),
+          }))}
+        />
+      ) : items?.ok && items.data.length === 0 ? (
         <EmptyState title={agendaCopy.empty} />
-      ) : (
+      ) : items?.ok ? (
         <>
           <div className="flex flex-wrap gap-sm" aria-label="Resumen del día">
             {daySummary(items.data).map((s) => (
@@ -136,7 +178,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
           </div>
           <AgendaDayList items={items.data.map((i) => presentAppointment(i, center.timezone))} />
         </>
-      )}
+      ) : null}
 
       {canManage && bays.ok && technicians.ok ? (
         <Card title={agendaCopy.resourcesTitle}>
