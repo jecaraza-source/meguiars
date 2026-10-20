@@ -25,6 +25,17 @@ describe("AgendaRepository (Supabase)", () => {
     });
   });
 
+  it("el día explícito manda aunque el filtro traiga otro", async () => {
+    const { client, rpc } = fakeRpc({ data: [], error: null });
+    await createAgendaRepository(client).listDay(CENTER, "2026-10-22", {
+      day: "2026-10-20",
+    } as unknown as Parameters<ReturnType<typeof createAgendaRepository>["listDay"]>[2]);
+    expect(rpc).toHaveBeenCalledWith("list_appointments", {
+      p_detail_center_id: CENTER,
+      p_day: "2026-10-22",
+    });
+  });
+
   it("alta: envía los ids y la hora UTC; bahía ocupada llega como conflicto 23P01", async () => {
     const { client, rpc } = fakeRpc({ data: null, error: { code: "23P01", message: "ocupada" } });
     const result = await createAgendaRepository(client).create({

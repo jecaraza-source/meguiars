@@ -50,7 +50,9 @@ export async function loadAgendaWeek(
   filter: AgendaFilter = {},
 ): Promise<Result<(AgendaWeekDay & { items: AppointmentListItem[] })[]>> {
   const days = agendaWeekDays(start, today);
-  const results = await Promise.all(days.map((d) => repo.listDay(detailCenterId, d.day, filter)));
+  // Sólo estatus, bahía y técnico: el día de cada consulta es el de su columna.
+  const f: AgendaFilter = { status: filter.status, bayId: filter.bayId, technicianId: filter.technicianId };
+  const results = await Promise.all(days.map((d) => repo.listDay(detailCenterId, d.day, f)));
   const failed = results.find((r) => !r.ok);
   if (failed && !failed.ok) return failed;
   return {
