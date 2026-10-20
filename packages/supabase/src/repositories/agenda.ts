@@ -111,7 +111,7 @@ const toTechnician = (row: Tables<"technicians">): Technician => ({
 export function createAgendaRepository(client: MeguiarsSupabaseClient): AgendaRepository {
   return {
     listDay(detailCenterId, day, filter = {}) {
-      const parsed = agendaFilterSchema.safeParse({ day, ...filter });
+      const parsed = agendaFilterSchema.safeParse({ ...filter, day });
       if (!parsed.success) return Promise.resolve(invalid(parsed.error));
       const f = parsed.data;
       return run(

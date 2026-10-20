@@ -30,9 +30,25 @@ describe("agenda de 7 días", () => {
   it("consulta cada día con los mismos filtros y devuelve el primer error", async () => {
     const item = { id: "a" } as AppointmentListItem;
     const listDay = vi.fn().mockResolvedValue({ ok: true, data: [item] });
-    const r = await loadAgendaWeek({ listDay }, "c", "2026-10-19", "2026-10-19", { status: "programada" });
+    // El filtro de la pantalla trae su propio día: no debe pisar el de cada columna.
+    const screenFilter = { day: "2026-10-19", status: "programada" as const };
+    const r = await loadAgendaWeek({ listDay }, "c", "2026-10-19", "2026-10-19", screenFilter);
     expect(listDay).toHaveBeenCalledTimes(7);
-    expect(listDay).toHaveBeenCalledWith("c", "2026-10-25", { status: "programada" });
+    expect(listDay.mock.calls.map((c) => c[1])).toEqual([
+      "2026-10-19",
+      "2026-10-20",
+      "2026-10-21",
+      "2026-10-22",
+      "2026-10-23",
+      "2026-10-24",
+      "2026-10-25",
+    ]);
+    for (const c of listDay.mock.calls) expect(c[2]).not.toHaveProperty("day", "2026-10-19");
+    expect(listDay).toHaveBeenCalledWith("c", "2026-10-25", {
+      status: "programada",
+      bayId: undefined,
+      technicianId: undefined,
+    });
     expect(r.ok && r.data.map((d) => d.items.length)).toEqual([1, 1, 1, 1, 1, 1, 1]);
     const failing = vi
       .fn()
