@@ -10,6 +10,3 @@ supabase/.temp
 
 # Generado por scripts/data-dictionary.sh (test-db compara el texto exacto).
 docs/diccionario-datos.md
-
-# Proyecto de firmware independiente (PlatformIO/C++), con su propio formato.
-deskpet/
