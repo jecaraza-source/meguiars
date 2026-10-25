@@ -39,6 +39,8 @@ Todas con RLS de sólo lectura; las escrituras van por RPC. `payments` y `paymen
 
 ## Reglas
 
+Un recibo cobra una OS **o** la venta/renovación de una membresía (`payment_allocations.membership_event_id`, ADR 0043). Los cobros de membresías siguen las mismas formas de pago, cambio, folio, corte y reverso; deben cubrir el precio completo.
+
 | Regla                  | Detalle                                                                                                                                                                                        |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Cuándo se cobra        | OS autorizada, en proceso, pausada, terminada o entregada (B2B entrega con saldo). Nunca abierta ni cancelada (22023).                                                                         |
