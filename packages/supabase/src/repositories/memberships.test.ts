@@ -102,4 +102,74 @@ describe("MembershipRepository (Supabase)", () => {
       data: [{ price: 3900, periodMonths: 3, revenueInRange: 3900 }],
     });
   });
+
+  it("vende con cobro: envía las formas de pago y devuelve la membresía y su recibo", async () => {
+    const { client, rpc } = fake({
+      data: {
+        membership: {
+          id: ID,
+          organization_id: OTHER,
+          detail_center_id: OTHER,
+          number: "MEM-000001",
+          plan_id: OTHER,
+          client_id: OTHER,
+          vehicle_id: OTHER,
+          state: "activa",
+          plan_code: "CARE",
+          plan_name: "Care",
+          plan_tier: "care",
+          price: 499,
+          period_months: 1,
+          redeem_scope: "centro_origen",
+          renewal_notice_days: 7,
+          benefits: [],
+          started_on: "2026-10-25",
+          period_anchor: "2026-10-25",
+          ends_on: "2026-11-24",
+          renewals: 0,
+          auto_renew: false,
+          cancel_reason: null,
+          created_at: "2026-10-25T15:00:00Z",
+        },
+        payment: { id: "p1", receipt_folio: "A-01-R-000001", amount: 499, change_amount: 1 },
+      },
+      error: null,
+    });
+    const result = await createMembershipRepository(client).sell({
+      detailCenterId: OTHER,
+      requestId: ID,
+      planId: OTHER,
+      clientId: OTHER,
+      vehicleId: OTHER,
+      tenders: [{ method: "efectivo", amount: 499 }],
+      cashReceived: 500,
+    });
+    expect(rpc).toHaveBeenCalledWith("sell_membership", {
+      p_detail_center_id: OTHER,
+      p_request_id: ID,
+      p_plan_id: OTHER,
+      p_client_id: OTHER,
+      p_vehicle_id: OTHER,
+      p_tenders: [{ method: "efectivo", amount: 499 }],
+      p_cash_received: 500,
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        membership: { number: "MEM-000001", price: 499 },
+        receipt: { receiptFolio: "A-01-R-000001", amount: 499, changeAmount: 1 },
+      },
+    });
+  });
+
+  it("no renueva sin formas de pago (valida antes de llamar)", async () => {
+    const { client, rpc } = fake({ data: null, error: null });
+    const result = await createMembershipRepository(client).renewPaid({
+      membershipId: ID,
+      requestId: ID,
+      tenders: [],
+    });
+    expect(result.ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+  });
 });

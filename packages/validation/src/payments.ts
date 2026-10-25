@@ -40,19 +40,19 @@ export const tenderSchema = z
     path: ["reference"],
   });
 
-const tendersSchema = z
+export const tendersSchema = z
   .array(tenderSchema)
   .min(1, "Indica al menos una forma de pago")
   .max(5, "Máximo 5 formas de pago");
 
-const cashReceivedSchema = z.preprocess(blankToUndefined, positiveMoney.optional());
-const notesSchema = z.preprocess(
+export const cashReceivedSchema = z.preprocess(blankToUndefined, positiveMoney.optional());
+export const paymentNotesSchema = z.preprocess(
   blankToUndefined,
   z.string().trim().max(PAYMENT_NOTES_MAX, `Usa como máximo ${PAYMENT_NOTES_MAX} caracteres`).optional(),
 );
 
 /** Efectivo recibido: sólo con efectivo y al menos lo cobrado en efectivo. */
-const cashCovers = (v: {
+export const cashCovers = (v: {
   tenders: { method: string; amount: number }[];
   cashReceived?: number | undefined;
 }) => {
@@ -62,14 +62,14 @@ const cashCovers = (v: {
     .reduce((a, t) => a + Math.round(t.amount * 100), 0);
   return cash > 0 && Math.round(v.cashReceived * 100) >= cash;
 };
-const cashMessage = {
+export const cashMessage = {
   message: "El efectivo recibido debe cubrir el importe en efectivo",
   path: ["cashReceived"],
 };
 
 /** Formulario de cobro (web y móvil). */
 export const paymentFormSchema = z
-  .object({ tenders: tendersSchema, cashReceived: cashReceivedSchema, notes: notesSchema })
+  .object({ tenders: tendersSchema, cashReceived: cashReceivedSchema, notes: paymentNotesSchema })
   .refine(cashCovers, cashMessage);
 
 /** Comando de cobro (repositorio). */
@@ -80,7 +80,7 @@ export const registerPaymentSchema = z
     requestId: z.uuid(),
     tenders: tendersSchema,
     cashReceived: cashReceivedSchema,
-    notes: notesSchema,
+    notes: paymentNotesSchema,
   })
   .refine(cashCovers, cashMessage);
 

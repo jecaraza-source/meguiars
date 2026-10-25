@@ -4,6 +4,8 @@ import {
   membershipBenefitSchema,
   membershipPlanSchema,
   redeemBenefitSchema,
+  renewMembershipPaidSchema,
+  sellMembershipSchema,
   voidRedemptionSchema,
 } from "./memberships";
 
@@ -90,5 +92,35 @@ describe("membresías y redención", () => {
       }),
     ).toMatchObject({ version: 3, quantity: 2 });
     expect(voidRedemptionSchema.safeParse({ redemptionId: id, version: 1, reason: "" }).success).toBe(false);
+  });
+});
+
+describe("cobro de membresías", () => {
+  it("vender exige formas de pago y el efectivo recibido cubre el efectivo", () => {
+    const base = { detailCenterId: id, requestId: id, planId: id, clientId: id, vehicleId: id };
+    expect(sellMembershipSchema.safeParse({ ...base, tenders: [] }).success).toBe(false);
+    expect(
+      sellMembershipSchema.safeParse({
+        ...base,
+        tenders: [{ method: "efectivo", amount: "499" }],
+        cashReceived: "400",
+      }).success,
+    ).toBe(false);
+    expect(
+      sellMembershipSchema.safeParse({
+        ...base,
+        tenders: [{ method: "efectivo", amount: "499" }],
+        cashReceived: "500",
+      }).data?.tenders[0]?.amount,
+    ).toBe(499);
+  });
+  it("renovar exige formas de pago; la transferencia pide referencia", () => {
+    expect(
+      renewMembershipPaidSchema.safeParse({
+        membershipId: id,
+        requestId: id,
+        tenders: [{ method: "transferencia", amount: 499 }],
+      }).success,
+    ).toBe(false);
   });
 });

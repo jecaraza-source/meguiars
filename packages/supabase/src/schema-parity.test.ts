@@ -249,6 +249,9 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_service_order_discount",
+  "sell_membership",
+  "renew_membership_paid",
+  "membership_payments",
   "center_readiness",
   "create_detail_center",
   "set_center_baseline",

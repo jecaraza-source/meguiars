@@ -238,6 +238,16 @@ export interface PaymentReceipt {
     balance: number;
     paymentStatus: OrderPaymentStatus;
   }[];
+  /** Venta o renovación de membresía que cobra el recibo (ADR 0043). */
+  memberships: {
+    id: string;
+    number: string;
+    planName: string;
+    kind: "alta" | "renovacion";
+    periodStart: string | null;
+    periodEnd: string | null;
+    applied: number;
+  }[];
   reversal: { reason: string; reversedAt: string; reversedBy: string | null } | null;
 }
 

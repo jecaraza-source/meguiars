@@ -3,6 +3,7 @@ import { z } from "zod";
 import { moneySchema, serviceCodeSchema } from "./catalog";
 import { changeReasonSchema } from "./centers";
 import { quantitySchema } from "./orders";
+import { cashCovers, cashMessage, cashReceivedSchema, paymentNotesSchema, tendersSchema } from "./payments";
 
 /**
  * Validación de membresías, compartida por web (server actions) y móvil. La
@@ -76,6 +77,33 @@ export const renewMembershipSchema = z.object({
   planId: z.preprocess(blankToUndefined, z.uuid().optional()),
   paymentReference: optionalText(120),
 });
+
+/** Alta con cobro completo (sell_membership). La base exige que cubra el precio. */
+export const sellMembershipSchema = z
+  .object({
+    detailCenterId: z.uuid(),
+    requestId: z.uuid(),
+    planId: z.uuid({ message: "Elige el plan" }),
+    clientId: z.uuid(),
+    vehicleId: z.uuid({ message: "Elige el vehículo" }),
+    startsOn: optionalDate,
+    tenders: tendersSchema,
+    cashReceived: cashReceivedSchema,
+    notes: paymentNotesSchema,
+  })
+  .refine(cashCovers, cashMessage);
+
+/** Renovación con cobro completo (renew_membership_paid). */
+export const renewMembershipPaidSchema = z
+  .object({
+    membershipId: z.uuid(),
+    requestId: z.uuid(),
+    planId: z.preprocess(blankToUndefined, z.uuid().optional()),
+    tenders: tendersSchema,
+    cashReceived: cashReceivedSchema,
+    notes: paymentNotesSchema,
+  })
+  .refine(cashCovers, cashMessage);
 
 export const membershipStateSchema = z.object({
   membershipId: z.uuid(),
