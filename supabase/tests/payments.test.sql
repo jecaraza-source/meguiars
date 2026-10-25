@@ -67,8 +67,8 @@ grant execute on all functions in schema pg_temp to authenticated, anon;
 -- Catálogo de formas de pago.
 select pg_temp.assert(
   (select string_agg(code || ':' || collects_cash, ',' order by position) from public.payment_methods where active)
-    = 'efectivo:true,tarjeta:true,transferencia:true,membresia:false,credito_b2b:false',
-  'formas de pago: efectivo, tarjeta y transferencia entran a caja; membresía y crédito B2B liquidan sin efectivo');
+    = 'efectivo:true,tarjeta:true,transferencia:true,credito_b2b:false',
+  'formas de pago: efectivo, tarjeta y transferencia entran a caja; crédito B2B liquida sin efectivo; la membresía ya no es forma de pago');
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'admin@o1'),
@@ -152,14 +152,15 @@ select pg_temp.assert_fails($$select pg_temp.pay('$$ || :'o1' || $$', '[{"method
   'MG002', 'el crédito B2B sólo aplica a OS a cuenta de una empresa');
 select pg_temp.assert_fails($$select public.register_payment('$$ || :'o1' || $$', 1, gen_random_uuid(),
   '[{"method":"tarjeta","amount":100}]')$$, '40001', 'versión vieja de la OS: no se cobra dos veces');
-select (pg_temp.pay(:'o1', '[{"method":"tarjeta","amount":1300,"reference":"AUT-1"},{"method":"membresia","amount":200},
+select pg_temp.assert_fails($$select pg_temp.pay('$$ || :'o1' || $$', '[{"method":"membresia","amount":200}]')$$,
+  '22023', 'la membresía no salda saldo: sus servicios se redimen como descuento de la OS');
+select (pg_temp.pay(:'o1', '[{"method":"tarjeta","amount":1500,"reference":"AUT-1"},
   {"method":"transferencia","amount":800,"reference":"SPEI-9"}]', null, '40000000-0000-4000-8000-000000000002')).id as p2 \gset
 select pg_temp.assert(
   (select paid_amount = 2800 and payment_status = 'pagada' from public.service_orders where id = :'o1')
   and (select string_agg(method || '=' || amount, ',' order by method) from public.payment_tenders where payment_id = :'p2')
-    = 'membresia=200.00,tarjeta=1300.00,transferencia=800.00'
-  and (select membership_id is not null from public.payment_tenders where payment_id = :'p2' and method = 'membresia'),
-  'pago mixto (tarjeta + membresía vigente + transferencia) salda la OS: pagada');
+    = 'tarjeta=1500.00,transferencia=800.00',
+  'pago mixto (tarjeta + transferencia) salda la OS: pagada');
 select pg_temp.assert(
   (pg_temp.pay(:'o1', '[{"method":"tarjeta","amount":1300,"reference":"AUT-1"}]', null,
      '40000000-0000-4000-8000-000000000002')).id = :'p2'
@@ -174,7 +175,7 @@ select (public.create_service_order(:'A', '30000000-0000-4000-8000-000000000002'
   jsonb_build_array(jsonb_build_object('service_id', :'lav')))).id as o2 \gset
 select from public.set_service_order_status(:'o2', pg_temp.v(:'o2'), 'autorizada');
 select pg_temp.assert_fails($$select pg_temp.pay('$$ || :'o2' || $$', '[{"method":"membresia","amount":100}]')$$,
-  'MG002', 'sin membresía vigente no se paga con membresía');
+  '22023', 'sin membresía vigente tampoco se paga con membresía');
 -- Interfaz previa (O4): misma firma, ahora crea un recibo.
 select from public.record_service_order_payment(:'o2', pg_temp.v(:'o2'), 100, 'efectivo', 'Anticipo');
 select pg_temp.assert(
@@ -203,7 +204,7 @@ select pg_temp.assert(
   and (select amount = 2300 and reason = 'Tarjeta declinada después' and reversed_by = '00000000-0000-0000-0000-0000000000e1'
          from public.payment_reversals where payment_id = :'p2')
   and (select paid_amount = 500 and payment_status = 'parcial' from public.service_orders where id = :'o1')
-  and pg_temp.n($$select 1 from public.payment_tenders where payment_id = '$$ || :'p2' || $$'$$) = 3,
+  and pg_temp.n($$select 1 from public.payment_tenders where payment_id = '$$ || :'p2' || $$'$$) = 2,
   'reverso: el recibo queda revertido con motivo y actor, sus formas de pago se conservan y el saldo vuelve');
 select pg_temp.assert(
   (public.reverse_payment(:'p2', 'Otra vez')).status = 'revertido'
@@ -300,7 +301,7 @@ select pg_temp.login('00000000-0000-0000-0000-0000000000c1');
 create temp table facts as select * from public.payment_facts(array[:'A'::uuid], :'today'::date, :'today'::date);
 select pg_temp.assert(
   (select string_agg(method || ':' || valid_amount || '/' || reversed_amount, ',' order by method) from facts)
-    = 'credito_b2b:250.00/0,efectivo:1500.00/100.00,membresia:0/200.00,tarjeta:1300.00/1300.00,transferencia:0/800.00'
+    = 'credito_b2b:250.00/0,efectivo:1500.00/100.00,tarjeta:1300.00/1500.00,transferencia:0/800.00'
   and (select sum(valid_amount) filter (where collects_cash) from facts) = 2800
   and (select sum(change_amount) from facts) = 500,
   'corte de caja por forma de pago: válido, revertido, en caja y cambio entregado');

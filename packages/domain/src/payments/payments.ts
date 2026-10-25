@@ -10,7 +10,12 @@ import { PAYMENT_METHOD_LABELS } from "./copy";
  * schema-parity.test.ts compara el catálogo de formas de pago.
  */
 
-/** Formas de pago que se capturan hoy (payment_methods activas, en orden). */
+/**
+ * Formas de pago con las que se capturaron cobros (en orden). Hoy sólo se
+ * capturan las activas (PAYMENT_METHOD_RULES[m].active): la membresía se
+ * desactivó en 20261102000000_payment_integrity_hardening.sql, pero sus recibos
+ * previos siguen siendo válidos.
+ */
 export const PAYMENT_METHODS = ["efectivo", "tarjeta", "transferencia", "membresia", "credito_b2b"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
@@ -58,7 +63,7 @@ export const PAYMENT_METHOD_RULES: Record<PaymentMethodCode, PaymentMethodRule> 
     collectsCash: false,
     requiresReference: false,
     allowsChange: false,
-    active: true,
+    active: false,
   },
   credito_b2b: {
     kind: "credito",
@@ -104,17 +109,16 @@ export function orderPaymentStatus(total: number, paidAmount: number): OrderPaym
 /**
  * Formas de pago que admite la OS: una OS a cuenta B2B sólo a crédito de la
  * cuenta (su cobranza va en el estado de cuenta, no en caja: así no se cuenta
- * dos veces); el crédito B2B sólo para OS a cuenta. La membresía sólo si el
- * cliente tiene una vigente.
+ * dos veces); el crédito B2B sólo para OS a cuenta. Sólo formas activas: la
+ * membresía ya no salda la OS (sus servicios se redimen como descuento).
+ * `hasActiveMembership` se conserva por compatibilidad y ya no habilita nada.
  */
 export function allowedPaymentMethods(order: {
   b2bAccountId: string | null;
   hasActiveMembership?: boolean;
 }): PaymentMethod[] {
   if (order.b2bAccountId) return ["credito_b2b"];
-  return PAYMENT_METHODS.filter(
-    (m) => m !== "credito_b2b" && (m !== "membresia" || order.hasActiveMembership === true),
-  );
+  return PAYMENT_METHODS.filter((m) => m !== "credito_b2b" && PAYMENT_METHOD_RULES[m].active);
 }
 
 export interface TenderInput {

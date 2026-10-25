@@ -182,12 +182,24 @@ describe("reglas por canal", () => {
     ).toBeNull();
   });
 
-  it("entregar: B2C y membresía cobradas; B2B a crédito con orden de compra", () => {
+  it("entregar: B2C, membresía y B2B sin cuenta cobradas; B2B a cuenta a crédito con orden de compra", () => {
     expect(deliveryBlocker({ ...order({ total: 100, paidAmount: 50 }), items: line })).toMatch(/saldo/);
     expect(deliveryBlocker({ ...order({ total: 100, paidAmount: 100 }), items: line })).toBeNull();
     expect(deliveryBlocker({ ...order({ channel: "membresia", total: 0 }), items: line })).toBeNull();
     expect(
       deliveryBlocker({ ...order({ channel: "b2b", channelReference: "OC-1", total: 900 }), items: line }),
+    ).toMatch(/sin cuenta/);
+    expect(
+      deliveryBlocker({
+        ...order({ channel: "b2b", channelReference: "OC-1", total: 900, paidAmount: 900 }),
+        items: line,
+      }),
+    ).toBeNull();
+    expect(
+      deliveryBlocker({
+        ...order({ channel: "b2b", channelReference: "OC-1", total: 900, b2bAccountId: "acc" }),
+        items: line,
+      }),
     ).toBeNull();
   });
 });

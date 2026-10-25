@@ -304,7 +304,8 @@ select pg_temp.assert_fails($$select public.update_service_order_details('$$ || 
     'b2c', null, null, null, null, null, null, null, null, null, null, null)$$,
   '22023', 'una OS entregada ya no se edita');
 
--- B2B: autoriza y entrega con orden de compra, sin cobro.
+-- B2B sin cuenta: autoriza con orden de compra y se cobra antes de entregar
+-- (sólo la OS a cuenta B2B se entrega a crédito; ver b2b.test.sql).
 select (public.create_service_order('aaaaaaaa-0000-0000-0000-000000000000', '30000000-0000-4000-8000-000000000003',
   :'client2', :'vehicle2', jsonb_build_array(jsonb_build_object('service_id', :'lavado', 'quantity', 1)), 'b2b')).id as ob \gset
 select pg_temp.assert_fails($$select public.set_service_order_status('$$ || :'ob' || $$', pg_temp.v('$$ || :'ob' || $$'), 'autorizada')$$,
@@ -317,11 +318,16 @@ select pg_temp.assert_fails($$select public.update_service_order_details('$$ || 
   '22023', 'el canal no cambia después de autorizar');
 select from public.set_service_order_status(:'ob', pg_temp.v(:'ob'), 'en_proceso');
 select from public.set_service_order_status(:'ob', pg_temp.v(:'ob'), 'terminada');
+select pg_temp.assert_fails($$select public.set_service_order_status('$$ || :'ob' || $$', pg_temp.v('$$ || :'ob' || $$'), 'entregada')$$,
+  'MG002', 'B2B sin cuenta: con saldo pendiente no se entrega (no hay estado de cuenta que lo cobre)');
+select from public.register_payment(:'ob', pg_temp.v(:'ob'), gen_random_uuid(),
+  jsonb_build_array(jsonb_build_object('method', 'transferencia', 'reference', 'SPEI-OC-7781',
+    'amount', (select total from public.service_orders where id = :'ob'))));
 select pg_temp.assert(
-  (select status = 'entregada' and paid_amount = 0 and next_visit_on = current_date + 15
+  (select status = 'entregada' and paid_amount = total and next_visit_on = current_date + 15
        and next_visit_service_id = :'lavado' and recommendations = 'Lavar chasis cada 15 días'
      from public.set_service_order_status(:'ob', pg_temp.v(:'ob'), 'entregada')),
-  'B2B: con orden de compra se entrega a crédito; recomendación y próxima visita guardadas');
+  'B2B sin cuenta: cobrada se entrega; recomendación y próxima visita guardadas');
 
 -- Membresía: exige número de membresía para autorizar.
 select (public.create_service_order('aaaaaaaa-0000-0000-0000-000000000000', '30000000-0000-4000-8000-000000000004',

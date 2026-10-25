@@ -45,12 +45,12 @@ Todas con RLS de sólo lectura; las escrituras van por RPC. `payments` y `paymen
 | Sin sobrepago          | Σ formas de pago ≤ saldo (22023). La **única excepción explícita** es el efectivo: el recibido puede ser mayor y se registra el cambio (`cash_received − efectivo`). El cambio no es cobranza. |
 | Efectivo recibido      | Sólo si hay efectivo y debe cubrirlo (22023).                                                                                                                                                  |
 | Referencia             | Obligatoria en transferencia (22023).                                                                                                                                                          |
-| Membresía              | Sólo con una membresía vigente del cliente de la OS (activa o próxima a vencer) (MG002). No entra a caja.                                                                                      |
+| Membresía              | **Ya no es forma de pago** (ADR 0042): inactiva, se rechaza (22023). Sus servicios se redimen como descuento de la OS. Los recibos previos siguen válidos.                                     |
 | Crédito B2B            | Una OS a cuenta B2B **sólo** se liquida a crédito de la cuenta, y el crédito B2B sólo existe para esas OS (MG002). Evita contar dos veces lo que ya está en el estado de cuenta B2B.           |
 | Concurrencia           | Versión de la OS (40001). Idempotente por `request_id`: un reintento (doble toque, web y móvil) devuelve el mismo recibo.                                                                      |
 | Reverso                | Recibo completo, sólo encargado o admin (42501), con motivo. El recibo queda `revertido` con su traza y el saldo vuelve a la OS. Idempotente.                                                  |
 | Cancelar una OS        | Sólo sin cobros válidos: primero se revierten (reembolso).                                                                                                                                     |
-| Entregar B2C/membresía | Exige `pagada` (sin cambio respecto a O4).                                                                                                                                                     |
+| Entregar B2C/membresía | Exige `pagada` (sin cambio respecto a O4). También una OS B2B **sin cuenta** (ADR 0042).                                                                                                       |
 | Sin conexión           | **Las mutaciones financieras requieren conexión.** No hay cola offline: la app muestra "Los cobros requieren conexión" y el `request_id` hace seguro el reintento.                             |
 
 Invariante verificado por las pruebas: para toda OS, `paid_amount = Σ asignaciones de recibos válidos`, y la suma de pagos válidos del corte es igual al saldo cobrado de las OS.
