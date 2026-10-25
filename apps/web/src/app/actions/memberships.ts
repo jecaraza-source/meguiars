@@ -2,22 +2,25 @@
 
 import {
   activeCenterAccess,
+  canInActiveCenter,
   canManageServices,
+  canSellMemberships,
   guardScreen,
   membershipErrorMessage,
+  membershipPaymentsCopy,
   membershipsCopy,
   type RepoError,
   type Screen,
 } from "@meguiars/domain";
 import { createMembershipRepository } from "@meguiars/supabase";
 import {
-  createMembershipSchema,
   fieldErrors,
   membershipBenefitSchema,
   membershipPlanSchema,
   membershipStateSchema,
   redeemBenefitSchema,
-  renewMembershipSchema,
+  renewMembershipPaidSchema,
+  sellMembershipSchema,
   voidRedemptionSchema,
 } from "@meguiars/validation";
 import { revalidatePath } from "next/cache";
@@ -25,6 +28,7 @@ import { redirect } from "next/navigation";
 import { getAuthState } from "@/lib/auth/dal";
 import { stamp, text, validationState, values, type ActionFormState } from "@/lib/form-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { tendersOf } from "@/lib/tenders";
 
 export type MembershipFormState = ActionFormState;
 
@@ -47,30 +51,41 @@ function refreshMembership(id: string) {
   revalidatePath("/comercial");
 }
 
+/** Error de validación del cobro: el primero de las formas de pago, si lo hay. */
+function paymentInvalid(fields: Record<string, string>, hidden: string[], form: FormData) {
+  const state = validationState(fields, hidden, form);
+  const tender = Object.entries(fields).find(([k]) => k.startsWith("tenders"))?.[1];
+  return stamp({ ...state, error: state.error ?? tender });
+}
+
+/** Alta con cobro completo (ADR 0043): sin el cobro no hay membresía. */
 export async function createMembershipAction(
   _prev: MembershipFormState,
   form: FormData,
 ): Promise<MembershipFormState> {
   const ctx = await context("membershipNew");
-  if (!ctx) return stamp({ error: membershipsCopy.forbidden });
-  const parsed = createMembershipSchema.safeParse({
+  if (!ctx || !canSellMemberships((c) => canInActiveCenter(ctx.state, c)))
+    return stamp({ error: membershipPaymentsCopy.noPaymentPermission });
+  const parsed = sellMembershipSchema.safeParse({
     detailCenterId: ctx.center.id,
     requestId: text(form, "requestId"),
     planId: text(form, "planId"),
     clientId: text(form, "clientId"),
     vehicleId: text(form, "vehicleId"),
     startsOn: text(form, "startsOn"),
-    paymentReference: text(form, "paymentReference"),
+    tenders: tendersOf(form),
+    cashReceived: text(form, "cashReceived"),
+    notes: text(form, "notes"),
   });
-  if (!parsed.success) {
-    return stamp(
-      validationState(fieldErrors(parsed.error), ["detailCenterId", "requestId", "clientId"], form),
-    );
-  }
-  const result = await ctx.repo.create(parsed.data);
+  if (!parsed.success)
+    return paymentInvalid(fieldErrors(parsed.error), ["detailCenterId", "requestId", "clientId"], form);
+  const result = await ctx.repo.sell(parsed.data);
   if (!result.ok) return failed(result.error, form);
   revalidatePath("/comercial/membresias");
-  redirect(`/comercial/membresias/${result.data.id}?nueva=1`);
+  revalidatePath("/finanzas/cobranza");
+  redirect(
+    `/comercial/membresias/${result.data.membership.id}?nueva=1&recibo=${encodeURIComponent(result.data.receipt.receiptFolio)}`,
+  );
 }
 
 export async function renewMembershipAction(
@@ -78,19 +93,22 @@ export async function renewMembershipAction(
   form: FormData,
 ): Promise<MembershipFormState> {
   const ctx = await context("membershipDetail");
-  if (!ctx) return stamp({ error: membershipsCopy.forbidden });
-  const parsed = renewMembershipSchema.safeParse({
+  if (!ctx || !canSellMemberships((c) => canInActiveCenter(ctx.state, c)))
+    return stamp({ error: membershipPaymentsCopy.noPaymentPermission });
+  const parsed = renewMembershipPaidSchema.safeParse({
     membershipId: text(form, "membershipId"),
     requestId: text(form, "requestId"),
     planId: text(form, "planId"),
-    paymentReference: text(form, "paymentReference"),
+    tenders: tendersOf(form),
+    cashReceived: text(form, "cashReceived"),
+    notes: text(form, "notes"),
   });
-  if (!parsed.success)
-    return stamp(validationState(fieldErrors(parsed.error), ["membershipId", "requestId"], form));
-  const result = await ctx.repo.renew(parsed.data);
+  if (!parsed.success) return paymentInvalid(fieldErrors(parsed.error), ["membershipId", "requestId"], form);
+  const result = await ctx.repo.renewPaid(parsed.data);
   refreshMembership(parsed.data.membershipId);
+  revalidatePath("/finanzas/cobranza");
   if (!result.ok) return failed(result.error, form);
-  return stamp({ message: membershipsCopy.renewed });
+  return stamp({ message: membershipPaymentsCopy.renewed(result.data.receipt.receiptFolio) });
 }
 
 export async function setMembershipStateAction(

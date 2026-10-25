@@ -59,17 +59,31 @@ export default async function ReceiptPage({ params }: PageProps<"/finanzas/cobra
               <dd>{r.who}</dd>
             </div>
           </dl>
-          <section aria-label={paymentsCopy.orders}>
-            <h3 className="mb-xs font-medium">{paymentsCopy.orders}</h3>
-            <ul className="flex flex-col gap-xs">
-              {r.orders.map((o) => (
-                <li key={o.id}>
-                  {o.folio} · {paymentsCopy.total} {o.total} · {paymentsCopy.applied} {o.applied} ·{" "}
-                  {paymentsCopy.balance} {o.balance} ({o.status})
-                </li>
-              ))}
-            </ul>
-          </section>
+          {r.orders.length > 0 ? (
+            <section aria-label={paymentsCopy.orders}>
+              <h3 className="mb-xs font-medium">{paymentsCopy.orders}</h3>
+              <ul className="flex flex-col gap-xs">
+                {r.orders.map((o) => (
+                  <li key={o.id}>
+                    {o.folio} · {paymentsCopy.total} {o.total} · {paymentsCopy.applied} {o.applied} ·{" "}
+                    {paymentsCopy.balance} {o.balance} ({o.status})
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {r.memberships.length > 0 ? (
+            <section aria-label={paymentsCopy.memberships}>
+              <h3 className="mb-xs font-medium">{paymentsCopy.memberships}</h3>
+              <ul className="flex flex-col gap-xs">
+                {r.memberships.map((m) => (
+                  <li key={m.id}>
+                    {m.number} · {m.label} · {m.period} · {paymentsCopy.applied} {m.applied}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
           <section aria-label={paymentsCopy.tenders}>
             <h3 className="mb-xs font-medium">{paymentsCopy.tenders}</h3>
             <ul className="flex flex-col gap-xs">
@@ -105,6 +119,7 @@ export default async function ReceiptPage({ params }: PageProps<"/finanzas/cobra
         <ReversePaymentForm
           paymentId={result.data.id}
           orderId={result.data.orders[0]?.id}
+          membershipId={result.data.memberships[0]?.id}
           reversed={result.data.status !== "valido"}
         />
       ) : null}

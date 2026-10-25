@@ -1,6 +1,7 @@
 import {
   activeCenterAccess,
   canInActiveCenter,
+  canSellMemberships,
   MEMBERSHIP_STATUS_LABELS,
   MEMBERSHIP_STATUSES,
   membershipErrorMessage,
@@ -62,7 +63,7 @@ export function MembershipsScreen({
   return (
     <Screen title={membershipsCopy.title} description={membershipsCopy.description} header={header}>
       {subnav}
-      {canInActiveCenter(state, "memberships.write") ? (
+      {canSellMemberships((c) => canInActiveCenter(state, c)) ? (
         <Button label={membershipsCopy.newMembership} onPress={onNew} />
       ) : null}
       <Button label={membershipsCopy.plansOpen} variant="secondary" onPress={onPlans} />

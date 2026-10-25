@@ -2,15 +2,20 @@ import {
   activeCenterAccess,
   canChangePlanOnRenewal,
   canInActiveCenter,
+  canSellMemberships,
   formatDateOnly,
   membershipActions,
   membershipErrorMessage,
+  membershipPaymentsCopy,
   membershipsCopy,
   membershipStatus,
   newRequestId,
+  paymentErrorMessage,
+  paymentsCopy,
   PLAN_TIER_LABELS,
   presentBalance,
   presentMembershipEvent,
+  presentMembershipPayment,
   presentPlan,
   presentRedemption,
   presentStatus,
@@ -20,21 +25,33 @@ import {
   todayIn,
   type MembershipAction,
   type MembershipDetail,
+  type MembershipPayment,
   type MembershipPlan,
   type MembershipStatus,
   type ViewState,
 } from "@meguiars/domain";
-import { createMembershipRepository, type MeguiarsSupabaseClient } from "@meguiars/supabase";
+import {
+  createMembershipRepository,
+  createPaymentRepository,
+  type MeguiarsSupabaseClient,
+} from "@meguiars/supabase";
 import { space } from "@meguiars/ui-tokens";
-import { fieldErrors, membershipStateSchema, renewMembershipSchema } from "@meguiars/validation";
+import {
+  fieldErrors,
+  membershipStateSchema,
+  renewMembershipPaidSchema,
+  reversePaymentSchema,
+} from "@meguiars/validation";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
+import { MembershipPaymentFields, useMembershipPayment } from "@/components/MembershipPaymentFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
 import { Badge, Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
 import { Screen } from "@/ui/layout";
 import { Notice } from "@/ui/notice";
 import { useToast } from "@/ui/overlay";
+import { textStyle } from "@/ui/theme";
 import type { PrivateScreenProps } from "./types";
 
 async function fetchDetail(client: MeguiarsSupabaseClient, id: string): Promise<ViewState<MembershipDetail>> {
@@ -88,7 +105,7 @@ export function MembershipDetailScreen({
   const origin = m.detailCenterId === center.id;
   const actions = origin
     ? membershipActions(status, {
-        write: canInActiveCenter(state, "memberships.write"),
+        write: canSellMemberships((c) => canInActiveCenter(state, c)),
         manage: canInActiveCenter(state, "memberships.manage"),
       })
     : [];
@@ -144,9 +161,19 @@ export function MembershipDetailScreen({
           key={version}
           membershipId={m.id}
           planId={m.planId}
+          price={m.price}
           organizationId={m.organizationId}
           status={status}
           actions={actions}
+          onDone={reload}
+        />
+      ) : null}
+      {canInActiveCenter(state, "payments.read") ? (
+        <ReceiptsCard
+          key={`receipts-${version}`}
+          membershipId={m.id}
+          timeZone={center.timezone}
+          canReverse={canInActiveCenter(state, "payments.reverse")}
           onDone={reload}
         />
       ) : null}
@@ -182,9 +209,109 @@ export function MembershipDetailScreen({
   );
 }
 
+/** Recibos de la membresía y reembolso (equivale a la tarjeta de recibos en web). */
+function ReceiptsCard({
+  membershipId,
+  timeZone,
+  canReverse,
+  onDone,
+}: {
+  membershipId: string;
+  timeZone: string;
+  canReverse: boolean;
+  onDone: () => void;
+}) {
+  const { client } = useAuth();
+  const toast = useToast();
+  const [list, setList] = useState<ViewState<MembershipPayment[]>>({ status: "loading" });
+  const [reversing, setReversing] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!client) return;
+    let active = true;
+    void createMembershipRepository(client)
+      .payments(membershipId)
+      .then((r) => {
+        if (!active) return;
+        setList(
+          r.ok
+            ? { status: "ready", data: r.data }
+            : { status: "error", message: paymentErrorMessage(r.error) },
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, [client, membershipId]);
+
+  const reverse = async (paymentId: string) => {
+    if (!client) return;
+    const parsed = reversePaymentSchema.safeParse({ paymentId, reason });
+    if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? null);
+    setBusy(true);
+    const r = await createPaymentRepository(client).reverse(parsed.data);
+    setBusy(false);
+    if (!r.ok) return setError(paymentErrorMessage(r.error));
+    toast({ message: paymentsCopy.reverseDone, tone: "success" });
+    onDone();
+  };
+
+  return (
+    <Card title={membershipPaymentsCopy.receiptsTitle}>
+      {list.status === "loading" ? <Skeleton lines={2} label="Cargando recibos" /> : null}
+      {list.status === "error" ? <Notice tone="danger" text={list.message} /> : null}
+      {list.status === "ready" && list.data.length === 0 ? (
+        <Text style={textStyle("bodySmall", "muted")}>{membershipPaymentsCopy.receiptsEmpty}</Text>
+      ) : null}
+      {list.status === "ready"
+        ? list.data.map((p) => {
+            const r = presentMembershipPayment(p, timeZone);
+            return (
+              <View key={r.id} style={styles.receipt}>
+                <Text style={textStyle("label")}>
+                  {r.folio} · {r.kind} · {r.amount}
+                </Text>
+                <Badge label={r.status} tone={r.statusTone} />
+                <Text style={textStyle("bodySmall")}>
+                  {r.methods} · {r.period}
+                </Text>
+                <Text style={textStyle("caption", "muted")}>{r.when}</Text>
+                {canReverse && r.valid && reversing !== r.id ? (
+                  <LinkButton label={paymentsCopy.reverse} onPress={() => setReversing(r.id)} />
+                ) : null}
+                {canReverse && reversing === r.id ? (
+                  <View style={styles.receipt}>
+                    <Text style={textStyle("bodySmall", "muted")}>{membershipPaymentsCopy.refundHint}</Text>
+                    <Field
+                      label={paymentsCopy.reverseReason}
+                      value={reason}
+                      onChangeText={setReason}
+                      maxLength={500}
+                    />
+                    <Button
+                      label={paymentsCopy.reverseConfirm}
+                      variant="danger"
+                      loading={busy}
+                      onPress={() => void reverse(r.id)}
+                    />
+                  </View>
+                ) : null}
+              </View>
+            );
+          })
+        : null}
+      <Notice tone="danger" text={error} />
+    </Card>
+  );
+}
+
 function ActionsCard({
   membershipId,
   planId,
+  price,
   organizationId,
   status,
   actions,
@@ -192,6 +319,8 @@ function ActionsCard({
 }: {
   membershipId: string;
   planId: string;
+  /** Precio congelado: se cobra al renovar antes de vencer. */
+  price: number;
   organizationId: string;
   status: MembershipStatus;
   actions: MembershipAction[];
@@ -202,12 +331,16 @@ function ActionsCard({
   const [requestId] = useState(newRequestId);
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [newPlan, setNewPlan] = useState("");
-  const [payment, setPayment] = useState("");
   const [open, setOpen] = useState<MembershipAction | null>(null);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const renew = actions.find((a) => a.kind === "renew");
+  // Vencida: se reinicia con el precio vigente del plan elegido (o del mismo plan).
+  const renewPrice = canChangePlanOnRenewal(status)
+    ? (plans.find((p) => p.id === (newPlan || planId))?.price ?? price)
+    : price;
+  const payment = useMembershipPayment(renewPrice);
 
   useEffect(() => {
     if (!client || !renew || !canChangePlanOnRenewal(status)) return;
@@ -223,18 +356,18 @@ function ActionsCard({
 
   const doRenew = async () => {
     if (!client) return;
-    const parsed = renewMembershipSchema.safeParse({
+    const parsed = renewMembershipPaidSchema.safeParse({
       membershipId,
       requestId,
       planId: newPlan,
-      paymentReference: payment,
+      ...payment.payload,
     });
     if (!parsed.success) return setError(Object.values(fieldErrors(parsed.error))[0] ?? "Datos inválidos");
     setBusy(true);
-    const r = await createMembershipRepository(client).renew(parsed.data);
+    const r = await createMembershipRepository(client).renewPaid(parsed.data);
     setBusy(false);
     if (!r.ok) return setError(membershipErrorMessage(r.error));
-    done(membershipsCopy.renewed);
+    done(membershipPaymentsCopy.renewed(r.data.receipt.receiptFolio));
   };
 
   const doState = async (a: MembershipAction) => {
@@ -263,12 +396,7 @@ function ActionsCard({
               onChange={setNewPlan}
             />
           ) : null}
-          <Field
-            label={membershipsCopy.paymentReference}
-            hint={membershipsCopy.paymentHint}
-            value={payment}
-            onChangeText={setPayment}
-          />
+          <MembershipPaymentFields price={renewPrice} values={payment.values} onChange={payment.setValues} />
           <Button label={renew.label} loading={busy} onPress={() => void doRenew()} />
         </>
       ) : null}
@@ -299,4 +427,4 @@ function ActionsCard({
   );
 }
 
-const styles = StyleSheet.create({ kpis: { gap: space.md } });
+const styles = StyleSheet.create({ kpis: { gap: space.md }, receipt: { gap: space.xs } });

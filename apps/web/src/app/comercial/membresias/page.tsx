@@ -1,6 +1,7 @@
 import {
   activeCenterAccess,
   canInActiveCenter,
+  canSellMemberships,
   MEMBERSHIP_STATUS_LABELS,
   MEMBERSHIP_STATUSES,
   membershipErrorMessage,
@@ -41,7 +42,7 @@ export default async function MembershipsPage({ searchParams }: PageProps<"/come
         actions={
           <div className="flex flex-wrap gap-sm">
             <ButtonLink href="/comercial/planes" label={membershipsCopy.plansOpen} />
-            {canInActiveCenter(state, "memberships.write") ? (
+            {canSellMemberships((c) => canInActiveCenter(state, c)) ? (
               <ButtonLink
                 href="/comercial/membresias/nueva"
                 label={membershipsCopy.newMembership}

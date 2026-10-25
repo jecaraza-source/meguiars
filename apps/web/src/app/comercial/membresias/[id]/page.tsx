@@ -1,14 +1,18 @@
 import {
   activeCenterAccess,
   canInActiveCenter,
+  canSellMemberships,
   formatDateOnly,
   membershipActions,
+  membershipPaymentsCopy,
   membershipsCopy,
   membershipStatus,
   newRequestId,
+  paymentErrorMessage,
   PLAN_TIER_LABELS,
   presentBalance,
   presentMembershipEvent,
+  presentMembershipPayment,
   presentRedemption,
   presentStatus,
   pricePerPeriod,
@@ -20,6 +24,7 @@ import { createMembershipRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MembershipActions } from "@/components/membership-forms";
+import { ReversePaymentForm } from "@/components/payment-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
@@ -32,7 +37,9 @@ export default async function MembershipPage({
   const state = await requireScreen("membershipDetail");
   const center = activeCenterAccess(state)!.center;
   const { id } = await params;
-  const created = (await searchParams).nueva === "1";
+  const query = await searchParams;
+  const created = query.nueva === "1";
+  const receiptFolio = typeof query.recibo === "string" ? query.recibo : null;
   const repo = createMembershipRepository((await createSupabaseServerClient())!);
   const result = await repo.get(id);
   if (!result.ok) {
@@ -53,11 +60,16 @@ export default async function MembershipPage({
   const origin = m.detailCenterId === center.id;
   const actions = origin
     ? membershipActions(status, {
-        write: canInActiveCenter(state, "memberships.write"),
+        write: canSellMemberships((c) => canInActiveCenter(state, c)),
         manage: canInActiveCenter(state, "memberships.manage"),
       })
     : [];
-  const plans = actions.some((a) => a.kind === "renew") ? await repo.listPlans(m.organizationId) : null;
+  const canReadPayments = canInActiveCenter(state, "payments.read");
+  const canReverse = canInActiveCenter(state, "payments.reverse");
+  const [plans, payments] = await Promise.all([
+    actions.some((a) => a.kind === "renew") ? repo.listPlans(m.organizationId) : null,
+    canReadPayments ? repo.payments(m.id) : null,
+  ]);
   const folios = new Map(
     events
       .filter((e) => e.kind === "redencion" && typeof e.data?.["redemption_id"] === "string")
@@ -76,7 +88,7 @@ export default async function MembershipPage({
       </Link>
       {created ? (
         <p role="status" className="mg-tone rounded-md border p-md text-sm" data-tone="success">
-          {membershipsCopy.created}
+          {receiptFolio ? membershipPaymentsCopy.sold(receiptFolio) : membershipsCopy.created}
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-sm">
@@ -136,8 +148,54 @@ export default async function MembershipPage({
             actions={actions}
             plans={plans?.ok ? plans.data : []}
             currentPlanId={m.planId}
+            currentPrice={m.price}
             requestId={newRequestId()}
           />
+        </Card>
+      ) : null}
+
+      {payments ? (
+        <Card title={membershipPaymentsCopy.receiptsTitle}>
+          {!payments.ok ? (
+            <p role="alert" className="text-sm">
+              {paymentErrorMessage(payments.error)}
+            </p>
+          ) : payments.data.length === 0 ? (
+            <p className="text-sm text-muted">{membershipPaymentsCopy.receiptsEmpty}</p>
+          ) : (
+            <ul className="flex flex-col gap-sm">
+              {payments.data.map((p) => {
+                const r = presentMembershipPayment(p, center.timezone);
+                return (
+                  <li
+                    key={r.id}
+                    className="flex flex-col gap-xs border-b border-border pb-sm text-sm"
+                    data-testid="membership-receipt"
+                  >
+                    <span className="flex flex-wrap items-center gap-xs">
+                      <Link href={`/finanzas/cobranza/recibos/${r.id}`} className="font-medium underline">
+                        {r.folio}
+                      </Link>
+                      · {r.kind} · {r.amount}
+                      <Badge label={r.status} tone={r.statusTone} />
+                    </span>
+                    <span>
+                      {r.methods} · {r.period}
+                    </span>
+                    <span className="text-xs text-muted">{r.when}</span>
+                    {canReverse ? (
+                      <ReversePaymentForm
+                        paymentId={r.id}
+                        membershipId={m.id}
+                        hint={membershipPaymentsCopy.refundHint}
+                        reversed={!r.valid}
+                      />
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </Card>
       ) : null}
 

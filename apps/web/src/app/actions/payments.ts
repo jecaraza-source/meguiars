@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { getAuthState } from "@/lib/auth/dal";
 import { stamp, text, values, type ActionFormState } from "@/lib/form-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { tendersOf } from "@/lib/tenders";
 
 export type PaymentFormState = ActionFormState;
 
@@ -23,19 +24,6 @@ async function context(capability: "payments.write" | "payments.reverse") {
   const supabase = await createSupabaseServerClient();
   if (!activeCenterAccess(state) || !supabase) return null;
   return createPaymentRepository(supabase);
-}
-
-/** Formas de pago del formulario: tenders.<n>.method / amount / reference. */
-function tendersOf(form: FormData) {
-  const rows = new Map<number, Record<string, string>>();
-  for (const [key, value] of form.entries()) {
-    const m = /^tenders\.(\d+)\.(method|amount|reference)$/.exec(key);
-    if (!m || typeof value !== "string") continue;
-    const row = rows.get(Number(m[1])) ?? {};
-    row[m[2]!] = value;
-    rows.set(Number(m[1]), row);
-  }
-  return [...rows.entries()].sort(([a], [b]) => a - b).map(([, row]) => row);
 }
 
 const refresh = (orderId: string) => {
@@ -91,6 +79,12 @@ export async function reversePaymentAction(
   const result = await repo.reverse(parsed.data);
   const orderId = text(form, "orderId");
   if (orderId) refresh(orderId);
+  // Recibo de una membresía: el reembolso puede cancelarla (ADR 0043).
+  const membershipId = text(form, "membershipId");
+  if (membershipId) {
+    revalidatePath(`/comercial/membresias/${membershipId}`);
+    revalidatePath("/comercial/membresias");
+  }
   revalidatePath(`/finanzas/cobranza/recibos/${parsed.data.paymentId}`);
   if (!result.ok) return stamp({ error: paymentErrorMessage(result.error), values: values(form) });
   return stamp({ message: paymentsCopy.reverseDone });

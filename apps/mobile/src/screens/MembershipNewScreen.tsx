@@ -1,9 +1,12 @@
 import {
   activeCenterAccess,
   agendaCopy,
+  canInActiveCenter,
+  canSellMemberships,
   clientErrorMessage,
   formatMoney,
   membershipErrorMessage,
+  membershipPaymentsCopy,
   membershipsCopy,
   newRequestId,
   presentPlan,
@@ -14,10 +17,11 @@ import {
   vehicleLabel,
 } from "@meguiars/domain";
 import { createClientRepository, createMembershipRepository } from "@meguiars/supabase";
-import { createMembershipSchema, fieldErrors } from "@meguiars/validation";
+import { fieldErrors, sellMembershipSchema } from "@meguiars/validation";
 import { useState } from "react";
 import { Text } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
+import { MembershipPaymentFields, useMembershipPayment } from "@/components/MembershipPaymentFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
 import { Card, EmptyState, List } from "@/ui/display";
 import { Screen } from "@/ui/layout";
@@ -41,7 +45,8 @@ export function MembershipNewScreen({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ReturnType<typeof presentSearchResult>[] | null>(null);
   const [chosen, setChosen] = useState<{ client: ClientDetail; plans: MembershipPlan[] } | null>(null);
-  const [values, setValues] = useState({ vehicleId: "", planId: "", startsOn: today, paymentReference: "" });
+  const [values, setValues] = useState({ vehicleId: "", planId: "", startsOn: today });
+  const canSell = canSellMemberships((c) => canInActiveCenter(state, c));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -76,23 +81,43 @@ export function MembershipNewScreen({
     setChosen({ client: detail.data, plans: available });
   };
 
+  const plan = chosen?.plans.find((p) => p.id === values.planId);
+  const payment = useMembershipPayment(plan?.price ?? 0);
+
   const submit = async () => {
     if (!client || !chosen) return;
-    const parsed = createMembershipSchema.safeParse({
+    const parsed = sellMembershipSchema.safeParse({
       ...values,
+      ...payment.payload,
       detailCenterId: center.id,
       requestId,
       clientId: chosen.client.id,
     });
-    if (!parsed.success) return setErrors(fieldErrors(parsed.error));
+    if (!parsed.success) {
+      const fields = fieldErrors(parsed.error);
+      setErrors(fields);
+      return setError(
+        Object.entries(fields).find(([k]) => k.startsWith("tenders") || k === "cashReceived")?.[1] ?? null,
+      );
+    }
     setErrors({});
+    setError(null);
     setBusy(true);
-    const result = await createMembershipRepository(client).create(parsed.data);
+    const result = await createMembershipRepository(client).sell(parsed.data);
     setBusy(false);
     if (!result.ok) return setError(membershipErrorMessage(result.error));
-    toast({ message: membershipsCopy.created, tone: "success" });
-    onOpen(result.data.id);
+    toast({ message: membershipPaymentsCopy.sold(result.data.receipt.receiptFolio), tone: "success" });
+    onOpen(result.data.membership.id);
   };
+
+  if (!canSell) {
+    return (
+      <Screen title={membershipsCopy.newTitle} header={header}>
+        <LinkButton label={`← ${membershipsCopy.title}`} onPress={onCancel} />
+        <EmptyState title={membershipPaymentsCopy.noPaymentPermission} />
+      </Screen>
+    );
+  }
 
   if (!chosen) {
     return (
@@ -128,7 +153,6 @@ export function MembershipNewScreen({
   }
 
   const vehicles = chosen.client.vehicles.filter((v) => v.active);
-  const plan = chosen.plans.find((p) => p.id === values.planId);
   return (
     <Screen title={membershipsCopy.newTitle} description={chosen.client.fullName} header={header}>
       <LinkButton label={agendaCopy.changeClient} onPress={() => setChosen(null)} />
@@ -170,13 +194,13 @@ export function MembershipNewScreen({
             onChangeText={(v) => set("startsOn", v)}
             error={errors.startsOn}
           />
-          <Field
-            label={membershipsCopy.paymentReference}
-            hint={membershipsCopy.paymentHint}
-            value={values.paymentReference}
-            onChangeText={(v) => set("paymentReference", v)}
-            error={errors.paymentReference}
-          />
+          {plan ? (
+            <MembershipPaymentFields
+              price={plan.price}
+              values={payment.values}
+              onChange={payment.setValues}
+            />
+          ) : null}
           <Notice tone="danger" text={error} />
           <Button
             label={plan ? `${membershipsCopy.create} · ${formatMoney(plan.price)}` : membershipsCopy.create}

@@ -79,6 +79,9 @@ export function ReceiptScreen({
     ...r.orders.map(
       (o) => `OS ${o.folio}: ${paymentsCopy.applied} ${o.applied} · ${paymentsCopy.balance} ${o.balance}`,
     ),
+    ...r.memberships.map(
+      (m) => `${m.number}: ${m.label} · ${m.period} · ${paymentsCopy.applied} ${m.applied}`,
+    ),
     ...r.tenders.map((t) => `${t.label}: ${t.amount}${t.reference ? ` · ${t.reference}` : ""}`),
     `Total ${r.amount}`,
     ...(r.change ? [`${paymentsCopy.change} ${r.change}`] : []),
@@ -109,11 +112,17 @@ export function ReceiptScreen({
         <Text style={textStyle("bodySmall")}>
           {paymentsCopy.client}: {r.client}
         </Text>
-        <Text style={textStyle("label")}>{paymentsCopy.orders}</Text>
+        {r.orders.length > 0 ? <Text style={textStyle("label")}>{paymentsCopy.orders}</Text> : null}
         {r.orders.map((o) => (
           <Text key={o.id} style={textStyle("bodySmall")}>
             {o.folio} · {paymentsCopy.total} {o.total} · {paymentsCopy.applied} {o.applied} ·{" "}
             {paymentsCopy.balance} {o.balance} ({o.status})
+          </Text>
+        ))}
+        {r.memberships.length > 0 ? <Text style={textStyle("label")}>{paymentsCopy.memberships}</Text> : null}
+        {r.memberships.map((m) => (
+          <Text key={m.id} style={textStyle("bodySmall")}>
+            {m.number} · {m.label} · {m.period} · {paymentsCopy.applied} {m.applied}
           </Text>
         ))}
         <Text style={textStyle("label")}>{paymentsCopy.tenders}</Text>

@@ -3,6 +3,8 @@
 import {
   canChangePlanOnRenewal,
   formatMoney,
+  membershipPaymentMethods,
+  membershipPaymentsCopy,
   membershipsCopy,
   PERIOD_LABELS,
   PERIOD_MONTHS,
@@ -11,6 +13,7 @@ import {
   presentPlan,
   REDEEM_SCOPE_LABELS,
   REDEEM_SCOPES,
+  summarizeMembershipTenders,
   type CatalogItem,
   type MembershipAction,
   type MembershipPlan,
@@ -31,6 +34,7 @@ import {
   voidRedemptionAction,
   type MembershipFormState,
 } from "@/app/actions/memberships";
+import { PaymentFields } from "./payment-forms";
 import { Button } from "./ui/button";
 import { Checkbox, Input, Select } from "./ui/field";
 import { useToast } from "./ui/overlay";
@@ -87,7 +91,25 @@ function useSuccessToast(state: MembershipFormState) {
 // Alta
 // ---------------------------------------------------------------------------
 
-/** Alta de membresía: vehículo del cliente, plan disponible, inicio y referencia de pago. */
+/** Cobro completo del precio (alta o renovación), con las reglas de la base. */
+function MembershipPaymentFields({ price, state }: { price: number; state: MembershipFormState }) {
+  return (
+    <fieldset className="flex flex-col gap-md" data-testid="membership-payment">
+      <legend className="mb-sm font-semibold">
+        {membershipPaymentsCopy.paymentTitle} · {formatMoney(price)}
+      </legend>
+      <PaymentFields
+        key={price}
+        order={{ total: price, paidAmount: 0, b2bAccountId: null }}
+        allowed={membershipPaymentMethods()}
+        state={state}
+        summarize={(tenders, cash) => summarizeMembershipTenders(price, tenders, cash)}
+      />
+    </fieldset>
+  );
+}
+
+/** Alta de membresía: vehículo del cliente, plan disponible, inicio y cobro completo. */
 export function NewMembershipForm({
   requestId,
   clientId,
@@ -152,14 +174,8 @@ export function NewMembershipForm({
           defaultValue={valueOf(state, "startsOn", today)}
           error={f.startsOn}
         />
-        <Input
-          name="paymentReference"
-          label={membershipsCopy.paymentReference}
-          hint={membershipsCopy.paymentHint}
-          defaultValue={valueOf(state, "paymentReference")}
-          error={f.paymentReference}
-        />
       </div>
+      {plan ? <MembershipPaymentFields price={plan.price} state={state} /> : null}
       <Alert text={state.error} />
       <div>
         <Submit
@@ -180,6 +196,7 @@ export function MembershipActions({
   actions,
   plans,
   currentPlanId,
+  currentPrice,
   requestId,
 }: {
   membershipId: string;
@@ -187,9 +204,16 @@ export function MembershipActions({
   actions: MembershipAction[];
   plans: MembershipPlan[];
   currentPlanId: string;
+  /** Precio congelado: se cobra al renovar antes de vencer. */
+  currentPrice: number;
   requestId: string;
 }) {
   const [renewState, renew] = useActionState(renewMembershipAction, {});
+  const [planChoice, setPlanChoice] = useState(valueOf(renewState, "planId"));
+  // Vencida: se reinicia con el precio vigente del plan elegido (o del mismo plan).
+  const renewPrice = canChangePlanOnRenewal(status)
+    ? (plans.find((p) => p.id === (planChoice || currentPlanId))?.price ?? currentPrice)
+    : currentPrice;
   const [stateState, setState] = useActionState(setMembershipStateAction, {});
   useSuccessToast(renewState);
   useSuccessToast(stateState);
@@ -212,17 +236,12 @@ export function MembershipActions({
                   value: p.id === currentPlanId ? "" : p.id,
                   label: `${presentPlan(p).name} · ${presentPlan(p).price}${p.id === currentPlanId ? ` (${membershipsCopy.samePlan})` : ""}`,
                 }))}
-                defaultValue={valueOf(renewState, "planId")}
+                value={planChoice}
+                onChange={(e) => setPlanChoice(e.target.value)}
               />
             ) : null}
-            <Input
-              name="paymentReference"
-              id="renew-payment"
-              label={membershipsCopy.paymentReference}
-              hint={membershipsCopy.paymentHint}
-              defaultValue={valueOf(renewState, "paymentReference")}
-            />
           </div>
+          <MembershipPaymentFields price={renewPrice} state={renewState} />
           <Alert text={renewState.error} />
           <div>
             <Submit label={renewAction.label} />
