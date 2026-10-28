@@ -1,5 +1,6 @@
 import { addDays } from "../agenda/zoned-time";
 import type { Result } from "../result";
+import type { MembershipPaymentRepository } from "./payment";
 
 /**
  * Membresías de clientes (C1). Reglas espejo de la migración
@@ -338,7 +339,7 @@ export interface RedeemBenefitCommand {
   requestId: string;
 }
 
-export interface MembershipRepository {
+export interface MembershipRepository extends MembershipPaymentRepository {
   listPlans(
     organizationId: string,
     options?: { includeInactive?: boolean },

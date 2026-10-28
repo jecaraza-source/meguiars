@@ -1,7 +1,10 @@
 import {
   activeCenterAccess,
   agendaCopy,
+  canInActiveCenter,
+  canSellMemberships,
   clientErrorMessage,
+  membershipPaymentsCopy,
   membershipsCopy,
   newRequestId,
   presentSearchResult,
@@ -20,6 +23,13 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export default async function NewMembershipPage({ searchParams }: PageProps<"/comercial/membresias/nueva">) {
   const state = await requireScreen("membershipNew");
   const center = activeCenterAccess(state)!.center;
+  if (!canSellMemberships((c) => canInActiveCenter(state, c))) {
+    return (
+      <AppShell state={state} screen="membershipNew" title={membershipsCopy.newTitle}>
+        <EmptyState title={membershipPaymentsCopy.noPaymentPermission} />
+      </AppShell>
+    );
+  }
   const params = await searchParams;
   const param = (k: string) => (typeof params[k] === "string" ? (params[k] as string) : "");
   const clientId = param("cliente");

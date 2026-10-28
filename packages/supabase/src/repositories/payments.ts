@@ -86,6 +86,19 @@ const receiptJson = z.object({
       }),
     )
     .nullable(),
+  memberships: z
+    .array(
+      z.object({
+        id: z.string(),
+        number: z.string(),
+        plan_name: z.string(),
+        kind: z.enum(["alta", "renovacion"]),
+        period_start: z.string().nullable(),
+        period_end: z.string().nullable(),
+        applied: z.coerce.number(),
+      }),
+    )
+    .nullish(),
   reversal: z
     .object({ reason: z.string(), reversed_at: z.string(), reversed_by: z.string().nullable() })
     .nullable(),
@@ -112,6 +125,15 @@ export const toReceipt = (json: Json): PaymentReceipt | null => {
     clientName: r.client_name,
     tenders: toTenders(r.tenders as Json),
     orders: (r.orders ?? []).map((o) => ({ ...o, paymentStatus: o.payment_status })),
+    memberships: (r.memberships ?? []).map((m) => ({
+      id: m.id,
+      number: m.number,
+      planName: m.plan_name,
+      kind: m.kind,
+      periodStart: m.period_start,
+      periodEnd: m.period_end,
+      applied: m.applied,
+    })),
     reversal: r.reversal
       ? { reason: r.reversal.reason, reversedAt: r.reversal.reversed_at, reversedBy: r.reversal.reversed_by }
       : null,

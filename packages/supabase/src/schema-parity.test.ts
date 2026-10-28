@@ -249,6 +249,9 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
 // Si falta una RPC en database.types.ts, este tipo deja de compilar la prueba.
 const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "add_service_order_discount",
+  "sell_membership",
+  "renew_membership_paid",
+  "membership_payments",
   "center_readiness",
   "create_detail_center",
   "set_center_baseline",
@@ -616,8 +619,17 @@ describe("paridad SQL ↔ TypeScript", () => {
       allowsChange: m[5] === "true",
       active: m[6] === "true",
     }));
+    // Migraciones posteriores activan o desactivan formas de pago (p. ej. la membresía).
+    for (const m of allSql.matchAll(
+      /update public\.payment_methods set active = (true|false) where code = '(\w+)';/g,
+    )) {
+      const row = rows.find((r) => r.code === m[2]);
+      if (row) row.active = m[1] === "true";
+    }
     expect(rows.map((r) => r.code)).toEqual([...PAYMENT_METHOD_CODES]);
-    expect(rows.filter((r) => r.active).map((r) => r.code)).toEqual([...PAYMENT_METHODS]);
+    expect(rows.filter((r) => r.active).map((r) => r.code)).toEqual(
+      PAYMENT_METHODS.filter((m) => PAYMENT_METHOD_RULES[m].active),
+    );
     for (const { code, ...rule } of rows)
       expect(PAYMENT_METHOD_RULES[code as PaymentMethodCode]).toEqual(rule);
     const status =

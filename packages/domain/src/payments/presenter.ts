@@ -1,4 +1,5 @@
 import { formatMoney } from "../catalog/presenter";
+import { formatDateOnly } from "../memberships/presenter";
 import { addDays } from "../agenda/zoned-time";
 import { formatInCenterTimeZone } from "../time";
 import {
@@ -98,6 +99,16 @@ export function presentReceipt(r: PaymentReceipt) {
       applied: formatMoney(o.applied),
       balance: formatMoney(o.balance),
       status: ORDER_PAYMENT_STATUS_LABELS[o.paymentStatus],
+    })),
+    memberships: r.memberships.map((m) => ({
+      id: m.id,
+      number: m.number,
+      label: `${m.kind === "alta" ? paymentsCopy.membershipSale : paymentsCopy.membershipRenewal} · ${m.planName}`,
+      period:
+        m.periodStart && m.periodEnd
+          ? `${formatDateOnly(m.periodStart)} – ${formatDateOnly(m.periodEnd)}`
+          : "—",
+      applied: formatMoney(m.applied),
     })),
     notes: r.notes,
     reversal: r.reversal

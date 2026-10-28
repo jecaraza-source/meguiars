@@ -1607,9 +1607,10 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `id` | uuid | no | gen_random_uuid() |
 | `organization_id` | uuid | no |  |
 | `payment_id` | uuid | no |  |
-| `service_order_id` | uuid | no |  |
+| `service_order_id` | uuid | sí |  |
 | `amount` | numeric(12,2) | no |  |
 | `created_at` | timestamp with time zone | no | now() |
+| `membership_event_id` | bigint | sí |  |
 
 ### `payment_methods`
 

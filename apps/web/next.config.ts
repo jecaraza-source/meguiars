@@ -15,6 +15,25 @@ const nextConfig: NextConfig = {
     // para el multipart.
     serverActions: { bodySizeLimit: "11mb" },
   },
+  // Encabezados de seguridad: nadie puede incrustar la app en otro sitio (evita
+  // clics engañosos sobre pantallas con sesión), sin adivinar tipos de archivo y
+  // sin mandar la URL completa a otros sitios. La cámara sólo para este sitio
+  // (fotos de evidencia).
+  headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
+  poweredByHeader: false,
   // Los paquetes @meguiars/* se publican como TypeScript fuente dentro del monorepo.
   transpilePackages: [
     "@meguiars/analytics",

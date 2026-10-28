@@ -48,3 +48,18 @@ export function parseAuthRedirect(url: string): AuthRedirectParams {
 export function isAuthRedirect(url: string, path = "auth/confirm"): boolean {
   return url.split(/[?#]/)[0]!.replace(/\/+$/, "").endsWith(path);
 }
+
+/**
+ * Ruta interna segura para `?next=` (evita redirecciones abiertas): empieza con
+ * una sola "/", sin "\" ni caracteres de control. El navegador quita tabuladores
+ * y saltos de línea al resolver la URL, así que "/\t/evil.com" se volvería
+ * "//evil.com" (otro sitio).
+ */
+export function isSafeInternalPath(path: string): boolean {
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return false;
+  for (let i = 0; i < path.length; i++) {
+    const code = path.charCodeAt(i);
+    if (code < 0x20 || code === 0x7f) return false;
+  }
+  return true;
+}

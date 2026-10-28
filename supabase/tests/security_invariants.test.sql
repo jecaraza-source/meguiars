@@ -53,6 +53,10 @@ select pg_temp.assert(pg_temp.list($q$
 $q$) = '-', 'toda función SECURITY DEFINER expuesta llama a un chequeo de permiso (private.* o auth.uid())');
 
 select pg_temp.assert(pg_temp.list($q$
+  select extname from pg_extension where extname = 'pg_graphql'
+$q$) = '-', 'pg_graphql apagado: varias mutaciones en una transacción saltarían require_change_reason (ADR 0042)');
+
+select pg_temp.assert(pg_temp.list($q$
   select id from storage.buckets where public
 $q$) = '-', 'ningún bucket de Storage es público');
 

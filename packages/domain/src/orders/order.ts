@@ -311,6 +311,7 @@ export interface ServiceOrderRepository {
 }
 
 type BlockerInput = Pick<ServiceOrder, "channel" | "channelReference" | "paidAmount" | "total"> & {
+  b2bAccountId?: string | null;
   items: readonly unknown[];
 };
 
@@ -324,12 +325,15 @@ export function authorizationBlocker(order: BlockerInput): string | null {
 
 /**
  * Qué impide entregar (null = nada). Espejo de private.service_order_delivery_blocker:
- * b2c y membresía exigen el saldo cobrado; B2B se factura a la cuenta con su orden de compra.
+ * b2c, membresía y B2B sin cuenta exigen el saldo cobrado; B2B a cuenta se factura
+ * a la cuenta con su orden de compra.
  */
 export function deliveryBlocker(order: BlockerInput): string | null {
   if ((order.channel === "b2c" || order.channel === "membresia") && order.paidAmount < order.total)
     return "Hay saldo pendiente: registra el cobro antes de entregar";
   if (order.channel === "b2b" && !order.channelReference) return "Captura la orden de compra del cliente B2B";
+  if (order.channel === "b2b" && !order.b2bAccountId && order.paidAmount < order.total)
+    return "Hay saldo pendiente: una OS B2B sin cuenta se cobra antes de entregar";
   return null;
 }
 

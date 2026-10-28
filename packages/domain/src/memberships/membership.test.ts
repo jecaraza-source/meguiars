@@ -7,6 +7,7 @@ import {
   membershipStatus,
   monthlyValue,
 } from "./membership";
+import { membershipPaymentMethods, summarizeMembershipTenders } from "./payment";
 import { membershipActions, presentBalance, redeemableLines, renewalCaption } from "./presenter";
 
 const m = (state: "activa" | "suspendida" | "cancelada", endsOn = "2026-10-31") => ({
@@ -118,5 +119,28 @@ describe("reglas de renovación, acciones y saldo", () => {
     expect(renewalCaption("2026-10-31", "2026-10-28")).toBe("Vence en 3 días");
     expect(renewalCaption("2026-10-31", "2026-10-31")).toBe("Vence hoy");
     expect(renewalCaption("2026-10-31", "2026-11-02")).toBe("Venció hace 2 días");
+  });
+});
+
+describe("cobro de membresías (espejo de private.create_membership_payment)", () => {
+  it("se cobra en efectivo, tarjeta o transferencia; nunca a crédito B2B ni con membresía", () => {
+    expect(membershipPaymentMethods()).toEqual(["efectivo", "tarjeta", "transferencia"]);
+  });
+
+  it("exige el precio completo; el efectivo admite cambio", () => {
+    expect(summarizeMembershipTenders(499, [{ method: "efectivo", amount: 499 }], 500)).toMatchObject({
+      total: 499,
+      change: 1,
+      error: null,
+    });
+    expect(summarizeMembershipTenders(499, [{ method: "tarjeta", amount: 300 }]).error).toMatch(/precio/);
+    expect(summarizeMembershipTenders(499, [{ method: "tarjeta", amount: 600 }]).error).toMatch(/excede/);
+    expect(summarizeMembershipTenders(499, [{ method: "credito_b2b", amount: 499 }]).error).not.toBeNull();
+    expect(
+      summarizeMembershipTenders(499, [
+        { method: "tarjeta", amount: 299 },
+        { method: "transferencia", amount: 200, reference: "SPEI-1" },
+      ]).error,
+    ).toBeNull();
   });
 });

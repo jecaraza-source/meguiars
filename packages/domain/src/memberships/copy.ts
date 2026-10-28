@@ -73,8 +73,6 @@ export const membershipsCopy = {
   endsOn: "Vence",
   nextRenewal: "Próxima renovación",
   startsOn: "Inicio",
-  paymentReference: "Referencia de pago (opcional)",
-  paymentHint: "Cobro manual: registra la referencia del pago del periodo.",
   create: "Contratar membresía",
   created: "Membresía contratada.",
   balanceTitle: "Saldo del periodo",

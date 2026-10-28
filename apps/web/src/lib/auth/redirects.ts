@@ -1,4 +1,4 @@
-import type { GuardResult } from "@meguiars/domain";
+import { isSafeInternalPath, type GuardResult } from "@meguiars/domain";
 
 type Redirect = Extract<GuardResult, { allow: false }>["redirect"];
 
@@ -36,5 +36,5 @@ export function isPublicPath(pathname: string): boolean {
 
 /** Sólo rutas internas: evita redirecciones abiertas con ?next=. */
 export function safeNext(next: string | null | undefined, fallback = "/"): string {
-  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : fallback;
+  return next && isSafeInternalPath(next) ? next : fallback;
 }

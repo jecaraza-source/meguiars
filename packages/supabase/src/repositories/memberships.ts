@@ -7,9 +7,11 @@ import {
   type MembershipEventKind,
   type MembershipListItem,
   type MembershipMetricFact,
+  type MembershipPayment,
   type MembershipPlan,
   type MembershipRedemption,
   type MembershipRepository,
+  type MembershipSale,
   type MembershipStatus,
   type PeriodMonths,
   type PlanTier,
@@ -22,7 +24,9 @@ import {
   membershipPlanSchema,
   membershipStateSchema,
   redeemBenefitSchema,
+  renewMembershipPaidSchema,
   renewMembershipSchema,
+  sellMembershipSchema,
   voidRedemptionSchema,
 } from "@meguiars/validation";
 import type { MeguiarsSupabaseClient } from "../client";
@@ -158,6 +162,27 @@ const toBalance = (r: BalanceRow): BenefitBalance => ({
 });
 
 const PLAN_SELECT = "*, membership_benefits(*, services(code, name))";
+
+/** Respuesta de sell_membership / renew_membership_paid: la membresía y su recibo. */
+const toSale = (data: Json): MembershipSale => {
+  const d = data as { membership: Tables<"memberships">; payment: Tables<"payments"> };
+  return {
+    membership: toMembership(d.membership),
+    receipt: {
+      id: d.payment.id,
+      receiptFolio: d.payment.receipt_folio,
+      amount: Number(d.payment.amount),
+      changeAmount: Number(d.payment.change_amount),
+    },
+  };
+};
+
+const tendersJson = (tenders: { method: string; amount: number; reference?: string | undefined }[]): Json =>
+  tenders.map((t) => ({
+    method: t.method,
+    amount: t.amount,
+    ...(t.reference ? { reference: t.reference } : {}),
+  }));
 
 /**
  * Adaptador Supabase del puerto `MembershipRepository`. Toda mutación va por
@@ -375,6 +400,63 @@ export function createMembershipRepository(client: MeguiarsSupabaseClient): Memb
             ...(c.paymentReference ? { p_payment_reference: c.paymentReference } : {}),
           }),
         toMembership,
+      );
+    },
+
+    sell(command) {
+      const parsed = sellMembershipSchema.safeParse(command);
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      const c = parsed.data;
+      return run(
+        () =>
+          client.rpc("sell_membership", {
+            p_detail_center_id: c.detailCenterId,
+            p_request_id: c.requestId,
+            p_plan_id: c.planId,
+            p_client_id: c.clientId,
+            p_vehicle_id: c.vehicleId,
+            p_tenders: tendersJson(c.tenders),
+            ...(c.startsOn ? { p_starts_on: c.startsOn } : {}),
+            ...(c.cashReceived !== undefined ? { p_cash_received: c.cashReceived } : {}),
+            ...(c.notes ? { p_notes: c.notes } : {}),
+          }),
+        toSale,
+      );
+    },
+
+    renewPaid(command) {
+      const parsed = renewMembershipPaidSchema.safeParse(command);
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      const c = parsed.data;
+      return run(
+        () =>
+          client.rpc("renew_membership_paid", {
+            p_membership_id: c.membershipId,
+            p_request_id: c.requestId,
+            p_tenders: tendersJson(c.tenders),
+            ...(c.planId ? { p_plan_id: c.planId } : {}),
+            ...(c.cashReceived !== undefined ? { p_cash_received: c.cashReceived } : {}),
+            ...(c.notes ? { p_notes: c.notes } : {}),
+          }),
+        toSale,
+      );
+    },
+
+    payments(membershipId) {
+      return run(
+        () => client.rpc("membership_payments", { p_membership_id: membershipId }),
+        (rows): MembershipPayment[] =>
+          (rows ?? []).map((r) => ({
+            id: r.id,
+            receiptFolio: r.receipt_folio,
+            amount: Number(r.amount),
+            status: r.status as MembershipPayment["status"],
+            receivedAt: r.received_at,
+            kind: r.kind as MembershipPayment["kind"],
+            periodStart: r.period_start,
+            periodEnd: r.period_end,
+            methods: r.methods,
+          })),
       );
     },
 

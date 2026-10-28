@@ -8,6 +8,8 @@ import {
   paymentsCopy,
   summarizeTenders,
   type PaymentMethod,
+  type TenderInput,
+  type TenderSummary,
 } from "@meguiars/domain";
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -83,14 +85,20 @@ export function OrderPaymentForm({
   );
 }
 
-function PaymentFields({
+/**
+ * Formas de pago, efectivo recibido, notas y vista previa. También lo usan el
+ * alta y la renovación de membresías con su propia regla (`summarize`).
+ */
+export function PaymentFields({
   order,
   allowed,
   state,
+  summarize,
 }: {
   order: { total: number; paidAmount: number; b2bAccountId: string | null };
   allowed: readonly PaymentMethod[];
   state: PaymentFormState;
+  summarize?: (tenders: TenderInput[], cashReceived: number | null) => TenderSummary;
 }) {
   const balance = Math.max(0, Math.round((order.total - order.paidAmount) * 100) / 100);
   const [rows, setRows] = useState<TenderRow[]>([
@@ -103,7 +111,8 @@ function PaymentFields({
     reference: r.reference,
   }));
   const hasCash = rows.some((r) => PAYMENT_METHOD_RULES[r.method].allowsChange);
-  const preview = summarizeTenders(order, tenders, hasCash && cash.trim() ? parseAmount(cash) : null);
+  const received = hasCash && cash.trim() ? parseAmount(cash) : null;
+  const preview = summarize ? summarize(tenders, received) : summarizeTenders(order, tenders, received);
   const update = (i: number, patch: Partial<TenderRow>) =>
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const options = allowed.map((m) => ({ value: m, label: PAYMENT_METHOD_LABELS[m] }));
@@ -219,10 +228,14 @@ function PaymentFields({
 export function ReversePaymentForm({
   paymentId,
   orderId,
+  membershipId,
+  hint,
   reversed,
 }: {
   paymentId: string;
   orderId?: string | undefined;
+  membershipId?: string | undefined;
+  hint?: string | undefined;
   /** Ya revertido: no se muestra, pero sigue montado para avisar el éxito. */
   reversed: boolean;
 }) {
@@ -235,7 +248,8 @@ export function ReversePaymentForm({
       <form key={state.at ?? 0} action={action} className="mt-sm flex flex-col gap-sm" noValidate>
         <input type="hidden" name="paymentId" value={paymentId} />
         {orderId ? <input type="hidden" name="orderId" value={orderId} /> : null}
-        <p className="text-muted">{paymentsCopy.reverseHint}</p>
+        {membershipId ? <input type="hidden" name="membershipId" value={membershipId} /> : null}
+        <p className="text-muted">{hint ?? paymentsCopy.reverseHint}</p>
         <Input
           name="reason"
           id={`reason-${paymentId}`}

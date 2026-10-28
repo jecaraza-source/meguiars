@@ -30,10 +30,14 @@ describe("formas de pago", () => {
     expect(PAYMENT_METHOD_RULES.otro.active).toBe(false);
   });
 
-  it("OS a cuenta B2B sólo a crédito; membresía sólo con una vigente", () => {
+  it("OS a cuenta B2B sólo a crédito; la membresía ya no es forma de pago", () => {
     expect(allowedPaymentMethods({ b2bAccountId: "acc" })).toEqual(["credito_b2b"]);
     expect(allowedPaymentMethods({ b2bAccountId: null })).toEqual(["efectivo", "tarjeta", "transferencia"]);
-    expect(allowedPaymentMethods({ b2bAccountId: null, hasActiveMembership: true })).toContain("membresia");
+    expect(allowedPaymentMethods({ b2bAccountId: null, hasActiveMembership: true })).toEqual([
+      "efectivo",
+      "tarjeta",
+      "transferencia",
+    ]);
   });
 });
 

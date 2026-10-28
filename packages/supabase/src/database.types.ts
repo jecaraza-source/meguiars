@@ -5099,27 +5099,37 @@ export type Database = {
           amount: number;
           created_at: string;
           id: string;
+          membership_event_id: number | null;
           organization_id: string;
           payment_id: string;
-          service_order_id: string;
+          service_order_id: string | null;
         };
         Insert: {
           amount: number;
           created_at?: string;
           id?: string;
+          membership_event_id?: number | null;
           organization_id: string;
           payment_id: string;
-          service_order_id: string;
+          service_order_id?: string | null;
         };
         Update: {
           amount?: number;
           created_at?: string;
           id?: string;
+          membership_event_id?: number | null;
           organization_id?: string;
           payment_id?: string;
-          service_order_id?: string;
+          service_order_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "payment_allocations_membership_event_fkey";
+            columns: ["organization_id", "membership_event_id"];
+            isOneToOne: false;
+            referencedRelation: "membership_events";
+            referencedColumns: ["organization_id", "id"];
+          },
           {
             foreignKeyName: "payment_allocations_organization_id_payment_id_fkey";
             columns: ["organization_id", "payment_id"];
@@ -10726,6 +10736,20 @@ export type Database = {
           used_units: number;
         }[];
       };
+      membership_payments: {
+        Args: { p_membership_id: string };
+        Returns: {
+          amount: number;
+          id: string;
+          kind: string;
+          methods: string;
+          period_end: string;
+          period_start: string;
+          receipt_folio: string;
+          received_at: string;
+          status: string;
+        }[];
+      };
       my_detail_centers: {
         Args: never;
         Returns: {
@@ -10953,6 +10977,17 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      renew_membership_paid: {
+        Args: {
+          p_cash_received?: number;
+          p_membership_id: string;
+          p_notes?: string;
+          p_plan_id?: string;
+          p_request_id: string;
+          p_tenders: Json;
+        };
+        Returns: Json;
+      };
       report_service_order_incident: {
         Args: {
           p_description: string;
@@ -11048,6 +11083,20 @@ export type Database = {
           price: number;
           source: string;
         }[];
+      };
+      sell_membership: {
+        Args: {
+          p_cash_received?: number;
+          p_client_id: string;
+          p_detail_center_id: string;
+          p_notes?: string;
+          p_plan_id: string;
+          p_request_id: string;
+          p_starts_on?: string;
+          p_tenders: Json;
+          p_vehicle_id: string;
+        };
+        Returns: Json;
       };
       set_active_center: {
         Args: { p_detail_center_id: string };
