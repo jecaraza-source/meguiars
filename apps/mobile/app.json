@@ -11,7 +11,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.meguiars.detailcenter"
+      "bundleIdentifier": "com.meguiars.detailcenter",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.meguiars.detailcenter",

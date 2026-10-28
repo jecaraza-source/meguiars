@@ -320,13 +320,18 @@ select (public.create_service_order(:'A', gen_random_uuid(), :'luis', :'luis_car
   jsonb_build_array(jsonb_build_object('service_id', :'lav')))).id as o4 \gset
 select from public.set_service_order_status(:'o4', pg_temp.v(:'o4'), 'autorizada');
 select pg_temp.assert(
+  (select (public.payment_receipt(:'p1')) ->> 'client_name') = 'Ana Ruiz'
+  and not exists (select 1 from public.receivable_orders(array[:'A'::uuid])),
+  'recepción ve el nombre del cliente en el recibo, pero no la lista de por cobrar (20261107000000)');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
+select pg_temp.assert(
   (select string_agg(folio || '=' || balance || ':' || payment_status, ',') from public.receivable_orders(array[:'A'::uuid]))
     = (select folio from public.service_orders where id = :'o4') || '=250.00:pendiente',
   'por cobrar: sólo las OS autorizadas con saldo');
 select pg_temp.assert(
-  (select (public.payment_receipt(:'p1')) ->> 'client_name') = 'Ana Ruiz'
-  and (select client_name from public.receivable_orders(array[:'A'::uuid]) limit 1) = 'Luis Mora',
-  'recepción sí ve el nombre del cliente en el recibo y en por cobrar');
+  (select client_name from public.receivable_orders(array[:'A'::uuid]) limit 1) = 'Luis Mora',
+  'el encargado ve el nombre del cliente en por cobrar');
 reset role;
 
 rollback;

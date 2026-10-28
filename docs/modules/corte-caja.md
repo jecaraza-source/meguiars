@@ -57,13 +57,13 @@ Todas con RLS de sólo lectura; las escrituras van por RPC. Las tres llevan `aud
 
 ## Permisos
 
-| Capacidad      | Roles                                 | Espejo en SQL              |
-| -------------- | ------------------------------------- | -------------------------- |
-| `cash.read`    | admin, encargado, recepción, contador | `private.can_read_cash`    |
-| `cash.operate` | admin, encargado                      | `private.can_operate_cash` |
-| `cash.reopen`  | admin                                 | `private.can_reopen_cash`  |
+| Capacidad      | Roles                      | Espejo en SQL              |
+| -------------- | -------------------------- | -------------------------- |
+| `cash.read`    | admin, encargado, contador | `private.can_read_cash`    |
+| `cash.operate` | admin, encargado           | `private.can_operate_cash` |
+| `cash.reopen`  | admin                      | `private.can_reopen_cash`  |
 
-El contador consulta cortes, versiones y movimientos, y sigue de sólo lectura. El comercial B2B no ve el corte.
+El contador consulta cortes, versiones y movimientos, y sigue de sólo lectura. Recepción cobra en el turno, pero no ve el corte (ADR 0047). El comercial B2B no ve el corte.
 
 ## RPC
 

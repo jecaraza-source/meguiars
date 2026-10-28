@@ -21,6 +21,7 @@ grant execute on all functions in schema pg_temp to authenticated;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000f1', 'operador@a'),
   ('00000000-0000-0000-0000-0000000000c1', 'contador@a'),
+  ('00000000-0000-0000-0000-0000000000e1', 'encargado@a'),
   ('00000000-0000-0000-0000-0000000000f2', 'operador@b');
 insert into public.organizations (id, slug, name) values ('0e000000-0000-0000-0000-000000000001', 'org-uno', 'Org');
 insert into public.detail_centers (id, organization_id, code, name, timezone) values
@@ -29,6 +30,7 @@ insert into public.detail_centers (id, organization_id, code, name, timezone) va
 insert into public.user_detail_centers (detail_center_id, user_id, role) values
   ('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000f1', 'operador_recepcion'),
   ('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000c1', 'contador'),
+  ('aaaaaaaa-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000e1', 'encargado'),
   ('bbbbbbbb-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000f2', 'operador_recepcion');
 insert into public.clients (id, organization_id, home_detail_center_id, kind, full_name, phone, request_id, created_in_detail_center_id)
 values ('c1000000-0000-0000-0000-000000000001', '0e000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000000',
@@ -68,11 +70,18 @@ select pg_temp.assert((select jsonb_array_length(j -> 'orders' -> 'active') = 2
                           and j -> 'orders' -> 'active' -> 0 ->> 'status' = 'en_proceso'
                           and j -> 'orders' -> 'active' -> 0 ->> 'vehicle' = 'Mazda 3 · ABC1234' from s),
   'lista activa: en proceso primero, con vehículo');
-select pg_temp.assert((select j -> 'orders' -> 'delivered_today' = '{"count": 1, "total": 500, "pending": 200}'::jsonb from s),
-  'entregadas hoy (no la de hace 2 días), con saldo por cobrar');
-select pg_temp.assert((select (j -> 'payments' ->> 'total')::numeric = 300 and (j -> 'payments' ->> 'count')::int = 1 from s), 'cobrado hoy');
+select pg_temp.assert((select j -> 'orders' -> 'delivered_today' = '{"count": 1, "total": null, "pending": null}'::jsonb
+                          and j -> 'payments' = 'null'::jsonb from s),
+  'recepción: entregadas hoy (no la de hace 2 días), sin venta, por cobrar ni cobrado (20261107000000)');
 select pg_temp.assert((select j -> 'agenda' -> 'by_status' = '{"entregada": 1, "programada": 1}'::jsonb
                           and jsonb_array_length(j -> 'agenda' -> 'upcoming') = 1 from s), 'citas del día y pendientes');
+reset role;
+
+select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
+select pg_temp.assert((select j -> 'orders' -> 'delivered_today' = '{"count": 1, "total": 500, "pending": 200}'::jsonb
+                          and (j -> 'payments' ->> 'total')::numeric = 300 and (j -> 'payments' ->> 'count')::int = 1
+                         from (select public.center_day_summary('aaaaaaaa-0000-0000-0000-000000000000') as j) x),
+  'encargado: venta del día, saldo por cobrar y cobrado hoy');
 reset role;
 
 select pg_temp.login('00000000-0000-0000-0000-0000000000c1');

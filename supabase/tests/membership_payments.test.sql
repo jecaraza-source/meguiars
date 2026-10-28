@@ -144,11 +144,17 @@ select pg_temp.assert(
 select pg_temp.assert(
   (select r -> 'memberships' -> 0 ->> 'number' = 'MEM-000001' and r -> 'memberships' -> 0 ->> 'kind' = 'alta'
           and r ->> 'client_name' = 'José Pérez' and r -> 'orders' = 'null'::jsonb
-     from public.payment_receipt(:'p1') r)
-  and (select order_folios = 'MEM-000001' and methods = 'Efectivo'
-         from public.list_payments(array['aaaaaaaa-0000-0000-0000-000000000000'::uuid], :'today'::date, :'today'::date)
-        where id = :'p1'),
-  'el recibo y el listado muestran la membresía cobrada');
+     from public.payment_receipt(:'p1') r),
+  'recepción ve el recibo de la membresía cobrada');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
+select pg_temp.assert(
+  (select order_folios = 'MEM-000001' and methods = 'Efectivo'
+     from public.list_payments(array['aaaaaaaa-0000-0000-0000-000000000000'::uuid], :'today'::date, :'today'::date)
+    where id = :'p1'),
+  'la cobranza del encargado muestra la membresía cobrada');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000f1');
 select pg_temp.assert(
   (select count(*) = 1 and min(kind) = 'alta' and min(receipt_folio) = 'A-01-R-000001'
      from public.membership_payments(:'m1')),

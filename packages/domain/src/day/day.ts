@@ -38,7 +38,8 @@ export interface DaySummary {
   orders: {
     byStatus: Partial<Record<ServiceOrderStatus, number>>;
     active: DayActiveOrder[];
-    deliveredToday: { count: number; total: number; pending: number };
+    /** total y pending son null si el usuario no ve las cifras de cobro (payments.ledger.read). */
+    deliveredToday: { count: number; total: number | null; pending: number | null };
     openedToday: number;
   } | null;
   agenda: {
@@ -90,7 +91,9 @@ export function presentDaySummary(s: DaySummary, timezone: string) {
         key: "entregadas",
         label: "Entregadas hoy",
         value: String(s.orders.deliveredToday.count),
-        caption: `Venta ${formatMoney(s.orders.deliveredToday.total)}`,
+        ...(s.orders.deliveredToday.total !== null
+          ? { caption: `Venta ${formatMoney(s.orders.deliveredToday.total)}` }
+          : {}),
       },
     );
   }
@@ -101,12 +104,9 @@ export function presentDaySummary(s: DaySummary, timezone: string) {
       value: formatMoney(s.payments.total),
       caption: `${s.payments.count} ${s.payments.count === 1 ? "recibo" : "recibos"}`,
     });
-  if (s.orders && s.orders.deliveredToday.pending > 0)
-    kpis.push({
-      key: "por_cobrar",
-      label: "Entregado sin cobrar",
-      value: formatMoney(s.orders.deliveredToday.pending),
-    });
+  const pending = s.orders?.deliveredToday.pending ?? null;
+  if (pending !== null && pending > 0)
+    kpis.push({ key: "por_cobrar", label: "Entregado sin cobrar", value: formatMoney(pending) });
   if (s.agenda) {
     const a = s.agenda.byStatus;
     const total = Object.values(a).reduce((x, n) => x + (n ?? 0), 0);

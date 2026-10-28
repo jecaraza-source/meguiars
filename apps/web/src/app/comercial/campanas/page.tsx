@@ -3,6 +3,7 @@ import {
   CAMPAIGN_OBJECTIVE_LABELS,
   CAMPAIGN_STATUS_LABELS,
   canInCenter,
+  canSeeCampaignMoney,
   formatMoney,
   MARKETING_COPY,
   PILOT_PERIODS,
@@ -34,6 +35,8 @@ export default async function CampaignsPage({ searchParams }: PageProps<"/comerc
       : Promise.resolve(null),
   ]);
   const canManage = canInCenter(state, center.id, "marketing.manage");
+  // Recepción ve las campañas sin cifras de dinero (inversión, costo, ventas, margen).
+  const money = canSeeCampaignMoney(state, center.id);
   const centers = usableCenters(state.access)
     .filter(
       (a) =>
@@ -88,11 +91,15 @@ export default async function CampaignsPage({ searchParams }: PageProps<"/comerc
                 <th className="py-xs">Campaña</th>
                 <th>Estado</th>
                 <th>Periodo</th>
-                <th className="text-right">Inversión</th>
+                {money ? <th className="text-right">Inversión</th> : null}
                 <th className="text-right">Prospectos</th>
-                <th className="text-right">Costo/prospecto</th>
-                <th className="text-right">Ventas</th>
-                <th className="text-right">Margen tras inversión</th>
+                {money ? (
+                  <>
+                    <th className="text-right">Costo/prospecto</th>
+                    <th className="text-right">Ventas</th>
+                    <th className="text-right">Margen tras inversión</th>
+                  </>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -117,11 +124,15 @@ export default async function CampaignsPage({ searchParams }: PageProps<"/comerc
                     <td>
                       {c.startsOn} – {c.endsOn}
                     </td>
-                    <td className="text-right">{formatMoney(c.spend)}</td>
+                    {money ? <td className="text-right">{formatMoney(c.spend)}</td> : null}
                     <td className="text-right">{f ? f.leads : c.leads}</td>
-                    <td className="text-right">{f?.costPerLeadLabel ?? "—"}</td>
-                    <td className="text-right">{f?.salesLabel ?? "—"}</td>
-                    <td className="text-right">{f?.marginAfterSpendLabel ?? "—"}</td>
+                    {money ? (
+                      <>
+                        <td className="text-right">{f?.costPerLeadLabel ?? "—"}</td>
+                        <td className="text-right">{f?.salesLabel ?? "—"}</td>
+                        <td className="text-right">{f?.marginAfterSpendLabel ?? "—"}</td>
+                      </>
+                    ) : null}
                   </tr>
                 );
               })}

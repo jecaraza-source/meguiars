@@ -74,11 +74,14 @@ Además: `paymentsByMethod` (desglose y participación) y `consolidateReconcilia
 
 ## Permisos
 
-| Capacidad          | Roles                                 | Espejo en SQL               |
-| ------------------ | ------------------------------------- | --------------------------- |
-| `payments.read`    | admin, encargado, recepción, contador | `private.can_read_payments` |
-| `payments.write`   | admin, encargado, recepción           | `private.can_use_orders`    |
-| `payments.reverse` | admin, encargado                      | `private.can_manage_orders` |
+| Capacidad              | Roles                                 | Espejo en SQL               |
+| ---------------------- | ------------------------------------- | --------------------------- |
+| `payments.read`        | admin, encargado, recepción, contador | `private.can_read_payments` |
+| `payments.ledger.read` | admin, encargado, contador            | `private.can_list_payments` |
+| `payments.write`       | admin, encargado, recepción           | `private.can_use_orders`    |
+| `payments.reverse`     | admin, encargado                      | `private.can_manage_orders` |
+
+`payments.read` cubre los recibos de una OS o membresía (cobrar, ver e imprimir). La pantalla **Cobranza** y las cifras del centro (`list_payments`, `payment_facts`, `receivable_orders`, `sales_reconciliation`, «Cobrado hoy» y venta del día en Operación del día) exigen `payments.ledger.read`: **recepción cobra desde la OS pero no ve la cobranza** (ADR 0047).
 
 El **contador** consulta corte, recibos y por cobrar, pero sigue de sólo lectura y **sin el nombre del cliente** (la base lo devuelve vacío si no puede leer clientes). El comercial B2B no ve cobranza.
 

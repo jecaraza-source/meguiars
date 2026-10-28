@@ -11,7 +11,7 @@ Documentos operativos: [checklist de datos maestros](../piloto/datos-maestros.md
 | Administración → **Centros** | `/equipo/centros`: lista con checklist resumido y **alta de centro**                                                               | `CentersScreen`: lista y checklist (el alta es web)             | `centers.setup` (admin_socio); el alta exige admin corporativo |
 | Activación del centro        | `/equipo/centros/[id]`: checklist con cómo corregir cada punto, cambiar a ese centro, **línea base** y errores recientes de la app | `CenterSetupScreen`: checklist, línea base y errores (consulta) | `centers.setup`                                                |
 | Importador de datos maestros | `/equipo/centros/[id]/importar`                                                                                                    | — (trabajo de escritorio con archivos)                          | `centers.setup` y los permisos de cada RPC                     |
-| Dirección → **Piloto**       | `/direccion/piloto`: adopción diaria y resultado vs línea base (7/30/90 días; centro activo o todos)                               | `PilotScreen`                                                   | `pnl.read` (admin, encargado, contador)                        |
+| Dirección → **Piloto**       | `/direccion/piloto`: adopción diaria y resultado vs línea base (7/30/90 días; centro activo o todos)                               | `PilotScreen`                                                   | Sección Dirección: sólo admin / socio (`executive.read`)       |
 
 Los cargadores (`centersScope`, `loadCenters`, `loadCenterSetup`, `loadPilot`) son idénticos en `apps/web/src/lib/pilot.ts` y `apps/mobile/src/lib/pilot.ts` (`scripts/dashboard-parity.test.mjs`).
 

@@ -1,3 +1,4 @@
+import { canInCenter, type AuthState } from "../auth/session";
 import type { Result } from "../result";
 
 /**
@@ -347,4 +348,16 @@ export function groupPostsByDay(
     map.set(day, [...(map.get(day) ?? []), p]);
   }
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([day, ps]) => ({ day, posts: ps }));
+}
+
+/**
+ * Presupuesto, inversión y resultados en dinero de las campañas: quien las gestiona
+ * o lee métricas comerciales (espejo de private.can_read_campaign_money). Recepción
+ * ve la campaña, pero no sus cifras.
+ */
+export function canSeeCampaignMoney(state: AuthState, centerId: string): boolean {
+  return (
+    canInCenter(state, centerId, "marketing.manage") ||
+    canInCenter(state, centerId, "commercial.metrics.read")
+  );
 }

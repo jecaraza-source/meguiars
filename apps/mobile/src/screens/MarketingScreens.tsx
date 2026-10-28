@@ -5,6 +5,7 @@ import {
   CAMPAIGN_OBJECTIVE_LABELS,
   CAMPAIGN_STATUS_LABELS,
   canInCenter,
+  canSeeCampaignMoney,
   commercialErrorMessage,
   CONTENT_FORMAT_LABELS,
   CONTENT_STATUS_LABELS,
@@ -178,6 +179,8 @@ export function CampaignsScreen({
   const facts = new Map(
     (data.status === "ready" ? (data.data.report?.rows ?? []) : []).map((r) => [r.campaignId, r]),
   );
+  // Recepción ve las campañas sin cifras de dinero.
+  const money = canSeeCampaignMoney(state, center.id);
   return (
     <Screen title={MARKETING_COPY.campaignsTitle} description={center.name} header={header}>
       {subnav}
@@ -206,19 +209,23 @@ export function CampaignsScreen({
             emptyMessage={MARKETING_COPY.noCampaigns}
             onRowPress={(c) => onOpen(c.id)}
             columns={[
-              { key: "name", header: "Campaña", value: (c) => c.name },
-              { key: "status", header: "Estado", value: (c) => CAMPAIGN_STATUS_LABELS[c.status] },
-              { key: "spend", header: "Inversión", value: (c) => formatMoney(c.spend) },
-              {
-                key: "cpl",
-                header: "Costo/prospecto",
-                value: (c) => facts.get(c.id)?.costPerLeadLabel ?? "—",
-              },
-              {
-                key: "margin",
-                header: "Margen tras inversión",
-                value: (c) => facts.get(c.id)?.marginAfterSpendLabel ?? "—",
-              },
+              { key: "name", header: "Campaña", value: (c: Campaign) => c.name },
+              { key: "status", header: "Estado", value: (c: Campaign) => CAMPAIGN_STATUS_LABELS[c.status] },
+              ...(money
+                ? [
+                    { key: "spend", header: "Inversión", value: (c: Campaign) => formatMoney(c.spend) },
+                    {
+                      key: "cpl",
+                      header: "Costo/prospecto",
+                      value: (c: Campaign) => facts.get(c.id)?.costPerLeadLabel ?? "—",
+                    },
+                    {
+                      key: "margin",
+                      header: "Margen tras inversión",
+                      value: (c: Campaign) => facts.get(c.id)?.marginAfterSpendLabel ?? "—",
+                    },
+                  ]
+                : [{ key: "leads", header: "Prospectos", value: (c: Campaign) => String(c.leads) }]),
             ]}
           />
         </>
@@ -287,6 +294,7 @@ export function CampaignScreen({
       })
     : null;
   const today = todayIn(center.timezone);
+  const money = canSeeCampaignMoney(state, center.id);
   return (
     <Screen
       title={c.name}
@@ -297,9 +305,10 @@ export function CampaignScreen({
       <LinkButton label="← Campañas" onPress={onBack} />
       <Card title={CAMPAIGN_STATUS_LABELS[c.status]} subtitle={`${c.startsOn} – ${c.endsOn}`}>
         <Text style={textStyle("bodySmall")}>
-          Inversión {formatMoney(c.spend)}
-          {c.budget != null ? ` de ${formatMoney(c.budget)}` : ""} · {c.leads} prospectos · {c.posts}{" "}
-          publicaciones
+          {money
+            ? `Inversión ${formatMoney(c.spend)}${c.budget != null ? ` de ${formatMoney(c.budget)}` : ""} · `
+            : ""}
+          {c.leads} prospectos · {c.posts} publicaciones
         </Text>
         <Text style={textStyle("caption", "muted")}>
           {c.channels.map((x) => CAMPAIGN_CHANNEL_LABELS[x]).join(", ") || "Sin canales"}
@@ -338,9 +347,11 @@ export function CampaignScreen({
           ))
         )}
       </Card>
-      <Text style={textStyle("caption", "muted")}>
-        {MARKETING_COPY.spendNote} El gasto y la edición se capturan en la web.
-      </Text>
+      {money ? (
+        <Text style={textStyle("caption", "muted")}>
+          {MARKETING_COPY.spendNote} El gasto y la edición se capturan en la web.
+        </Text>
+      ) : null}
     </Screen>
   );
 }

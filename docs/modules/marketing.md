@@ -60,13 +60,16 @@ Reglas de presentación:
 
 ## Seguridad y permisos
 
-| Acción                                      | Quién                                                                                        |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Ver calendario, campañas y promociones      | `marketing.read`: admin, encargado, recepción, contador y comercial del centro               |
-| Crear o editar campañas, gasto y calendario | `marketing.manage`: admin, encargado y comercial del centro (campaña de organización: admin) |
-| Crear o editar promociones                  | `promotions.manage`: admin/socio de la organización                                          |
-| Aplicar una promoción                       | quien puede editar la cotización (`leads.use`) o descontar en la OS                          |
-| Indicadores de campaña                      | `commercial.metrics.read` (el contador ve cifras, no datos personales)                       |
+| Acción                                      | Quién                                                                                                                   |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Ver campañas                                | `marketing.read`: admin, encargado, recepción, contador y comercial del centro                                          |
+| Ver calendario y promociones (menú)         | `marketing.planning.read`: admin, encargado, contador y comercial (no recepción)                                        |
+| Ver segmentos (menú)                        | `marketing.manage`: admin, encargado y comercial del centro                                                             |
+| Presupuesto, inversión y gasto de campañas  | `private.can_read_campaign_money` ↔ `canSeeCampaignMoney`: gestiona marketing o lee métricas comerciales (no recepción) |
+| Crear o editar campañas, gasto y calendario | `marketing.manage`: admin, encargado y comercial del centro (campaña de organización: admin)                            |
+| Crear o editar promociones                  | `promotions.manage`: admin/socio de la organización                                                                     |
+| Aplicar una promoción                       | quien puede editar la cotización (`leads.use`) o descontar en la OS                                                     |
+| Indicadores de campaña                      | `commercial.metrics.read` (el contador ve cifras, no datos personales)                                                  |
 
 - Todas las escrituras son RPC `security definer` con verificación explícita. `authenticated` no tiene `insert`, `update` ni `delete` sobre las tablas.
 - Los cambios llevan motivo y quedan en `audit_log`.
