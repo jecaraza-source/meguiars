@@ -22,7 +22,7 @@ La fase 1 funciona **sin ninguna red conectada**. Las consultas que llegan por I
 - **Cotizaciones:**
   - folio `<CENTRO>-COT-00001`;
   - precio, costo y % del operador congelados;
-  - descuentos con la misma regla de autorización que la OS;
+  - descuentos con la misma regla de autorización que la OS, también al cambiar las líneas (ADR 0044);
   - vigencia;
   - texto listo para compartir por WhatsApp o redes;
   - **reservar** crea la cita en la agenda.
