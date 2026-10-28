@@ -19,3 +19,10 @@ El dueño definió qué ve recepción (`operador_recepcion`): cobra en mostrador
 - Compatible con las apps instaladas: mismas firmas y columnas. Una app anterior muestra la inversión de las campañas en $0 a recepción hasta actualizarse.
 - La tabla `payments` sigue legible para recepción por RLS, porque la usa al cobrar; las vistas de la cobranza del centro son las que se restringen.
 - Pruebas: `reception_visibility.test.sql`, más los ajustes de cobranza, corte, membresías y Operación del día; dominio (navegación, roles, cifras del día y de campañas).
+
+## Ajuste (2026-10-28): sin Comercial ni Ajustes
+
+El dueño quitó a recepción las secciones **Comercial** y **Configuración (Ajustes)**. Nueva capacidad `commercial.workspace.read` (admin, encargado, comercial B2B) en los guards de bandeja, historial, conversación, prospectos, cotizaciones, lista y planes de membresías, CRM, seguimientos, asistente e integraciones. El menú de recepción queda en Inicio, Operación y Marketing → Campañas.
+
+- Recepción sigue vendiendo y consultando membresías **desde la OS** (`membershipNew` y `membershipDetail` conservan `memberships.*`); al regresar va a la OS o al cliente, no a la lista.
+- No se quitan permisos de datos (`memberships.*`, `crm.read`, `leads.use`): la OS y la ficha del cliente los usan. El cambio es de pantallas y menú; la base sigue permitiendo esas lecturas a recepción.

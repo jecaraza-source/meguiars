@@ -14,7 +14,7 @@ export async function GET() {
   const state = await getAuthState();
   if (state.status !== "signed_in") return Response.json({ unread: 0 }, { status: 401 });
   const center = activeCenterAccess(state)?.center;
-  if (!center || !canInActiveCenter(state, "leads.use")) return Response.json({ unread: 0 });
+  if (!center || !canInActiveCenter(state, "commercial.workspace.read")) return Response.json({ unread: 0 });
   const supabase = await createSupabaseServerClient();
   if (!supabase) return Response.json({ unread: 0 }, { status: 503 });
   const r = await createInboxRepository(supabase).unreadCount(center.id);

@@ -16,7 +16,9 @@ export function useInboxUnread(
   const [unread, setUnread] = useState(0);
   const signedIn = state.status === "signed_in";
   const centerId = signedIn ? (activeCenterAccess(state)?.center.id ?? null) : null;
-  const enabled = Boolean(client && signedIn && centerId && canInActiveCenter(state, "leads.use"));
+  const enabled = Boolean(
+    client && signedIn && centerId && canInActiveCenter(state, "commercial.workspace.read"),
+  );
 
   useEffect(() => {
     if (!enabled || !client || !centerId) return;

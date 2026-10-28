@@ -3,6 +3,7 @@ import {
   canInActiveCenter,
   canSellMemberships,
   formatDateOnly,
+  guardScreen,
   membershipActions,
   membershipPaymentsCopy,
   membershipsCopy,
@@ -47,7 +48,11 @@ export default async function MembershipPage({
       <AppShell state={state} screen="membershipDetail" title={membershipsCopy.title}>
         <EmptyState
           title={membershipsCopy.notFound}
-          action={<ButtonLink href="/comercial/membresias" label={membershipsCopy.title} />}
+          action={
+            guardScreen(state, "memberships").allow ? (
+              <ButtonLink href="/comercial/membresias" label={membershipsCopy.title} />
+            ) : undefined
+          }
         />
       </AppShell>
     );
@@ -83,9 +88,15 @@ export default async function MembershipPage({
       title={`${m.number} · ${clientName}`}
       description={`${vehicleLabel} · ${PLAN_TIER_LABELS[m.planTier]} · ${m.planName}`}
     >
-      <Link href="/comercial/membresias" className="text-sm underline">
-        ← {membershipsCopy.title}
-      </Link>
+      {guardScreen(state, "memberships").allow ? (
+        <Link href="/comercial/membresias" className="text-sm underline">
+          ← {membershipsCopy.title}
+        </Link>
+      ) : (
+        <Link href={`/clientes/${m.clientId}`} className="text-sm underline">
+          ← {clientName}
+        </Link>
+      )}
       {created ? (
         <p role="status" className="mg-tone rounded-md border p-md text-sm" data-tone="success">
           {receiptFolio ? membershipPaymentsCopy.sold(receiptFolio) : membershipsCopy.created}

@@ -1,4 +1,5 @@
 import {
+  guardScreen,
   activeCenterAccess,
   can,
   canInActiveCenter,
@@ -79,7 +80,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
         <KpiCard label={clientsCopy.vehiclesTitle} value={String(view.vehiclesCount)} caption="activos" />
         <KpiCard label="Promociones" value={view.consent} caption={view.centers} />
       </div>
-      {canInActiveCenter(state, "crm.read") ? (
+      {guardScreen(state, "crmCustomerDetail").allow ? (
         <Link href={`/comercial/clientes/${client.id}`} className="text-sm underline">
           {crmCopy.openProfile}: última visita, próxima recomendación y seguimientos
         </Link>
