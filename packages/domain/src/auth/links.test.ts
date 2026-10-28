@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAuthRedirect, parseAuthRedirect } from "./links";
+import { isAuthRedirect, isSafeInternalPath, parseAuthRedirect } from "./links";
 
 describe("parseAuthRedirect", () => {
   it("lee el código PKCE del deep link móvil", () => {
@@ -31,5 +31,28 @@ describe("parseAuthRedirect", () => {
     expect(isAuthRedirect("meguiars://auth/confirm?code=x")).toBe(true);
     expect(isAuthRedirect("exp://192.168.0.2:8081/--/auth/confirm#error=x")).toBe(true);
     expect(isAuthRedirect("meguiars://otra/ruta")).toBe(false);
+  });
+});
+
+describe("isSafeInternalPath (redirecciones de ?next=)", () => {
+  it("acepta rutas internas", () => {
+    expect(isSafeInternalPath("/")).toBe(true);
+    expect(isSafeInternalPath("/ordenes/123?tab=cobro")).toBe(true);
+    expect(isSafeInternalPath("/comercial/membresias/nueva?cliente=abc")).toBe(true);
+  });
+
+  it("rechaza otros sitios, aunque traigan caracteres que el navegador quita", () => {
+    for (const p of [
+      "//evil.com",
+      "/\\evil.com",
+      "/\t/evil.com",
+      "/\n/evil.com",
+      "/\r//evil.com",
+      "https://evil.com",
+      "evil.com",
+      "",
+    ]) {
+      expect(isSafeInternalPath(p)).toBe(false);
+    }
   });
 });
