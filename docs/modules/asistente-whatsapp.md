@@ -78,6 +78,10 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
 - Opus y Sonnet llevan `fallbacks: "default"`: si un clasificador de seguridad rechaza la petición, la API la reintenta con otro modelo. Si aun así se rechaza, pasa a una persona.
 - Las instrucciones de la organización (reglas, centros, respuestas aprobadas) van en un bloque cacheado. Lo de la conversación (hora, centro elegido, nombre) va aparte, para no invalidar la caché.
 - El costo en pantalla se estima con el precio público por millón de tokens. La factura real está en la consola de Anthropic.
+- **Límites de gasto** (`private.assistant_limits()`, ADR 0045; cambiarlos es una migración):
+  - 12 turnos por conversación en una hora. Al pasarlo, el asistente se pausa en esa conversación («Límite de mensajes del asistente») y la atiende una persona.
+  - 1,500 turnos o 6 millones de tokens por organización en 24 h. Al pasarlo, los mensajes quedan sin respuesta del asistente para que los atienda el equipo; la conversación no se pausa.
+  - Como máximo 2 citas futuras programadas por conversación; la tercera confirmación responde que le atiende una persona.
 
 ## Modelo de datos (`20261028000000_whatsapp_assistant.sql`)
 
@@ -97,7 +101,7 @@ En la **Bandeja**, las respuestas del asistente aparecen como «Asistente». La 
 
 El asistente agenda, reprograma y cancela citas; **la cita sólo existe cuando el cliente toca «Confirmar»**. Decisiones en [ADR 0038](../adr/0038-citas-por-whatsapp-con-boton.md).
 
-1. Con `consultar_cliente` el asistente ve el nombre, los autos y las próximas citas del número (cliente ligado a la conversación o con el mismo teléfono; los celulares de México llegan como 521… y se normalizan igual que en clientes).
+1. Con `consultar_cliente` el asistente ve el nombre, los autos y las próximas citas del número (cliente ligado a la conversación o con el mismo teléfono; los celulares de México llegan como 521… y se quita el 1; cualquier otro número se conserva en E.164, así que un número extranjero no se confunde con uno de México, ADR 0045).
 2. Muestra horarios libres; cuando el cliente elige uno, pide lo que falte: nombre (si no es cliente) y el auto (uno registrado, o marca, modelo y año; **la placa es opcional**).
 3. `proponer_cita` (o `proponer_cambio_cita` / `proponer_cancelacion`): la base valida el horario del centro, la anticipación, los días hacia adelante, la capacidad y que haya una bahía libre, y guarda la propuesta con un resumen.
 4. El cliente recibe ese resumen **con botones** (Confirmar / Cambiar; para cancelar: Sí, cancelar / No, mantenerla). El texto del modelo de ese turno no se envía.
