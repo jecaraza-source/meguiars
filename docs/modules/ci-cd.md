@@ -172,7 +172,15 @@ npx eas-cli@24.8.0 env:create --environment preview --name EXPO_PUBLIC_SUPABASE_
 
 Después crea un _access token_ en expo.dev (_Account settings → Access tokens_) y guárdalo como secret `EXPO_TOKEN` en los GitHub Environments `staging` y `production`.
 
-Publicar en tiendas: `npx eas-cli@24.8.0 submit --profile production --platform android|ios` (requiere las cuentas de Google Play y App Store Connect).
+### Publicar en tiendas
+
+- **App Store / TestFlight desde GitHub:**
+  - _Actions → Build móvil (EAS)_ con `production`, `ios` y **«Enviar a App Store»** marcado: EAS compila y, al terminar, sube el build a App Store Connect (`--auto-submit`).
+  - _Actions → Enviar a App Store (EAS Submit)_ manda el último build de iOS de producción ya terminado, sin recompilar.
+  - Ambos sólo desde `main`, con la aprobación del environment `production`.
+  - Requieren la llave de API de App Store Connect guardada en EAS (se crea la primera vez con `eas submit` interactivo o en `eas credentials` → iOS → App Store Connect API Key) y el `ascAppId` en `apps/mobile/eas.json` (`submit.production.ios`): el número «Apple ID» de la app en App Store Connect → Información de la app. No es secreto.
+  - Apple procesa el build en 10–30 minutos; después se agrega al grupo de TestFlight.
+- **Google Play:** la primera versión de la app se sube a mano en Play Console (AAB del perfil `production`). Para las siguientes, `eas submit --platform android` requiere una cuenta de servicio de Google con acceso a la app, guardada en EAS; el envío automático de Android desde GitHub aún no está configurado.
 
 ## Secretos
 

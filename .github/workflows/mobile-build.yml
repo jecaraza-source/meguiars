@@ -2,6 +2,9 @@
 # móvil (EAS) → Run workflow. El perfil define ambiente y distribución
 # (apps/mobile/eas.json); las variables EXPO_PUBLIC_* salen de EAS Environment
 # Variables. Requiere el secret EXPO_TOKEN en el environment correspondiente.
+# «Enviar a App Store» (sólo production + ios) usa --auto-submit: al terminar
+# el build, EAS lo sube a App Store Connect / TestFlight con la llave de API
+# guardada en EAS y el ascAppId de eas.json (submit.production.ios).
 name: Build móvil (EAS)
 
 on:
@@ -17,6 +20,10 @@ on:
         type: choice
         options: [android, ios, all]
         default: android
+      submit:
+        description: Enviar a App Store / TestFlight al terminar (sólo production + ios)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,16 +39,29 @@ jobs:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       PROFILE: ${{ inputs.profile }}
       PLATFORM: ${{ inputs.platform }}
+      SUBMIT: ${{ inputs.submit }}
     steps:
       - name: Verificar EXPO_TOKEN
         run: |
           [[ -n "$EXPO_TOKEN" ]] || { echo "::error::Falta el secret EXPO_TOKEN (docs/modules/ci-cd.md)."; exit 1; }
+      - name: Verificar el envío a la tienda
+        if: inputs.submit
+        run: |
+          [[ "$PROFILE" == "production" && "$PLATFORM" == "ios" ]] \
+            || { echo "::error::El envío automático sólo aplica a production + ios (Google Play: ver docs/modules/ci-cd.md)."; exit 1; }
       - uses: actions/checkout@v4
+      - name: Verificar ascAppId en eas.json
+        if: inputs.submit
+        run: |
+          node -e 'const id = require("./apps/mobile/eas.json").submit?.production?.ios?.ascAppId; if (!/^\d+$/.test(String(id ?? ""))) { console.log("::error::Falta submit.production.ios.ascAppId en apps/mobile/eas.json (App Store Connect → la app → Información de la app → Apple ID)."); process.exit(1); }'
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       # Encola el build en EAS y termina; el progreso se ve en expo.dev.
-      - run: npx --yes eas-cli@24.8.0 build --profile "$PROFILE" --platform "$PLATFORM" --non-interactive --no-wait
+      - run: |
+          args=(--profile "$PROFILE" --platform "$PLATFORM" --non-interactive --no-wait)
+          [[ "$SUBMIT" == "true" ]] && args+=(--auto-submit)
+          npx --yes eas-cli@24.8.0 build "${args[@]}"
         working-directory: apps/mobile
