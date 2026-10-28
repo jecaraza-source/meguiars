@@ -201,8 +201,16 @@ select pg_temp.assert_fails($$select public.update_expense('$$ || :'compressor' 
 select pg_temp.assert_fails($$select public.update_expense('$$ || :'compressor' || $$', 1,
   pg_temp.cat('mantenimiento'), null, 'Compresor usado', 4500, 'tarjeta', current_date - 1, null, null, 'Otra cotización')$$,
   '40001', 'versión vieja: no se pisa otra edición');
+select pg_temp.assert_fails($$select public.update_expense('$$ || :'compressor' || $$', pg_temp.ev('$$ || :'compressor' || $$'),
+  pg_temp.cat('mantenimiento'), '$$ || :'qce' || $$', 'Compresor usado', 4500, 'tarjeta', current_date, null, null,
+  'Otra cotización más barata')$$,
+  '42501', 'el encargado no edita un egreso rechazado: no se salta el rechazo del admin');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000a2');
 select from public.update_expense(:'compressor', pg_temp.ev(:'compressor'), pg_temp.cat('mantenimiento'), :'qce',
   'Compresor usado', 4500, 'tarjeta', :'today'::date, null, null, 'Otra cotización más barata');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
 select from public.update_expense(:'rent', pg_temp.ev(:'rent'), pg_temp.cat('renta'), :'landlord',
   'Renta de septiembre y octubre', 7000, 'transferencia', :'today'::date, 'SPEI-1', null, 'Se pagaron dos meses');
 select pg_temp.assert_fails($$select public.void_expense('$$ || :'payroll' || $$', pg_temp.ev('$$ || :'payroll' || $$'), 'Duplicado')$$,

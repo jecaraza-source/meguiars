@@ -125,7 +125,7 @@ select pg_temp.assert_fails(format($$select public.update_assistant_settings(%L,
   '23514', 'sólo modelos permitidos');
 select from public.update_assistant_settings(:'O1', 1, 'prueba', 'claude-opus-5-5', 'Asistente MEGUIAR''S', 'Cordial y breve', 'Hola, soy el asistente',
   'https://ejemplo.mx/privacidad', 'lun-sáb 9:00-19:00', null, 'colonia', 14, 2, true, true, array['55 1111-2222', '5215533334444'], 'Modo prueba');
-select pg_temp.assert((select mode || ':' || array_to_string(test_numbers, ',') || ':' || version from public.bot_settings where organization_id = :'O1')
+select pg_temp.assert((select mode || ':' || array_to_string(test_numbers, ',') || ':' || version from public.get_assistant_settings(:'O1'))
                       = 'prueba:5215533334444,5511112222:2',
   'el admin pone el modo prueba; los números quedan sólo con dígitos');
 select pg_temp.assert_fails(format($$select public.update_assistant_settings(%L, 1, 'activo', 'claude-opus-5-5', 'Asistente', 'Cordial', null, null, null, null, 'colonia', 14, 2, true, true, '{}', 'Viejo')$$, :'O1'),

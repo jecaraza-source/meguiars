@@ -49,16 +49,16 @@ Todas con RLS de sólo lectura; las escrituras van por RPC. Categorías, proveed
 
 ## Reglas
 
-| Regla              | Detalle                                                                                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Captura            | Categoría activa de la organización, proveedor activo (opcional), monto > 0 con 2 decimales, forma de pago válida y fecha no futura (22023). Idempotente por `request_id`.                        |
-| Umbral             | Monto ≥ umbral del centro → **pendiente** de aprobación. Si lo captura un admin, queda aprobado con el evento `autoaprobada` (registrado).                                                        |
-| Aprobar / rechazar | Sólo el admin (42501), sólo pendientes. Rechazar exige motivo.                                                                                                                                    |
-| Editar             | Con motivo y versión (40001). Se reevalúa la aprobación: un aprobado que ahora supera el umbral vuelve a pendiente si no lo edita un admin; un rechazado corregido bajo el umbral queda aprobado. |
-| Anular             | Con motivo. El admin anula cualquiera; el encargado, sólo pendientes o rechazados. Un anulado ya no cambia ni recibe comprobantes.                                                                |
-| Reclasificar       | Cambiar el grupo de una categoría sólo afecta egresos nuevos o editados: el P&L histórico no se reescribe.                                                                                        |
-| P&L                | Sólo cuentan los aprobados (por fecha del pago). Los pendientes se muestran aparte y los anulados y rechazados no cuentan.                                                                        |
-| Sin conexión       | Las mutaciones requieren conexión (sin cola offline); el `request_id` y el uuid del archivo hacen seguro el reintento.                                                                            |
+| Regla              | Detalle                                                                                                                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Captura            | Categoría activa de la organización, proveedor activo (opcional), monto > 0 con 2 decimales, forma de pago válida y fecha no futura (22023). Idempotente por `request_id`.                               |
+| Umbral             | Monto ≥ umbral del centro → **pendiente** de aprobación. Si lo captura un admin, queda aprobado con el evento `autoaprobada` (registrado).                                                               |
+| Aprobar / rechazar | Sólo el admin (42501), sólo pendientes. Rechazar exige motivo.                                                                                                                                           |
+| Editar             | Con motivo y versión (40001). Se reevalúa la aprobación: un aprobado que ahora supera el umbral vuelve a pendiente si no lo edita un admin. Un rechazado sólo lo edita quien aprueba egresos (ADR 0046). |
+| Anular             | Con motivo. El admin anula cualquiera; el encargado, sólo pendientes o rechazados. Un anulado ya no cambia ni recibe comprobantes.                                                                       |
+| Reclasificar       | Cambiar el grupo de una categoría sólo afecta egresos nuevos o editados: el P&L histórico no se reescribe.                                                                                               |
+| P&L                | Sólo cuentan los aprobados (por fecha del pago). Los pendientes se muestran aparte y los anulados y rechazados no cuentan.                                                                               |
+| Sin conexión       | Las mutaciones requieren conexión (sin cola offline); el `request_id` y el uuid del archivo hacen seguro el reintento.                                                                                   |
 
 ## Estado de resultados
 

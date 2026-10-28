@@ -112,13 +112,13 @@ La migración `20260923000000_multicenter_security.sql` aplica los cambios sobre
 
 ## Criterios de aceptación → pruebas (`supabase/tests/rls_multicenter.test.sql`)
 
-| Criterio                                       | Casos                                                                                                                                                          |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Un usuario del centro A no lee ni escribe en B | operador A: no ve B, no edita B, no se agrega a B. admin_socio de A: no gestiona B. Admin de O2: no ve O1                                                      |
-| El admin corporativo consolida                 | ve todos los centros de su organización, incluido el deshabilitado; `my_detail_centers` le da admin_socio en A y B; edita cualquier centro                     |
-| El contador sólo lee                           | lee centros, membresías, roles y auditoría; `update_detail_center`, `set_center_membership`, `set_role_assignment` e insertar organizaciones devuelven `42501` |
-| Casos positivos y negativos                    | 67 aserciones más la verificación de la transición                                                                                                             |
-| Seed                                           | organización demo con 2 centros, validada por `npm run test:db`                                                                                                |
+| Criterio                                       | Casos                                                                                                                                                                                                                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Un usuario del centro A no lee ni escribe en B | operador A: no ve B, no edita B, no se agrega a B. admin_socio de A: no gestiona B. Admin de O2: no ve O1                                                                                                                                               |
+| El admin corporativo consolida                 | ve todos los centros de su organización, incluido el deshabilitado; `my_detail_centers` le da admin_socio en A y B; edita cualquier centro                                                                                                              |
+| El contador sólo lee                           | lee centros, membresías, roles y la auditoría de cobranza, caja, egresos y cuentas por cobrar B2B (sin datos de clientes, ADR 0046); `update_detail_center`, `set_center_membership`, `set_role_assignment` e insertar organizaciones devuelven `42501` |
+| Casos positivos y negativos                    | 67 aserciones más la verificación de la transición                                                                                                                                                                                                      |
+| Seed                                           | organización demo con 2 centros, validada por `npm run test:db`                                                                                                                                                                                         |
 
 ## Barrido automático (F5.1)
 
