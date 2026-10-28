@@ -1,4 +1,10 @@
-import { canInCenter, paymentErrorMessage, paymentsCopy, presentReceipt } from "@meguiars/domain";
+import {
+  canInCenter,
+  guardScreen,
+  paymentErrorMessage,
+  paymentsCopy,
+  presentReceipt,
+} from "@meguiars/domain";
 import { createPaymentRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -13,11 +19,22 @@ export default async function ReceiptPage({ params }: PageProps<"/finanzas/cobra
   const { id } = await params;
   const repo = createPaymentRepository((await createSupabaseServerClient())!);
   const result = await repo.receipt(id);
+  // Recepción cobra desde la OS o la membresía y no ve Cobranza: regresa a lo cobrado.
+  const ledger = guardScreen(state, "payments").allow;
+  const order = result.ok ? result.data.orders[0] : undefined;
+  const membership = result.ok ? result.data.memberships[0] : undefined;
+  const back = ledger
+    ? { href: "/finanzas/cobranza", label: paymentsCopy.title }
+    : order
+      ? { href: `/ordenes/${order.id}`, label: order.folio }
+      : membership
+        ? { href: `/comercial/membresias/${membership.id}`, label: membership.number }
+        : { href: "/", label: "Inicio" };
   if (!result.ok) {
     return (
       <AppShell state={state} screen="paymentReceipt" title={paymentsCopy.receipt}>
-        <Link href="/finanzas/cobranza" className="text-sm underline">
-          ← {paymentsCopy.title}
+        <Link href={back.href} className="text-sm underline">
+          ← {back.label}
         </Link>
         <EmptyState title={paymentsCopy.notFound} message={paymentErrorMessage(result.error)} />
       </AppShell>
@@ -30,8 +47,8 @@ export default async function ReceiptPage({ params }: PageProps<"/finanzas/cobra
   return (
     <AppShell state={state} screen="paymentReceipt" title={`${paymentsCopy.receipt} ${r.folio}`}>
       <div className="flex flex-wrap items-center justify-between gap-sm print:hidden">
-        <Link href="/finanzas/cobranza" className="text-sm underline">
-          ← {paymentsCopy.title}
+        <Link href={back.href} className="text-sm underline">
+          ← {back.label}
         </Link>
         <PrintButton />
       </div>

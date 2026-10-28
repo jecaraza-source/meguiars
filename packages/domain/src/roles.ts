@@ -69,6 +69,10 @@ export const CAPABILITIES = [
   "payments.read",
   "payments.write",
   "payments.reverse",
+  // Cobranza y cifras de cobro del centro (lista de recibos, cuentas por cobrar,
+  // conciliación, «Cobrado hoy»): private.can_list_payments. Recepción cobra desde la
+  // OS y la membresía (payments.write) pero no ve la cobranza del centro.
+  "payments.ledger.read",
   // Egresos y P&L (AF2): approve = aprobar, rechazar, anular aprobados y fijar el umbral;
   // manage = catálogo de categorías (admin corporativo).
   "expenses.read",
@@ -115,6 +119,8 @@ export const CAPABILITIES = [
   "marketing.read",
   "marketing.manage",
   "promotions.manage",
+  // Calendario de contenido y promociones (menú Marketing). Recepción sólo ve campañas.
+  "marketing.planning.read",
   // CR2 (fase 4): ver automatizaciones y su historial (private.can_read_automations;
   // trae nombres de clientes, así que el contador no) y configurarlas
   // (private.can_manage_automations). El panel comercial usa commercial.metrics.read.
@@ -203,6 +209,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.read",
     "payments.write",
     "payments.reverse",
+    "payments.ledger.read",
     "expenses.read",
     "expenses.write",
     "expenses.approve",
@@ -226,6 +233,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "clients.merge",
     "channels.manage",
     "marketing.read",
+    "marketing.planning.read",
     "marketing.manage",
     "promotions.manage",
     "automations.read",
@@ -259,6 +267,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "payments.read",
     "payments.write",
     "payments.reverse",
+    "payments.ledger.read",
     "expenses.read",
     "expenses.write",
     "cash.read",
@@ -273,6 +282,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "commercial.metrics.read",
     "clients.merge",
     "marketing.read",
+    "marketing.planning.read",
     "marketing.manage",
     "automations.read",
     "automations.manage",
@@ -294,7 +304,6 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "crm.write",
     "payments.read",
     "payments.write",
-    "cash.read",
     "leads.use",
     "marketing.read",
   ],
@@ -309,6 +318,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "upsell.read",
     "pipeline.metrics.read",
     "payments.read",
+    "payments.ledger.read",
     "expenses.read",
     "cash.read",
     "pnl.read",
@@ -318,6 +328,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "customers.metrics.read",
     "commercial.metrics.read",
     "marketing.read",
+    "marketing.planning.read",
   ],
   comercial_b2b: [
     "center.read",
@@ -341,6 +352,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "leads.use",
     "commercial.metrics.read",
     "marketing.read",
+    "marketing.planning.read",
     "marketing.manage",
     "automations.read",
   ],

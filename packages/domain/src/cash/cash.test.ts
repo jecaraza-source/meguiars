@@ -103,11 +103,11 @@ describe("acciones y permisos", () => {
     });
   });
 
-  it("matriz de roles: encargado opera, admin reabre, recepción y contador sólo consultan", () => {
+  it("matriz de roles: encargado opera, admin reabre, contador sólo consulta, recepción no lo ve", () => {
     expect(can(["encargado"], "cash.operate")).toBe(true);
     expect(can(["encargado"], "cash.reopen")).toBe(false);
     expect(can(["admin_socio"], "cash.reopen")).toBe(true);
-    expect(can(["operador_recepcion"], "cash.read")).toBe(true);
+    expect(can(["operador_recepcion"], "cash.read")).toBe(false);
     expect(can(["operador_recepcion"], "cash.operate")).toBe(false);
     expect(can(["contador"], "cash.read")).toBe(true);
     expect(isReadOnlyRole("contador")).toBe(true);

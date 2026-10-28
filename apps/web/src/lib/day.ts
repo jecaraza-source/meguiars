@@ -42,7 +42,7 @@ export async function loadFinanceSummary(
   const today = todayIn(center.timezone);
   const monthFrom = `${today.slice(0, 8)}01`;
   const canPnl = canInActiveCenter(state, "pnl.read");
-  const canPay = canInActiveCenter(state, "payments.read");
+  const canPay = canInActiveCenter(state, "payments.ledger.read");
   const canCash = canInActiveCenter(state, "cash.read");
   const [lines, day, receivables, cash] = await Promise.all([
     canPnl ? repos.pnl.lines([center.id], monthFrom, today) : null,

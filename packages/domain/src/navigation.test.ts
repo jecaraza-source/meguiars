@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CenterAccess } from "./access/access";
 import type { AuthState } from "./auth/session";
+import { guardScreen } from "./auth/guards";
 import {
   landingScreen,
   NAV_SECTIONS,
@@ -58,9 +59,9 @@ describe("navegación por rol", () => {
     ],
     // Dirección es sólo del admin / socio.
     ["encargado", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
-    // Vende y renueva membresías en recepción (Comercial → Membresías) y hace el
-    // corte de caja (Finanzas → Cobranza).
-    ["operador_recepcion", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
+    // Vende y renueva membresías (Comercial → Membresías) y cobra desde la OS; no ve
+    // cobranza, corte de caja ni Finanzas. En Marketing sólo ve campañas.
+    ["operador_recepcion", ["inicio", "operacion", "comercial", "marketing", "configuracion"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).
     ["contador", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
@@ -192,8 +193,9 @@ describe("navegación por rol", () => {
     expect(sectionOfPath("/finanzas/resultados")).toBe("finanzas");
   });
 
-  it("Corte de caja (en Operación): admin, encargado, recepción y contador; comercial no", () => {
-    expect(itemsOf(["operador_recepcion"])).toContain("cash");
+  it("Corte de caja (en Operación): admin, encargado y contador; recepción y comercial no", () => {
+    expect(itemsOf(["encargado"])).toContain("cash");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("cash");
     expect(itemsOf(["contador"])).toContain("cash");
     expect(itemsOf(["comercial_b2b"])).not.toContain("cash");
     expect(navScreenOf("cashSession")).toBe("cash");
@@ -209,13 +211,24 @@ describe("navegación por rol", () => {
     }
   });
 
-  it("Cobranza: recepción, encargado, admin y contador; comercial no", () => {
-    expect(itemsOf(["operador_recepcion"])).toContain("payments");
+  it("Cobranza: encargado, admin y contador; recepción (cobra desde la OS) y comercial no", () => {
+    expect(itemsOf(["encargado"])).toContain("payments");
+    expect(itemsOf(["operador_recepcion"])).not.toContain("payments");
+    expect(guardScreen(stateFor(["operador_recepcion"]), "paymentReceipt").allow).toBe(true);
     expect(itemsOf(["operador_recepcion"])).not.toContain("finanzas");
     expect(itemsOf(["contador"])).toContain("payments");
     expect(itemsOf(["comercial_b2b"])).not.toContain("payments");
     expect(navScreenOf("paymentReceipt")).toBe("payments");
     expect(sectionOfPath("/finanzas/cobranza/recibos/abc")).toBe("finanzas");
+  });
+
+  it("Marketing de recepción: sólo campañas (sin calendario, promociones ni segmentos)", () => {
+    const marketing = ["campaigns", "contentCalendar", "promotions", "segments"];
+    expect(itemsOf(["operador_recepcion"]).filter((i) => marketing.includes(i))).toEqual(["campaigns"]);
+    expect(itemsOf(["encargado"])).toEqual(expect.arrayContaining(marketing));
+    expect(itemsOf(["contador"])).toEqual(
+      expect.arrayContaining(["campaigns", "contentCalendar", "promotions"]),
+    );
   });
 
   it("sin sesión o sin centro activo no hay navegación privada", () => {

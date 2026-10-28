@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildUtmUrl,
+  canSeeCampaignMoney,
   contentStatusActions,
   groupPostsByDay,
   promotionState,
@@ -48,5 +49,28 @@ describe("marketing", () => {
       ["2026-09-30", ["a"]],
       ["2026-10-01", ["b"]],
     ]);
+  });
+});
+
+describe("cifras de campañas por rol", () => {
+  const stateFor = (role: string) =>
+    ({
+      status: "signed_in",
+      user: { id: "u", email: "u@x" },
+      profile: { id: "u", fullName: "U", active: true },
+      activeCenterId: "c",
+      access: [
+        {
+          center: { id: "c", organizationId: "o", code: "A", name: "A", timezone: "UTC", active: true },
+          roles: [role],
+          corporateRoles: [],
+        },
+      ],
+    }) as unknown as Parameters<typeof canSeeCampaignMoney>[0];
+  it("recepción ve la campaña sin presupuesto ni inversión; los demás roles de marketing sí", () => {
+    expect(canSeeCampaignMoney(stateFor("operador_recepcion"), "c")).toBe(false);
+    for (const role of ["admin_socio", "encargado", "contador", "comercial_b2b"])
+      expect(canSeeCampaignMoney(stateFor(role), "c")).toBe(true);
+    expect(canSeeCampaignMoney(stateFor("encargado"), "otro")).toBe(false);
   });
 });

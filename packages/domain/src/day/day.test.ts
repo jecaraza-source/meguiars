@@ -84,4 +84,22 @@ describe("operación del día", () => {
     expect(v.kpis.map((k) => k.key)).toEqual(["cobrado"]);
     expect([v.showOrders, v.showAgenda]).toEqual([false, false]);
   });
+
+  it("recepción (sin cifras de cobro): entregadas sin venta, sin cobrado ni por cobrar", () => {
+    const v = presentDaySummary(
+      {
+        ...summary,
+        orders: { ...summary.orders!, deliveredToday: { count: 4, total: null, pending: null } },
+        payments: null,
+      },
+      "America/Mexico_City",
+    );
+    expect(v.kpis.map((k) => k.key)).not.toContain("cobrado");
+    expect(v.kpis.map((k) => k.key)).not.toContain("por_cobrar");
+    expect(v.kpis.find((k) => k.key === "entregadas")).toEqual({
+      key: "entregadas",
+      label: "Entregadas hoy",
+      value: "4",
+    });
+  });
 });

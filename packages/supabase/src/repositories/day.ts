@@ -41,8 +41,8 @@ export function toDaySummary(raw: J): DaySummary {
           })),
           deliveredToday: {
             count: num(delivered.count),
-            total: num(delivered.total),
-            pending: num(delivered.pending),
+            total: delivered.total == null ? null : num(delivered.total),
+            pending: delivered.pending == null ? null : num(delivered.pending),
           },
           openedToday: num(o.opened_today),
         }

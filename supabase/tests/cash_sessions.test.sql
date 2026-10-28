@@ -154,7 +154,14 @@ reset role;
 select pg_temp.ago('public.payments', 'received_at', format('detail_center_id = %L', :'A'), 300);
 select pg_temp.ago('public.payment_reversals', 'reversed_at', format('payment_id = %L', :'p_cash2'), 290);
 
+-- Recepción cobra en el turno, pero no ve el corte (20261107000000).
 select pg_temp.login('00000000-0000-0000-0000-0000000000f1');
+select pg_temp.assert(
+  (select count(*) = 0 from public.list_cash_sessions(array[:'A'::uuid], :'today', :'today')),
+  'recepción no ve el corte de caja');
+select pg_temp.assert(public.cash_session_detail(:'s1') is null, 'recepción no abre el detalle del corte');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
 select pg_temp.assert(
   (select (d -> 'live' ->> 'expected_cash')::numeric = 1750 and (d -> 'live' ->> 'cash_collected')::numeric = 1450
           and (d -> 'live' ->> 'cash_refunded')::numeric = 200 and (d -> 'live' ->> 'card_total')::numeric = 500

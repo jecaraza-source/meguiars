@@ -4,8 +4,10 @@ import {
   CAMPAIGN_OBJECTIVE_LABELS,
   CAMPAIGN_STATUS_LABELS,
   canInCenter,
+  canSeeCampaignMoney,
   CONTENT_STATUS_LABELS,
   formatMoney,
+  guardScreen,
   MARKETING_COPY,
   PILOT_PERIODS,
   PROMOTION_STATE_LABELS,
@@ -43,6 +45,9 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
     );
   }
   const c = r.data;
+  // Recepción ve la campaña sin presupuesto ni gasto; tampoco abre promociones ni calendario.
+  const money = canSeeCampaignMoney(state, center.id);
+  const canPlan = guardScreen(state, "promotions").allow;
   const visibleCenters = usableCenters(state.access).filter(
     (a) => a.center.organizationId === center.organizationId,
   );
@@ -50,7 +55,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
     .filter((a) => canInCenter(state, a.center.id, "commercial.metrics.read"))
     .map((a) => a.center.id);
   const [spend, promos, posts, expenses, report] = await Promise.all([
-    repo.spendEntries(c.id),
+    money ? repo.spendEntries(c.id) : Promise.resolve(null),
     repo.promotions(center.organizationId),
     repo.posts(
       center.organizationId,
@@ -90,8 +95,8 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
         />
         <span className="text-sm text-muted">
           {c.startsOn} – {c.endsOn} ·{" "}
-          {c.channels.map((x) => CAMPAIGN_CHANNEL_LABELS[x]).join(", ") || "Sin canales"} · presupuesto{" "}
-          {c.budget != null ? formatMoney(c.budget) : "sin definir"}
+          {c.channels.map((x) => CAMPAIGN_CHANNEL_LABELS[x]).join(", ") || "Sin canales"}
+          {money ? ` · presupuesto ${c.budget != null ? formatMoney(c.budget) : "sin definir"}` : ""}
         </span>
       </div>
       {report ? (
@@ -153,48 +158,54 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
         </p>
         <UtmBuilder campaign={c} />
       </Card>
-      <Card title="Gasto">
-        <p className="text-sm text-muted">{MARKETING_COPY.spendNote}</p>
-        {!spend.ok ? (
-          <EmptyState title={spend.error.message} />
-        ) : spend.data.length === 0 ? (
-          <p className="text-sm">Sin gasto registrado.</p>
-        ) : (
-          <ul className="flex flex-col gap-sm" data-testid="spend-list">
-            {spend.data.map((s) => (
-              <li key={s.id} className="flex flex-col gap-xs border-b border-border pb-sm">
-                <div className="flex flex-wrap items-center gap-sm text-sm">
-                  <span className={s.voidedAt ? "line-through" : "font-medium"}>{formatMoney(s.amount)}</span>
-                  <span>{s.spentOn}</span>
-                  <Badge label={CAMPAIGN_CHANNEL_LABELS[s.channel]} tone="neutral" />
-                  {s.expenseFolio ? (
-                    <Badge label={`Egreso ${s.expenseFolio}`} tone="info" />
-                  ) : (
-                    <Badge label="Sin egreso" tone="warning" />
-                  )}
-                  {s.voidedAt ? <Badge label={`Anulado: ${s.voidReason}`} tone="danger" /> : null}
-                </div>
-                {s.note ? <p className="text-sm text-muted">{s.note}</p> : null}
-                {c.canManage && !s.voidedAt ? <VoidSpendForm campaignId={c.id} spendId={s.id} /> : null}
-              </li>
-            ))}
-          </ul>
-        )}
-        {c.canManage ? (
-          <SpendForm
-            campaignId={c.id}
-            expenses={(expenses?.ok ? expenses.data : []).map((e) => ({ value: e.id, label: e.label }))}
-            today={today}
-          />
-        ) : null}
-      </Card>
+      {spend ? (
+        <Card title="Gasto">
+          <p className="text-sm text-muted">{MARKETING_COPY.spendNote}</p>
+          {!spend.ok ? (
+            <EmptyState title={spend.error.message} />
+          ) : spend.data.length === 0 ? (
+            <p className="text-sm">Sin gasto registrado.</p>
+          ) : (
+            <ul className="flex flex-col gap-sm" data-testid="spend-list">
+              {spend.data.map((s) => (
+                <li key={s.id} className="flex flex-col gap-xs border-b border-border pb-sm">
+                  <div className="flex flex-wrap items-center gap-sm text-sm">
+                    <span className={s.voidedAt ? "line-through" : "font-medium"}>
+                      {formatMoney(s.amount)}
+                    </span>
+                    <span>{s.spentOn}</span>
+                    <Badge label={CAMPAIGN_CHANNEL_LABELS[s.channel]} tone="neutral" />
+                    {s.expenseFolio ? (
+                      <Badge label={`Egreso ${s.expenseFolio}`} tone="info" />
+                    ) : (
+                      <Badge label="Sin egreso" tone="warning" />
+                    )}
+                    {s.voidedAt ? <Badge label={`Anulado: ${s.voidReason}`} tone="danger" /> : null}
+                  </div>
+                  {s.note ? <p className="text-sm text-muted">{s.note}</p> : null}
+                  {c.canManage && !s.voidedAt ? <VoidSpendForm campaignId={c.id} spendId={s.id} /> : null}
+                </li>
+              ))}
+            </ul>
+          )}
+          {c.canManage ? (
+            <SpendForm
+              campaignId={c.id}
+              expenses={(expenses?.ok ? expenses.data : []).map((e) => ({ value: e.id, label: e.label }))}
+              today={today}
+            />
+          ) : null}
+        </Card>
+      ) : null}
       <Card title="Promociones de la campaña">
         {myPromos.length === 0 ? (
           <p className="text-sm">
             Sin promociones.{" "}
-            <Link href="/comercial/promociones" className="underline">
-              Promociones
-            </Link>
+            {canPlan ? (
+              <Link href="/comercial/promociones" className="underline">
+                Promociones
+              </Link>
+            ) : null}
           </p>
         ) : (
           <ul className="flex flex-col gap-xs text-sm" data-testid="campaign-promotions">
@@ -211,9 +222,11 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
         {!posts.ok || posts.data.length === 0 ? (
           <p className="text-sm">
             Sin publicaciones.{" "}
-            <Link href="/comercial/calendario" className="underline">
-              Calendario
-            </Link>
+            {canPlan ? (
+              <Link href="/comercial/calendario" className="underline">
+                Calendario
+              </Link>
+            ) : null}
           </p>
         ) : (
           <ul className="flex flex-col gap-xs text-sm">
