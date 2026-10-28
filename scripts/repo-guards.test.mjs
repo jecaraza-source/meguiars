@@ -91,6 +91,16 @@ describe("workflows", () => {
   });
 });
 
+describe("envío a tiendas", () => {
+  it("eas.json trae el perfil de envío de iOS y Android que usan los workflows", () => {
+    const eas = JSON.parse(readFileSync(join(root, "apps/mobile/eas.json"), "utf8"));
+    expect(eas.submit.production.ios.ascAppId).toMatch(/^\d+$/);
+    expect(eas.submit.production.android).toEqual({ track: "internal", releaseStatus: "completed" });
+    for (const file of [".github/workflows/mobile-build.yml", ".github/workflows/mobile-submit.yml"])
+      expect(readFileSync(join(root, file), "utf8")).toContain("node scripts/check-store-submit.mjs");
+  });
+});
+
 describe("build web reproducible", () => {
   it("Vercel instala con npm ci desde la raíz del workspace y fija Node a la versión de .nvmrc", () => {
     const vercel = JSON.parse(readFileSync(join(root, "apps/web/vercel.json"), "utf8"));

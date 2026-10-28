@@ -1,30 +1,38 @@
-# Envía a App Store Connect / TestFlight el último build de iOS de producción
-# que ya terminó en EAS, sin volver a compilar. Manual: Actions → Enviar a App
-# Store (EAS Submit) → Run workflow, sólo desde main. Usa la llave de API de
-# App Store Connect guardada en EAS y el ascAppId de eas.json
-# (submit.production.ios). Requiere el secret EXPO_TOKEN del environment
-# production. Google Play: la primera versión se sube a mano (docs/modules/ci-cd.md).
-name: Enviar a App Store (EAS Submit)
+# Envía a las tiendas el último build de producción que ya terminó en EAS, sin
+# volver a compilar: iOS → App Store Connect / TestFlight; Android → prueba
+# interna de Google Play. Manual: Actions → Enviar a tiendas (EAS Submit) →
+# Run workflow, sólo desde main. Usa las llaves guardadas en EAS (App Store
+# Connect API Key y cuenta de servicio de Google) y el perfil submit.production
+# de eas.json. Requiere el secret EXPO_TOKEN del environment production.
+# Google Play: la primera versión de la app se sube a mano (docs/modules/ci-cd.md).
+name: Enviar a tiendas (EAS Submit)
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Tienda
+        type: choice
+        options: [ios, android, all]
+        default: ios
 
 permissions:
   contents: read
 
 concurrency:
-  group: mobile-submit-ios
+  group: mobile-submit-${{ inputs.platform }}
   cancel-in-progress: false
 
 jobs:
   submit:
-    name: eas submit (production, ios)
+    name: eas submit (production, ${{ inputs.platform }})
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      PLATFORM: ${{ inputs.platform }}
     steps:
       - name: Verificar EXPO_TOKEN
         run: |
@@ -34,10 +42,9 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Verificar ascAppId en eas.json
-        run: |
-          node -e 'const id = require("./apps/mobile/eas.json").submit?.production?.ios?.ascAppId; if (!/^\d+$/.test(String(id ?? ""))) { console.log("::error::Falta submit.production.ios.ascAppId en apps/mobile/eas.json (App Store Connect → la app → Información de la app → Apple ID)."); process.exit(1); }'
+      - name: Verificar el perfil de envío en eas.json
+        run: node scripts/check-store-submit.mjs "$PLATFORM"
       - run: npm ci
       # Encola el envío en EAS y termina; el progreso se ve en expo.dev → Submissions.
-      - run: npx --yes eas-cli@24.8.0 submit --profile production --platform ios --latest --non-interactive --no-wait
+      - run: npx --yes eas-cli@24.8.0 submit --profile production --platform "$PLATFORM" --latest --non-interactive --no-wait
         working-directory: apps/mobile

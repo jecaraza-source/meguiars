@@ -174,13 +174,21 @@ Después crea un _access token_ en expo.dev (_Account settings → Access tokens
 
 ### Publicar en tiendas
 
-- **App Store / TestFlight desde GitHub:**
-  - _Actions → Build móvil (EAS)_ con `production`, `ios` y **«Enviar a App Store»** marcado: EAS compila y, al terminar, sube el build a App Store Connect (`--auto-submit`).
-  - _Actions → Enviar a App Store (EAS Submit)_ manda el último build de iOS de producción ya terminado, sin recompilar.
-  - Ambos sólo desde `main`, con la aprobación del environment `production`.
-  - Requieren la llave de API de App Store Connect guardada en EAS (se crea la primera vez con `eas submit` interactivo o en `eas credentials` → iOS → App Store Connect API Key) y el `ascAppId` en `apps/mobile/eas.json` (`submit.production.ios`): el número «Apple ID» de la app en App Store Connect → Información de la app. No es secreto.
-  - Apple procesa el build en 10–30 minutos; después se agrega al grupo de TestFlight.
-- **Google Play:** la primera versión de la app se sube a mano en Play Console (AAB del perfil `production`). Para las siguientes, `eas submit --platform android` requiere una cuenta de servicio de Google con acceso a la app, guardada en EAS; el envío automático de Android desde GitHub aún no está configurado.
+Desde GitHub, sólo en `main` y con la aprobación del environment `production`:
+
+- _Actions → Build móvil (EAS)_ con `production` y **«Enviar a la tienda»**: EAS compila y, al terminar, sube el build (`--auto-submit`). iOS va a App Store Connect / TestFlight; Android, a la **prueba interna** de Google Play.
+- _Actions → Enviar a tiendas (EAS Submit)_: manda el último build de producción ya terminado (iOS, Android o ambos), sin recompilar.
+- `scripts/check-store-submit.mjs` verifica antes el perfil `submit.production` de `apps/mobile/eas.json`: `ios.ascAppId` (número «Apple ID» de la app en App Store Connect, no es secreto) y `android.track` (`internal`, `releaseStatus: completed`).
+
+Llaves (se guardan en EAS, nunca en el repo ni en GitHub):
+
+- **App Store Connect API Key:** se crea la primera vez con `eas submit` interactivo o en `eas credentials` → iOS → App Store Connect API Key. Apple procesa el build en 10–30 minutos; después se agrega al grupo de TestFlight.
+- **Cuenta de servicio de Google Play:**
+  1. Google Cloud Console → un proyecto → habilita **Google Play Android Developer API**.
+  2. IAM → Cuentas de servicio → crea una (sin roles de Cloud) → Claves → Agregar clave → JSON.
+  3. Play Console → Usuarios y permisos → Invitar usuario con el correo de la cuenta de servicio; en la app: ver información de la app y **publicar en pistas de prueba** (y producción cuando se quiera publicar desde CI).
+  4. Sube el JSON a EAS: expo.dev → proyecto → Credentials → Android → `com.meguiars.detailcenter` → Google Service Account Key (para envíos), o `eas credentials -p android`. Borra el JSON local después.
+- **Primera versión de Android:** Google no deja crear la primera versión por API. Se sube a mano el AAB del perfil `production` en Play Console (Prueba interna) y desde la segunda versión se usa el envío automático.
 
 ## Secretos
 
