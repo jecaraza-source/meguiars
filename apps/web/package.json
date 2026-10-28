@@ -18,7 +18,7 @@
     "@meguiars/ui-tokens": "*",
     "@meguiars/validation": "*",
     "@supabase/ssr": "^0.12.7",
-    "next": "16.3.6",
+    "next": "16.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "server-only": "^0.0.1"
@@ -28,7 +28,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.4.3",
     "tailwindcss": "^4"
   },
   "engines": {
