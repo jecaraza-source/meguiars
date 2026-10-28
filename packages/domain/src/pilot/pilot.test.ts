@@ -68,7 +68,7 @@ describe("checklist de datos maestros", () => {
     expect(view.rows.find((r) => r.key === "membresias")!.requiredLabel).toBe("Recomendado");
   });
 
-  it("sólo el admin configura centros; el piloto lo ven quienes leen el P&L", () => {
+  it("sólo el admin configura centros; el piloto (Dirección) también es sólo del admin", () => {
     expect(ROLE_CAPABILITIES.admin_socio).toContain("centers.setup");
     for (const role of ["encargado", "operador_recepcion", "contador", "comercial_b2b"] as const)
       expect(ROLE_CAPABILITIES[role]).not.toContain("centers.setup");
@@ -87,13 +87,13 @@ describe("checklist de datos maestros", () => {
         },
       ],
     } as unknown as Parameters<typeof guardScreen>[0];
-    expect(guardScreen(state, "pilot").allow).toBe(true);
+    expect(guardScreen(state, "pilot").allow).toBe(false);
     expect(guardScreen(state, "centers").allow).toBe(false);
     expect(
       visibleNavigation(state)
         .flatMap((s) => s.items)
         .map((i) => i.screen),
-    ).toContain("pilot");
+    ).not.toContain("pilot");
   });
 });
 

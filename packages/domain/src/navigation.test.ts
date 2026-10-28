@@ -56,23 +56,17 @@ describe("navegación por rol", () => {
       "admin_socio",
       ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"],
     ],
-    // Dirección → Tableros (dirigidos a su rol); la vista consolidada es sólo del admin.
-    [
-      "encargado",
-      ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"],
-    ],
+    // Dirección es sólo del admin / socio.
+    ["encargado", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
     // Vende y renueva membresías en recepción (Comercial → Membresías) y hace el
     // corte de caja (Finanzas → Cobranza).
     ["operador_recepcion", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
     // Consulta el catálogo (precios y costos) sin ver la operación del día.
     // Y consulta el estado de cuenta y la rentabilidad B2B (Comercial → Cuentas B2B).
-    ["contador", ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"]],
+    ["contador", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
     // Consulta clientes (Operación → Clientes y vehículos) sin ver la operación del día;
     // en Finanzas sólo ve Cuentas por cobrar B2B (factura y cobra a las cuentas).
-    [
-      "comercial_b2b",
-      ["inicio", "operacion", "comercial", "marketing", "finanzas", "direccion", "configuracion"],
-    ],
+    ["comercial_b2b", ["inicio", "operacion", "comercial", "marketing", "finanzas", "configuracion"]],
     // Sólo «Mi día» (sus asignaciones).
     ["tecnico", ["inicio"]],
   ])("%s ve %j", (role, expected) => {
@@ -176,17 +170,15 @@ describe("navegación por rol", () => {
       "comercial",
       "marketing",
       "finanzas",
-      "direccion",
       "configuracion",
     ]);
   });
 
-  it("Tableros: todos salvo recepción; la vista consolidada y el constructor, sólo el admin", () => {
-    for (const role of ["admin_socio", "encargado", "contador", "comercial_b2b"] as const)
-      expect(itemsOf([role])).toEqual(expect.arrayContaining(["dashboards", "kpis"]));
-    expect(itemsOf(["operador_recepcion"])).not.toContain("dashboards");
-    expect(itemsOf(["operador_recepcion"])).not.toContain("kpis");
-    expect(itemsOf(["encargado"])).not.toContain("direccion");
+  it("Dirección (tablero, tableros, KPIs, alertas, reportes y piloto): sólo el admin / socio", () => {
+    const direccion = ["direccion", "dashboards", "kpis", "alerts", "reportEmails", "pilot"];
+    expect(itemsOf(["admin_socio"])).toEqual(expect.arrayContaining(direccion));
+    for (const role of ["encargado", "operador_recepcion", "contador", "comercial_b2b", "tecnico"] as const)
+      for (const screen of direccion) expect(itemsOf([role])).not.toContain(screen);
     expect(sectionOfScreen("dashboardEdit")).toBe("direccion");
   });
 
