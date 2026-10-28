@@ -1,0 +1,43 @@
+# Envía a App Store Connect / TestFlight el último build de iOS de producción
+# que ya terminó en EAS, sin volver a compilar. Manual: Actions → Enviar a App
+# Store (EAS Submit) → Run workflow, sólo desde main. Usa la llave de API de
+# App Store Connect guardada en EAS y el ascAppId de eas.json
+# (submit.production.ios). Requiere el secret EXPO_TOKEN del environment
+# production. Google Play: la primera versión se sube a mano (docs/modules/ci-cd.md).
+name: Enviar a App Store (EAS Submit)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-submit-ios
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    name: eas submit (production, ios)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Verificar EXPO_TOKEN
+        run: |
+          [[ -n "$EXPO_TOKEN" ]] || { echo "::error::Falta el secret EXPO_TOKEN (docs/modules/ci-cd.md)."; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Verificar ascAppId en eas.json
+        run: |
+          node -e 'const id = require("./apps/mobile/eas.json").submit?.production?.ios?.ascAppId; if (!/^\d+$/.test(String(id ?? ""))) { console.log("::error::Falta submit.production.ios.ascAppId en apps/mobile/eas.json (App Store Connect → la app → Información de la app → Apple ID)."); process.exit(1); }'
+      - run: npm ci
+      # Encola el envío en EAS y termina; el progreso se ve en expo.dev → Submissions.
+      - run: npx --yes eas-cli@24.8.0 submit --profile production --platform ios --latest --non-interactive --no-wait
+        working-directory: apps/mobile

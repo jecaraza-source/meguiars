@@ -76,6 +76,8 @@ describe("workflows", () => {
     ".github/workflows/ci.yml",
     ".github/workflows/deploy-db.yml",
     ".github/workflows/mobile-build.yml",
+    ".github/workflows/mobile-submit.yml",
+    ".github/workflows/mobile-update.yml",
     ".github/workflows/assistant-eval.yml",
   ])("%s declara permisos mínimos y lee secretos sólo con secrets.*", (file) => {
     const text = readFileSync(join(root, file), "utf8");
