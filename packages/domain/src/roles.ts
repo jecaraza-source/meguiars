@@ -121,6 +121,10 @@ export const CAPABILITIES = [
   "promotions.manage",
   // Calendario de contenido y promociones (menú Marketing). Recepción sólo ve campañas.
   "marketing.planning.read",
+  // Pantallas de Comercial y de Ajustes del asistente (bandeja, prospectos, cotizaciones,
+  // membresías, CRM, seguimientos, asistente e integraciones). Recepción no las ve: vende
+  // y consulta membresías desde la OS (memberships.*) y usa los datos del cliente (crm.read).
+  "commercial.workspace.read",
   // CR2 (fase 4): ver automatizaciones y su historial (private.can_read_automations;
   // trae nombres de clientes, así que el contador no) y configurarlas
   // (private.can_manage_automations). El panel comercial usa commercial.metrics.read.
@@ -228,6 +232,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.metrics.read",
     "customers.metrics.read",
     "leads.use",
+    "commercial.workspace.read",
     "leads.manage",
     "commercial.metrics.read",
     "clients.merge",
@@ -279,6 +284,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.metrics.read",
     "customers.metrics.read",
     "leads.use",
+    "commercial.workspace.read",
     "commercial.metrics.read",
     "clients.merge",
     "marketing.read",
@@ -350,6 +356,7 @@ export const ROLE_CAPABILITIES: Record<AppRole, readonly Capability[]> = {
     "memberships.metrics.read",
     "customers.metrics.read",
     "leads.use",
+    "commercial.workspace.read",
     "commercial.metrics.read",
     "marketing.read",
     "marketing.planning.read",

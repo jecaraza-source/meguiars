@@ -1,4 +1,5 @@
 import {
+  guardScreen,
   activeCenterAccess,
   can,
   canInActiveCenter,
@@ -111,7 +112,7 @@ export function ClientDetailScreen({
         <KpiCard label={clientsCopy.vehiclesTitle} value={String(view.vehiclesCount)} caption="activos" />
         <KpiCard label="Promociones" value={view.consent} caption={view.centers} />
       </View>
-      {onCrm && canInActiveCenter(state, "crm.read") ? (
+      {onCrm && guardScreen(state, "crmCustomerDetail").allow ? (
         <LinkButton label={crmCopy.openProfile} onPress={() => onCrm(clientId)} />
       ) : null}
       <Card title={clientsCopy.vehiclesTitle}>

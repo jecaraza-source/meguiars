@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { guardScreen } from "../auth/guards";
 import { navScreenOf, visibleNavigation } from "../navigation";
-import { ROLE_CAPABILITIES } from "../roles";
 import {
   contributionMargin,
   estimateQuote,
@@ -193,9 +192,11 @@ describe("permisos y navegación", () => {
       ],
     }) as unknown as Parameters<typeof guardScreen>[0];
 
-  it("recepción registra prospectos y cotiza; no fusiona ni ve reportes", () => {
-    expect(ROLE_CAPABILITIES.operador_recepcion).toContain("leads.use");
-    expect(guardScreen(state(["operador_recepcion"]), "leads").allow).toBe(true);
+  it("recepción no ve el menú Comercial (prospectos, cotizaciones, bandeja); no fusiona ni ve reportes", () => {
+    expect(guardScreen(state(["operador_recepcion"]), "leads").allow).toBe(false);
+    expect(guardScreen(state(["operador_recepcion"]), "quotes").allow).toBe(false);
+    expect(guardScreen(state(["operador_recepcion"]), "inbox").allow).toBe(false);
+    expect(guardScreen(state(["encargado"]), "leads").allow).toBe(true);
     expect(guardScreen(state(["operador_recepcion"]), "duplicates").allow).toBe(false);
     expect(guardScreen(state(["operador_recepcion"]), "commercialReports").allow).toBe(false);
   });

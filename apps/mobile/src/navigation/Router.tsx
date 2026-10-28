@@ -347,6 +347,9 @@ export function Router() {
     />
   );
   const props = { state, header, subnav };
+  // Recepción vende membresías desde la OS sin ver el menú Comercial: regresa a la OS.
+  const membershipsBack = () =>
+    setScreen(guardScreen(state, "memberships").allow ? "memberships" : orderId ? "orderDetail" : "home");
 
   let content: React.ReactNode;
   if (!guard.allow) {
@@ -614,9 +617,7 @@ export function Router() {
         );
         break;
       case "membershipNew":
-        content = (
-          <MembershipNewScreen {...props} onOpen={openMembership} onCancel={() => setScreen("memberships")} />
-        );
+        content = <MembershipNewScreen {...props} onOpen={openMembership} onCancel={membershipsBack} />;
         break;
       case "membershipDetail":
         content = membershipId ? (
@@ -624,7 +625,7 @@ export function Router() {
             key={membershipId}
             {...props}
             membershipId={membershipId}
-            onBack={() => setScreen("memberships")}
+            onBack={membershipsBack}
           />
         ) : (
           <MembershipsScreen
