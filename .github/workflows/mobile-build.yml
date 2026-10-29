@@ -5,7 +5,9 @@
 # «Enviar a la tienda» (sólo production) usa --auto-submit: al terminar el
 # build, EAS lo sube a App Store Connect / TestFlight (iOS) y a la prueba
 # interna de Google Play (Android) con las llaves guardadas en EAS y el perfil
-# submit.production de eas.json. Ver docs/modules/ci-cd.md.
+# submit.production de eas.json. «Esperar a que termine» deja el job abierto
+# hasta que EAS acaba (hasta 90 min de Actions) y publica en el resumen del run
+# la página y el archivo de cada build. Ver docs/modules/ci-cd.md.
 name: Build móvil (EAS)
 
 on:
@@ -25,6 +27,10 @@ on:
         description: Enviar a la tienda al terminar (sólo production; iOS → TestFlight, Android → prueba interna de Play)
         type: boolean
         default: false
+      wait:
+        description: Esperar a que EAS termine y publicar los enlaces de instalación (usa minutos de Actions)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,13 +40,14 @@ jobs:
     name: eas build (${{ inputs.profile }}, ${{ inputs.platform }})
     if: github.ref == 'refs/heads/main' || inputs.profile == 'preview'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: ${{ inputs.wait && 90 || 20 }}
     environment: ${{ inputs.profile == 'production' && 'production' || 'staging' }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       PROFILE: ${{ inputs.profile }}
       PLATFORM: ${{ inputs.platform }}
       SUBMIT: ${{ inputs.submit }}
+      WAIT: ${{ inputs.wait }}
     steps:
       - name: Verificar EXPO_TOKEN
         run: |
@@ -59,9 +66,17 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # Encola el build en EAS y termina; el progreso se ve en expo.dev.
+      # Sin «esperar»: encola el build en EAS y termina; el progreso se ve en expo.dev.
+      # Con «esperar»: espera a EAS y deja la salida JSON para el resumen.
       - run: |
-          args=(--profile "$PROFILE" --platform "$PLATFORM" --non-interactive --no-wait)
+          args=(--profile "$PROFILE" --platform "$PLATFORM" --non-interactive)
           [[ "$SUBMIT" == "true" ]] && args+=(--auto-submit)
-          npx --yes eas-cli@24.8.0 build "${args[@]}"
+          if [[ "$WAIT" == "true" ]]; then
+            npx --yes eas-cli@24.8.0 build "${args[@]}" --wait --json > "$RUNNER_TEMP/builds.json"
+          else
+            npx --yes eas-cli@24.8.0 build "${args[@]}" --no-wait
+          fi
         working-directory: apps/mobile
+      - name: Enlaces de instalación
+        if: inputs.wait && always()
+        run: node scripts/eas-build-summary.mjs "$RUNNER_TEMP/builds.json"
