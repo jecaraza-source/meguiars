@@ -2,11 +2,16 @@ import { describe, expect, it } from "vitest";
 import { fieldErrors, forgotPasswordSchema, loginSchema, resetPasswordSchema } from "./auth";
 
 describe("validaciones de autenticación", () => {
-  it("normaliza el correo y exige contraseña", () => {
-    expect(loginSchema.parse({ email: "  Ana@Demo.MX ", password: "x" }).email).toBe("ana@demo.mx");
-    const bad = loginSchema.safeParse({ email: "no-es-correo", password: "" });
+  it("entra con correo (minúsculas) o celular (E.164) y exige contraseña", () => {
+    expect(loginSchema.parse({ identifier: "  Ana@Demo.MX ", password: "x" }).identifier).toEqual({
+      email: "ana@demo.mx",
+    });
+    expect(loginSchema.parse({ identifier: "55 1234 5678", password: "x" }).identifier).toEqual({
+      phone: "+525512345678",
+    });
+    const bad = loginSchema.safeParse({ identifier: "no-es-correo", password: "" });
     expect(bad.success).toBe(false);
-    expect(Object.keys(fieldErrors(bad.error!)).sort()).toEqual(["email", "password"]);
+    expect(Object.keys(fieldErrors(bad.error!)).sort()).toEqual(["identifier", "password"]);
   });
 
   it("recuperación sólo necesita un correo válido", () => {

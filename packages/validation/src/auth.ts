@@ -1,11 +1,26 @@
+import { parseLoginIdentifier } from "@meguiars/domain";
 import { z } from "zod";
 
 export const PASSWORD_MIN_LENGTH = 8;
 
 export const emailSchema = z.string().trim().toLowerCase().pipe(z.email("Correo inválido"));
 
+/** Correo o celular (10 dígitos = México); sale como { email } o { phone } en E.164. */
+export const loginIdentifierSchema = z
+  .string({ message: "Escribe tu correo o tu celular" })
+  .trim()
+  .min(1, "Escribe tu correo o tu celular")
+  .transform((value, ctx) => {
+    const id = parseLoginIdentifier(value);
+    if (!id) {
+      ctx.addIssue({ code: "custom", message: "Escribe un correo válido o un celular de 10 dígitos" });
+      return z.NEVER;
+    }
+    return id;
+  });
+
 export const loginSchema = z.object({
-  email: emailSchema,
+  identifier: loginIdentifierSchema,
   password: z.string().min(1, "Escribe tu contraseña"),
 });
 

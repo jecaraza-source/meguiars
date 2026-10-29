@@ -8,18 +8,18 @@ import { Screen } from "@/ui/layout";
 
 export function LoginScreen({ onForgot }: { onForgot: () => void }) {
   const { signIn, linkError } = useAuth();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    const parsed = loginSchema.safeParse({ email, password });
+    const parsed = loginSchema.safeParse({ identifier, password });
     if (!parsed.success) return setFields(fieldErrors(parsed.error));
     setFields({});
     setBusy(true);
-    setError(await signIn(parsed.data.email, parsed.data.password));
+    setError(await signIn(parsed.data.identifier, parsed.data.password));
     setBusy(false);
   };
 
@@ -27,14 +27,15 @@ export function LoginScreen({ onForgot }: { onForgot: () => void }) {
     <Screen brand title={authCopy.loginTitle}>
       <Notice tone="danger" text={linkError} />
       <Field
-        label={authCopy.emailLabel}
-        value={email}
-        onChangeText={setEmail}
+        label={authCopy.loginIdLabel}
+        hint={authCopy.loginIdHint}
+        value={identifier}
+        onChangeText={setIdentifier}
         autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
+        autoCorrect={false}
+        autoComplete="username"
         textContentType="username"
-        error={fields.email}
+        error={fields.identifier}
       />
       <Field
         label={authCopy.passwordLabel}

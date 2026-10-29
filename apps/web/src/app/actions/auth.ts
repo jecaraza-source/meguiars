@@ -47,11 +47,17 @@ async function siteUrl(): Promise<string> {
 }
 
 export async function loginAction(_prev: FormState, form: FormData): Promise<FormState> {
-  const parsed = loginSchema.safeParse({ email: form.get("email"), password: form.get("password") });
+  const parsed = loginSchema.safeParse({
+    identifier: form.get("identifier"),
+    password: form.get("password"),
+  });
   if (!parsed.success) return { fields: fieldErrors(parsed.error) };
 
   const supabase = await client();
-  const result = await signInWithPassword(supabase, parsed.data);
+  const result = await signInWithPassword(supabase, {
+    ...parsed.data.identifier,
+    password: parsed.data.password,
+  });
   if (!result.ok) return { error: result.error.message };
 
   const state = await loadAuthState(supabase);

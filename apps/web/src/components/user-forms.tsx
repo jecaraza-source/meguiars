@@ -61,12 +61,20 @@ export function CreateUserForm({ centers }: { centers: readonly Center[] }) {
           required
         />
         <Input
+          name="phone"
+          type="tel"
+          inputMode="tel"
+          label={USERS_COPY.phone}
+          hint={USERS_COPY.loginHint}
+          defaultValue={v("phone")}
+          error={f.phone}
+        />
+        <Input
           name="email"
           type="email"
-          label="Correo (usuario)"
+          label={USERS_COPY.emailOptional}
           defaultValue={v("email")}
           error={f.email}
-          required
         />
         <Input
           name="password"

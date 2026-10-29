@@ -44,11 +44,14 @@ export function LoginForm({ next }: { next?: string | undefined }) {
     <form action={action} className="flex flex-col gap-lg" noValidate>
       <input type="hidden" name="next" value={next ?? "/"} />
       <Input
-        name="email"
-        label={authCopy.emailLabel}
-        type="email"
-        autoComplete="email"
-        error={state.fields?.email}
+        name="identifier"
+        label={authCopy.loginIdLabel}
+        hint={authCopy.loginIdHint}
+        type="text"
+        autoComplete="username"
+        autoCapitalize="none"
+        spellCheck={false}
+        error={state.fields?.identifier}
       />
       <Input
         name="password"

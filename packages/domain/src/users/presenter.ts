@@ -30,7 +30,13 @@ export const USERS_COPY = {
   corporateAdmin: "Admin corporativo (todos los centros)",
   noServiceKey:
     "El servidor no tiene configurada la llave de servicio (SUPABASE_SERVICE_ROLE_KEY): no se pueden crear cuentas ni cambiar contraseñas.",
+  phone: "Celular (usuario)",
+  emailOptional: "Correo (opcional)",
+  loginHint: "Entra con su celular o su correo: escribe al menos uno. El celular no recibe SMS.",
   emailTaken: "Ya existe una cuenta con ese correo.",
+  phoneTaken: "Ya existe una cuenta con ese celular.",
+  phoneDisabled:
+    "El acceso con celular no está activado en Supabase (Authentication → Providers → Phone). Usa el correo o pide que lo activen.",
 } as const;
 
 /** Fila del listado: nombre, correo, accesos, estado y último acceso. */
@@ -57,6 +63,13 @@ export type OrgUserView = ReturnType<typeof presentOrgUser>;
 export function usersErrorMessage(error: { kind: string; message: string }): string {
   if (error.kind === "permission_denied") return error.message || USERS_COPY.onlyCorporate;
   if (error.kind === "unavailable") return "Sin conexión: intenta de nuevo.";
+  if (/phone_exists|phone number already/i.test(error.message)) return USERS_COPY.phoneTaken;
+  if (
+    /phone_provider_disabled|phone.*(signups|logins).*disabled|unsupported phone provider/i.test(
+      error.message,
+    )
+  )
+    return USERS_COPY.phoneDisabled;
   if (/already been registered|already registered|email_exists/i.test(error.message))
     return USERS_COPY.emailTaken;
   return error.message;

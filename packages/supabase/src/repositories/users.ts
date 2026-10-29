@@ -83,11 +83,11 @@ const authError = (e: { message?: string; code?: string; status?: number } | nul
  */
 export function createUserAccountsAdmin(serviceClient: MeguiarsSupabaseClient): UserAccountsAdmin {
   return {
-    async create({ email, password, fullName }) {
+    async create({ email, phone, password, fullName }) {
       const { data, error } = await serviceClient.auth.admin.createUser({
-        email,
+        ...(email ? { email, email_confirm: true } : {}),
+        ...(phone ? { phone, phone_confirm: true } : {}),
         password,
-        email_confirm: true,
         user_metadata: { full_name: fullName },
       });
       if (error || !data.user) return authError(error);

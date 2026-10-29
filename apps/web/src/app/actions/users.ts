@@ -47,6 +47,7 @@ export async function createUserAction(_prev: UsersFormState, form: FormData): P
     organizationId: ctx.organizationId,
     fullName: text(form, "fullName"),
     email: text(form, "email"),
+    phone: text(form, "phone"),
     password: text(form, "password"),
     confirmPassword: text(form, "confirmPassword"),
     accessKind: text(form, "accessKind"),
@@ -66,7 +67,12 @@ export async function createUserAction(_prev: UsersFormState, form: FormData): P
   if (!service) return stamp({ error: USERS_COPY.noServiceKey, values: keep() });
   const accounts = createUserAccountsAdmin(service);
   const v = parsed.data;
-  const created = await accounts.create({ email: v.email, password: v.password, fullName: v.fullName });
+  const created = await accounts.create({
+    email: v.email,
+    phone: v.phone,
+    password: v.password,
+    fullName: v.fullName,
+  });
   if (!created.ok) return stamp({ error: usersErrorMessage(created.error), values: keep() });
   const userId = created.data.userId;
   // El acceso se asigna con la sesión del admin (permisos y auditoría de la base).

@@ -1,17 +1,17 @@
 # Administración / Usuarios (A1)
 
-El admin corporativo da de alta a las personas con **correo (usuario) y contraseña**, les asigna roles por centro o corporativos, cambia contraseñas y desactiva o reactiva cuentas. Web: **Finanzas → Usuarios** (`/equipo/usuarios`, ficha en `/equipo/usuarios/[id]`). Móvil: **Usuarios** en consulta; las altas y contraseñas se hacen en la web. Decisiones en [ADR 0028](../adr/0028-alta-de-usuarios-con-llave-de-servicio.md).
+El admin corporativo da de alta a las personas con **celular o correo (usuario) y contraseña**, les asigna roles por centro o corporativos, cambia contraseñas y desactiva o reactiva cuentas. Web: **Finanzas → Usuarios** (`/equipo/usuarios`, ficha en `/equipo/usuarios/[id]`). Móvil: **Usuarios** en consulta; las altas y contraseñas se hacen en la web. Decisiones en [ADR 0028](../adr/0028-alta-de-usuarios-con-llave-de-servicio.md).
 
 ## Qué se puede hacer
 
-| Acción               | Cómo                                                                                                                                   |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Alta                 | Nombre, correo, contraseña (mínimo 8, con confirmación) y acceso: admin corporativo o un rol en uno o más centros. Motivo obligatorio. |
-| Cambiar contraseña   | Nueva contraseña con confirmación. La persona también puede cambiarla con “¿Olvidaste tu contraseña?”.                                 |
-| Roles                | Asignar o cambiar el rol en un centro (uno por centro), hacer admin corporativo, o quitar un rol (queda inactivo). Motivo obligatorio. |
-| Desactivar/Reactivar | Retira todo acceso por RLS y bloquea el login (`banned_until`). Motivo obligatorio. Nunca la propia cuenta.                            |
+| Acción               | Cómo                                                                                                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Alta                 | Nombre, celular y/o correo (al menos uno), contraseña (mínimo 8, con confirmación) y acceso: admin corporativo o un rol en uno o más centros. Motivo obligatorio. |
+| Cambiar contraseña   | Nueva contraseña con confirmación. La persona también puede cambiarla con “¿Olvidaste tu contraseña?”.                                                            |
+| Roles                | Asignar o cambiar el rol en un centro (uno por centro), hacer admin corporativo, o quitar un rol (queda inactivo). Motivo obligatorio.                            |
+| Desactivar/Reactivar | Retira todo acceso por RLS y bloquea el login (`banned_until`). Motivo obligatorio. Nunca la propia cuenta.                                                       |
 
-La cuenta se crea confirmada (sin correo de verificación). Si el acceso inicial no se puede asignar, el alta se deshace.
+La cuenta se crea confirmada (sin correo de verificación ni SMS); con celular, la persona entra con celular + contraseña (ADR 0048). Si el acceso inicial no se puede asignar, el alta se deshace.
 
 ## Permisos
 
@@ -27,7 +27,7 @@ Crear la cuenta y cambiar su contraseña requieren la Auth Admin API (`SUPABASE_
 
 - `private.org_user_ids`, `private.user_in_other_org`.
 - `public.can_admin_users(org)`, `public.can_admin_user(org, user)`.
-- `public.org_users(org)`: usuarios con correo, nombre, estado, último acceso, roles corporativos y por centro.
+- `public.org_users(org)`: usuarios con correo (o celular +52… si no tiene correo), nombre, estado, último acceso, roles corporativos y por centro.
 - `public.admin_set_user_disabled(org, user, disabled, reason)`: usa `set_user_disabled` (perfil inactivo + login bloqueado) con bitácora.
 
 ## Pruebas

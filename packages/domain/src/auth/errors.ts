@@ -14,6 +14,9 @@ export function authErrorMessage(
       return authCopy.errors.invalidCredentials;
     case "email_not_confirmed":
       return authCopy.errors.emailNotConfirmed;
+    case "phone_provider_disabled":
+    case "phone_not_confirmed":
+      return authCopy.errors.phoneUnavailable;
     case "user_banned":
       return authCopy.errors.disabled;
     case "over_request_rate_limit":
