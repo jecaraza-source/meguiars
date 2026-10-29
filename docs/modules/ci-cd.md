@@ -145,7 +145,7 @@ Vercel no distribuye la app móvil. Los binarios se construyen con **EAS Build**
 - **Variables de Supabase:** en **EAS Environment Variables** (`expo.dev` → proyecto → Environment variables), con visibilidad _Plain text_ porque son públicas:
   - `preview`: `EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_ANON_KEY` de staging;
   - `production`: las de `meguiars`.
-- **En CI:** el job `mobile` compila el bundle en cada PR. Los builds firmados se piden a mano: _Actions → Build móvil (EAS) → Run workflow_ con perfil y plataforma. `production` sólo se permite desde `main` y usa el environment `production`, que requiere aprobación.
+- **En CI:** el job `mobile` compila el bundle en cada PR. Los builds firmados se piden a mano: _Actions → Build móvil (EAS) → Run workflow_ con perfil y plataforma. `production` sólo se permite desde `main` y usa el environment `production`, que requiere aprobación. Con **«Esperar a que termine»** el job queda abierto hasta que EAS acaba (hasta 90 min de Actions) y el resumen del run trae la página y el archivo (APK/AAB/IPA) de cada build (`scripts/eas-build-summary.mjs`); falla si un build no termina bien.
 
 ### Actualizaciones sin reinstalar (EAS Update)
 
