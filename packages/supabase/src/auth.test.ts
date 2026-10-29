@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { loadAuthState, sendPasswordReset, setActiveCenter, signInWithPassword } from "./auth";
 import type { MeguiarsSupabaseClient } from "./client";
 
-const USER = { id: "u1", email: "ana@demo.mx" };
+const USER: { id: string; email?: string | null; phone?: string } = { id: "u1", email: "ana@demo.mx" };
 const centerRow = (id: string, roles: string[]) => ({
   id,
   organization_id: "o1",
@@ -67,6 +67,17 @@ describe("loadAuthState", () => {
     expect(raw.rpc).not.toHaveBeenCalled();
   });
 
+  it("quien entra con celular se muestra con su celular", async () => {
+    const { client } = fakeClient({
+      user: { id: "u1", email: null, phone: "525512345678" },
+      profile: { id: "u1", full_name: "Ana", active: false, last_detail_center_id: null },
+    });
+    expect(await loadAuthState(client)).toEqual({
+      ok: true,
+      data: { status: "disabled", email: "+52 55 1234 5678" },
+    });
+  });
+
   it("usa el centro guardado en el perfil cuando sigue siendo válido", async () => {
     const { client } = fakeClient({
       user: USER,
@@ -85,6 +96,16 @@ describe("acciones de sesión", () => {
     });
     const result = await signInWithPassword(client, { email: "x@y.mx", password: "mala" });
     expect(result.ok || result.error.message).toBe(authCopy.errors.invalidCredentials);
+  });
+
+  it("login con celular manda el celular a Supabase (sin correo)", async () => {
+    const { client, raw } = fakeClient({ signIn: { data: { user: { id: "u2" } }, error: null } });
+    const result = await signInWithPassword(client, { phone: "+525512345678", password: "segura123" });
+    expect(result).toEqual({ ok: true, data: { userId: "u2" } });
+    expect(raw.auth.signInWithPassword).toHaveBeenCalledWith({
+      phone: "+525512345678",
+      password: "segura123",
+    });
   });
 
   it("recuperación pasa la URL de retorno a Supabase", async () => {

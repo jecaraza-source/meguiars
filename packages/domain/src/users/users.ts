@@ -68,7 +68,13 @@ export interface UsersRepository {
  * sesión del admin.
  */
 export interface UserAccountsAdmin {
-  create(input: { email: string; password: string; fullName: string }): Promise<Result<{ userId: string }>>;
+  /** Alta con correo, celular (E.164) o ambos; queda confirmado (no se envía correo ni SMS). */
+  create(input: {
+    email?: string | undefined;
+    phone?: string | undefined;
+    password: string;
+    fullName: string;
+  }): Promise<Result<{ userId: string }>>;
   setPassword(userId: string, password: string): Promise<Result<void>>;
   /** Deshace un alta cuyo acceso no se pudo asignar. */
   remove(userId: string): Promise<Result<void>>;

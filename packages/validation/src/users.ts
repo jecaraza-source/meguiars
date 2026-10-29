@@ -1,4 +1,4 @@
-import { MIN_PASSWORD_LENGTH } from "@meguiars/domain";
+import { MIN_PASSWORD_LENGTH, normalizePhone } from "@meguiars/domain";
 import { z } from "zod";
 import { appRoleSchema, changeReasonSchema } from "./centers";
 
@@ -21,7 +21,25 @@ export const newUserSchema = z
   .object({
     organizationId: z.uuid(),
     fullName: z.string().trim().min(2, "Escribe el nombre").max(120, "Máximo 120 caracteres"),
-    email: z.string().trim().toLowerCase().pipe(z.email("Correo inválido").max(254)),
+    // Correo, celular o ambos: con cualquiera de los dos se inicia sesión.
+    email: z.preprocess(
+      (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.string().trim().toLowerCase().pipe(z.email("Correo inválido").max(254)).optional(),
+    ),
+    phone: z.preprocess(
+      (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z
+        .string()
+        .transform((v, ctx) => {
+          const phone = normalizePhone(v);
+          if (!phone) {
+            ctx.addIssue({ code: "custom", message: "Celular de 10 dígitos" });
+            return z.NEVER;
+          }
+          return phone;
+        })
+        .optional(),
+    ),
     accessKind: z.enum(["corporativo", "centro"], { message: "Elige el tipo de acceso" }),
     role: z.preprocess((v) => (v === "" ? undefined : v), appRoleSchema.optional()),
     centerIds: z.preprocess((v) => (v == null ? [] : Array.isArray(v) ? v : [v]), z.array(z.uuid()).max(50)),
@@ -31,6 +49,8 @@ export const newUserSchema = z
   })
   .superRefine((v, ctx) => {
     passwordsMatch(v, ctx);
+    if (!v.email && !v.phone)
+      ctx.addIssue({ code: "custom", path: ["phone"], message: "Escribe el celular o el correo" });
     if (v.accessKind === "centro" && !v.role)
       ctx.addIssue({ code: "custom", path: ["role"], message: "Elige el rol" });
     if (v.accessKind === "corporativo" && v.role === "tecnico")

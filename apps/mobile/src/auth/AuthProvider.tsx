@@ -4,6 +4,7 @@ import {
   parseAuthRedirect,
   authErrorMessage,
   type AuthState,
+  type LoginIdentifier,
   type Result,
 } from "@meguiars/domain";
 import {
@@ -27,7 +28,8 @@ interface AuthContextValue {
   recovery: boolean;
   /** Mensaje de un enlace de recuperación inválido o expirado. */
   linkError: string | null;
-  signIn(email: string, password: string): Promise<string | null>;
+  /** Correo o celular ya interpretados (loginSchema). */
+  signIn(identifier: LoginIdentifier, password: string): Promise<string | null>;
   signOut(): Promise<void>;
   sendReset(email: string): Promise<Result<null>>;
   updatePassword(password: string): Promise<Result<null>>;
@@ -125,10 +127,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     state,
     recovery,
     linkError,
-    async signIn(email, password) {
+    async signIn(identifier, password) {
       if (!supabase) return authCopy.errors.unknown;
       showingDisabled.current = false;
-      const result = await signInWithPassword(supabase, { email, password });
+      const result = await signInWithPassword(supabase, { ...identifier, password });
       return result.ok ? null : result.error.message;
     },
     async signOut() {

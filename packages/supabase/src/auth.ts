@@ -1,9 +1,11 @@
 import {
+  accountLabel,
   authErrorMessage,
   buildAuthState,
   fail,
   ok,
   type AuthState,
+  type LoginIdentifier,
   type Result,
   type SessionUser,
 } from "@meguiars/domain";
@@ -35,7 +37,8 @@ export async function loadAuthState(
 
   const user: SessionUser = {
     id: data.user.id,
-    email: data.user.email ?? "",
+    // Quien entra con celular no tiene correo: se muestra el celular.
+    email: accountLabel({ email: data.user.email, phone: data.user.phone }),
     fullName: profile.data.full_name,
     active: profile.data.active,
     lastDetailCenterId: profile.data.last_detail_center_id,
@@ -49,10 +52,14 @@ export async function loadAuthState(
 
 export async function signInWithPassword(
   client: MeguiarsSupabaseClient,
-  credentials: { email: string; password: string },
+  credentials: LoginIdentifier & { password: string },
 ): Promise<Result<{ userId: string }>> {
   try {
-    const { data, error } = await client.auth.signInWithPassword(credentials);
+    const { data, error } = await client.auth.signInWithPassword(
+      "phone" in credentials
+        ? { phone: credentials.phone, password: credentials.password }
+        : { email: credentials.email, password: credentials.password },
+    );
     if (error) return authFail(error);
     return ok({ userId: data.user.id });
   } catch (error) {

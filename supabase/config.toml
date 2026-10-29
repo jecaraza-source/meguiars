@@ -256,8 +256,10 @@ otp_expiry = 3600
 # content_path = "./supabase/templates/password_changed_notification.html"
 
 [auth.sms]
-# Allow/disallow new user signups via SMS to your project.
-enable_signup = false
+# Activa el proveedor Phone: el equipo puede entrar con celular + contraseña. Las cuentas
+# las crea el admin con el celular confirmado (sin SMS); el registro público sigue
+# apagado por [auth] enable_signup = false.
+enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
 # Template for sending OTP to users

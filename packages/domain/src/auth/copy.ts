@@ -2,11 +2,14 @@
 export const authCopy = {
   loginTitle: "Iniciar sesión",
   emailLabel: "Correo electrónico",
+  loginIdLabel: "Correo o celular",
+  loginIdHint: "Tu correo o tu celular a 10 dígitos.",
   passwordLabel: "Contraseña",
   submitLogin: "Entrar",
   forgotLink: "¿Olvidaste tu contraseña?",
   forgotTitle: "Recuperar contraseña",
-  forgotHelp: "Te enviaremos un enlace para crear una nueva contraseña.",
+  forgotHelp:
+    "Te enviaremos un enlace para crear una nueva contraseña. Si entras con tu celular, pide al administrador que te asigne una nueva.",
   submitForgot: "Enviar enlace",
   forgotSent:
     "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Revisa también tu carpeta de spam.",
@@ -38,8 +41,10 @@ export const authCopy = {
   submitEditCenter: "Guardar cambios",
   saved: "Cambios guardados.",
   errors: {
-    invalidCredentials: "Correo o contraseña incorrectos.",
+    invalidCredentials: "Correo o celular, o contraseña, incorrectos.",
     emailNotConfirmed: "Confirma tu correo antes de iniciar sesión.",
+    phoneUnavailable:
+      "Por ahora no se puede entrar con celular. Entra con tu correo o avisa al administrador.",
     disabled: "Tu cuenta está deshabilitada.",
     rateLimited: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
     weakPassword: "La contraseña es demasiado débil.",

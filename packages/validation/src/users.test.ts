@@ -42,6 +42,14 @@ describe("alta de usuario", () => {
     ]);
     expect(issues({ accessKind: "corporativo", role: "", centerIds: [] })).toEqual([]);
   });
+  it("celular o correo: al menos uno; el celular se guarda en E.164", () => {
+    expect(newUserSchema.parse({ ...base, email: "", phone: "55 1234 5678" })).toMatchObject({
+      email: undefined,
+      phone: "+525512345678",
+    });
+    expect(issues({ email: "", phone: "" })).toEqual(["phone: Escribe el celular o el correo"]);
+    expect(issues({ phone: "123" })).toEqual(["phone: Celular de 10 dígitos"]);
+  });
   it("correo y motivo", () => {
     expect(issues({ email: "no-es-correo" })).toEqual(["email: Correo inválido"]);
     expect(issues({ reason: "" }).length).toBe(1);

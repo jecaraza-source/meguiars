@@ -65,10 +65,13 @@ _Authentication → URL Configuration_:
 _Authentication → Sign In / Providers_:
 
 - **Allow new users to sign up: apagado.** No hay registro público: las cuentas las crea el admin en Usuarios (`auth.admin.createUser` con la llave de servicio), que sigue funcionando así.
+- **Phone: activado** (Authentication → Sign In / Providers → Phone), con **«Enable phone confirmations» apagado**. El equipo puede entrar con **celular + contraseña** (ADR 0048): el admin crea la cuenta con el celular ya confirmado y no se envía SMS, así que no hace falta proveedor de SMS para este uso. Si el panel no deja guardar sin proveedor, se configura uno (Twilio) sólo para habilitarlo; sin códigos por SMS no hay cargos.
 - **Email → Minimum password length: 8**, la misma que valida la app (`MIN_PASSWORD_LENGTH`). Sin requisitos de caracteres extra, para no rechazar contraseñas que la app acepta.
 - **Prevent use of leaked passwords: encendido** (contra HaveIBeenPwned; requiere plan Pro). El asesor `auth_leaked_password_protection` deja de marcarse.
 
-`supabase/config.toml` tiene lo mismo para el entorno local (registro apagado y mínimo 8).
+`supabase/config.toml` tiene lo mismo para el entorno local (registro apagado, mínimo 8 y proveedor Phone activo).
+
+**Acceso:** un solo campo «Correo o celular» en web y móvil (`loginSchema` → `parseLoginIdentifier`): con «@» es correo; si no, celular (10 dígitos = México, se guarda en E.164 +52…). Quien entra con celular se muestra con su celular (`accountLabel`). La recuperación por enlace es sólo para correo: a quien entra con celular le cambia la contraseña el admin en Usuarios.
 
 ## Variables de entorno
 
