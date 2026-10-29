@@ -4,7 +4,9 @@ import type { AuthState } from "./auth/session";
 import { guardScreen } from "./auth/guards";
 import {
   landingScreen,
+  NAV_GROUPS,
   NAV_SECTIONS,
+  navGroups,
   navScreenOf,
   sectionOfPath,
   sectionOfScreen,
@@ -306,5 +308,23 @@ describe("navegación por rol", () => {
     // Sólo quien administra el centro cambia sus datos.
     expect(itemsOf(["admin_socio"])).toContain("editCenter");
     expect(itemsOf(["encargado"])).not.toContain("editCenter");
+  });
+
+  it("grupos del menú: cada opción en un solo grupo y sin grupos vacíos para el rol", () => {
+    for (const section of NAV_SECTIONS) {
+      const grouped = NAV_GROUPS[section.id].flatMap((g) => g.screens);
+      expect([...grouped].sort()).toEqual(section.items.map((i) => i.screen).sort());
+      expect(new Set(grouped).size).toBe(grouped.length);
+    }
+    const comercial = visibleNavigation(stateFor(["encargado"])).find((s) => s.id === "comercial")!;
+    expect(navGroups(comercial).map((g) => g.label)).toEqual([
+      "Resumen",
+      "Atención a clientes",
+      "Membresías y CRM",
+      "Empresas (B2B)",
+      "Ventas e indicadores",
+    ]);
+    const recepcion = visibleNavigation(stateFor(["operador_recepcion"])).find((s) => s.id === "marketing")!;
+    expect(navGroups(recepcion)).toEqual([{ label: "Campañas y contenido", items: recepcion.items }]);
   });
 });

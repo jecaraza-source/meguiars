@@ -220,6 +220,53 @@ export const NAV_SECTIONS: readonly NavSection[] = BASE_SECTIONS.map((section) =
 }));
 
 /**
+ * Grupos de cada sección para menús con muchas opciones (hoja de navegación en
+ * móvil). Cada pantalla del menú pertenece a un solo grupo; el orden de los
+ * grupos es el de esta tabla y, dentro de cada uno, el de NAV_SECTIONS.
+ */
+export const NAV_GROUPS: Record<NavSectionId, readonly { label: string; screens: readonly Screen[] }[]> = {
+  inicio: [{ label: "Inicio", screens: ["home", "myWork"] }],
+  operacion: [
+    { label: "El día", screens: ["operacion", "agenda", "orders", "cash"] },
+    { label: "Clientes y catálogo", screens: ["clients", "catalog"] },
+  ],
+  comercial: [
+    { label: "Resumen", screens: ["comercial", "commercialPanel"] },
+    { label: "Atención a clientes", screens: ["inbox", "conversationHistory", "leads", "quotes"] },
+    { label: "Membresías y CRM", screens: ["memberships", "crmCustomers", "crmTasks", "duplicates"] },
+    { label: "Empresas (B2B)", screens: ["b2bAccounts", "b2bProfitability"] },
+    {
+      label: "Ventas e indicadores",
+      screens: ["pipeline", "pipelineMetrics", "upsell", "commercialReports"],
+    },
+  ],
+  marketing: [
+    { label: "Campañas y contenido", screens: ["campaigns", "contentCalendar", "promotions"] },
+    { label: "Clientes", screens: ["segments", "automations"] },
+  ],
+  finanzas: [
+    { label: "Resumen", screens: ["finanzas"] },
+    { label: "Ingresos", screens: ["payments", "receivables"] },
+    { label: "Gastos y resultados", screens: ["expenses", "pnl"] },
+  ],
+  direccion: [
+    { label: "Tableros", screens: ["direccion", "dashboards", "kpis"] },
+    { label: "Seguimiento", screens: ["alerts", "reportEmails", "pilot"] },
+  ],
+  configuracion: [
+    { label: "Centro y equipo", screens: ["editCenter", "centers", "team", "users"] },
+    { label: "WhatsApp y redes", screens: ["assistant", "integrations"] },
+  ],
+};
+
+/** Ítems visibles de una sección, agrupados (sin grupos vacíos). */
+export function navGroups(section: NavSection): { label: string; items: NavItem[] }[] {
+  return NAV_GROUPS[section.id]
+    .map((g) => ({ label: g.label, items: section.items.filter((i) => g.screens.includes(i.screen)) }))
+    .filter((g) => g.items.length > 0);
+}
+
+/**
  * Pantalla de inicio del centro activo: el técnico / lavador (sólo «Mi día», sin
  * operación del centro) entra directo a sus asignaciones; los demás, a «Mi centro».
  */
