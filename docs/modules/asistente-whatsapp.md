@@ -235,3 +235,7 @@ Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, 
 - Validar los recordatorios con la plantilla aprobada y el número real.
 - F3: membresías, reactivación de clientes con consentimiento.
 - Correr la evaluación con la llave real y el modelo elegido (ver arriba) antes de pasar a «activo».
+
+## Opciones numeradas
+
+Cuando el cliente tiene que elegir (servicio, centro, horario, sí/no), el asistente numera las opciones (1., 2., 3.…, una por línea) y cierra con «Responde con el número de tu opción». Si el cliente contesta sólo con un número, se toma como esa opción del último mensaje (regla en `assistantRules`, `packages/domain/src/assistant/turn.ts`).

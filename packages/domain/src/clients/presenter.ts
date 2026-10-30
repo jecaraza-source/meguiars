@@ -1,6 +1,6 @@
 import type { CenterAccess } from "../access/access";
 import { formatDateInCenterTimeZone } from "../time";
-import type { ClientDetail, ClientHistoryEntry, ClientSearchResult } from "./client";
+import type { ClientDetail, ClientHistoryEntry, ClientListItem, ClientSearchResult } from "./client";
 import {
   CLIENT_KIND_LABELS,
   clientsCopy,
@@ -21,6 +21,11 @@ const date = (utc: string | null, timeZone: string) =>
 
 /** Fila de resultados de búsqueda (mismos textos en web y móvil). */
 export function presentSearchResult(result: ClientSearchResult, timeZone: string) {
+  return { ...presentClientListItem(result, timeZone), match: SEARCH_MATCH_LABELS[result.matchedOn] };
+}
+
+/** Fila del catálogo completo (igual que la búsqueda, sin «coincide por»). */
+export function presentClientListItem(result: ClientListItem, timeZone: string) {
   return {
     id: result.id,
     name: result.fullName,
@@ -28,7 +33,17 @@ export function presentSearchResult(result: ClientSearchResult, timeZone: string
     plates: result.plates.join(", ") || "—",
     home: result.homeCenterName ?? "Otro centro",
     lastVisit: date(result.lastVisitAt, timeZone),
-    match: SEARCH_MATCH_LABELS[result.matchedOn],
+  };
+}
+
+/** «Mostrando 51–100 de 230» y si hay página anterior o siguiente. */
+export function clientPageInfo(page: number, total: number, pageSize: number) {
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+  return {
+    label: total === 0 ? "Sin clientes" : `Mostrando ${from}–${to} de ${total}`,
+    hasPrev: page > 1,
+    hasNext: page * pageSize < total,
   };
 }
 

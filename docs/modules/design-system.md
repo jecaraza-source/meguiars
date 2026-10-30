@@ -131,3 +131,7 @@ Cada opción del menú tiene una descripción breve de lo que se captura o consu
   - verificación de estilos escritos a mano en las apps.
 - `domain`: navegación por rol para los 5 roles, roles combinados, sección activa por ruta y pantalla, KPIs de Dirección, y fecha y hora por centro.
 - **E2E del design system**: 15 comprobaciones en escritorio, tablet y móvil que cubren layout, rejillas, barra inferior, tablas como tarjetas, áreas táctiles, foco, etiquetas, modal y aviso, y navegación por rol y por centro activo. El e2e de sesión de F0.3 (17 comprobaciones) sigue pasando.
+
+## Enter en formularios (web)
+
+En las pantallas internas, Enter dentro de un campo no envía el formulario: hay que tocar el botón (Guardar, Continuar…). Lo hace `EnterGuard` (`apps/web/src/components/enter-guard.tsx`, montado en `AppShell`). Siguen enviándose con Enter los formularios GET (buscadores y filtros), las áreas de texto y los botones enfocados; un formulario puede permitirlo con `data-enter-submit="true"`. En móvil ningún formulario se guarda con la tecla Enter; sólo las búsquedas.
