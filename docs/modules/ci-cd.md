@@ -177,7 +177,7 @@ Después crea un _access token_ en expo.dev (_Account settings → Access tokens
 Desde GitHub, sólo en `main` y con la aprobación del environment `production`:
 
 - _Actions → Build móvil (EAS)_ con `production` y **«Enviar a la tienda»**: EAS compila y, al terminar, sube el build (`--auto-submit`). iOS va a App Store Connect / TestFlight; Android, a la **prueba interna** de Google Play.
-- _Actions → Enviar a tiendas (EAS Submit)_: manda el último build de producción ya terminado (iOS, Android o ambos), sin recompilar.
+- _Actions → Enviar a tiendas (EAS Submit)_: manda el último build de producción ya terminado (iOS, Android o ambos), sin recompilar. Con «ID del build» manda ese build exacto (cópialo de expo.dev; útil si hay un build de preview más reciente).
 - `scripts/check-store-submit.mjs` verifica antes el perfil `submit.production` de `apps/mobile/eas.json`: `ios.ascAppId` (número «Apple ID» de la app en App Store Connect, no es secreto) y `android.track` (`internal`, `releaseStatus: completed`).
 
 Llaves (se guardan en EAS, nunca en el repo ni en GitHub):

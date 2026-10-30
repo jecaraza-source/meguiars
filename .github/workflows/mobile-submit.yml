@@ -15,6 +15,10 @@ on:
         type: choice
         options: [ios, android, all]
         default: ios
+      build_id:
+        description: ID del build de EAS (opcional; vacío = el más reciente). Úsalo si hay un build de preview más nuevo.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -46,5 +50,15 @@ jobs:
         run: node scripts/check-store-submit.mjs "$PLATFORM"
       - run: npm ci
       # Encola el envío en EAS y termina; el progreso se ve en expo.dev → Submissions.
-      - run: npx --yes eas-cli@24.8.0 submit --profile production --platform "$PLATFORM" --latest --non-interactive --no-wait
+      - name: Enviar
         working-directory: apps/mobile
+        env:
+          BUILD_ID: ${{ inputs.build_id }}
+        run: |
+          if [[ -n "$BUILD_ID" ]]; then
+            [[ "$PLATFORM" != "all" ]] || { echo "::error::Con build_id elige ios o android."; exit 1; }
+            [[ "$BUILD_ID" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::build_id inválido."; exit 1; }
+            npx --yes eas-cli@24.8.0 submit --profile production --platform "$PLATFORM" --id "$BUILD_ID" --non-interactive --no-wait
+          else
+            npx --yes eas-cli@24.8.0 submit --profile production --platform "$PLATFORM" --latest --non-interactive --no-wait
+          fi
