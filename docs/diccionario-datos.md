@@ -2351,6 +2351,33 @@ CASE
 | `updated_at` | timestamp with time zone | no | now() |
 | `operator_commission_pct` | numeric(5,2) | sí |  |
 
+### `supply_lots`
+
+- **Módulo:** [ejecucion-evidencias](modules/ejecucion-evidencias.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `inventory_item_id` | uuid | no |  |
+| `lot_code` | text | no |  |
+| `expires_on` | date | no |  |
+| `received_on` | date | no |  |
+| `quantity` | numeric(12,3) | sí |  |
+| `notes` | text | sí |  |
+| `status` | text | no | 'activo'::text |
+| `closed_reason` | text | sí |  |
+| `closed_at` | timestamp with time zone | sí |  |
+| `closed_by` | uuid | sí |  |
+| `request_id` | uuid | no |  |
+| `version` | integer | no | 1 |
+| `created_by` | uuid | sí | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `updated_at` | timestamp with time zone | no | now() |
+
 ### `technicians`
 
 - **Módulo:** [agenda](modules/agenda.md)

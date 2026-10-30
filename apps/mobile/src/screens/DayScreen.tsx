@@ -1,9 +1,17 @@
-import { DAY_COPY, sectionCopy } from "@meguiars/domain";
+import {
+  activeCenterAccess,
+  DAY_COPY,
+  guardScreen,
+  sectionCopy,
+  supplyLotAlert,
+  supplyLotsCopy,
+} from "@meguiars/domain";
 import {
   createCashRepository,
   createDayRepository,
   createPaymentRepository,
   createPnlRepository,
+  createSupplyLotRepository,
 } from "@meguiars/supabase";
 import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -29,19 +37,27 @@ export function DayScreen({
   onAppointment,
   onNewOrder,
   onNewAppointment,
+  onLots,
 }: PrivateScreenProps & {
   onOrder: (id: string) => void;
   onAppointment: (id: string) => void;
   onNewOrder: () => void;
   onNewAppointment: () => void;
+  onLots: () => void;
 }) {
   const { client } = useAuth();
   const [d, setD] = useState<DayView | null>(null);
+  const [lotAlert, setLotAlert] = useState<ReturnType<typeof supplyLotAlert>>(null);
   const [version, setVersion] = useState(0);
   useEffect(() => {
     if (!client) return;
     let active = true;
     void loadDayView(state, createDayRepository(client)).then((v) => active && setD(v));
+    // Aviso de lotes caducados o por caducar (ADR 0052); si falla, no se muestra.
+    if (guardScreen(state, "supplyLots").allow)
+      void createSupplyLotRepository(client)
+        .list(activeCenterAccess(state)!.center.id)
+        .then((r) => active && setLotAlert(r.ok ? supplyLotAlert(r.data) : null));
     return () => {
       active = false;
     };
@@ -57,6 +73,12 @@ export function DayScreen({
         ) : null}
         <LinkButton label="Actualizar" onPress={() => setVersion((x) => x + 1)} />
       </View>
+      {lotAlert ? (
+        <>
+          <Notice tone={lotAlert.tone} text={lotAlert.text} />
+          <LinkButton label={supplyLotsCopy.alertLink} onPress={onLots} />
+        </>
+      ) : null}
       {!d ? <Skeleton /> : null}
       <Notice text={d?.error} tone="danger" />
       {d?.view ? (

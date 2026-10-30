@@ -12,6 +12,7 @@ export * from "./repositories/memberships";
 export * from "./repositories/crm";
 export * from "./repositories/b2b";
 export * from "./repositories/commercial-ai";
+export * from "./repositories/supply-lots";
 export * from "./repositories/upsell";
 export * from "./repositories/pipeline";
 export * from "./repositories/payments";

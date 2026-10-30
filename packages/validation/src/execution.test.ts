@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { fieldErrors } from "./auth";
 import {
+  closeSupplyLotSchema,
+  registerSupplyLotSchema,
   consumptionFormSchema,
   evidenceMetaSchema,
   incidentFormSchema,
@@ -87,6 +89,27 @@ describe("ejecución: validación compartida", () => {
         quantity: "0",
         reason: "Estándar",
       }).success,
+    ).toBe(false);
+  });
+});
+
+describe("lotes de insumos", () => {
+  const base = {
+    requestId: "8c8a2d8e-3f5a-4a4e-9a49-2a6f0b8e8a11",
+    inventoryItemId: "1c8a2d8e-3f5a-4a4e-9a49-2a6f0b8e8a11",
+    lotCode: " L-1 ",
+    expiresOn: "2026-12-01",
+  };
+  it("acepta campos opcionales vacíos del formulario", () => {
+    const r = registerSupplyLotSchema.parse({ ...base, receivedOn: "", quantity: "", notes: "" });
+    expect(r).toMatchObject({ lotCode: "L-1", receivedOn: undefined, quantity: undefined, notes: undefined });
+    expect(registerSupplyLotSchema.parse({ ...base, quantity: "2.5" }).quantity).toBe(2.5);
+  });
+  it("rechaza fecha inválida y cierre sin motivo", () => {
+    expect(registerSupplyLotSchema.safeParse({ ...base, expiresOn: "01/12/2026" }).success).toBe(false);
+    expect(
+      closeSupplyLotSchema.safeParse({ id: base.requestId, version: "1", outcome: "retirado", reason: "" })
+        .success,
     ).toBe(false);
   });
 });
