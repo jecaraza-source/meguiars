@@ -156,7 +156,16 @@ export default async function B2bAccountPage({ params, searchParams }: PageProps
         ) : null}
       </Card>
 
-      <Card title={b2bCopy.vehiclesTitle}>
+      <Card
+        title={b2bCopy.vehiclesTitle}
+        actions={
+          vehicles.some((v) => v.authorized) ? (
+            <Link href={`/comercial/b2b/${account.id}/qr`} className="text-sm underline">
+              {b2bCopy.qrTitle}
+            </Link>
+          ) : null
+        }
+      >
         {vehicles.length === 0 ? <EmptyState title={b2bCopy.vehiclesEmpty} /> : null}
         <ul className="flex flex-col gap-sm" aria-label={b2bCopy.vehiclesTitle}>
           {vehicles.map((v) => (

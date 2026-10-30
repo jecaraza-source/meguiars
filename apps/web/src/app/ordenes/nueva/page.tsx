@@ -5,6 +5,7 @@ import {
   clientErrorMessage,
   newRequestId,
   ordersCopy,
+  parseB2bQrToken,
   presentSearchResult,
 } from "@meguiars/domain";
 import {
@@ -34,21 +35,65 @@ export default async function NewOrderPage({ searchParams }: PageProps<"/ordenes
   const supabase = (await createSupabaseServerClient())!;
 
   if (b2bMode) {
+    const b2b = createB2bRepository(supabase);
     const [accounts, catalog] = await Promise.all([
-      createB2bRepository(supabase).accountsForCenter(center.id),
+      b2b.accountsForCenter(center.id),
       createCatalogRepository(supabase).listForCenter(center.id),
     ]);
+    // QR del vehículo (ADR 0050): por la cámara (/q/b2b/<token>) o un lector que escribe el código.
+    const qrText = param("qr");
+    const qrToken = qrText ? parseB2bQrToken(qrText) : null;
+    const qr = qrToken ? await b2b.vehicleByQr(center.id, qrToken) : null;
+    const qrVehicle = qr?.ok && qr.data?.usable ? qr.data : null;
+    const qrMessage = !qrText
+      ? null
+      : !qrToken
+        ? b2bCopy.qrInvalid
+        : qr && !qr.ok
+          ? qr.error.message
+          : !qr?.data
+            ? b2bCopy.qrNotFound
+            : !qr.data.usable
+              ? `${qr.data.accountName} · ${qr.data.plate ?? qr.data.vehicleLabel}: ${b2bCopy.qrNotUsable}`
+              : null;
     return (
       <AppShell state={state} screen="orderNew" title={`${ordersCopy.newTitle} · ${b2bCopy.b2bMode}`}>
         <Link href="/ordenes/nueva" className="text-sm underline">
           ← {ordersCopy.newTitle}
         </Link>
+        <form method="get" action="/ordenes/nueva" className="flex flex-col gap-sm md:flex-row md:items-end">
+          <input type="hidden" name="modo" value="b2b" />
+          <div className="flex-1">
+            <Input
+              name="qr"
+              label={b2bCopy.qrScan}
+              hint="Escanea con la app o un lector; también puedes pegar el enlace."
+              defaultValue={qrVehicle ? "" : qrText}
+            />
+          </div>
+          <button type="submit" className="mg-btn" data-variant="secondary" data-size="md">
+            Buscar
+          </button>
+        </form>
+        {qrMessage ? (
+          <p role="alert" className="mg-tone rounded-md border p-md text-sm" data-tone="warning">
+            {qrMessage}
+          </p>
+        ) : null}
+        {qrVehicle ? (
+          <p role="status" className="mg-tone rounded-md border p-md text-sm" data-tone="success">
+            {qrVehicle.accountName} · {qrVehicle.plate ?? qrVehicle.vehicleLabel}
+          </p>
+        ) : null}
         <Card>
           {accounts.ok ? (
             <NewB2bOrderForm
+              key={qrVehicle?.vehicleId ?? "b2b"}
               requestId={newRequestId()}
               accounts={accounts.data}
               services={catalog.ok ? catalog.data : []}
+              initialAccountId={qrVehicle?.accountId}
+              initialVehicleId={qrVehicle?.vehicleId}
             />
           ) : (
             <p role="alert" className="text-sm">

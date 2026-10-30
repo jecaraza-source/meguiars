@@ -178,3 +178,10 @@ export const b2bAccountFilterSchema = z.object({
   status: z.preprocess(blankToUndefined, z.enum(B2B_ACCOUNT_STATUSES).optional()),
   query: optionalText(80),
 });
+
+/** Nuevo código QR de un vehículo de flotilla (con motivo). */
+export const regenerateVehicleQrSchema = z.object({
+  accountId: z.uuid(),
+  vehicleId: z.uuid(),
+  reason: changeReasonSchema,
+});

@@ -216,6 +216,35 @@ select pg_temp.assert_fails($$update public.service_orders set b2b_account_id = 
   where id = '$$ || :'os1' || $$'$$, '42501', 'la cuenta de la OS sólo cambia por las RPC B2B');
 do $$ begin perform set_config('app.change_reason', '', true); end $$;
 reset role;
+
+-- QR por vehículo (20261112000000, ADR 0050).
+select qr_token as qr1 from public.b2b_vehicles where account_id = :'acc' and vehicle_id = :'car1' \gset
+select pg_temp.login('00000000-0000-0000-0000-0000000000f1');
+select pg_temp.assert(
+  (select account_id = :'acc' and vehicle_id = :'car1' and usable and plate = 'FLT0001'
+     from public.b2b_vehicle_by_qr(:'A', :'qr1')),
+  'recepción escanea el QR del vehículo y obtiene la cuenta y el vehículo listos para la OS');
+select pg_temp.assert(not exists (select 1 from public.b2b_vehicle_by_qr(:'A', gen_random_uuid())),
+  'un QR desconocido no identifica nada');
+select pg_temp.assert_fails($$select * from public.b2b_vehicle_qr_codes('$$ || :'acc' || $$')$$, '42501',
+  'recepción no imprime las calcomanías');
+select pg_temp.assert_fails($$select public.regenerate_b2b_vehicle_qr('$$ || :'acc' || $$', '$$ || :'car1' || $$', 'Perdida')$$,
+  '42501', 'recepción no regenera códigos');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.assert((select qr_token = :'qr1' from public.b2b_vehicle_qr_codes(:'acc') where vehicle_id = :'car1'),
+  'el comercial ve los códigos de la flotilla para imprimir');
+select public.regenerate_b2b_vehicle_qr(:'acc', :'car1', 'Calcomanía perdida') as qr2 \gset
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000f1');
+select pg_temp.assert(
+  not exists (select 1 from public.b2b_vehicle_by_qr(:'A', :'qr1'))
+  and (select vehicle_id = :'car1' from public.b2b_vehicle_by_qr(:'A', :'qr2')),
+  'al regenerar, la calcomanía anterior deja de funcionar y la nueva sí');
+reset role;
+select pg_temp.assert(exists (select 1 from public.audit_log where table_name = 'public.b2b_vehicles' and reason = 'Calcomanía perdida'),
+  'regenerar el código queda auditado con motivo');
+
 select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
 select from public.add_service_order_discount(:'os1', pg_temp.v(:'os1'), null, 'amount', 20, 'Ajuste autorizado');
 select pg_temp.assert((select total = 2680 from public.service_orders where id = :'os1'),

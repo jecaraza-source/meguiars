@@ -38,6 +38,14 @@
           "photosPermission": "Meguiar's accede a tus fotos para adjuntar evidencia a una orden de servicio.",
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Meguiar's usa la cámara para leer el QR de los vehículos de flotilla y abrir su orden de servicio.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
       ]
     ],
     "extra": {

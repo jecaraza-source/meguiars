@@ -102,6 +102,8 @@ Errores: `MG002` → regla visible (vencido, vehículo no autorizado, crédito, 
 | `/ordenes/nueva?modo=b2b`       | `OrderNewScreen` → "A cuenta B2B"    | Cuenta, vehículo autorizado, orden de compra y líneas (la tarifa se aplica al guardar).                             |
 | `/ordenes/[id]`                 | `OrderDetailScreen` (`OrderB2bCard`) | Cuenta y convenio de la OS, líneas con tarifa y precio de lista; "Aplicar convenio" a una OS abierta de la empresa. |
 
+- **QR por vehículo (ADR 0050):** `/comercial/b2b/[id]/qr` imprime las calcomanías; el QR abre `/q/b2b/<token>` → OS a cuenta con cuenta y vehículo elegidos. Móvil: "Escanear QR del vehículo" en la OS a cuenta B2B.
+
 ## Datos seed
 
 - Cuenta **Transportes del Norte** (centro gestor Monterrey) con el convenio "Flotilla 2026" (tarifa por vehículo, vigente, CDMX y Monterrey, 30 días, límite $50,000): lavado exprés a $199 y 10 % sobre lista en el resto; vehículo NL4521A autorizado.

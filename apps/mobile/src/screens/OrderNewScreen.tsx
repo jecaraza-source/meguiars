@@ -2,6 +2,7 @@ import {
   activeCenterAccess,
   agendaCopy,
   b2bCopy,
+  parseB2bQrToken,
   clientErrorMessage,
   newRequestId,
   orderErrorMessage,
@@ -30,6 +31,7 @@ import {
 import { useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { NewB2bOrderEditor } from "@/components/B2bForms";
+import { QrScanner } from "@/components/QrScanner";
 import type { FieldErrors, FormValues } from "@/components/ClientFields";
 import { ChannelFields, QuantityFields } from "@/components/OrderFields";
 import { Button, Field, LinkButton, Select } from "@/ui/controls";
@@ -68,6 +70,22 @@ export function OrderNewScreen({
   const set = (key: string, value: string) => setValues((v) => ({ ...v, [key]: value }));
   // Modo "A cuenta B2B" (web: /ordenes/nueva?modo=b2b).
   const [b2b, setB2b] = useState<{ accounts: B2bAccountForOrder[]; services: CatalogItem[] } | null>(null);
+  // QR del vehículo de flotilla (ADR 0050): preselecciona la cuenta y el vehículo.
+  const [scanning, setScanning] = useState(false);
+  const [qrPick, setQrPick] = useState<{ accountId: string; vehicleId: string; label: string } | null>(null);
+  const [qrMessage, setQrMessage] = useState<string | null>(null);
+  const onScanned = async (text: string) => {
+    setScanning(false);
+    const token = parseB2bQrToken(text);
+    if (!token || !client) return setQrMessage(b2bCopy.qrInvalid);
+    const r = await createB2bRepository(client).vehicleByQr(center.id, token);
+    if (!r.ok) return setQrMessage(r.error.message);
+    if (!r.data) return setQrMessage(b2bCopy.qrNotFound);
+    const label = `${r.data.accountName} · ${r.data.plate ?? r.data.vehicleLabel}`;
+    if (!r.data.usable) return setQrMessage(`${label}: ${b2bCopy.qrNotUsable}`);
+    setQrMessage(null);
+    setQrPick({ accountId: r.data.accountId, vehicleId: r.data.vehicleId, label });
+  };
   const openB2b = async () => {
     if (!client) return;
     const [accounts, catalog] = await Promise.all([
@@ -130,14 +148,26 @@ export function OrderNewScreen({
     return (
       <Screen title={`${ordersCopy.newTitle} · ${b2bCopy.b2bMode}`} header={header}>
         <LinkButton label={`← ${ordersCopy.newTitle}`} onPress={() => setB2b(null)} />
+        <Button label={b2bCopy.qrScan} variant="secondary" onPress={() => setScanning(true)} />
+        <Notice tone="warning" text={qrMessage} />
+        {qrPick ? <Notice tone="success" text={qrPick.label} /> : null}
         <Card>
           <NewB2bOrderEditor
+            key={qrPick?.vehicleId ?? "b2b"}
             centerId={center.id}
             accounts={b2b.accounts}
             services={b2b.services}
             onCreated={onOpen}
+            initialAccountId={qrPick?.accountId}
+            initialVehicleId={qrPick?.vehicleId}
           />
         </Card>
+        <QrScanner
+          open={scanning}
+          title={b2bCopy.qrScan}
+          onClose={() => setScanning(false)}
+          onScanned={(t) => void onScanned(t)}
+        />
       </Screen>
     );
   }

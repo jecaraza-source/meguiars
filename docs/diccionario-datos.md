@@ -478,6 +478,7 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `notes` | text | sí |  |
 | `created_at` | timestamp with time zone | no | now() |
 | `updated_at` | timestamp with time zone | no | now() |
+| `qr_token` | uuid | no | gen_random_uuid() |
 
 ### `bays`
 

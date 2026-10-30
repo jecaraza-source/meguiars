@@ -380,8 +380,55 @@ export interface OrderMutationRef {
   channel: SalesChannel;
 }
 
+// ---------------------------------------------------------------------------
+// QR por vehículo de flotilla (ADR 0050)
+// ---------------------------------------------------------------------------
+
+/** Ruta del enlace del QR: <web>/q/b2b/<token>. */
+export const B2B_QR_PATH = "/q/b2b/";
+
+/** Enlace que lleva el QR del vehículo (lo abre la app o la cámara del teléfono). */
+export function b2bQrUrl(webUrl: string, token: string): string {
+  return `${webUrl.replace(/\/+$/, "")}${B2B_QR_PATH}${token}`;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Código de un QR escaneado: el enlace /q/b2b/<token> o el código solo. null si no es de un vehículo B2B. */
+export function parseB2bQrToken(text: string | null | undefined): string | null {
+  const raw = (text ?? "").trim();
+  const i = raw.indexOf(B2B_QR_PATH);
+  const candidate = (i >= 0 ? raw.slice(i + B2B_QR_PATH.length) : raw).split(/[?#/]/)[0] ?? "";
+  return UUID.test(candidate) ? candidate.toLowerCase() : null;
+}
+
+/** Vehículo identificado por un QR en el centro activo. */
+export interface B2bQrVehicle {
+  accountId: string;
+  accountName: string;
+  vehicleId: string;
+  vehicleLabel: string;
+  plate: string | null;
+  /** La cuenta tiene convenio vigente en el centro y el vehículo está activo. */
+  usable: boolean;
+}
+
+/** Vehículo con su código, para imprimir calcomanías. */
+export interface B2bVehicleQr {
+  vehicleId: string;
+  vehicleLabel: string;
+  plate: string | null;
+  costCenter: string | null;
+  driverName: string | null;
+  active: boolean;
+  token: string;
+}
+
 /** Puerto del módulo B2B (adaptador Supabase en @meguiars/supabase). */
 export interface B2bRepository {
+  vehicleByQr(detailCenterId: string, token: string): Promise<Result<B2bQrVehicle | null>>;
+  vehicleQrCodes(accountId: string): Promise<Result<B2bVehicleQr[]>>;
+  regenerateVehicleQr(accountId: string, vehicleId: string, reason: string): Promise<Result<string>>;
   /** `today` (YYYY-MM-DD, zona del centro) decide el estado efectivo del convenio mostrado. */
   listAccounts(
     today: string,

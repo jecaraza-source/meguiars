@@ -78,6 +78,17 @@ export const B2B_PAYMENT_METHOD_LABELS: Record<B2bPaymentMethod, string> = {
 
 /** Textos del módulo B2B, idénticos en web y móvil. */
 export const b2bCopy = {
+  qrTitle: "QR de la flotilla",
+  qrHelp:
+    "Imprime una calcomanía o tarjeta por vehículo. Recepción la escanea al recibir el auto y se abre la OS a cuenta.",
+  qrPrint: "Imprimir",
+  qrRegenerate: "Nuevo código",
+  qrRegenerateHelp: "Si una calcomanía se pierde, genera un código nuevo: la anterior deja de funcionar.",
+  qrScan: "Escanear QR del vehículo",
+  qrNotFound: "Ese QR no corresponde a ningún vehículo de flotilla.",
+  qrNotUsable: "La cuenta no tiene un convenio vigente en este centro o el vehículo está inactivo.",
+  qrInvalid: "Ese código no es un QR de vehículo B2B.",
+  qrCameraDenied: "Permite el uso de la cámara para escanear el QR.",
   title: "Cuentas B2B",
   description:
     "Empresas con convenio: tarifas, vehículos autorizados, consumo y saldo por facturar o cobrar.",
