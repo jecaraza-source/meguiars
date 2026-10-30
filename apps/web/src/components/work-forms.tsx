@@ -40,7 +40,7 @@ function useSuccessToast(state: ActionFormState) {
   }, [state, toast]);
 }
 
-/** Botones grandes de un servicio: Empezar y Trabajo realizado. */
+/** Botones grandes de un servicio: Empezar y Trabajo terminado. */
 export function MyWorkItemButtons({ itemId, canStart }: { itemId: string; canStart: boolean }) {
   const [state, action] = useActionState(myWorkItemAction, {});
   useSuccessToast(state);

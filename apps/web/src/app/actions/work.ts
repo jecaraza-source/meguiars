@@ -24,7 +24,7 @@ async function context(screen: Screen) {
 
 const NO_ACCESS = "Sin acceso a «Mi día» en este centro";
 
-/** Empezar o «Trabajo realizado» de un servicio (botón con name="action"). */
+/** Empezar o «Trabajo terminado» de un servicio (botón con name="action"). */
 export async function myWorkItemAction(_prev: ActionFormState, form: FormData): Promise<ActionFormState> {
   const ctx = await context("myWork");
   if (!ctx) return stamp({ error: NO_ACCESS });
@@ -37,7 +37,7 @@ export async function myWorkItemAction(_prev: ActionFormState, form: FormData): 
     message: result.data.orderFinished
       ? MY_WORK_COPY.finished
       : action === "done"
-        ? "Trabajo realizado"
+        ? "Trabajo terminado"
         : "Servicio empezado",
   });
 }

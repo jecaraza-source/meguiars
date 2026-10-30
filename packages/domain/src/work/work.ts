@@ -3,11 +3,13 @@ import type { EvidenceKind, EvidenceMimeType, ItemWorkStatus } from "../executio
 import type { Result } from "../result";
 import type { AppRole } from "../roles";
 import type { ServiceOrderStatus } from "../orders/order";
+import { addDays } from "../agenda/zoned-time";
+import { formatMoney } from "../catalog/presenter";
 import { formatTimeInCenterTimeZone } from "../time";
 
 /**
  * «Mi día» del técnico / lavador: sus asignaciones con botones grandes
- * (Empezar, Trabajo realizado, Foto, Comentario, Problema). La base decide qué
+ * (Empezar, Trabajo terminado, Foto, Comentario, Problema) y «Mi semana». La base decide qué
  * le toca (public.my_work) y valida cada acción (public.my_work_*).
  */
 
@@ -115,9 +117,36 @@ export interface TechnicianUser {
   technicianId: string | null;
 }
 
+/** Servicio terminado por el operador en la semana (public.my_work_week). */
+export interface MyWorkWeekItem {
+  itemId: string;
+  orderId: string;
+  folio: string;
+  service: string;
+  quantity: number;
+  finishedAt: string;
+  /** Día del centro en que se terminó (YYYY-MM-DD). */
+  day: string;
+  vehicle: { make: string; model: string; plate: string | null };
+  /** Pago al operador congelado en la línea de la OS. */
+  commission: number;
+}
+
+/** Corte lunes–domingo del operador; se paga el martes siguiente. */
+export interface MyWorkWeek {
+  weekStart: string;
+  weekEnd: string;
+  payDay: string;
+  today: string;
+  items: MyWorkWeekItem[];
+  total: number;
+}
+
 /** Puerto de «Mi día». Web y móvil usan el mismo adaptador (`@meguiars/supabase`). */
 export interface MyWorkRepository {
   get(detailCenterId: string, day?: string): Promise<Result<MyWorkDay>>;
+  /** Semana (lunes–domingo) que contiene `day` (por defecto, hoy en el centro). */
+  week(detailCenterId: string, day?: string): Promise<Result<MyWorkWeek>>;
   start(itemId: string): Promise<Result<MyWorkActionResult>>;
   done(itemId: string, note?: string): Promise<Result<MyWorkActionResult>>;
   comment(orderId: string, note: string, itemId?: string): Promise<Result<void>>;
@@ -137,7 +166,14 @@ export const MY_WORK_COPY = {
   tomorrow: "Mañana",
   refresh: "Actualizar",
   start: "Empezar",
-  done: "Trabajo realizado",
+  done: "Trabajo terminado",
+  week: "Mi semana",
+  thisWeek: "Esta semana",
+  lastWeek: "Semana pasada",
+  weekEmpty: "Todavía no tienes trabajos terminados en esta semana.",
+  weekTotal: "Total a pagar",
+  noCommission: "Sin comisión configurada",
+  finishedToday: "Terminados",
   photoBefore: "Foto antes",
   photoAfter: "Foto después",
   comment: "Comentario",
@@ -232,4 +268,60 @@ export function orderTimeLabel(
 
 export function photosOf(order: Pick<MyWorkOrder, "photos">, kind: EvidenceKind): MyWorkPhoto[] {
   return order.photos.filter((p) => p.kind === kind);
+}
+
+const WEEKDAYS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/** "2026-10-27" → "lun 27 oct" (fecha calendario, sin zona). */
+export function weekdayLabel(date: string): string {
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  return `${WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${d} ${MONTHS[m - 1]}`;
+}
+
+/**
+ * «Mi semana» (igual en web y móvil): los 7 días de lunes a domingo con sus
+ * trabajos y lo que gana el operador, el total y cuándo se paga.
+ */
+export function presentMyWorkWeek(week: MyWorkWeek, timeZone: string) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(week.weekStart, i)).map((date) => {
+    const items = week.items.filter((it) => it.day === date);
+    return {
+      date,
+      label: weekdayLabel(date),
+      isToday: date === week.today,
+      count: items.length,
+      subtotal: formatMoney(items.reduce((a, it) => a + it.commission, 0)),
+      items: items.map((it) => ({
+        id: it.itemId,
+        title: `${it.quantity > 1 ? `${it.quantity} × ` : ""}${it.service}`,
+        detail: [
+          [it.vehicle.make, it.vehicle.model].filter(Boolean).join(" "),
+          it.vehicle.plate,
+          it.folio,
+          formatTimeInCenterTimeZone(it.finishedAt, timeZone),
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        pay: it.commission > 0 ? formatMoney(it.commission) : MY_WORK_COPY.noCommission,
+      })),
+    };
+  });
+  return {
+    range: `${weekdayLabel(week.weekStart)} – ${weekdayLabel(week.weekEnd)}`,
+    count: week.items.length,
+    total: formatMoney(week.total),
+    payDay: `Se paga el ${weekdayLabel(week.payDay)}`,
+    days,
+  };
+}
+
+/** «terminado 4:30 p.m.»: hora del último servicio terminado de la OS (o null). */
+export function finishedLabel(order: Pick<MyWorkOrder, "items">, timeZone: string): string | null {
+  const last = order.items
+    .map((i) => i.finishedAt)
+    .filter((t): t is string => t !== null)
+    .sort()
+    .at(-1);
+  return last ? `terminado ${formatTimeInCenterTimeZone(last, timeZone)}` : null;
 }

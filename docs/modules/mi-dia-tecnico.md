@@ -6,7 +6,7 @@ Una pantalla muy sencilla para quien lava o detalla el auto. Ve sólo lo que tie
 
 - **Agenda del día** (Hoy / Mañana): autos por trabajar, terminados de hoy y citas asignadas cuyo auto aún no llega.
 - **Por auto:** vehículo y placas, hora (o hora de entrega prometida), bahía, folio, indicaciones de recepción y avance («1 de 2 servicios»).
-- **Por servicio:** **Empezar** y **Trabajo realizado**. «Trabajo realizado» también funciona si no se tocó «Empezar».
+- **Por servicio:** **Empezar** y **Trabajo terminado**. «Trabajo terminado» también funciona si no se tocó «Empezar».
 - **Foto antes / Foto después** con la cámara (app móvil). Se comprimen igual que en la OS (lado mayor 1600 px, JPEG 70 %).
 - **Comentario** (p. ej. «tiene un rayón en la puerta») y **Reportar problema** (llega a recepción como incidencia abierta).
 - Cuando termina el último servicio, la OS queda **terminada** y recepción la entrega al cliente.
@@ -47,7 +47,7 @@ Un usuario con otro rol (p. ej. recepción) también puede estar ligado a un té
 | Función                             | Móvil (`MyWorkScreen`) | Web (`/mi-dia`)          |
 | ----------------------------------- | ---------------------- | ------------------------ |
 | Hoy / Mañana, avance e indicaciones | Sí                     | Sí                       |
-| Empezar / Trabajo realizado         | Sí                     | Sí                       |
+| Empezar / Trabajo terminado         | Sí                     | Sí                       |
 | Comentario y reportar problema      | Sí                     | Sí                       |
 | Foto antes / después                | Sí (cámara)            | No: se toman con la app  |
 | Ligar técnico ↔ usuario             | No                     | Agenda (encargado/admin) |
@@ -73,3 +73,12 @@ Un usuario con otro rol (p. ej. recepción) también puede estar ligado a un té
 - Probarlo en el piloto con los lavadores (tamaño de botones, cámara en sus teléfonos).
 - Tomar fotos desde la web (hoy sólo móvil).
 - Notificación al técnico cuando le asignan un auto.
+
+## Mi semana (pago lunes–domingo)
+
+Los cortes de los operadores van de lunes a domingo (día del centro) y se pagan el martes siguiente. La pestaña **Mi semana** (web `/mi-dia?vista=semana`, móvil «Mi semana») muestra cada servicio que el técnico terminó en la semana, agrupado por día, con su pago, el total y el día de pago. Se puede ver la semana pasada.
+
+- Fuente: `public.my_work_week(centro, día)` (migración `20261110000000`). Suma `service_order_items.operator_commission_amount` de las líneas del técnico ligado al usuario (`technician_id`), terminadas en la semana y sin OS canceladas. La comisión se congela en la línea al agregar el servicio (ADR 0026).
+- El operador ve su pago, no el precio al cliente ni la venta del centro. Un técnico no ve la semana de otro.
+- Presentación compartida: `presentMyWorkWeek` y `weekdayLabel` (`packages/domain/src/work/work.ts`).
+- En «Hoy», lo pendiente va arriba con los botones grandes y lo terminado en una lista corta (con «Foto después» mientras la OS no se entrega).

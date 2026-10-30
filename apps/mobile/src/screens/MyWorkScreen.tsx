@@ -13,7 +13,9 @@ import {
   nextActionOf,
   orderProgress,
   orderStateOf,
+  finishedLabel,
   orderTimeLabel,
+  presentMyWorkWeek,
   sortOrders,
   todayIn,
   vehicleLabel,
@@ -21,6 +23,7 @@ import {
   type MyWorkDay,
   type MyWorkItem,
   type MyWorkOrder,
+  type MyWorkWeek,
 } from "@meguiars/domain";
 import { createMyWorkRepository } from "@meguiars/supabase";
 import { colors, radius, space } from "@meguiars/ui-tokens";
@@ -40,8 +43,9 @@ type Writing = { kind: "comment" | "problem"; order: MyWorkOrder } | null;
 
 /**
  * «Mi día» del técnico / lavador (equivale a /mi-dia): sus asignaciones con
- * botones grandes. Empezar y Trabajo realizado por servicio; fotos antes y
- * después con la cámara; comentario y reportar problema.
+ * botones grandes. Empezar y Trabajo terminado por servicio; fotos antes y
+ * después con la cámara; comentario y reportar problema. Lo pendiente arriba, lo
+ * terminado en una lista corta, y «Mi semana» con su pago (lunes–domingo).
  */
 export function MyWorkScreen({ state, header, subnav }: PrivateScreenProps) {
   const { client } = useAuth();
@@ -50,6 +54,10 @@ export function MyWorkScreen({ state, header, subnav }: PrivateScreenProps) {
   const repo = useMemo(() => (client ? createMyWorkRepository(client) : null), [client]);
   const today = todayIn(center.timezone);
   const [day, setDay] = useState(today);
+  // «week» muestra Mi semana; weekDay es un día de la semana a mostrar (hoy o hace 7 días).
+  const [view, setView] = useState<"day" | "week">("day");
+  const [weekDay, setWeekDay] = useState(today);
+  const [week, setWeek] = useState<MyWorkWeek | null>(null);
   const [data, setData] = useState<MyWorkDay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -77,6 +85,24 @@ export function MyWorkScreen({ state, header, subnav }: PrivateScreenProps) {
       active = false;
     };
   }, [repo, center.id, day, reload]);
+
+  useEffect(() => {
+    if (!repo || view !== "week") return;
+    let active = true;
+    void repo.week(center.id, weekDay).then((result) => {
+      if (!active) return;
+      if (result.ok) {
+        setWeek(result.data);
+        setError(null);
+      } else {
+        setWeek(null);
+        setError(result.error.kind === "permission_denied" ? MY_WORK_COPY.notLinked : result.error.message);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [repo, center.id, view, weekDay, reload]);
 
   /** Ejecuta una acción, avisa y recarga el día. */
   const act = async (key: string, run: () => Promise<{ ok: boolean; message?: string }>, success: string) => {
@@ -163,36 +189,131 @@ export function MyWorkScreen({ state, header, subnav }: PrivateScreenProps) {
   };
 
   const orders = data ? sortOrders(data.orders) : [];
+  const pending = orders.filter((o) => orderStateOf(o) !== "terminada");
+  const finished = orders.filter((o) => orderStateOf(o) === "terminada");
+  const weekView = week ? presentMyWorkWeek(week, center.timezone) : null;
   return (
-    <Screen title={MY_WORK_COPY.title} description={data ? myWorkSummary(data) : undefined} header={header}>
+    <Screen
+      title={view === "week" ? MY_WORK_COPY.week : MY_WORK_COPY.title}
+      description={view === "week" ? weekView?.range : data ? myWorkSummary(data) : undefined}
+      header={header}
+    >
       {subnav}
       <View style={styles.row}>
         <View style={styles.grow}>
           <Button
             label={MY_WORK_COPY.today}
-            variant={day === today ? "primary" : "secondary"}
-            onPress={() => setDay(today)}
+            variant={view === "day" && day === today ? "primary" : "secondary"}
+            onPress={() => {
+              setView("day");
+              setDay(today);
+            }}
           />
         </View>
         <View style={styles.grow}>
           <Button
             label={MY_WORK_COPY.tomorrow}
-            variant={day !== today ? "primary" : "secondary"}
-            onPress={() => setDay(addDays(today, 1))}
+            variant={view === "day" && day !== today ? "primary" : "secondary"}
+            onPress={() => {
+              setView("day");
+              setDay(addDays(today, 1));
+            }}
           />
         </View>
         <View style={styles.grow}>
-          <Button label={MY_WORK_COPY.refresh} variant="ghost" onPress={load} />
+          <Button
+            label={MY_WORK_COPY.week}
+            variant={view === "week" ? "primary" : "secondary"}
+            onPress={() => {
+              setView("week");
+              setWeekDay(today);
+            }}
+          />
         </View>
       </View>
 
       {error ? <Notice text={error} tone="warning" /> : null}
-      {data === null && !error ? <Skeleton lines={5} /> : null}
-      {data && orders.length === 0 && data.appointments.length === 0 ? (
+      <Button label={MY_WORK_COPY.refresh} variant="ghost" onPress={load} />
+
+      {view === "week" ? (
+        <>
+          <View style={styles.row}>
+            <View style={styles.grow}>
+              <Button
+                label={MY_WORK_COPY.thisWeek}
+                variant={weekDay === today ? "primary" : "ghost"}
+                onPress={() => setWeekDay(today)}
+              />
+            </View>
+            <View style={styles.grow}>
+              <Button
+                label={MY_WORK_COPY.lastWeek}
+                variant={weekDay !== today ? "primary" : "ghost"}
+                onPress={() => setWeekDay(addDays(today, -7))}
+              />
+            </View>
+          </View>
+          {weekView === null && !error ? <Skeleton lines={5} /> : null}
+          {weekView ? (
+            <Card title={`${MY_WORK_COPY.weekTotal}: ${weekView.total}`} subtitle={weekView.payDay}>
+              <Text style={textStyle("bodySmall", "muted")}>
+                {weekView.count} {weekView.count === 1 ? "trabajo terminado" : "trabajos terminados"}
+              </Text>
+            </Card>
+          ) : null}
+          {weekView && weekView.count === 0 ? <EmptyState title={MY_WORK_COPY.weekEmpty} /> : null}
+          {weekView?.days
+            .filter((d) => d.count > 0)
+            .map((d) => (
+              <Card key={d.date} title={`${d.label}${d.isToday ? " · hoy" : ""}`} subtitle={d.subtotal}>
+                {d.items.map((it) => (
+                  <View key={it.id} style={styles.service}>
+                    <View style={styles.row}>
+                      <Text style={[textStyle("label"), styles.grow]}>{it.title}</Text>
+                      <Text style={textStyle("label")}>{it.pay}</Text>
+                    </View>
+                    <Text style={textStyle("caption", "muted")}>{it.detail}</Text>
+                  </View>
+                ))}
+              </Card>
+            ))}
+        </>
+      ) : null}
+
+      {view === "day" && data === null && !error ? <Skeleton lines={5} /> : null}
+      {view === "day" && data && orders.length === 0 && data.appointments.length === 0 ? (
         <EmptyState title={MY_WORK_COPY.emptyDay} />
       ) : null}
 
-      {orders.map((order) => {
+      {view === "day" && finished.length > 0 ? (
+        <Card title={`${MY_WORK_COPY.finishedToday} (${finished.length})`}>
+          {finished.map((order) => (
+            <View key={order.id} style={styles.service}>
+              <Text style={textStyle("label")}>{vehicleLabel(order.vehicle)}</Text>
+              <Text style={textStyle("caption", "muted")}>
+                {[
+                  order.items.map((i) => i.name).join(", "),
+                  finishedLabel(order, center.timezone),
+                  order.folio,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </Text>
+              {order.status === "terminada" ? (
+                <Button
+                  label={MY_WORK_COPY.photoAfter}
+                  variant="secondary"
+                  loading={busy === `photo:${order.id}:despues`}
+                  disabled={busy !== null}
+                  onPress={() => void photo(order, "despues")}
+                />
+              ) : null}
+            </View>
+          ))}
+        </Card>
+      ) : null}
+
+      {(view === "day" ? pending : []).map((order) => {
         const state = orderStateOf(order);
         const progress = orderProgress(order);
         const closed = state === "terminada";
@@ -328,7 +449,7 @@ export function MyWorkScreen({ state, header, subnav }: PrivateScreenProps) {
         );
       })}
 
-      {data?.appointments.map((a) => (
+      {(view === "day" ? (data?.appointments ?? []) : []).map((a) => (
         <Card
           key={a.id}
           title={vehicleLabel(a.vehicle)}
