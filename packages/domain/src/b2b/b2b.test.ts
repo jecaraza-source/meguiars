@@ -172,3 +172,18 @@ describe("convenios B2B", () => {
     expect(b2bErrorMessage({ kind: "conflict", code: "40001", message: "x" })).toMatch(/otro dispositivo/);
   });
 });
+
+describe("QR por vehículo de flotilla (ADR 0050)", () => {
+  it("arma el enlace y lee el código desde el enlace o el código solo", async () => {
+    const { b2bQrUrl, parseB2bQrToken } = await import("./b2b");
+    const token = "7e000000-0000-4000-8000-0000000000AB";
+    expect(b2bQrUrl("https://meguiars-web.vercel.app/", token)).toBe(
+      `https://meguiars-web.vercel.app/q/b2b/${token}`,
+    );
+    expect(parseB2bQrToken(`https://meguiars-web.vercel.app/q/b2b/${token}?x=1`)).toBe(token.toLowerCase());
+    expect(parseB2bQrToken(` ${token} `)).toBe(token.toLowerCase());
+    expect(parseB2bQrToken("https://otra.com/q/b2b/no-es-uuid")).toBeNull();
+    expect(parseB2bQrToken("hola")).toBeNull();
+    expect(parseB2bQrToken(null)).toBeNull();
+  });
+});

@@ -3594,6 +3594,7 @@ export type Database = {
           driver_name: string | null;
           notes: string | null;
           organization_id: string;
+          qr_token: string;
           updated_at: string;
           vehicle_id: string;
         };
@@ -3605,6 +3606,7 @@ export type Database = {
           driver_name?: string | null;
           notes?: string | null;
           organization_id: string;
+          qr_token?: string;
           updated_at?: string;
           vehicle_id: string;
         };
@@ -3616,6 +3618,7 @@ export type Database = {
           driver_name?: string | null;
           notes?: string | null;
           organization_id?: string;
+          qr_token?: string;
           updated_at?: string;
           vehicle_id?: string;
         };
@@ -9890,6 +9893,29 @@ export type Database = {
           vehicles: Json;
         }[];
       };
+      b2b_vehicle_by_qr: {
+        Args: { p_detail_center_id: string; p_token: string };
+        Returns: {
+          account_id: string;
+          account_name: string;
+          plate: string | null;
+          usable: boolean;
+          vehicle_id: string;
+          vehicle_label: string;
+        }[];
+      };
+      b2b_vehicle_qr_codes: {
+        Args: { p_account_id: string };
+        Returns: {
+          active: boolean;
+          cost_center: string | null;
+          driver_name: string | null;
+          plate: string | null;
+          qr_token: string;
+          vehicle_id: string;
+          vehicle_label: string;
+        }[];
+      };
       b2b_profitability_facts: {
         Args: { p_detail_center_ids: string[]; p_from: string; p_to: string };
         Returns: {
@@ -11027,6 +11053,10 @@ export type Database = {
       membership_reminders_due: {
         Args: { p_limit?: number };
         Returns: { membership_id: string }[];
+      };
+      regenerate_b2b_vehicle_qr: {
+        Args: { p_account_id: string; p_reason: string; p_vehicle_id: string };
+        Returns: string;
       };
       reminders_due: {
         Args: {

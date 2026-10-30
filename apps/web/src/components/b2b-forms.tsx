@@ -30,6 +30,7 @@ import { useFormStatus } from "react-dom";
 import {
   applyB2bAccountAction,
   createB2bOrderAction,
+  regenerateVehicleQrAction,
   setPriceRuleAction,
   setVehicleAction,
   upsertAccountAction,
@@ -560,6 +561,29 @@ export function RuleToggle({ rule }: { rule: B2bPriceRule }) {
 }
 
 // ---------------------------------------------------------------------------
+// QR por vehículo (ADR 0050)
+// ---------------------------------------------------------------------------
+
+/** Nuevo código para un vehículo (calcomanía perdida): pide motivo. */
+export function RegenerateQrForm({ accountId, vehicleId }: { accountId: string; vehicleId: string }) {
+  const [state, action] = useActionState(regenerateVehicleQrAction, {});
+  useSuccessToast(state);
+  return (
+    <details className="text-sm">
+      <summary className="cursor-pointer underline">{b2bCopy.qrRegenerate}</summary>
+      <form key={state.at ?? 0} action={action} className="flex flex-col gap-sm pt-sm" noValidate>
+        <input type="hidden" name="accountId" value={accountId} />
+        <input type="hidden" name="vehicleId" value={vehicleId} />
+        <p className="text-muted">{b2bCopy.qrRegenerateHelp}</p>
+        <Input name="reason" label="Motivo" required error={state.fields?.reason} />
+        <Submit label={b2bCopy.qrRegenerate} variant="danger" />
+        <Alert text={state.error} />
+      </form>
+    </details>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // OS a cuenta B2B
 // ---------------------------------------------------------------------------
 
@@ -568,15 +592,20 @@ export function NewB2bOrderForm({
   requestId,
   accounts,
   services,
+  initialAccountId,
+  initialVehicleId,
 }: {
   requestId: string;
   accounts: B2bAccountForOrder[];
   services: CatalogItem[];
+  /** Cuenta y vehículo identificados por el QR (ADR 0050). */
+  initialAccountId?: string | undefined;
+  initialVehicleId?: string | undefined;
 }) {
   const [state, action] = useActionState(createB2bOrderAction, {});
   const f = state.fields ?? {};
   const [accountId, setAccountId] = useState(
-    valueOf(state, "accountId", accounts.length === 1 ? accounts[0]!.accountId : ""),
+    valueOf(state, "accountId", initialAccountId ?? (accounts.length === 1 ? accounts[0]!.accountId : "")),
   );
   const account = accounts.find((a) => a.accountId === accountId);
   if (accounts.length === 0) return <p className="text-sm text-muted">{b2bCopy.noAccounts}</p>;
@@ -614,7 +643,11 @@ export function NewB2bOrderForm({
         defaultValue={valueOf(
           state,
           "vehicleId",
-          account?.vehicles.length === 1 ? account.vehicles[0]!.id : "",
+          accountId === initialAccountId && initialVehicleId
+            ? initialVehicleId
+            : account?.vehicles.length === 1
+              ? account.vehicles[0]!.id
+              : "",
         )}
         error={f.vehicleId}
       />

@@ -10,6 +10,7 @@ import {
 } from "@meguiars/domain";
 import { createB2bRepository } from "@meguiars/supabase";
 import {
+  regenerateVehicleQrSchema,
   applyB2bAccountSchema,
   b2bAccountSchema,
   b2bAgreementSchema,
@@ -169,6 +170,27 @@ export async function setVehicleAction(_prev: B2bFormState, form: FormData): Pro
     return stamp(validationState(fieldErrors(parsed.error), ["accountId", "vehicleId", "active"], form));
   const result = await ctx.repo.setVehicle(parsed.data);
   refreshAccount(parsed.data.accountId);
+  if (!result.ok) return failed(result.error, form);
+  return stamp({ message: b2bCopy.saved });
+}
+
+/** Nuevo código QR para un vehículo (calcomanía perdida): el anterior deja de funcionar. */
+export async function regenerateVehicleQrAction(_prev: B2bFormState, form: FormData): Promise<B2bFormState> {
+  const ctx = await context("b2bAccountNew");
+  if (!ctx) return stamp({ error: b2bCopy.forbidden });
+  const parsed = regenerateVehicleQrSchema.safeParse({
+    accountId: text(form, "accountId"),
+    vehicleId: text(form, "vehicleId"),
+    reason: text(form, "reason"),
+  });
+  if (!parsed.success)
+    return stamp(validationState(fieldErrors(parsed.error), ["accountId", "vehicleId"], form));
+  const result = await ctx.repo.regenerateVehicleQr(
+    parsed.data.accountId,
+    parsed.data.vehicleId,
+    parsed.data.reason,
+  );
+  revalidatePath(`/comercial/b2b/${parsed.data.accountId}/qr`);
   if (!result.ok) return failed(result.error, form);
   return stamp({ message: b2bCopy.saved });
 }

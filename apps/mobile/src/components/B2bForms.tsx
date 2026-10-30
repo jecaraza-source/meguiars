@@ -619,17 +619,24 @@ export function NewB2bOrderEditor({
   accounts,
   services,
   onCreated,
+  initialAccountId,
+  initialVehicleId,
 }: {
   centerId: string;
   accounts: B2bAccountForOrder[];
   services: CatalogItem[];
   onCreated: (id: string) => void;
+  /** Cuenta y vehículo identificados por el QR (ADR 0050). */
+  initialAccountId?: string | undefined;
+  initialVehicleId?: string | undefined;
 }) {
   const { busy, error, fields, submit } = useSubmit();
   const [requestId] = useState(newRequestId);
-  const [accountId, setAccountId] = useState(accounts.length === 1 ? accounts[0]!.accountId : "");
+  const [accountId, setAccountId] = useState(
+    initialAccountId ?? (accounts.length === 1 ? accounts[0]!.accountId : ""),
+  );
   const account = accounts.find((a) => a.accountId === accountId);
-  const [vehicleId, setVehicleId] = useState("");
+  const [vehicleId, setVehicleId] = useState(initialVehicleId ?? "");
   const [purchaseOrder, setPurchaseOrder] = useState("");
   const [qty, setQty] = useState<Record<string, string>>({});
   if (accounts.length === 0) return <Text style={textStyle("bodySmall", "muted")}>{b2bCopy.noAccounts}</Text>;

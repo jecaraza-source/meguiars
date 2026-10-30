@@ -392,6 +392,53 @@ export function createB2bRepository(client: MeguiarsSupabaseClient): B2bReposito
       );
     },
 
+    vehicleByQr(detailCenterId, token) {
+      return run(
+        () => client.rpc("b2b_vehicle_by_qr", { p_detail_center_id: detailCenterId, p_token: token }),
+        (rows) => {
+          const r = rows[0];
+          return r
+            ? {
+                accountId: r.account_id,
+                accountName: r.account_name,
+                vehicleId: r.vehicle_id,
+                vehicleLabel: r.vehicle_label,
+                plate: r.plate,
+                usable: r.usable,
+              }
+            : null;
+        },
+      );
+    },
+
+    vehicleQrCodes(accountId) {
+      return run(
+        () => client.rpc("b2b_vehicle_qr_codes", { p_account_id: accountId }),
+        (rows) =>
+          rows.map((r) => ({
+            vehicleId: r.vehicle_id,
+            vehicleLabel: r.vehicle_label,
+            plate: r.plate,
+            costCenter: r.cost_center,
+            driverName: r.driver_name,
+            active: r.active,
+            token: r.qr_token,
+          })),
+      );
+    },
+
+    regenerateVehicleQr(accountId, vehicleId, reason) {
+      return run(
+        () =>
+          client.rpc("regenerate_b2b_vehicle_qr", {
+            p_account_id: accountId,
+            p_vehicle_id: vehicleId,
+            p_reason: reason,
+          }),
+        (token) => String(token),
+      );
+    },
+
     accountsForCenter(detailCenterId) {
       return run(
         () => client.rpc("b2b_accounts_for_center", { p_detail_center_id: detailCenterId }),
