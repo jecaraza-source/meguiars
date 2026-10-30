@@ -163,3 +163,7 @@ Ninguna nueva.
   - vincular un cliente de otro centro;
   - vista de móvil sin scroll horizontal;
   - contador sin acceso.
+
+## Catálogo completo
+
+Sin búsqueda, web (`/clientes?pagina=N`) y móvil (Clientes, «Cargar más») muestran todos los clientes visibles, 50 por página: los del centro activo primero y luego por nombre. RPC `public.list_clients(centro, offset, limit)` (security invoker: RLS decide qué clientes ve cada quien) con `total_count` para la paginación; dominio `CLIENT_PAGE_SIZE`, `presentClientListItem` y `clientPageInfo`.

@@ -7799,6 +7799,22 @@ export type Database = {
           version: number;
         }[];
       };
+      list_clients: {
+        Args: { p_detail_center_id: string; p_limit?: number; p_offset?: number };
+        Returns: {
+          email: string | null;
+          full_name: string;
+          home_center_name: string | null;
+          home_detail_center_id: string;
+          id: string;
+          in_active_center: boolean;
+          kind: string;
+          last_visit_at: string | null;
+          phone: string;
+          plates: string[];
+          total_count: number;
+        }[];
+      };
       list_content_posts: {
         Args: {
           p_campaign_id?: string | null;

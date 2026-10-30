@@ -10,6 +10,11 @@ export const clientsCopy = {
   searchEmptyTitle: "Sin resultados",
   searchEmptyMessage:
     "No hay clientes visibles con ese dato. Revisa la placa o el teléfono, o registra al cliente.",
+  catalogTitle: "Todos los clientes",
+  catalogEmpty: "Todavía no hay clientes registrados.",
+  previousPage: "Anterior",
+  nextPage: "Siguiente",
+  loadMore: "Cargar más",
   searchPromptTitle: "Busca un cliente",
   searchPromptMessage: "Por placa o teléfono es lo más rápido. Los clientes de este centro aparecen primero.",
   newClient: "Nuevo cliente",

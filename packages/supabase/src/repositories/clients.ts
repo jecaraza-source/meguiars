@@ -1,8 +1,10 @@
 import {
+  CLIENT_PAGE_SIZE,
   type Client,
   type ClientDetail,
   type ClientHistoryEntry,
   type ClientKind,
+  type ClientListItem,
   type ClientMatch,
   type ClientRepository,
   type ClientSearchResult,
@@ -62,6 +64,19 @@ export const toVehicle = (row: Tables<"vehicles">): Vehicle => ({
   createdAt: row.created_at,
 });
 
+const toSearchResultBase = (row: Fn["list_clients"]["Returns"][number]): ClientListItem => ({
+  id: row.id,
+  fullName: row.full_name,
+  phone: row.phone,
+  email: row.email,
+  kind: row.kind as ClientKind,
+  homeDetailCenterId: row.home_detail_center_id,
+  homeCenterName: row.home_center_name,
+  lastVisitAt: row.last_visit_at,
+  inActiveCenter: row.in_active_center,
+  plates: row.plates,
+});
+
 const toSearchResult = (row: Fn["search_clients"]["Returns"][number]): ClientSearchResult => ({
   id: row.id,
   fullName: row.full_name,
@@ -113,6 +128,22 @@ export function createClientRepository(client: MeguiarsSupabaseClient): ClientRe
         () =>
           client.rpc("search_clients", { p_detail_center_id: detailCenterId, p_query: parsed.data.query }),
         (rows) => rows.map(toSearchResult),
+      );
+    },
+
+    list(detailCenterId, page) {
+      const p = Number.isInteger(page) && page > 0 ? page : 1;
+      return run(
+        () =>
+          client.rpc("list_clients", {
+            p_detail_center_id: detailCenterId,
+            p_offset: (p - 1) * CLIENT_PAGE_SIZE,
+            p_limit: CLIENT_PAGE_SIZE,
+          }),
+        (rows) => ({
+          rows: rows.map((r) => toSearchResultBase(r)),
+          total: rows.length > 0 ? Number(rows[0]!.total_count) : 0,
+        }),
       );
     },
 

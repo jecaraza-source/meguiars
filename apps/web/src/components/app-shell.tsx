@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
 import { BrandLogo } from "./brand-logo";
+import { EnterGuard } from "./enter-guard";
 import { EnvironmentBanner } from "./environment-banner";
 import { InboxUnreadProvider } from "./inbox-unread";
 import { BottomNav, SideNav, SubNav } from "./nav";
@@ -50,6 +51,7 @@ export function AppShell({
   return (
     <InboxUnreadProvider enabled={seesInbox}>
       <div className="flex min-h-screen flex-col">
+        <EnterGuard />
         <a href="#contenido" className="sr-only focus:not-sr-only focus:p-sm">
           Saltar al contenido
         </a>

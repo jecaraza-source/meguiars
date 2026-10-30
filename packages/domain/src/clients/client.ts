@@ -174,8 +174,22 @@ export interface FindMatchesQuery {
 }
 
 /** Puerto de clientes y vehículos. Web y móvil usan el mismo adaptador (`@meguiars/supabase`). */
+/** Cliente del catálogo completo (sin búsqueda). */
+export type ClientListItem = Omit<ClientSearchResult, "matchedOn">;
+
+/** Clientes por página en el catálogo. */
+export const CLIENT_PAGE_SIZE = 50;
+
+export interface ClientListPage {
+  rows: ClientListItem[];
+  /** Total de clientes visibles (para la paginación). */
+  total: number;
+}
+
 export interface ClientRepository {
   search(detailCenterId: string, query: string): Promise<Result<ClientSearchResult[]>>;
+  /** Catálogo completo: los del centro activo primero, luego por nombre. `page` empieza en 1. */
+  list(detailCenterId: string, page: number): Promise<Result<ClientListPage>>;
   get(id: string): Promise<Result<ClientDetail>>;
   history(id: string): Promise<Result<ClientHistoryEntry[]>>;
   findMatches(query: FindMatchesQuery): Promise<Result<ClientMatch[]>>;

@@ -125,6 +125,9 @@ describe("contexto del turno", () => {
     expect(rules).toContain("Nunca inventes ni estimes precios");
     expect(rules).toContain("No reservas ni confirmas citas");
     expect(rules).toContain("pide_persona:");
+    // Opciones numeradas para que el cliente conteste con un número.
+    expect(rules).toContain("numera las opciones (1., 2., 3.…");
+    expect(rules).toContain("Responde con el número de tu opción");
     expect(rules).not.toContain("falla_tecnica:");
     expect(rules).not.toContain("consultar_membresias");
     // Las instrucciones cacheadas no dependen de la conversación.

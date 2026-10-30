@@ -461,6 +461,7 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "resolve_service_order_incident",
   "record_service_order_payment",
   "search_clients",
+  "list_clients",
   "service_price_at",
   "set_active_center",
   "set_appointment_status",

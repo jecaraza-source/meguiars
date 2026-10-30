@@ -133,3 +133,20 @@ describe("presentadores de clientes", () => {
     ).toMatchObject({ date: SEPT_25, kind: "Vehículo", center: "Centro A" });
   });
 });
+
+describe("catálogo de clientes", () => {
+  it("rango mostrado y páginas anterior/siguiente", async () => {
+    const { clientPageInfo } = await import("./presenter");
+    expect(clientPageInfo(1, 120, 50)).toEqual({
+      label: "Mostrando 1–50 de 120",
+      hasPrev: false,
+      hasNext: true,
+    });
+    expect(clientPageInfo(3, 120, 50)).toEqual({
+      label: "Mostrando 101–120 de 120",
+      hasPrev: true,
+      hasNext: false,
+    });
+    expect(clientPageInfo(1, 0, 50)).toEqual({ label: "Sin clientes", hasPrev: false, hasNext: false });
+  });
+});
