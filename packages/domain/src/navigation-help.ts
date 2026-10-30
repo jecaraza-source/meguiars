@@ -16,6 +16,8 @@ export const NAV_ITEM_DESCRIPTIONS: Partial<Record<Screen, string>> = {
   cash: "Apertura y cierre de caja por turno: fondo inicial, cobros del turno, efectivo contado y diferencias.",
   clients: "Clientes y sus vehículos: datos de contacto, consentimiento, placas e historial de visitas.",
   catalog: "Servicios y productos: precio, costo, duración, comisión e insumos estándar por servicio.",
+  supplyLots:
+    "Lotes de insumos con su fecha de caducidad: aviso de lo que hay que usar primero y de lo caducado que hay que sacar.",
   comercial: "Resumen de ventas, membresías, recurrencia y oportunidades del centro.",
   inbox: "Conversaciones de WhatsApp, Messenger e Instagram: responder, asignar, etiquetar y notas internas.",
   conversationHistory:

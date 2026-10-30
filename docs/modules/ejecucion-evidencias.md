@@ -110,3 +110,13 @@ Las RPC de ejecución bloquean la OS (`private.lock_order_for_execution`) sin ex
 ## Variables de entorno
 
 Ninguna nueva. El bucket se crea en la migración.
+
+## Lotes y caducidad (ADR 0052)
+
+Operación → **Lotes y caducidad** (web `/operacion/lotes`, móvil «Lotes y caducidad»): recepción, el encargado o el admin registran cada lote que llega con su fecha de caducidad y lo cierran cuando se termina o se saca. El estado (vigente, por caducar a 30 días o menos, caducado) lo calcula la base con la fecha del centro (`private.supply_lot_state` ↔ `supplyLotState`). Operación del día avisa de los caducados y los por caducar. Sin existencias (ADR 0012).
+
+| RPC                                                                                      | Uso                                |
+| ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| `register_supply_lot(center, request, item, lote, caduca, recibido?, cantidad?, notas?)` | Alta idempotente.                  |
+| `close_supply_lot(id, version, agotado \| retirado, motivo)`                             | Cierre con motivo y auditoría.     |
+| `supply_lots_for_center(center, include_closed)`                                         | Lista con estado y días restantes. |

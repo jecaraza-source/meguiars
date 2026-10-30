@@ -40,6 +40,8 @@ export const SCREEN_GUARDS = {
   orderExecution: { center: true, capability: "orders.read" },
   myWork: { center: true, capability: "work.mine" },
   supplies: { center: true, capability: "catalog.read" },
+  // Lotes de insumos con caducidad (ADR 0052): private.can_use_supply_lots.
+  supplyLots: { center: true, capability: "operations.write" },
   comercial: { center: true, capability: "commercial.read" },
   // Menú Comercial y Ajustes del asistente: no para recepción (vende membresías desde la OS:
   // membershipNew y membershipDetail siguen con memberships.*).

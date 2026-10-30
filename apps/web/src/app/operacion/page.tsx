@@ -1,5 +1,5 @@
-import { DAY_COPY } from "@meguiars/domain";
-import { createDayRepository } from "@meguiars/supabase";
+import { activeCenterAccess, DAY_COPY, guardScreen, supplyLotAlert, supplyLotsCopy } from "@meguiars/domain";
+import { createDayRepository, createSupplyLotRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ButtonLink } from "@/components/ui/button";
@@ -11,7 +11,13 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 /** Operación del día: órdenes en curso, entregas, cobros y citas de hoy del centro activo. */
 export default async function OperationPage() {
   const state = await requireScreen("operacion");
-  const d = await loadDayView(state, createDayRepository((await createSupabaseServerClient())!));
+  const supabase = (await createSupabaseServerClient())!;
+  const d = await loadDayView(state, createDayRepository(supabase));
+  // Aviso de lotes caducados o por caducar (ADR 0052); si falla, no se muestra.
+  const lots = guardScreen(state, "supplyLots").allow
+    ? await createSupplyLotRepository(supabase).list(activeCenterAccess(state)!.center.id)
+    : null;
+  const lotAlert = lots?.ok ? supplyLotAlert(lots.data) : null;
   return (
     <AppShell
       state={state}
@@ -27,6 +33,14 @@ export default async function OperationPage() {
           <ButtonLink href="/agenda/nueva" label={DAY_COPY.newAppointment} size="sm" />
         ) : null}
       </div>
+      {lotAlert ? (
+        <p role="status" className="mg-tone rounded-md border p-md text-sm" data-tone={lotAlert.tone}>
+          {lotAlert.text}{" "}
+          <Link href="/operacion/lotes" className="underline">
+            {supplyLotsCopy.alertLink}
+          </Link>
+        </p>
+      ) : null}
       {d.error ? (
         <p role="alert" className="mg-tone rounded-md border p-md text-sm" data-tone="danger">
           {d.error}

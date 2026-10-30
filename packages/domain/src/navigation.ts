@@ -105,6 +105,7 @@ const BASE_SECTIONS: readonly NavSection[] = [
       { screen: "cash", label: "Corte de caja", href: "/finanzas/caja", icon: "banknote" },
       { screen: "clients", label: "Clientes y vehículos", href: "/clientes", icon: "car" },
       { screen: "catalog", label: "Catálogo", href: "/catalogo", icon: "bookOpen" },
+      { screen: "supplyLots", label: "Lotes y caducidad", href: "/operacion/lotes", icon: "bell" },
     ],
   },
   {
@@ -228,7 +229,7 @@ export const NAV_GROUPS: Record<NavSectionId, readonly { label: string; screens:
   inicio: [{ label: "Inicio", screens: ["home", "myWork"] }],
   operacion: [
     { label: "El día", screens: ["operacion", "agenda", "orders", "cash"] },
-    { label: "Clientes y catálogo", screens: ["clients", "catalog"] },
+    { label: "Clientes y catálogo", screens: ["clients", "catalog", "supplyLots"] },
   ],
   comercial: [
     { label: "Resumen", screens: ["comercial", "commercialPanel"] },

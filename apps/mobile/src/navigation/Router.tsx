@@ -99,6 +99,7 @@ import { OrdersScreen } from "@/screens/OrdersScreen";
 import { ResetPasswordScreen } from "@/screens/ResetPasswordScreen";
 import { SelectCenterScreen } from "@/screens/SelectCenterScreen";
 import { SuppliesScreen } from "@/screens/SuppliesScreen";
+import { SupplyLotsScreen } from "@/screens/SupplyLotsScreen";
 import { TeamScreen } from "@/screens/TeamScreen";
 import { UsersScreen } from "@/screens/UsersScreen";
 import { CenterSetupScreen, CentersScreen, PilotScreen } from "@/screens/PilotScreens";
@@ -660,6 +661,7 @@ export function Router() {
             onOrder={openOrder}
             onAppointment={openAppointment}
             onNewOrder={() => setScreen("orderNew")}
+            onLots={() => setScreen("supplyLots")}
             onNewAppointment={() => {
               setNewAppointment({ walkIn: false, day: "" });
               setScreen("appointmentNew");
@@ -980,6 +982,9 @@ export function Router() {
         ) : (
           <OrdersScreen {...props} onOpen={openOrder} onNew={() => setScreen("orderNew")} />
         );
+        break;
+      case "supplyLots":
+        content = <SupplyLotsScreen {...props} />;
         break;
       case "supplies":
         content = <SuppliesScreen {...props} onBack={() => setScreen("catalog")} />;

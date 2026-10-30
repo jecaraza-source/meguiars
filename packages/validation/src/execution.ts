@@ -4,9 +4,11 @@ import {
   EVIDENCE_MIME_TYPES,
   INCIDENT_KINDS,
   INVENTORY_UNITS,
+  SUPPLY_LOT_OUTCOMES,
 } from "@meguiars/domain";
 import { z } from "zod";
 import { serviceCodeSchema } from "./catalog";
+import { dayStringSchema } from "./agenda";
 import { changeReasonSchema } from "./centers";
 
 /**
@@ -123,5 +125,34 @@ export const supplyStandardSchema = z.object({
     blankToUndefined,
     quantitySchema3.refine((n) => n > 0, "Debe ser mayor que 0").optional(),
   ),
+  reason: changeReasonSchema,
+});
+
+/** Alta de un lote de insumo (ADR 0052); la base valida insumo, centro y fechas. */
+export const registerSupplyLotSchema = z.object({
+  requestId: z.uuid(),
+  inventoryItemId: z.uuid("Elige el insumo"),
+  lotCode: z.string().trim().min(1, "Escribe el lote").max(40),
+  expiresOn: dayStringSchema,
+  receivedOn: z
+    .union([dayStringSchema, z.literal("")])
+    .optional()
+    .transform((v) => v || undefined),
+  quantity: z
+    .union([z.literal(""), z.coerce.number().positive("Debe ser mayor a 0").max(1_000_000)])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? undefined : v)),
+  notes: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .transform((v) => v || undefined),
+});
+
+export const closeSupplyLotSchema = z.object({
+  id: z.uuid(),
+  version: z.coerce.number().int().min(1),
+  outcome: z.enum(SUPPLY_LOT_OUTCOMES, "Elige qué pasó"),
   reason: changeReasonSchema,
 });

@@ -6794,6 +6794,91 @@ export type Database = {
           },
         ];
       };
+      supply_lots: {
+        Row: {
+          closed_at: string | null;
+          closed_by: string | null;
+          closed_reason: string | null;
+          created_at: string;
+          created_by: string | null;
+          detail_center_id: string;
+          expires_on: string;
+          id: string;
+          inventory_item_id: string;
+          lot_code: string;
+          notes: string | null;
+          organization_id: string;
+          quantity: number | null;
+          received_on: string;
+          request_id: string;
+          status: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closed_reason?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id: string;
+          expires_on: string;
+          id?: string;
+          inventory_item_id: string;
+          lot_code: string;
+          notes?: string | null;
+          organization_id: string;
+          quantity?: number | null;
+          received_on: string;
+          request_id: string;
+          status?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closed_reason?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail_center_id?: string;
+          expires_on?: string;
+          id?: string;
+          inventory_item_id?: string;
+          lot_code?: string;
+          notes?: string | null;
+          organization_id?: string;
+          quantity?: number | null;
+          received_on?: string;
+          request_id?: string;
+          status?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "supply_lots_detail_center_id_fkey";
+            columns: ["detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "supply_lots_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "supply_lots_organization_id_inventory_item_id_fkey";
+            columns: ["organization_id", "inventory_item_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_items";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       technicians: {
         Row: {
           active: boolean;
@@ -9159,6 +9244,27 @@ export type Database = {
         Returns: Database["public"]["Tables"]["alert_instances"]["Row"];
         SetofOptions: { from: "*"; to: "alert_instances"; isOneToOne: true; isSetofReturn: false };
       };
+      supply_lots_for_center: {
+        Args: { p_detail_center_id: string; p_include_closed?: boolean };
+        Returns: {
+          closed_at: string | null;
+          closed_reason: string | null;
+          days_left: number;
+          expires_on: string;
+          id: string;
+          inventory_item_id: string;
+          item_code: string;
+          item_name: string;
+          item_unit: string;
+          lot_code: string;
+          notes: string | null;
+          quantity: number | null;
+          received_on: string;
+          state: string | null;
+          status: string;
+          version: number;
+        }[];
+      };
       start_commercial_ai_report: {
         Args: {
           p_center_ids: string[];
@@ -10499,6 +10605,10 @@ export type Database = {
           vehicle_id: string | null;
         }[];
       };
+      close_supply_lot: {
+        Args: { p_id: string; p_outcome: string; p_reason: string; p_version: number };
+        Returns: number;
+      };
       complete_commercial_ai_report: {
         Args: {
           p_actions: string[];
@@ -11161,6 +11271,19 @@ export type Database = {
       membership_reminders_due: {
         Args: { p_limit?: number };
         Returns: { membership_id: string }[];
+      };
+      register_supply_lot: {
+        Args: {
+          p_detail_center_id: string;
+          p_expires_on: string;
+          p_inventory_item_id: string;
+          p_lot_code: string;
+          p_notes: string | null;
+          p_quantity: number | null;
+          p_received_on: string | null;
+          p_request_id: string;
+        };
+        Returns: string;
       };
       regenerate_b2b_vehicle_qr: {
         Args: { p_account_id: string; p_reason: string; p_vehicle_id: string };
