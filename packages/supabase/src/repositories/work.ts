@@ -10,6 +10,7 @@ import {
   type MyWorkDay,
   type MyWorkOrder,
   type MyWorkRepository,
+  type MyWorkWeek,
   type MyWorkVehicle,
   type Result,
   type ServiceOrderStatus,
@@ -40,6 +41,35 @@ const toVehicle = (v: unknown): MyWorkVehicle => {
   const o = obj(v);
   return { make: str(o.make), model: str(o.model), year: Number(o.year) || 0, plate: strOrNull(o.plate) };
 };
+
+const num = (v: unknown): number => (typeof v === "number" ? v : Number(v) || 0);
+
+/** Convierte la respuesta de public.my_work_week (jsonb). */
+export function parseMyWorkWeek(json: Json): MyWorkWeek {
+  const root = obj(json);
+  return {
+    weekStart: str(root.week_start),
+    weekEnd: str(root.week_end),
+    payDay: str(root.pay_day),
+    today: str(root.today),
+    total: num(root.total),
+    items: arr(root.items).map((raw) => {
+      const o = obj(raw);
+      const v = obj(o.vehicle);
+      return {
+        itemId: str(o.item_id),
+        orderId: str(o.order_id),
+        folio: str(o.folio),
+        service: str(o.service),
+        quantity: num(o.quantity) || 1,
+        finishedAt: str(o.finished_at),
+        day: str(o.day),
+        vehicle: { make: str(v.make), model: str(v.model), plate: strOrNull(v.plate) },
+        commission: num(o.commission),
+      };
+    }),
+  };
+}
 
 /** Convierte la respuesta de public.my_work (jsonb) al modelo del dominio. */
 export function parseMyWork(json: Json): MyWorkDay {
@@ -134,6 +164,19 @@ async function runVoid(call: () => PromiseLike<{ error: unknown }>): Promise<Res
  */
 export function createMyWorkRepository(client: MeguiarsSupabaseClient): MyWorkRepository {
   return {
+    week(detailCenterId, day) {
+      const parsed = myWorkDaySchema.safeParse({ detailCenterId, day });
+      if (!parsed.success) return Promise.resolve(invalid(parsed.error));
+      return run(
+        () =>
+          client.rpc("my_work_week", {
+            p_detail_center_id: parsed.data.detailCenterId,
+            ...(parsed.data.day ? { p_day: parsed.data.day } : {}),
+          }),
+        parseMyWorkWeek,
+      );
+    },
+
     async get(detailCenterId, day) {
       const parsed = myWorkDaySchema.safeParse({ detailCenterId, day });
       if (!parsed.success) return invalid(parsed.error);

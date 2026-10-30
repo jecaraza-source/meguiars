@@ -94,3 +94,71 @@ describe("«Mi día»", () => {
     );
   });
 });
+
+describe("Mi semana del operador", () => {
+  it("lunes a domingo con trabajos, pago por trabajo, total y día de pago (martes)", async () => {
+    const { presentMyWorkWeek, weekdayLabel } = await import("./work");
+    expect(weekdayLabel("2026-10-27")).toBe("mar 27 oct");
+    const v = presentMyWorkWeek(
+      {
+        weekStart: "2026-10-26",
+        weekEnd: "2026-11-01",
+        payDay: "2026-11-03",
+        today: "2026-10-28",
+        total: 157,
+        items: [
+          {
+            itemId: "i1",
+            orderId: "o1",
+            folio: "A-01-000123",
+            service: "Lavado",
+            quantity: 1,
+            finishedAt: "2026-10-26T17:30:00Z",
+            day: "2026-10-26",
+            vehicle: { make: "Mazda", model: "3", plate: "ABC1234" },
+            commission: 57,
+          },
+          {
+            itemId: "i2",
+            orderId: "o2",
+            folio: "A-01-000124",
+            service: "Encerado",
+            quantity: 2,
+            finishedAt: "2026-10-28T20:00:00Z",
+            day: "2026-10-28",
+            vehicle: { make: "Kia", model: "Rio", plate: null },
+            commission: 100,
+          },
+          {
+            itemId: "i3",
+            orderId: "o3",
+            folio: "A-01-000125",
+            service: "Llantas",
+            quantity: 1,
+            finishedAt: "2026-10-28T21:00:00Z",
+            day: "2026-10-28",
+            vehicle: { make: "Kia", model: "Rio", plate: null },
+            commission: 0,
+          },
+        ],
+      },
+      "America/Mexico_City",
+    );
+    expect(v.range).toBe("lun 26 oct – dom 1 nov");
+    expect(v.payDay).toBe("Se paga el mar 3 nov");
+    expect(v.count).toBe(3);
+    expect(v.total).toBe("$157.00");
+    expect(v.days.map((d) => d.count)).toEqual([1, 0, 2, 0, 0, 0, 0]);
+    expect(v.days[2]!.isToday).toBe(true);
+    expect(v.days[0]!.items[0]).toEqual({
+      id: "i1",
+      title: "Lavado",
+      detail: "Mazda 3 · ABC1234 · A-01-000123 · 11:30 a.m.",
+      pay: "$57.00",
+    });
+    expect(v.days[2]!.items.map((i) => [i.title, i.pay])).toEqual([
+      ["2 × Encerado", "$100.00"],
+      ["Llantas", "Sin comisión configurada"],
+    ]);
+  });
+});

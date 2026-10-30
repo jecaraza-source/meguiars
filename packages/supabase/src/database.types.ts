@@ -8278,6 +8278,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      my_work_week: {
+        Args: { p_day?: string; p_detail_center_id: string };
+        Returns: Json;
+      };
       prepare_outbound_message: {
         Args: {
           p_body: string;

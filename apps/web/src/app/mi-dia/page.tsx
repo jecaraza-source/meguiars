@@ -13,6 +13,7 @@ import {
   orderProgress,
   orderStateOf,
   orderTimeLabel,
+  presentMyWorkWeek,
   sortOrders,
   todayIn,
   vehicleLabel,
@@ -38,6 +39,83 @@ export default async function MyWorkPage({ searchParams }: PageProps<"/mi-dia">)
   });
   const day = (parsed.success ? parsed.data.day : undefined) ?? today;
   const repo = createMyWorkRepository((await createSupabaseServerClient())!);
+  // «Mi semana»: corte lunes–domingo con su pago (?vista=semana&semana=YYYY-MM-DD).
+  if (params.vista === "semana") {
+    const weekParsed = myWorkDaySchema.safeParse({
+      detailCenterId: center.id,
+      day: typeof params.semana === "string" ? params.semana : "",
+    });
+    const weekDay = (weekParsed.success ? weekParsed.data.day : undefined) ?? today;
+    const weekResult = await repo.week(center.id, weekDay);
+    const w = weekResult.ok ? presentMyWorkWeek(weekResult.data, center.timezone) : null;
+    const lastWeek = addDays(today, -7);
+    return (
+      <AppShell state={state} screen="myWork" title={MY_WORK_COPY.week} description={w?.range}>
+        <div className="flex flex-wrap gap-sm">
+          <ButtonLink href="/mi-dia" label={MY_WORK_COPY.today} variant="secondary" />
+          <ButtonLink
+            href={`/mi-dia?dia=${addDays(today, 1)}`}
+            label={MY_WORK_COPY.tomorrow}
+            variant="secondary"
+          />
+          <ButtonLink href="/mi-dia?vista=semana" label={MY_WORK_COPY.week} variant="primary" />
+        </div>
+        <div className="flex flex-wrap gap-sm">
+          <ButtonLink
+            href="/mi-dia?vista=semana"
+            label={MY_WORK_COPY.thisWeek}
+            variant={weekDay === today ? "primary" : "ghost"}
+            size="sm"
+          />
+          <ButtonLink
+            href={`/mi-dia?vista=semana&semana=${lastWeek}`}
+            label={MY_WORK_COPY.lastWeek}
+            variant={weekDay !== today ? "primary" : "ghost"}
+            size="sm"
+          />
+        </div>
+        {!weekResult.ok ? (
+          <EmptyState
+            title={
+              weekResult.error.kind === "permission_denied"
+                ? MY_WORK_COPY.notLinked
+                : weekResult.error.message
+            }
+          />
+        ) : null}
+        {w ? (
+          <Card title={`${MY_WORK_COPY.weekTotal}: ${w.total}`} subtitle={w.payDay}>
+            <p className="text-sm text-muted" data-testid="week-count">
+              {w.count} {w.count === 1 ? "trabajo terminado" : "trabajos terminados"}
+            </p>
+          </Card>
+        ) : null}
+        {w && w.count === 0 ? <EmptyState title={MY_WORK_COPY.weekEmpty} /> : null}
+        <div className="grid gap-lg lg:grid-cols-2">
+          {w?.days
+            .filter((d) => d.count > 0)
+            .map((d) => (
+              <Card key={d.date} title={`${d.label}${d.isToday ? " · hoy" : ""}`} subtitle={d.subtotal}>
+                <ul className="flex flex-col gap-sm">
+                  {d.items.map((it) => (
+                    <li
+                      key={it.id}
+                      className="flex flex-col gap-xxs border-t border-border pt-sm first:border-t-0 first:pt-0"
+                    >
+                      <span className="flex items-center justify-between gap-sm font-medium">
+                        <span>{it.title}</span>
+                        <span>{it.pay}</span>
+                      </span>
+                      <span className="text-xs text-muted">{it.detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            ))}
+        </div>
+      </AppShell>
+    );
+  }
   const result = await repo.get(center.id, day);
   const data = result.ok ? result.data : null;
   const orders = data ? sortOrders(data.orders) : [];
@@ -61,6 +139,7 @@ export default async function MyWorkPage({ searchParams }: PageProps<"/mi-dia">)
           label={MY_WORK_COPY.tomorrow}
           variant={day === tomorrow ? "primary" : "secondary"}
         />
+        <ButtonLink href="/mi-dia?vista=semana" label={MY_WORK_COPY.week} variant="secondary" />
       </div>
       {!result.ok ? (
         <EmptyState

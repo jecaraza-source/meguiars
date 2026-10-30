@@ -532,6 +532,7 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "my_work_register_evidence",
   "my_work_report_problem",
   "my_work_start",
+  "my_work_week",
   "receive_and_open_order",
   "convert_lead_to_client",
 ];

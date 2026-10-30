@@ -75,6 +75,9 @@ select (public.create_service('0e000000-0000-0000-0000-000000000001', 'LAV', 'La
 select (public.create_service('0e000000-0000-0000-0000-000000000001', 'ASP', 'Aspirado', null, 'recurrente', 20, 120, 30)).id as aspirado \gset
 select (public.upsert_technician('bbbbbbbb-0000-0000-0000-000000000000', null, 'Beto Garza', true, 'Alta de técnico')).id as techb \gset
 reset role;
+-- Comisión del operador en el lavado (30 %), para «Mi semana».
+select set_config('app.change_reason', 'Comisión de prueba', true);
+update public.services set operator_commission_pct = 30 where id = :'lavado';
 
 select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
 select (public.upsert_technician('aaaaaaaa-0000-0000-0000-000000000000', null, 'Toño Ruiz', true, 'Alta de técnico')).id as tech1 \gset
@@ -306,6 +309,37 @@ select pg_temp.assert(
      from public.my_work('aaaaaaaa-0000-0000-0000-000000000000') r),
   'un técnico agregado como participante ve esa OS');
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- Mi semana (20261110000000): trabajos terminados de lunes a domingo y su pago
+-- ---------------------------------------------------------------------------
+select pg_temp.login('00000000-0000-0000-0000-0000000000d1');
+select public.my_work_week('aaaaaaaa-0000-0000-0000-000000000000') as wk \gset
+select pg_temp.assert(
+  extract(isodow from (:'wk'::jsonb ->> 'week_start')::date) = 1
+  and (:'wk'::jsonb ->> 'week_end')::date = (:'wk'::jsonb ->> 'week_start')::date + 6
+  and extract(isodow from (:'wk'::jsonb ->> 'pay_day')::date) = 2
+  and (:'wk'::jsonb ->> 'pay_day')::date = (:'wk'::jsonb ->> 'week_start')::date + 8,
+  'Mi semana va de lunes a domingo y se paga el martes siguiente');
+select pg_temp.assert(
+  jsonb_array_length(:'wk'::jsonb -> 'items') = 2
+  and (select string_agg(x ->> 'service', ',' order by x ->> 'service') from jsonb_array_elements(:'wk'::jsonb -> 'items') x)
+      = 'Aspirado,Lavado'
+  and (:'wk'::jsonb ->> 'total')::numeric = 75,
+  'sólo los servicios que terminó el técnico, con su comisión (30 % de $250 = $75) y el total');
+select pg_temp.assert(
+  jsonb_array_length(public.my_work_week('aaaaaaaa-0000-0000-0000-000000000000', current_date - 7) -> 'items') = 0,
+  'la semana pasada no tiene trabajos');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000d2');
+select pg_temp.assert(jsonb_array_length(public.my_work_week('aaaaaaaa-0000-0000-0000-000000000000') -> 'items') = 0,
+  'otro técnico no ve los trabajos ni el pago de su compañero');
+reset role;
+select pg_temp.login('00000000-0000-0000-0000-0000000000f1');
+select pg_temp.assert_fails($$select public.my_work_week('aaaaaaaa-0000-0000-0000-000000000000')$$, '42501',
+  'recepción (sin técnico ligado) no tiene Mi semana');
+reset role;
+
 
 -- Desligar quita el acceso.
 select pg_temp.login('00000000-0000-0000-0000-0000000000e1');
