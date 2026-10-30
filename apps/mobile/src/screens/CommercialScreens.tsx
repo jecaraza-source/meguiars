@@ -57,6 +57,7 @@ import { space } from "@meguiars/ui-tokens";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Share, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
+import { CommercialAiCard } from "@/components/CommercialAiCard";
 import { commercialCenters, loadCommercialReport, loadLeadsBoard } from "@/lib/commercial";
 import { Button, Checkbox, Field, LinkButton, Select } from "@/ui/controls";
 import { Badge, Card, EmptyState, KpiCard, List, Skeleton } from "@/ui/display";
@@ -1049,6 +1050,14 @@ export function CommercialReportsScreen({ state, header, subnav }: PrivateScreen
             Cohorte de prospectos registrados del {data.data.period.from} al {data.data.period.to}; cada venta
             se atribuye una sola vez.
           </Text>
+          {client ? (
+            <CommercialAiCard
+              client={client}
+              centerId={center.id}
+              timeZone={center.timezone}
+              periodId={periodId}
+            />
+          ) : null}
           {data.data.kpis.map((k) => (
             <KpiCard key={k.id} label={k.name} value={k.display} caption={k.formula} />
           ))}

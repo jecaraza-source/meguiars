@@ -924,6 +924,34 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `merged_at` | timestamp with time zone | sí |  |
 | `merged_by` | uuid | sí |  |
 
+### `commercial_ai_reports`
+
+- **Módulo:** [prospectos-cotizaciones](modules/prospectos-cotizaciones.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `center_ids` | uuid[] | no |  |
+| `period_from` | date | no |  |
+| `period_to` | date | no |  |
+| `period_label` | text | no |  |
+| `scope_label` | text | no |  |
+| `request_id` | uuid | no |  |
+| `status` | text | no | 'pendiente'::text |
+| `summary` | text | sí |  |
+| `highlights` | text[] | no | '{}'::text[] |
+| `risks` | text[] | no | '{}'::text[] |
+| `actions` | text[] | no | '{}'::text[] |
+| `model` | text | sí |  |
+| `error` | text | sí |  |
+| `created_by` | uuid | no | auth.uid() |
+| `created_at` | timestamp with time zone | no | now() |
+| `completed_at` | timestamp with time zone | sí |  |
+
 ### `contact_preferences`
 
 - **Módulo:** [crm-recurrencia](modules/crm-recurrencia.md)

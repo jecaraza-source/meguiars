@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { AssistantLlm, LlmBlock, LlmRequest } from "@meguiars/domain";
+import { commercialAiOutputSchema } from "@meguiars/validation";
 
 /**
  * Adaptador del SDK oficial de Anthropic para el asistente. Sólo se usa en el
@@ -59,3 +61,27 @@ export const claudeLlm: AssistantLlm = {
     };
   },
 };
+
+/**
+ * Redacta un reporte comercial (ADR 0051) con salida estructurada: el modelo
+ * devuelve JSON que cumple commercialAiOutputSchema. Devuelve null si el modelo
+ * se negó o no completó la respuesta.
+ */
+export async function writeCommercialReport(prompt: { system: string; user: string }, model: string) {
+  const res = await anthropic().beta.messages.parse(
+    {
+      model,
+      max_tokens: 16000,
+      thinking: { type: "adaptive" },
+      output_config: { effort: "medium", format: betaZodOutputFormat(commercialAiOutputSchema) },
+      system: [{ type: "text", text: prompt.system, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: prompt.user }],
+      betas: [FALLBACK_BETA],
+      fallbacks: "default",
+    },
+    // Un reporte puede tardar más que un mensaje de WhatsApp.
+    { timeout: 100_000 },
+  );
+  if (res.stop_reason !== "end_turn" || !res.parsed_output) return null;
+  return { content: res.parsed_output, model: res.model };
+}

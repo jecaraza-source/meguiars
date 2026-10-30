@@ -8,6 +8,7 @@ import {
   type LeadContactChannel,
   type LeadLossReason,
   type Screen,
+  type SignedInState,
 } from "@meguiars/domain";
 import { createCommercialRepository, createCrmRepository } from "@meguiars/supabase";
 import {
@@ -30,6 +31,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
 import { getAuthState } from "@/lib/auth/dal";
+import { generateCommercialAiReport } from "@/lib/commercial-ai";
 import { stamp, text, values, type ActionFormState } from "@/lib/form-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -586,4 +588,23 @@ export async function mergeClientsAction(
   revalidatePath("/comercial/duplicados");
   revalidatePath(`/comercial/clientes/${parsed.data.keepClientId}`);
   return stamp({ message: "Clientes fusionados" });
+}
+
+/** Reporte comercial con IA del centro activo (ADR 0051). */
+export async function generateCommercialAiReportAction(
+  _prev: CommercialFormState,
+  form: FormData,
+): Promise<CommercialFormState> {
+  const ctx = await context("commercialReports");
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const r = await generateCommercialAiReport(ctx.supabase, ctx.state as SignedInState, {
+    detailCenterId: ctx.center.id,
+    periodId: text(form, "periodId"),
+    scope: text(form, "scope"),
+    requestId: text(form, "requestId"),
+  });
+  // También tras un error: la página trae un requestId nuevo y el intento fallido en el historial.
+  revalidatePath("/comercial/reportes");
+  if (!r.ok) return fail(r.error);
+  return stamp({ message: "Reporte con IA listo." });
 }
