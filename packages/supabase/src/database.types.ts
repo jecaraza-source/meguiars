@@ -485,6 +485,9 @@ export type Database = {
           greeting: string | null;
           human_hours: string | null;
           max_days_ahead: number;
+          membership_reminder_days: number;
+          membership_reminder_template_id: string | null;
+          membership_reminders_enabled: boolean;
           mention_memberships: boolean;
           mention_promotions: boolean;
           min_hours_ahead: number;
@@ -510,6 +513,9 @@ export type Database = {
           greeting?: string | null;
           human_hours?: string | null;
           max_days_ahead?: number;
+          membership_reminder_days?: number;
+          membership_reminder_template_id?: string | null;
+          membership_reminders_enabled?: boolean;
           mention_memberships?: boolean;
           mention_promotions?: boolean;
           min_hours_ahead?: number;
@@ -535,6 +541,9 @@ export type Database = {
           greeting?: string | null;
           human_hours?: string | null;
           max_days_ahead?: number;
+          membership_reminder_days?: number;
+          membership_reminder_template_id?: string | null;
+          membership_reminders_enabled?: boolean;
           mention_memberships?: boolean;
           mention_promotions?: boolean;
           min_hours_ahead?: number;
@@ -4759,6 +4768,42 @@ export type Database = {
           },
         ];
       };
+      membership_reminders: {
+        Row: {
+          benefits_text: string;
+          client_id: string;
+          created_at: string;
+          detail_center_id: string;
+          id: string;
+          membership_id: string;
+          message_id: string | null;
+          organization_id: string;
+          sent: boolean;
+        };
+        Insert: {
+          benefits_text: string;
+          client_id: string;
+          created_at?: string;
+          detail_center_id: string;
+          id?: string;
+          membership_id: string;
+          message_id?: string | null;
+          organization_id: string;
+          sent: boolean;
+        };
+        Update: {
+          benefits_text?: string;
+          client_id?: string;
+          created_at?: string;
+          detail_center_id?: string;
+          id?: string;
+          membership_id?: string;
+          message_id?: string | null;
+          organization_id?: string;
+          sent?: boolean;
+        };
+        Relationships: [];
+      };
       membership_redemptions: {
         Row: {
           amount: number;
@@ -7575,6 +7620,17 @@ export type Database = {
         Returns: Database["public"]["Tables"]["messages"]["Row"];
         SetofOptions: { from: "*"; to: "messages"; isOneToOne: true; isSetofReturn: false };
       };
+      get_membership_reminder_settings: {
+        Args: { p_organization_id: string };
+        Returns: {
+          can_manage: boolean;
+          days: number;
+          enabled: boolean;
+          sent_last_30_days: number;
+          template_id: string | null;
+          version: number;
+        }[];
+      };
       get_assistant_settings: {
         Args: {
           p_organization_id: string;
@@ -8316,6 +8372,21 @@ export type Database = {
           template_params: string[];
         }[];
       };
+      prepare_membership_reminder: {
+        Args: { p_membership_id: string };
+        Returns: {
+          already_sent: boolean;
+          body: string;
+          button_payloads: string[];
+          contact_external_id: string;
+          contact_phone: string | null;
+          external_account_id: string;
+          message_id: string;
+          template_language: string;
+          template_name: string;
+          template_params: string[];
+        }[];
+      };
       prepare_outbound_media: {
         Args: {
           p_caption: string;
@@ -8421,6 +8492,18 @@ export type Database = {
         Args: {
           p_enabled: boolean;
           p_hours: number;
+          p_organization_id: string;
+          p_reason: string;
+          p_template_id: string;
+          p_version: number;
+        };
+        Returns: Database["public"]["Tables"]["bot_settings"]["Row"];
+        SetofOptions: { from: "*"; to: "bot_settings"; isOneToOne: true; isSetofReturn: false };
+      };
+      set_membership_reminders: {
+        Args: {
+          p_days: number;
+          p_enabled: boolean;
           p_organization_id: string;
           p_reason: string;
           p_template_id: string;
@@ -10940,6 +11023,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      membership_reminders_due: {
+        Args: { p_limit?: number };
+        Returns: { membership_id: string }[];
       };
       reminders_due: {
         Args: {

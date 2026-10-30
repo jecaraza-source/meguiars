@@ -612,6 +612,9 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `reminders_enabled` | boolean | no | false |
 | `reminder_template_id` | uuid | sí |  |
 | `reminder_hours` | smallint | no | 24 |
+| `membership_reminders_enabled` | boolean | no | false |
+| `membership_reminder_template_id` | uuid | sí |  |
+| `membership_reminder_days` | smallint | no | 14 |
 
 ### `bot_turns`
 
@@ -1461,6 +1464,24 @@ lo verifican. El esquema `private` (funciones de permiso y cálculo) no se expon
 | `voided_by` | uuid | sí |  |
 | `void_reason` | text | sí |  |
 | `updated_at` | timestamp with time zone | no | now() |
+
+### `membership_reminders`
+
+- **Módulo:** [membresias](modules/membresias.md)
+- **Tenencia:** centro (`detail_center_id`) y organización
+- **Escritura:** sólo por RPC · RLS con 1 política(s)
+
+| Columna | Tipo | Nulo | Default |
+| --- | --- | --- | --- |
+| `id` | uuid | no | gen_random_uuid() |
+| `organization_id` | uuid | no |  |
+| `detail_center_id` | uuid | no |  |
+| `membership_id` | uuid | no |  |
+| `client_id` | uuid | no |  |
+| `message_id` | uuid | sí |  |
+| `benefits_text` | text | no |  |
+| `sent` | boolean | no |  |
+| `created_at` | timestamp with time zone | no | now() |
 
 ### `memberships`
 

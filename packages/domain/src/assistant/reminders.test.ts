@@ -59,3 +59,40 @@ describe("recordatorios de cita", () => {
     ).toEqual(["no está aprobada por Meta", "no es de utilidad", "necesita 2 botones de respuesta rápida"]);
   });
 });
+
+describe("aviso de membresía (ADR 0049)", () => {
+  it("la plantilla debe estar aprobada, ser de utilidad o marketing, con 2 datos y sin botones", async () => {
+    const { membershipReminderTemplateIssues, membershipReminderStatus } = await import("./reminders");
+    const t = {
+      id: "t",
+      name: "aviso_membresia",
+      language: "es_MX",
+      category: "MARKETING",
+      status: "APPROVED",
+      bodyText: "Hola {{1}}, {{2}}",
+      paramCount: 2,
+      quickReplyCount: 0,
+    } as unknown as Parameters<typeof membershipReminderTemplateIssues>[0];
+    expect(membershipReminderTemplateIssues(t)).toEqual([]);
+    expect(
+      membershipReminderTemplateIssues({
+        ...t,
+        category: "AUTHENTICATION",
+        paramCount: 3,
+        quickReplyCount: 2,
+      }),
+    ).toEqual(["no es de utilidad ni de marketing", "necesita 2 datos", "no debe llevar botones"]);
+    expect(
+      membershipReminderStatus({
+        enabled: true,
+        templateId: "t",
+        days: 14,
+        sentLast30Days: 3,
+        version: 1,
+        canManage: false,
+      }),
+    ).toBe(
+      "Encendido: a quien tiene servicios sin usar y no viene en 14 días (máx. uno cada 14 días). 3 enviados en 30 días.",
+    );
+  });
+});

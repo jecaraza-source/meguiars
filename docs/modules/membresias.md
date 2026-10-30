@@ -126,3 +126,7 @@ Errores: `MG002` → regla visible (sin saldo, vencida, otro centro…), `40001`
 ## Variables de entorno
 
 Ninguna nueva.
+
+## Aviso por WhatsApp para usarla
+
+Si una membresía tiene servicios incluidos sin usar y el cliente no ha venido en los días configurados, el asistente de WhatsApp le manda un aviso (sólo con consentimiento de WhatsApp). Ver [asistente-whatsapp](asistente-whatsapp.md) y ADR 0049.

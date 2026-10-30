@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assistantFaqSchema,
   assistantRemindersSchema,
+  membershipRemindersSchema,
   assistantSettingsSchema,
   centerPublicInfoSchema,
   handoffRuleSchema,
@@ -141,5 +142,24 @@ describe("recordatorios de cita", () => {
       enabled: false,
       templateId: null,
     });
+  });
+});
+
+describe("aviso de membresía", () => {
+  const form = {
+    organizationId: ORG,
+    version: "2",
+    enabled: "on",
+    templateId: "",
+    days: "14",
+    reason: "Encender",
+  };
+  it("encender exige plantilla; los días van de 7 a 60", () => {
+    expect(membershipRemindersSchema.safeParse(form).success).toBe(false);
+    expect(
+      membershipRemindersSchema.parse({ ...form, templateId: "7e000000-0000-4000-8000-000000000001" }),
+    ).toMatchObject({ enabled: true, days: 14, version: 2 });
+    expect(membershipRemindersSchema.safeParse({ ...form, enabled: null, days: "5" }).success).toBe(false);
+    expect(membershipRemindersSchema.safeParse({ ...form, enabled: null, days: "61" }).success).toBe(false);
   });
 });

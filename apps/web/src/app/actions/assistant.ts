@@ -5,6 +5,7 @@ import { createAssistantRepository } from "@meguiars/supabase";
 import {
   assistantFaqSchema,
   assistantRemindersSchema,
+  membershipRemindersSchema,
   assistantServiceSchema,
   assistantSettingsSchema,
   centerPublicInfoSchema,
@@ -92,6 +93,27 @@ export async function saveAssistantRemindersAction(
   if (!r.ok) return fail(r.error, form);
   revalidatePath(PAGE);
   return stamp({ message: "Recordatorios guardados" });
+}
+
+export async function saveMembershipRemindersAction(
+  _prev: AssistantFormState,
+  form: FormData,
+): Promise<AssistantFormState> {
+  const ctx = await context();
+  if (!ctx) return stamp({ error: FORBIDDEN });
+  const parsed = membershipRemindersSchema.safeParse({
+    organizationId: ctx.center.organizationId,
+    version: text(form, "version"),
+    enabled: form.get("enabled"),
+    templateId: text(form, "templateId"),
+    days: text(form, "days"),
+    reason: text(form, "reason"),
+  });
+  if (!parsed.success) return invalid(parsed.error.issues, form);
+  const r = await ctx.repo.setMembershipReminders(parsed.data);
+  if (!r.ok) return fail(r.error, form);
+  revalidatePath(PAGE);
+  return stamp({ message: "Aviso de membresía guardado" });
 }
 
 export async function saveAssistantFaqAction(
