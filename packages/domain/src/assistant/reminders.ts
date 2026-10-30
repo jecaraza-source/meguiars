@@ -113,3 +113,65 @@ export async function runReminders(
   }
   return run;
 }
+
+// ---------------------------------------------------------------------------
+// Aviso de membresía (ADR 0049): a quien tiene servicios incluidos sin usar y
+// no ha venido en N días. Espejo de private.membership_reminder_rules. Se envía
+// con el mismo runReminders y otro gateway (membresías en lugar de citas).
+// ---------------------------------------------------------------------------
+
+export const MEMBERSHIP_REMINDER_RULES = {
+  /** Datos de la plantilla: {{1}} nombre, {{2}} servicios disponibles («2 Lavado»). */
+  paramCount: 2,
+  /** Sin botones: si el cliente responde, lo atiende el asistente. */
+  quickReplies: 0,
+  /** Días sin visita ni uso antes del aviso (y entre un aviso y otro). */
+  days: { min: 7, max: 60, default: 14 },
+  /** Sólo se envía entre estas horas del centro. */
+  fromHour: 10,
+  toHour: 19,
+} as const;
+
+export const MEMBERSHIP_REMINDER_TEMPLATE_EXAMPLE = {
+  name: "aviso_membresia",
+  category: "MARKETING",
+  body: "Hola {{1}}, su membresía de Meguiar's incluye {{2}} disponibles este periodo. ¿Le agendamos una visita? Responda a este mensaje.",
+} as const;
+
+/** Por qué una plantilla no sirve para el aviso de membresía (vacío = sirve). */
+export function membershipReminderTemplateIssues(t: WhatsappTemplate): string[] {
+  const issues: string[] = [];
+  if (t.status !== "APPROVED") issues.push("no está aprobada por Meta");
+  if (t.category !== "UTILITY" && t.category !== "MARKETING")
+    issues.push("no es de utilidad ni de marketing");
+  if (t.paramCount !== MEMBERSHIP_REMINDER_RULES.paramCount)
+    issues.push(`necesita ${MEMBERSHIP_REMINDER_RULES.paramCount} datos`);
+  if (t.quickReplyCount !== MEMBERSHIP_REMINDER_RULES.quickReplies) issues.push("no debe llevar botones");
+  return issues;
+}
+
+/** Configuración del aviso de membresía (public.get_membership_reminder_settings). */
+export interface MembershipReminderSettings {
+  enabled: boolean;
+  templateId: string | null;
+  days: number;
+  sentLast30Days: number;
+  version: number;
+  canManage: boolean;
+}
+
+export interface SetMembershipRemindersCommand {
+  organizationId: string;
+  version: number;
+  enabled: boolean;
+  templateId: string | null;
+  days: number;
+  reason: string;
+}
+
+/** Texto para quien no administra (web y móvil). */
+export function membershipReminderStatus(s: MembershipReminderSettings): string {
+  return s.enabled
+    ? `Encendido: a quien tiene servicios sin usar y no viene en ${s.days} días (máx. uno cada ${s.days} días). ${s.sentLast30Days} enviados en 30 días.`
+    : "Apagado.";
+}

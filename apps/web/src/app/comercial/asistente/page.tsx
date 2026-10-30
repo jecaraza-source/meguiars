@@ -1,4 +1,5 @@
 import {
+  membershipReminderStatus,
   activeCenterAccess,
   activeTone,
   addDays,
@@ -24,6 +25,7 @@ import {
   AssistantFaqForm,
   AssistantServiceForm,
   AssistantRemindersForm,
+  MembershipRemindersForm,
   AssistantSettingsForm,
   CenterInfoForm,
   DeleteFaqButton,
@@ -51,26 +53,28 @@ export default async function AssistantPage() {
   );
   const today = todayIn(center.timezone);
   const from = addDays(today, -29);
-  const [settings, centers, services, faqs, rules, metrics, accounts, owners, templates] = await Promise.all([
-    repo.settings(center.organizationId),
-    repo.centers(center.organizationId),
-    repo.services(center.organizationId),
-    repo.faqs(center.organizationId),
-    repo.handoffRules(center.organizationId),
-    repo.metrics(
-      orgCenters.map((a) => a.center.id),
-      from,
-      today,
-    ),
-    createInboxRepository(supabase).accounts(center.organizationId),
-    Promise.all(
-      orgCenters.map(async (a) => {
-        const r = await createCommercialRepository(supabase).leadOwners(a.center.id);
-        return { centerId: a.center.id, owners: r.ok ? r.data : [] };
-      }),
-    ),
-    createInboxRepository(supabase).templates(center.organizationId),
-  ]);
+  const [settings, centers, services, faqs, rules, metrics, accounts, owners, templates, memberReminders] =
+    await Promise.all([
+      repo.settings(center.organizationId),
+      repo.centers(center.organizationId),
+      repo.services(center.organizationId),
+      repo.faqs(center.organizationId),
+      repo.handoffRules(center.organizationId),
+      repo.metrics(
+        orgCenters.map((a) => a.center.id),
+        from,
+        today,
+      ),
+      createInboxRepository(supabase).accounts(center.organizationId),
+      Promise.all(
+        orgCenters.map(async (a) => {
+          const r = await createCommercialRepository(supabase).leadOwners(a.center.id);
+          return { centerId: a.center.id, owners: r.ok ? r.data : [] };
+        }),
+      ),
+      createInboxRepository(supabase).templates(center.organizationId),
+      repo.membershipReminders(center.organizationId),
+    ]);
   if (!settings.ok || !settings.data) {
     return (
       <AppShell state={state} screen="assistant" title={ASSISTANT_COPY.title}>
@@ -201,6 +205,19 @@ export default async function AssistantPage() {
               ? `Se envían ${s.reminderHours} h antes de cada cita, con botones Confirmar y Reagendar.`
               : "Apagados."}
           </p>
+        )}
+      </Card>
+
+      <Card title="Aviso de membresía sin usar">
+        {!memberReminders.ok || !memberReminders.data ? (
+          <EmptyState title={memberReminders.ok ? "Sin acceso" : memberReminders.error.message} />
+        ) : memberReminders.data.canManage ? (
+          <MembershipRemindersForm
+            settings={memberReminders.data}
+            templates={templates.ok ? templates.data : []}
+          />
+        ) : (
+          <p className="text-sm">{membershipReminderStatus(memberReminders.data)}</p>
         )}
       </Card>
 

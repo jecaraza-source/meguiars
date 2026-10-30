@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  MEMBERSHIP_REMINDER_RULES,
+  MEMBERSHIP_REMINDER_TEMPLATE_EXAMPLE,
+  membershipReminderTemplateIssues,
+  type MembershipReminderSettings,
   ASSISTANT_COPY,
   ASSISTANT_MODEL_INFO,
   ASSISTANT_MODELS,
@@ -24,6 +28,7 @@ import {
   deleteAssistantFaqAction,
   saveAssistantFaqAction,
   saveAssistantRemindersAction,
+  saveMembershipRemindersAction,
   saveAssistantServiceAction,
   saveAssistantSettingsAction,
   saveCenterInfoAction,
@@ -283,6 +288,70 @@ export function AssistantRemindersForm({
       />
       <Input name="reason" label="Motivo del cambio" required defaultValue="" />
       <Submit label="Guardar recordatorios" />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+/** Aviso de membresía por WhatsApp (sólo el admin): plantilla, días sin visita y encendido. */
+export function MembershipRemindersForm({
+  settings,
+  templates,
+}: {
+  settings: MembershipReminderSettings;
+  templates: WhatsappTemplate[];
+}) {
+  const [state, action] = useActionState(saveMembershipRemindersAction, {});
+  useToastOnMessage(state);
+  const v = (k: string, d: string) => valueOf(state, k, d);
+  const usable = templates.filter((t) => membershipReminderTemplateIssues(t).length === 0);
+  return (
+    <form
+      key={state.at ? String(state.at) : "membership-reminders"}
+      action={action}
+      className="flex flex-col gap-md"
+      data-testid="membership-reminders-form"
+    >
+      <input type="hidden" name="version" value={settings.version} />
+      <p className="text-sm text-muted">
+        Se manda a quien tiene una membresía con servicios incluidos sin usar, no ha venido en los días que
+        elijas y aceptó recibir WhatsApp; como máximo un aviso cada esos días, entre 10:00 y 19:00. Plantilla
+        aprobada por Meta (Marketing o Utilidad) con 2 datos y sin botones. Ejemplo: «
+        {MEMBERSHIP_REMINDER_TEMPLATE_EXAMPLE.body}». Créala en WhatsApp Manager y sincroniza las plantillas
+        en Integraciones.
+      </p>
+      <div className="grid gap-sm md:grid-cols-2">
+        <Select
+          name="templateId"
+          label="Plantilla del aviso"
+          options={[
+            {
+              value: "",
+              label: usable.length ? "Elige una plantilla" : "Ninguna plantilla cumple los requisitos",
+            },
+            ...usable.map((t) => ({ value: t.id, label: `${t.name} (${t.language})` })),
+          ]}
+          defaultValue={v("templateId", settings.templateId ?? "")}
+          error={state.fields?.templateId}
+        />
+        <Input
+          name="days"
+          type="number"
+          min={MEMBERSHIP_REMINDER_RULES.days.min}
+          max={MEMBERSHIP_REMINDER_RULES.days.max}
+          label="Días sin visita"
+          defaultValue={v("days", String(settings.days))}
+          error={state.fields?.days}
+        />
+      </div>
+      <Checkbox
+        name="enabled"
+        value="on"
+        label="Avisar a clientes con servicios de su membresía sin usar"
+        checked={settings.enabled}
+      />
+      <Input name="reason" label="Motivo del cambio" required defaultValue="" />
+      <Submit label="Guardar aviso de membresía" />
       <FormError state={state} />
     </form>
   );

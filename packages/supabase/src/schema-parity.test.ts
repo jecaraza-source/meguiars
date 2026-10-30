@@ -195,6 +195,7 @@ const typedTables: (keyof Database["public"]["Tables"])[] = [
   "membership_events",
   "membership_plans",
   "membership_redemptions",
+  "membership_reminders",
   "memberships",
   "organizations",
   "profiles",
@@ -533,6 +534,10 @@ const typedRpcs: (keyof Database["public"]["Functions"])[] = [
   "my_work_report_problem",
   "my_work_start",
   "my_work_week",
+  "get_membership_reminder_settings",
+  "set_membership_reminders",
+  "membership_reminders_due",
+  "prepare_membership_reminder",
   "receive_and_open_order",
   "convert_lead_to_client",
 ];

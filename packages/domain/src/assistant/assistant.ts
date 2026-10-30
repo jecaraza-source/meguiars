@@ -1,4 +1,5 @@
 import type { StatusTone } from "../agenda/copy";
+import type { MembershipReminderSettings, SetMembershipRemindersCommand } from "./reminders";
 import type { Result } from "../result";
 
 /**
@@ -295,6 +296,8 @@ export interface AssistantRepository {
   settings(organizationId: string): Promise<Result<AssistantSettings | null>>;
   updateSettings(command: UpdateAssistantSettingsCommand): Promise<Result<void>>;
   setReminders(command: SetAssistantRemindersCommand): Promise<Result<void>>;
+  membershipReminders(organizationId: string): Promise<Result<MembershipReminderSettings | null>>;
+  setMembershipReminders(command: SetMembershipRemindersCommand): Promise<Result<void>>;
   faqs(organizationId: string): Promise<Result<AssistantFaq[]>>;
   upsertFaq(command: UpsertAssistantFaqCommand): Promise<Result<void>>;
   deleteFaq(organizationId: string, id: string, reason: string): Promise<Result<void>>;

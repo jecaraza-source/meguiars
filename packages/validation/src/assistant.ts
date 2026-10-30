@@ -4,6 +4,7 @@ import {
   ASSISTANT_MODES,
   CENTER_CHOICES,
   HANDOFF_CODES,
+  MEMBERSHIP_REMINDER_RULES,
   REMINDER_RULES,
   REQUIRED_HANDOFF_CODES,
   normalizeTestNumber,
@@ -132,6 +133,31 @@ export const assistantRemindersSchema = z
   .refine((v) => !v.enabled || v.templateId !== null, {
     path: ["templateId"],
     message: "Elige la plantilla del recordatorio",
+  });
+
+/** Aviso de membresía (la base valida la plantilla: aprobada, 2 datos y sin botones). */
+export const membershipRemindersSchema = z
+  .object({
+    organizationId: z.uuid(),
+    version: z.coerce.number().int().min(1),
+    enabled: checkbox,
+    templateId: z.preprocess(blankToNull, z.uuid({ message: "Elige una plantilla" }).nullable()),
+    days: z.coerce
+      .number()
+      .int()
+      .min(
+        MEMBERSHIP_REMINDER_RULES.days.min,
+        `Entre ${MEMBERSHIP_REMINDER_RULES.days.min} y ${MEMBERSHIP_REMINDER_RULES.days.max} días`,
+      )
+      .max(
+        MEMBERSHIP_REMINDER_RULES.days.max,
+        `Entre ${MEMBERSHIP_REMINDER_RULES.days.min} y ${MEMBERSHIP_REMINDER_RULES.days.max} días`,
+      ),
+    reason: changeReasonSchema,
+  })
+  .refine((v) => !v.enabled || v.templateId !== null, {
+    path: ["templateId"],
+    message: "Elige la plantilla del aviso",
   });
 
 export const assistantFaqSchema = z.object({

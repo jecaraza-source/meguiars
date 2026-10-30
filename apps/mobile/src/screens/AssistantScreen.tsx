@@ -9,6 +9,8 @@ import {
   type CenterPublicInfo,
   estimateAssistantCost,
   formatCenterHours,
+  membershipReminderStatus,
+  type MembershipReminderSettings,
   todayIn,
   usableCenters,
 } from "@meguiars/domain";
@@ -25,6 +27,7 @@ interface Loaded {
   settings: AssistantSettings | null;
   centers: CenterPublicInfo[];
   metrics: AssistantCenterMetrics[];
+  memberReminders: MembershipReminderSettings | null;
 }
 
 /** Asistente de WhatsApp (equivale a /comercial/asistente): estado e indicadores; se configura en la web. */
@@ -45,13 +48,15 @@ export function AssistantScreen({ state, header, subnav }: PrivateScreenProps) {
       repo.settings(center.organizationId),
       repo.centers(center.organizationId),
       repo.metrics(ids, from, today),
+      repo.membershipReminders(center.organizationId),
     ]).then(
-      ([s, c, m]) =>
+      ([s, c, m, mr]) =>
         active &&
         setData({
           settings: s.ok ? s.data : null,
           centers: c.ok ? c.data.filter((x) => x.active) : [],
           metrics: m.ok ? m.data : [],
+          memberReminders: mr.ok ? mr.data : null,
         }),
     );
     return () => {
@@ -83,6 +88,11 @@ export function AssistantScreen({ state, header, subnav }: PrivateScreenProps) {
                 ? `${s.reminderHours} h antes de cada cita, con botones Confirmar y Reagendar`
                 : "apagados"}
             </Text>
+            {data?.memberReminders ? (
+              <Text style={textStyle("bodySmall")}>
+                Aviso de membresía sin usar: {membershipReminderStatus(data.memberReminders)}
+              </Text>
+            ) : null}
             <Text style={textStyle("caption", "muted")}>La configuración se cambia en la web.</Text>
           </Card>
           <Card title="Últimos 30 días">

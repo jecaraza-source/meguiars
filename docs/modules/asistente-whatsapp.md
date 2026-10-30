@@ -239,3 +239,7 @@ Muestra cada falla con la respuesta, el total de aprobados y el costo estimado, 
 ## Opciones numeradas
 
 Cuando el cliente tiene que elegir (servicio, centro, horario, sí/no), el asistente numera las opciones (1., 2., 3.…, una por línea) y cierra con «Responde con el número de tu opción». Si el cliente contesta sólo con un número, se toma como esa opción del último mensaje (regla en `assistantRules`, `packages/domain/src/assistant/turn.ts`).
+
+## Aviso de membresía sin usar (ADR 0049)
+
+A quien tiene servicios incluidos sin usar en su periodo, aceptó WhatsApp y no ha venido en N días (7 a 60, por defecto 14), se le manda una plantilla aprobada con 2 datos y sin botones («Hola {{1}}, su membresía incluye {{2}}…»). Máximo uno cada N días, entre 10:00 y 19:00 del centro. Se configura en Asistente de WhatsApp → «Aviso de membresía sin usar» (`set_membership_reminders`); lo envía el mismo cron de los recordatorios (`membership_reminders_due`, `prepare_membership_reminder`, bitácora `membership_reminders`).

@@ -1,4 +1,5 @@
 import {
+  type MembershipReminderSettings,
   parseBeginTurn,
   type AssistantCenterMetrics,
   type AssistantFaq,
@@ -138,6 +139,37 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
           // La base acepta null (sin plantilla); los tipos generados piden string.
           p_template_id: c.templateId as string,
           p_hours: c.hours,
+          p_reason: c.reason,
+        }),
+      );
+    },
+    membershipReminders(organizationId) {
+      return run(
+        () => client.rpc("get_membership_reminder_settings", { p_organization_id: organizationId }),
+        (data): MembershipReminderSettings | null => {
+          const r = data[0];
+          return r
+            ? {
+                enabled: r.enabled,
+                templateId: r.template_id,
+                days: r.days,
+                sentLast30Days: Number(r.sent_last_30_days),
+                version: r.version,
+                canManage: r.can_manage,
+              }
+            : null;
+        },
+      );
+    },
+    setMembershipReminders(c) {
+      return done(() =>
+        client.rpc("set_membership_reminders", {
+          p_organization_id: c.organizationId,
+          p_version: c.version,
+          p_enabled: c.enabled,
+          // La base acepta null (sin plantilla); los tipos generados piden string.
+          p_template_id: c.templateId as string,
+          p_days: c.days,
           p_reason: c.reason,
         }),
       );
@@ -325,6 +357,41 @@ export function createAssistantRepository(client: MeguiarsSupabaseClient): Assis
 }
 
 /** Recordatorios de cita con la llave de servicio (sólo el servidor, desde el cron). */
+/** Mismo envío que los recordatorios de cita, para el aviso de membresía (ADR 0049). */
+export function createMembershipReminderServiceGateway(service: MeguiarsSupabaseClient): ReminderGateway {
+  const base = createReminderServiceGateway(service);
+  return {
+    due(limit) {
+      return run(
+        () => service.rpc("membership_reminders_due", { p_limit: limit }),
+        (rows) => rows.map((r) => r.membership_id),
+      );
+    },
+    prepare(membershipId) {
+      return run(
+        () => service.rpc("prepare_membership_reminder", { p_membership_id: membershipId }),
+        (rows): PreparedReminder | null => {
+          const r = rows[0];
+          if (!r) return null;
+          return {
+            messageId: r.message_id,
+            externalAccountId: r.external_account_id,
+            contactExternalId: r.contact_external_id,
+            contactPhone: r.contact_phone,
+            body: r.body,
+            alreadySent: r.already_sent,
+            templateName: r.template_name,
+            templateLanguage: r.template_language,
+            templateParams: r.template_params,
+            buttonPayloads: r.button_payloads,
+          };
+        },
+      );
+    },
+    finishOutbound: base.finishOutbound,
+  };
+}
+
 export function createReminderServiceGateway(service: MeguiarsSupabaseClient): ReminderGateway {
   return {
     due(limit) {
