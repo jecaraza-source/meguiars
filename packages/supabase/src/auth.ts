@@ -23,8 +23,10 @@ const authFail = <T>(error: { code?: string; status?: number; message?: string }
 export async function loadAuthState(
   client: MeguiarsSupabaseClient,
   preferredCenterId?: string | null,
+  /** Token de la app móvil cuando el cliente no guarda sesión (rutas /api con Bearer). */
+  accessToken?: string,
 ): Promise<Result<AuthState>> {
-  const { data, error } = await client.auth.getUser();
+  const { data, error } = await client.auth.getUser(accessToken);
   if (error || !data.user) return ok({ status: "signed_out" });
 
   const profile = await client

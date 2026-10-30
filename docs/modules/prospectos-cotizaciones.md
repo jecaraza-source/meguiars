@@ -143,6 +143,10 @@ Errores:
 
 Accesos: «Crear cotización» desde la ficha CRM del cliente, «Precio cotizado» en la OS y «Registrar como cliente» desde el prospecto (`/clientes/nuevo?prospecto=`).
 
+## Reporte con IA (ADR 0051)
+
+En Reportes comerciales (web y móvil), «Generar reporte con IA» pide a Claude un resumen, hallazgos, riesgos y acciones a partir de los mismos KPIs del periodo y alcance que se ven en pantalla; la IA no calcula cifras. Tabla `commercial_ai_reports` (migración 20261113000000) con historial inmutable; RPC `start_commercial_ai_report` (sesión del usuario) y `complete_commercial_ai_report` / `fail_commercial_ai_report` (sólo servidor). Móvil usa `POST /api/comercial/reporte-ia`. Límite: 20 reportes por persona al día.
+
 ## Integraciones por canal
 
 Desde la fase 2, WhatsApp Business, Messenger e Instagram tienen conexión oficial con la bandeja. El estado real, la configuración y los límites por canal están en [bandeja.md](bandeja.md). Google Business Profile y TikTok siguen «Aún no disponible»: sus consultas se registran a mano con canal Google u «Otro».

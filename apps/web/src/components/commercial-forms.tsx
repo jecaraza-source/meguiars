@@ -25,6 +25,7 @@ import {
   type LeadStage,
   type Quote,
   type QuoteStatus,
+  COMMERCIAL_AI_COPY,
 } from "@meguiars/domain";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -51,6 +52,7 @@ import {
   voidQuoteDiscountAction,
   winLeadAction,
   type CommercialFormState,
+  generateCommercialAiReportAction,
 } from "@/app/actions/commercial";
 import { Button } from "./ui/button";
 import { Checkbox, Input, Select } from "./ui/field";
@@ -1208,5 +1210,43 @@ export function MergeClientsForm({
         <Submit label="Fusionar" variant="secondary" />
       </div>
     </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Reporte con IA (ADR 0051)
+// ---------------------------------------------------------------------------
+
+/** Botón para pedir el reporte con IA del periodo y alcance que se están viendo. */
+export function CommercialAiReportForm({
+  periodId,
+  scope,
+  requestId,
+}: {
+  periodId: string;
+  scope: string;
+  /** Nuevo en cada carga de la página: el doble clic no genera dos reportes. */
+  requestId: string;
+}) {
+  const [state, action] = useActionState(generateCommercialAiReportAction, {});
+  useToastOnMessage(state);
+  return (
+    <form action={action} className="flex flex-col gap-sm" noValidate>
+      <input type="hidden" name="periodId" value={periodId} />
+      <input type="hidden" name="scope" value={scope} />
+      <input type="hidden" name="requestId" value={requestId} />
+      <Pending />
+      <FormError state={state} />
+    </form>
+  );
+}
+
+function Pending() {
+  const { pending } = useFormStatus();
+  return (
+    <div className="flex flex-wrap items-center gap-sm">
+      <Button type="submit" label={COMMERCIAL_AI_COPY.generate} loading={pending} size="sm" />
+      {pending ? <span className="text-sm text-muted">{COMMERCIAL_AI_COPY.generating}</span> : null}
+    </div>
   );
 }

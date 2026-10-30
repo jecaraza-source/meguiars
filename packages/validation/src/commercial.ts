@@ -5,7 +5,9 @@ import {
   LEAD_MILESTONES,
   LEAD_SOURCES,
   LEAD_TASK_KINDS,
+  PILOT_PERIODS,
   QUOTE_RULES,
+  type PilotPeriodId,
 } from "@meguiars/domain";
 import { z } from "zod";
 import { moneySchema } from "./catalog";
@@ -276,3 +278,19 @@ export const segmentFilterSchema = z
         message: "El máximo debe ser mayor que el mínimo",
       });
   });
+
+/** Pedido de reporte comercial con IA (web y móvil → servidor; ADR 0051). */
+export const commercialAiRequestSchema = z.object({
+  detailCenterId: z.uuid(),
+  periodId: z.enum(PILOT_PERIODS.map((p) => p.id) as [PilotPeriodId, ...PilotPeriodId[]]),
+  scope: z.enum(["centro", "todos"]),
+  requestId: z.uuid(),
+});
+
+/** Lo que la IA debe devolver (structured outputs); los límites los recorta el dominio. */
+export const commercialAiOutputSchema = z.object({
+  summary: z.string(),
+  highlights: z.array(z.string()),
+  risks: z.array(z.string()),
+  actions: z.array(z.string()),
+});

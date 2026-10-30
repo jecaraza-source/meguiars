@@ -4053,6 +4053,87 @@ export type Database = {
           },
         ];
       };
+      commercial_ai_reports: {
+        Row: {
+          actions: string[];
+          center_ids: string[];
+          completed_at: string | null;
+          created_at: string;
+          created_by: string;
+          detail_center_id: string;
+          error: string | null;
+          highlights: string[];
+          id: string;
+          model: string | null;
+          organization_id: string;
+          period_from: string;
+          period_label: string;
+          period_to: string;
+          request_id: string;
+          risks: string[];
+          scope_label: string;
+          status: string;
+          summary: string | null;
+        };
+        Insert: {
+          actions?: string[];
+          center_ids: string[];
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          detail_center_id: string;
+          error?: string | null;
+          highlights?: string[];
+          id?: string;
+          model?: string | null;
+          organization_id: string;
+          period_from: string;
+          period_label: string;
+          period_to: string;
+          request_id: string;
+          risks?: string[];
+          scope_label: string;
+          status?: string;
+          summary?: string | null;
+        };
+        Update: {
+          actions?: string[];
+          center_ids?: string[];
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          detail_center_id?: string;
+          error?: string | null;
+          highlights?: string[];
+          id?: string;
+          model?: string | null;
+          organization_id?: string;
+          period_from?: string;
+          period_label?: string;
+          period_to?: string;
+          request_id?: string;
+          risks?: string[];
+          scope_label?: string;
+          status?: string;
+          summary?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_ai_reports_detail_center_id_fkey";
+            columns: ["detail_center_id"];
+            isOneToOne: false;
+            referencedRelation: "detail_centers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commercial_ai_reports_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       contact_preferences: {
         Row: {
           channel: string;
@@ -7614,6 +7695,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      fail_commercial_ai_report: {
+        Args: { p_error: string; p_id: string };
+        Returns: undefined;
+      };
       finish_outbound_message: {
         Args: {
           p_error: string | null;
@@ -9074,6 +9159,18 @@ export type Database = {
         Returns: Database["public"]["Tables"]["alert_instances"]["Row"];
         SetofOptions: { from: "*"; to: "alert_instances"; isOneToOne: true; isSetofReturn: false };
       };
+      start_commercial_ai_report: {
+        Args: {
+          p_center_ids: string[];
+          p_detail_center_id: string;
+          p_from: string;
+          p_period_label: string;
+          p_request_id: string;
+          p_scope_label: string;
+          p_to: string;
+        };
+        Returns: string;
+      };
       start_alert_run: {
         Args: { p_organization_id: string; p_source: string };
         Returns: string;
@@ -10401,6 +10498,17 @@ export type Database = {
           title: string;
           vehicle_id: string | null;
         }[];
+      };
+      complete_commercial_ai_report: {
+        Args: {
+          p_actions: string[];
+          p_highlights: string[];
+          p_id: string;
+          p_model: string;
+          p_risks: string[];
+          p_summary: string;
+        };
+        Returns: undefined;
       };
       complete_crm_task: {
         Args: {

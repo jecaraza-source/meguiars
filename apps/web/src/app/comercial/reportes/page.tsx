@@ -1,11 +1,23 @@
-import { COMMERCIAL_COPY, PILOT_PERIODS, todayIn, activeCenterAccess } from "@meguiars/domain";
-import { createCommercialRepository } from "@meguiars/supabase";
+import {
+  activeCenterAccess,
+  COMMERCIAL_AI_COPY,
+  COMMERCIAL_COPY,
+  PILOT_PERIODS,
+  presentCommercialAiReport,
+  todayIn,
+} from "@meguiars/domain";
+import { createCommercialAiReportRepository, createCommercialRepository } from "@meguiars/supabase";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { CommercialAiReportView } from "@/components/commercial-ai-report";
+import { CommercialAiReportForm } from "@/components/commercial-forms";
 import { Card, EmptyState, KpiCard, Table } from "@/components/ui/display";
 import { requireScreen } from "@/lib/auth/dal";
 import { commercialCenters, loadCommercialReport } from "@/lib/commercial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+/** La IA redacta el reporte dentro de la server action (ADR 0051). */
+export const maxDuration = 120;
 
 /** Reportes comerciales: embudo, tiempo de respuesta, ventas y margen atribuidos, por canal y responsable. */
 export default async function CommercialReportsPage({ searchParams }: PageProps<"/comercial/reportes">) {
@@ -26,6 +38,10 @@ export default async function CommercialReportsPage({ searchParams }: PageProps<
     todayIn(center.timezone),
     Object.fromEntries((owners.ok ? owners.data : []).map((o) => [o.userId, o.fullName])),
   );
+  const aiReports = await createCommercialAiReportRepository(supabase).list(center.id, 5);
+  const [latest, ...older] = aiReports.ok
+    ? aiReports.data.map((r) => presentCommercialAiReport(r, center.timezone))
+    : [];
   const link = (patch: Record<string, string>) => {
     const q = new URLSearchParams({ periodo: report.period.id, alcance: scope, ...patch });
     return `/comercial/reportes?${q.toString()}`;
@@ -95,6 +111,29 @@ export default async function CommercialReportsPage({ searchParams }: PageProps<
       {report.error ? (
         <EmptyState title="No se pudieron calcular los reportes" message={report.error} />
       ) : null}
+      <Card title={COMMERCIAL_AI_COPY.title}>
+        <div className="flex flex-col gap-md">
+          <p className="text-sm text-muted">{COMMERCIAL_AI_COPY.description}</p>
+          <CommercialAiReportForm periodId={report.period.id} scope={scope} requestId={crypto.randomUUID()} />
+          {!aiReports.ok ? (
+            <p className="text-sm text-muted">{aiReports.error.message}</p>
+          ) : latest ? (
+            <CommercialAiReportView report={latest} />
+          ) : (
+            <p className="text-sm text-muted">{COMMERCIAL_AI_COPY.empty}</p>
+          )}
+          {older.length ? (
+            <details className="text-sm">
+              <summary className="cursor-pointer underline">{COMMERCIAL_AI_COPY.history}</summary>
+              <div className="flex flex-col gap-lg pt-md">
+                {older.map((r) => (
+                  <CommercialAiReportView key={r.id} report={r} />
+                ))}
+              </div>
+            </details>
+          ) : null}
+        </div>
+      </Card>
       <div className="grid gap-md md:grid-cols-3 xl:grid-cols-4" data-testid="commercial-kpis">
         {report.kpis.map((k) => (
           <KpiCard key={k.id} label={k.name} value={k.display} caption={k.formula} />
