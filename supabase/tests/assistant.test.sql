@@ -358,6 +358,41 @@ select pg_temp.assert((select bot_status || ':' || bot_paused_reason from public
   'y se pausa solo en esa conversación');
 reset role;
 
+-- Se reanuda solo: el cliente vuelve a escribir y nadie del equipo respondió en 2 h.
+select pg_temp.as_service();
+select pg_temp.inbound('wamid.8', '5215511112222', '¿me confirman?', now()) as m8 \gset
+select pg_temp.assert(public.assistant_begin_turn(:'m8') ->> 'skip' = 'asistente pausado en la conversación',
+  'recién pausado (una persona respondió hace poco) sigue sin contestar');
+reset role;
+update public.conversations set bot_paused_at = now() - interval '3 hours' where id = :'cv';
+-- Simula que la última respuesta del equipo fue hace 3 h (el contenido de un mensaje no se edita en la app).
+alter table public.messages disable trigger messages_keep_content;
+update public.messages set occurred_at = now() - interval '3 hours'
+ where conversation_id = :'cv' and direction = 'saliente' and not sent_by_bot;
+alter table public.messages enable trigger messages_keep_content;
+select pg_temp.as_service();
+select pg_temp.inbound('wamid.9', '5215511112222', '¿hola?', now()) as m9 \gset
+select (public.assistant_begin_turn(:'m9') ->> 'turn_id') as t9 \gset
+reset role;
+select pg_temp.assert(:'t9' is not null
+  and (select bot_status = 'activo' and bot_paused_reason is null and bot_resumed_at = now()
+         from public.conversations where id = :'cv')
+  and (select count(*) from public.conversation_notes
+        where conversation_id = :'cv' and body like 'Asistente: se reanudó solo%') = 1,
+  'sin respuesta del equipo en 2 h, el asistente se reanuda, deja nota interna y contesta');
+delete from public.bot_turns where id = :'t9';
+-- Una pausa manual se respeta aunque pasen las 2 h.
+select pg_temp.login('00000000-0000-0000-0000-0000000000f2');
+select from public.set_conversation_assistant(:'cv', false);
+reset role;
+update public.conversations set bot_paused_at = now() - interval '3 hours' where id = :'cv';
+select pg_temp.as_service();
+select pg_temp.inbound('wamid.10', '5215511112222', '¿siguen ahí?', now()) as m10 \gset
+select pg_temp.assert(public.assistant_begin_turn(:'m10') ->> 'skip' = 'asistente pausado en la conversación'
+  and (select bot_paused_reason like 'Pausado por %' from public.conversations where id = :'cv'),
+  'una pausa manual («Pausado por …») no se reanuda sola');
+reset role;
+
 -- ---------------------------------------------------------------------------
 -- Baja de promociones por WhatsApp.
 -- ---------------------------------------------------------------------------

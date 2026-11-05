@@ -21,7 +21,7 @@ Decisiones en [ADR 0036](../adr/0036-asistente-whatsapp-con-claude.md). Se monta
 2. **¿Atiende?** La base (`assistant_begin_turn`) decide y abre un **turno**, uno por mensaje entrante, así que un reintento de Meta no responde dos veces. No atiende si:
    - el asistente está apagado;
    - está en modo prueba y el número no es de prueba (compara los últimos 10 dígitos);
-   - está pausado en esa conversación;
+   - está pausado en esa conversación, salvo que se **reanude solo**: si el cliente vuelve a escribir y nadie del equipo ha respondido desde la pausa en **2 horas**, el asistente se reactiva, deja una nota interna («se reanudó solo…») y contesta. Aplica a las pausas automáticas (escalamiento, «Atendida por una persona», límite de mensajes); una pausa manual desde la Bandeja («Pausado por …») se respeta. El tiempo vive en `private.assistant_limits()` (`auto_resume_minutes`, ADR 0053);
    - una persona ya respondió (entonces se pausa solo);
    - llegó un mensaje más reciente (contesta el turno de ese mensaje, con todo el contexto);
    - la ventana de 24 h está cerrada.
@@ -174,7 +174,7 @@ Un mensaje de plantilla **24 h antes** de cada cita programada (configurable de 
   - elección de centro (mueve conversación y mensajes);
   - respuesta única;
   - escalamiento (pendiente, asignación, nota, pausa);
-  - reactivación;
+  - reactivación, y reanudación sola tras 2 h sin respuesta del equipo (no en pausas manuales);
   - baja con origen `whatsapp`;
   - indicadores por permiso;
   - aislamiento entre organizaciones;
