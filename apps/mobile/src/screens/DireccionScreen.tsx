@@ -13,7 +13,7 @@ import {
   type PresentedTrend,
 } from "@meguiars/domain";
 import { createDashboardRepository } from "@meguiars/supabase";
-import { space } from "@meguiars/ui-tokens";
+import { fontSize, space } from "@meguiars/ui-tokens";
 import { useEffect, useState } from "react";
 import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/auth/AuthProvider";
@@ -249,8 +249,27 @@ export function DireccionScreen({
   );
 }
 
+/**
+ * Cifras del resumen ejecutivo en media pantalla de teléfono: «$103,839.00» no
+ * cabe con la letra más grande y se partía en dos renglones o se cortaba. Se
+ * elige el paso más grande de la escala tipográfica que cabe en el ancho real
+ * de la tarjeta (siempre en negrita y en un renglón).
+ */
+const VALUE_SIZES = [fontSize.xxl, fontSize.xl, fontSize.lg, fontSize.md, fontSize.sm] as const;
+/** Ancho aproximado de un carácter en negrita respecto al tamaño de letra. */
+const CHAR_WIDTH = 0.62;
+
+function fittedValueSize(value: string, width: number | null, big: boolean): number {
+  const largest = big ? fontSize.xxl : fontSize.lg;
+  if (width === null) return fontSize.lg;
+  return (
+    VALUE_SIZES.find((size) => size <= largest && value.length * size * CHAR_WIDTH <= width) ?? fontSize.sm
+  );
+}
+
 function CardTile({ card, onPress, big }: { card: PresentedCard; onPress: () => void; big?: boolean }) {
   const c = card.consolidated;
+  const [width, setWidth] = useState<number | null>(null);
   return (
     <Pressable
       accessibilityRole="button"
@@ -261,7 +280,16 @@ function CardTile({ card, onPress, big }: { card: PresentedCard; onPress: () => 
       <Text style={textStyle("bodySmall", "muted")}>{card.name}</Text>
       {c ? (
         <>
-          <Text style={textStyle(big ? "kpi" : "heading")}>{c.value}</Text>
+          <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+            <Text
+              style={[textStyle("heading"), { fontSize: fittedValueSize(c.value, width, !!big) }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
+              {c.value}
+            </Text>
+          </View>
           <View style={dashboardStyles.row}>
             <TrendBadge trend={c.trend} />
             {c.alert ? <Badge label={`⚠ ${c.alert.kind}`} tone="danger" /> : null}
