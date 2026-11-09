@@ -190,6 +190,15 @@ Llaves (se guardan en EAS, nunca en el repo ni en GitHub):
   4. Sube el JSON a EAS: expo.dev → proyecto → Credentials → Android → `com.meguiars.detailcenter` → Google Service Account Key (para envíos), o `eas credentials -p android`. Borra el JSON local después.
 - **Primera versión de Android:** Google no deja crear la primera versión por API. Se sube a mano el AAB del perfil `production` en Play Console (Prueba interna) y desde la segunda versión se usa el envío automático.
 
+### Distribución: sólo para el equipo (decisión del 9 nov 2026)
+
+La app es una herramienta interna (recepción, técnicos, Dirección), no para clientes. Por eso no se lista públicamente:
+
+- **iPhone y iPad (y Mac con chip Apple):** App Store como **app no listada** (_unlisted_): sólo se instala con el enlace directo. Se pide a Apple con el formulario de distribución no listada, después de que la versión pase la revisión normal. La revisión pide una **cuenta de prueba** con datos de ejemplo (usuario y contraseña en App Review Information). En App Store Connect → la app → Precios y disponibilidad, deja activa la disponibilidad en **Mac con chip Apple** (la app de iPad corre ahí sin otro build).
+- **Android:** Google Play no tiene «no listada». La app se publica en la pista de **prueba cerrada** con una lista de correos del equipo (o un Grupo de Google). Quien no está en la lista no la ve. Las cuentas de desarrollador personales nuevas deben tener una prueba cerrada con al menos 12 personas durante 14 días antes de poder pasar a producción.
+- **Windows (y cualquier computadora):** la web se instala como app desde Edge o Chrome (menú → «Instalar Meguiar's» o el ícono de instalar en la barra de direcciones). Usa `app/manifest.ts` y los íconos de `public/icons/`; abre en su propia ventana, con la misma sesión y los mismos permisos que la web.
+- Las versiones se compilan y suben con _Actions → Build móvil (EAS)_ (`production`, «Enviar a la tienda»). De TestFlight o de la prueba interna se envían a revisión (Apple) o se promueven a la prueba cerrada (Google) desde cada consola.
+
 ## Secretos
 
 | Secreto                     | Dónde vive                                                                                                                                                                                                | Quién lo usa                                                                                                                   |

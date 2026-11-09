@@ -28,6 +28,8 @@ export const PUBLIC_PATHS = [
   "/api/health",
   "/api/webhooks/meta",
   "/api/inbox/send",
+  // Manifiesto para instalar la web como app (el navegador lo pide sin sesión).
+  "/manifest.webmanifest",
   // Reporte comercial con IA desde la app (Bearer; ADR 0051).
   "/api/comercial/reporte-ia",
 ];
